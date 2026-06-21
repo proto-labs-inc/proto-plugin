@@ -1,0 +1,194 @@
+.previewStage {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: visible;
+  background: var(--prototype-ground);
+}
+
+.previewStageStateMap {
+  background: var(--tool-chrome-bg);
+
+  .viewportFrame {
+    background: var(--tool-chrome-bg);
+    border-color: transparent;
+  }
+
+  .viewport:not(.viewportMobile) {
+    background: var(--tool-chrome-bg);
+  }
+
+  &.previewStageMobile {
+    background: var(--tool-chrome-bg);
+  }
+}
+
+.previewStageMobile {
+  background: var(--prototype-ground);
+}
+
+.previewStageSidebarOpen {
+  border-right: 1px solid var(--border-faint);
+}
+
+.previewStageSidebarOpen .viewportFrame {
+  border-right: none;
+  border-top: none;
+}
+
+.previewStageBody {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  align-items: stretch;
+  justify-content: center;
+  overflow: visible;
+  padding: 0;
+}
+
+.previewStageMobile .previewStageBody {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.viewportFrame {
+  display: flex;
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+  flex-direction: column;
+  background: var(--bg-main);
+  border: 1px solid var(--border-faint);
+}
+
+.viewportFrameMobile {
+  flex: 0 0 auto;
+  width: auto;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.viewport {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  overflow: hidden;
+  // Contain position:fixed descendants (e.g. source app sidebar) inside the frame.
+  transform: translateZ(0);
+
+  // Source app shell uses h-svh — re-anchor to this preview frame (above review footer).
+  :global([data-slot="sidebar-wrapper"]),
+  :global([data-slot="sidebar-container"]) {
+    height: 100% !important;
+    max-height: 100%;
+  }
+
+  :global([data-slot="sidebar-container"]) {
+    top: 0;
+    bottom: 0;
+  }
+
+  :global([data-slot="sidebar-inset"]) {
+    min-height: 0;
+  }
+
+  &:not(.viewportMobile) {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+}
+
+// Prototype pages must fill the device frame — unlike h-svh, which tracks the browser.
+.viewportContent {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.viewportPage {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+// Prototype page root (e.g. PrototypeComponent id="page") — source app shells use h-full.
+.viewportPage > * {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.viewportMobile {
+  flex: 0 0 auto;
+  width: var(--prototype-mobile-viewport-width, 390px);
+  max-width: 100%;
+  height: min(var(--prototype-mobile-viewport-height, 844px), 100%);
+  margin-inline: auto;
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px color-mix(in srgb, var(--color-gray-900) 12%, transparent);
+  container-type: inline-size;
+  container-name: prototype-viewport;
+
+  // Source app shell uses h-svh / fixed — re-anchor to this device frame.
+  :global([data-slot="sidebar-wrapper"]),
+  :global([data-slot="sidebar-container"]) {
+    height: 100% !important;
+    max-height: 100%;
+  }
+
+  :global([data-slot="sidebar-container"]) {
+    top: 0;
+    bottom: 0;
+  }
+}
+
+.reviewFooter {
+  position: relative;
+  z-index: 0;
+  flex: 0 0 auto;
+  width: 100%;
+  border-top: none;
+  background: var(--bg-ground);
+}
+
+.commentsSidebarRoot {
+  background: var(--bg-ground);
+}
+
+.commentsSidebarRootClosed {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+}

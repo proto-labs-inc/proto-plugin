@@ -1,0 +1,1341 @@
+// Keep in sync with prototype-review-chrome.module.scss.
+$morph-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
+$morph-duration: 0.25s;
+$enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
+$enter-duration: 150ms;
+
+// Half-height pills (22px) — sit to the left of the 44px review toolbar.
+.miniPill {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 22px;
+  max-width: 10rem;
+  padding: 0 0.625rem;
+  border: none;
+  border-radius: 9999px;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 0 0 1px #333333;
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  gap: 0.375rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #333333;
+    }
+  }
+
+  &:active {
+    background: #3a3a3a;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+  }
+}
+
+.miniPillActive {
+  background: #252525;
+  color: #fff;
+}
+
+.miniPillEmoji {
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.miniPillText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.miniPillLabelGroup {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+  overflow: hidden;
+}
+
+.miniPillSlot {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  gap: 0.125rem;
+  user-select: none;
+}
+
+.miniPillTabsSlot {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  gap: 0.125rem;
+
+  > * {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
+  }
+}
+
+// Inline variant tab controls — no outer chrome (sits beside the active pill label).
+.miniPillTabsInline {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: max-content;
+  gap: 0.125rem;
+
+  .variantsTabsList {
+    height: 18px !important;
+    min-height: 18px !important;
+    padding: 1px !important;
+    gap: 1px !important;
+    border-radius: 9999px !important;
+
+    [role="tab"] {
+      height: 14px !important;
+      min-height: 14px !important;
+      max-height: 14px !important;
+      padding: 0 0.375rem !important;
+      font-size: 0.625rem !important;
+    }
+  }
+}
+
+// Compact variant tabs toolbar — half height of main review bar.
+.variantsToolbarMini {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: max-content;
+  gap: 0.25rem;
+  height: 22px;
+  padding: 0.125rem 0.25rem;
+  border-radius: 9999px;
+  background: #1e1e1e;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 0 0 1px #333333;
+
+  .variantsTabsList {
+    height: 18px !important;
+    min-height: 18px !important;
+    padding: 1px !important;
+    gap: 1px !important;
+    border-radius: 9999px !important;
+
+    [role="tab"] {
+      height: 14px !important;
+      min-height: 14px !important;
+      max-height: 14px !important;
+      padding: 0 0.375rem !important;
+      font-size: 0.625rem !important;
+    }
+  }
+}
+
+.variantsControlButtonMini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #e0e0e0;
+    }
+  }
+}
+
+.orbSlot {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.orbSlotExpanded {
+  gap: 0.375rem;
+}
+
+.tabsPortal {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.inlinePicker {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: auto;
+  transform-origin: left center;
+  animation: inlinePickerEnter $enter-duration $enter-ease forwards;
+
+  // Dark surface tokens for nested prototype controls.
+  --bg-main: #1e1e1e;
+  --bg-top: #1e1e1e;
+  --bg-subtle: #181818;
+  --bg-ground: #121212;
+  --bg-layered: #252525;
+  --text-primary: #e0e0e0;
+  --text-secondary: #888888;
+  --text-tertiary: #666666;
+  --border-solid: #333333;
+  --border-faint: #2a2a2a;
+  --border-medium: #404040;
+}
+
+// Matches review chrome orb + morph toolbar (44px total height).
+.variantsToolbar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 44px;
+  padding: 0.375rem;
+  border-radius: 1.5rem;
+  background: #1e1e1e;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 0 0 1px #333333;
+}
+
+.variantsControlButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #e0e0e0;
+    }
+  }
+}
+
+.variantsTabsList {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 2px !important;
+  gap: 2px !important;
+  border-radius: 0.5rem !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+
+  > :first-child {
+    border-radius: 0.375rem !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: none !important;
+  }
+
+  [role="tab"] {
+    flex: 0 0 auto !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    padding: 0 0.5rem !important;
+    border: none !important;
+    border-radius: 0.375rem !important;
+    box-shadow: none !important;
+    font-size: 0.8125rem !important;
+    line-height: 1 !important;
+  }
+}
+
+.variantsDefaultTab {
+  background: #252525 !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.variantsTab {
+  color: rgba(255, 255, 255, 0.55) !important;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not([data-active]) {
+      background: rgba(255, 255, 255, 0.06) !important;
+      color: rgba(255, 255, 255, 0.75) !important;
+    }
+  }
+
+  &[data-active] {
+    color: rgba(255, 255, 255, 0.92) !important;
+  }
+}
+
+.rationalePopover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 2;
+  max-width: 24rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #242424;
+  color: rgba(255, 255, 255, 0.68);
+  text-align: left;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 0 0 1px #333333;
+}
+
+.rationaleLabel {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+@keyframes inlinePickerEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.orb {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: #1e1e1e;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 0 0 1px #333333;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #333333;
+    }
+  }
+
+  &:active {
+    background: #3a3a3a;
+  }
+}
+
+// Width morph — matches review chrome .morphToolbar (expand toward main bar).
+.orbMorph {
+  box-sizing: border-box;
+  overflow: hidden;
+  height: 44px;
+  justify-content: flex-end;
+  transition:
+    max-width $morph-duration $morph-ease,
+    border-radius $morph-duration $morph-ease,
+    opacity $morph-duration $morph-ease,
+    background-color 150ms ease;
+
+  &.orbMorphCollapsed {
+    max-width: 0;
+    border-radius: 22px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &.orbMorphExpanded {
+    max-width: 20rem;
+    border-radius: 9999px;
+    opacity: 1;
+  }
+
+  .trigger {
+    flex-shrink: 0;
+  }
+}
+
+.orbPressed {
+  background: #252525;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #252525;
+    }
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  &::selection,
+  & *::selection {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+  }
+}
+
+.triggerLabel {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// Render label from aria-label so there is no selectable text node.
+.triggerLabelText {
+  font-size: 0;
+  line-height: 0;
+
+  &::before {
+    content: attr(aria-label);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: normal;
+    color: #e0e0e0;
+  }
+}
+
+.triggerWithIcon {
+  gap: 0.375rem;
+
+  .triggerIcon {
+    flex-shrink: 0;
+    opacity: 0.75;
+  }
+}
+
+.triggerIconOnly {
+  width: 2.75rem;
+  padding: 0;
+
+  .triggerIcon {
+    opacity: 0.92;
+  }
+}
+
+.dropdownContent {
+  min-width: 12rem;
+  padding: 8px;
+  border: none;
+  border-radius: 0.75rem;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  user-select: none;
+  outline: none;
+  // Above comment target highlights (capture-styles targetHighlightLayer: 1040).
+  z-index: 1051;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.24),
+    0 0 0 1px #333333;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
+
+  // Portaled menu items inherit page tokens; scope dark values for hover/focus.
+  --bg-layered: #252525;
+  --text-primary: #e0e0e0;
+  --border-faint: #333333;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+
+  // Attribute is on the same portaled node as .dropdownContent (not an ancestor).
+  &[data-prototype-comment-theme="light"] {
+    background: #fff;
+    color: rgba(0, 0, 0, 0.92);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.06),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+
+    --bg-layered: rgba(0, 0, 0, 0.06);
+    --text-primary: rgba(0, 0, 0, 0.92);
+    --border-faint: rgba(0, 0, 0, 0.08);
+
+    .dropdownLabel,
+    .panelSelectSectionTitle {
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    .dropdownItem,
+    .panelActionItem {
+      color: rgba(0, 0, 0, 0.88);
+
+      &:focus,
+      &:focus-visible {
+        background: rgba(0, 0, 0, 0.06);
+        color: rgba(0, 0, 0, 0.92);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover,
+        &:focus {
+          background: rgba(0, 0, 0, 0.06);
+          color: rgba(0, 0, 0, 0.92);
+        }
+      }
+
+      &[data-highlighted] {
+        background: rgba(0, 0, 0, 0.06) !important;
+        color: rgba(0, 0, 0, 0.92) !important;
+      }
+    }
+
+    .dropdownItemIcon,
+    .panelSelectChevron,
+    .panelSelectLabel {
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    .dropdownMenuItem {
+      color: rgba(0, 0, 0, 0.82);
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: rgba(0, 0, 0, 0.06);
+          color: rgba(0, 0, 0, 0.92);
+        }
+      }
+
+      &[data-highlighted] {
+        background: rgba(0, 0, 0, 0.06) !important;
+        color: rgba(0, 0, 0, 0.92) !important;
+      }
+    }
+
+    .dropdownMenuItemSelected,
+    .panelActionItemActive {
+      background: rgba(0, 0, 0, 0.08);
+      color: rgba(0, 0, 0, 0.92);
+
+      &[data-highlighted] {
+        background: rgba(0, 0, 0, 0.1) !important;
+        color: rgba(0, 0, 0, 0.92) !important;
+      }
+    }
+
+    .dropdownMenuItemCheck {
+      color: rgba(0, 0, 0, 0.55);
+    }
+
+    .toolbarIconPickerOption {
+      color: rgba(0, 0, 0, 0.55);
+
+      &:focus-visible {
+        background: rgba(0, 0, 0, 0.06);
+        color: rgba(0, 0, 0, 0.92);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: rgba(0, 0, 0, 0.06);
+          color: rgba(0, 0, 0, 0.92);
+        }
+      }
+
+      &[data-selected="true"] {
+        background: rgba(0, 0, 0, 0.08);
+        color: rgba(0, 0, 0, 0.92);
+      }
+    }
+
+    .dropdownMenuSubTrigger svg:last-child {
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    .dropdownMenuSeparator {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .explorationBriefTrigger {
+      color: rgba(0, 0, 0, 0.55);
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: rgba(0, 0, 0, 0.06);
+          color: rgba(0, 0, 0, 0.92);
+        }
+      }
+
+      &:focus-visible {
+        outline-color: rgba(0, 0, 0, 0.25);
+      }
+
+      .dropdownItemIcon {
+        color: rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    .explorationBriefSeparator {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .panelSelectTrigger {
+      background: rgba(0, 0, 0, 0.04);
+      color: rgba(0, 0, 0, 0.92);
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: rgba(0, 0, 0, 0.06);
+        }
+      }
+
+      &:focus-visible {
+        outline-color: rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    .panelSelectList {
+      background: rgba(0, 0, 0, 0.03);
+    }
+  }
+}
+
+.dropdownLabel {
+  padding: 0.375rem 0.625rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  outline: none;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover,
+    &:focus {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+  }
+}
+
+.dropdownItemIcon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dropdownMenuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  outline: none;
+  background: transparent;
+  text-align: left;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #252525;
+      color: rgba(255, 255, 255, 0.98);
+    }
+  }
+
+  &[data-highlighted] {
+    background: #252525 !important;
+    color: rgba(255, 255, 255, 0.98) !important;
+  }
+}
+
+.dropdownMenuItemSelected {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 500;
+
+  &[data-highlighted] {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+  }
+}
+
+.dropdownMenuItemCheck {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dropdownMenuSubTrigger {
+  width: 100%;
+
+  svg:last-child {
+    width: 0.875rem;
+    height: 0.875rem;
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+.dropdownSubContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 9rem;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.24),
+    0 8px 32px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  z-index: 1052;
+
+  &[data-prototype-comment-theme="light"] {
+    background: #fff;
+    color: rgba(0, 0, 0, 0.92);
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.1),
+      0 8px 32px rgba(0, 0, 0, 0.06),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+
+    .dropdownMenuItem {
+      color: rgba(0, 0, 0, 0.82);
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          background: rgba(0, 0, 0, 0.06);
+          color: rgba(0, 0, 0, 0.92);
+        }
+      }
+
+      &[data-highlighted] {
+        background: rgba(0, 0, 0, 0.06) !important;
+        color: rgba(0, 0, 0, 0.92) !important;
+      }
+    }
+
+    .dropdownMenuItemSelected {
+      background: rgba(0, 0, 0, 0.08);
+      color: rgba(0, 0, 0, 0.92);
+
+      &[data-highlighted] {
+        background: rgba(0, 0, 0, 0.1) !important;
+        color: rgba(0, 0, 0, 0.92) !important;
+      }
+    }
+
+    .dropdownMenuItemCheck {
+      color: rgba(0, 0, 0, 0.55);
+    }
+  }
+}
+
+.dropdownMenuSeparator {
+  pointer-events: none;
+  margin: 0.375rem 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.dropdownContentIconPicker {
+  min-width: 0;
+  width: max-content;
+  padding: 4px;
+}
+
+.controlsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0;
+}
+
+.controlsPanelExplorations,
+.controlsPanelMenuList {
+  width: max-content;
+  min-width: 11.5rem;
+  max-width: min(18rem, calc(100vw - 2rem));
+  align-items: stretch;
+}
+
+.controlsPanelMenuList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0;
+}
+
+.controlsPanelStates {
+  width: max-content;
+  min-width: 11.5rem;
+  max-width: min(20rem, calc(100vw - 2rem));
+}
+
+.toolbarIconPicker {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: max-content;
+}
+
+.toolbarIconPickerOption {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.92);
+    }
+  }
+
+  &[data-selected="true"] {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e0e0e0;
+  }
+}
+
+.dropdownItemExploration {
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.explorationBriefPanel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.explorationBriefTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s ease, background-color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #252525;
+      color: rgba(255, 255, 255, 0.92);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.25);
+    outline-offset: 0;
+  }
+}
+
+.explorationBriefSeparator {
+  pointer-events: none;
+  flex-shrink: 0;
+  width: 100%;
+  height: 1px;
+  margin: 0.125rem 0;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.explorationBriefTriggerLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controlsPanelSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.panelSelectSectionTitle {
+  padding: 0.375rem 0.625rem 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.panelSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.controlsPanelSelect {
+  width: min(18rem, calc(100vw - 2rem));
+  max-width: 100%;
+}
+
+.panelSelectTrigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #252525;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+  }
+}
+
+.panelSelectTriggerMiniPill {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: auto;
+  max-width: 10rem;
+  height: 22px;
+  gap: 0.375rem;
+  padding: 0 0.625rem;
+  border: none;
+  border-radius: 9999px;
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.28),
+    0 0 0 1px #333333;
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+  transition: background-color 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #333333;
+    }
+  }
+
+  &:active {
+    background: #3a3a3a;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.28),
+      0 0 0 1px #333333;
+  }
+
+  &[data-state="open"] {
+    background: #252525;
+  }
+}
+
+.panelSelectMiniPill {
+  width: auto;
+}
+
+.panelSelectList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.panelSelectLabel {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.panelSelectValue {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.panelSelectChevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.45);
+  transition: transform 0.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.panelSelectChevronOpen {
+  transform: rotate(180deg);
+}
+
+.panelActionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+  }
+
+  &[data-highlighted] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+  }
+}
+
+.panelActionItemActive {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.98);
+  font-weight: 500;
+
+  &[data-highlighted] {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+  }
+}
+
+.panelActionItemIcon {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.orbPressed {
+  background: #252525;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .orbMorph,
+  .trigger,
+  .inlinePicker {
+    transition: none;
+    animation: none;
+  }
+
+  .orb:active,
+  .orbMorph:active {
+    transform: none;
+  }
+
+  .orbMorphCollapsed {
+    opacity: 0;
+  }
+}
+
+// Light mode for portaled controls menus (paired with data-prototype-comment-theme on content).
+[data-prototype-comment-theme="light"] {
+  .inlinePicker {
+    --bg-main: #fff;
+    --bg-top: #fafafa;
+    --bg-subtle: #f5f5f5;
+    --bg-ground: rgba(0, 0, 0, 0.04);
+    --bg-layered: rgba(0, 0, 0, 0.06);
+    --text-primary: rgba(0, 0, 0, 0.92);
+    --text-secondary: rgba(0, 0, 0, 0.68);
+    --text-tertiary: rgba(0, 0, 0, 0.45);
+    --border-solid: rgba(0, 0, 0, 0.1);
+    --border-faint: rgba(0, 0, 0, 0.06);
+    --border-medium: rgba(0, 0, 0, 0.14);
+  }
+
+  .variantsToolbar {
+    background: #fff;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .variantsControlButton {
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.55);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: rgba(0, 0, 0, 0.06);
+        color: rgba(0, 0, 0, 0.92);
+      }
+    }
+  }
+
+  .miniPill,
+  .panelSelectTriggerMiniPill {
+    background: #fff;
+    color: rgba(0, 0, 0, 0.92);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+
+    &:active {
+      background: #ebebeb;
+    }
+  }
+
+  .miniPillActive,
+  .panelSelectTriggerMiniPill[data-state="open"] {
+    background: #f5f5f5;
+    color: rgba(0, 0, 0, 0.92);
+  }
+
+  .variantsToolbarMini {
+    background: #fff;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+  }
+
+  .variantsControlButtonMini {
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.55);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: rgba(0, 0, 0, 0.06);
+        color: rgba(0, 0, 0, 0.92);
+      }
+    }
+  }
+
+  .orb {
+    background: #fff;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
+
+    &:active {
+      background: #ebebeb;
+    }
+  }
+
+  .orbPressed {
+    background: #f5f5f5;
+  }
+
+  .trigger {
+    color: rgba(0, 0, 0, 0.92);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: rgba(0, 0, 0, 0.06);
+      }
+    }
+
+    &:active {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    &::selection,
+    & *::selection {
+      color: rgba(0, 0, 0, 0.92) !important;
+    }
+
+    &:focus-visible {
+      outline-color: rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  .triggerLabelText::before {
+    color: rgba(0, 0, 0, 0.92);
+  }
+
+  .rationaleLabel {
+    color: rgba(0, 0, 0, 0.92);
+  }
+}

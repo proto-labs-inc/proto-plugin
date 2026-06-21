@@ -1,0 +1,25 @@
+.region {
+  border-radius: inherit;
+  transition:
+    background-color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+.regionActive {
+  background: color-mix(in srgb, var(--prototype-comment-color-blue, #3b82f6) 8%, transparent);
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--prototype-comment-color-blue, #3b82f6) 55%, transparent);
+}
+
+.previewOverlay {
+  position: absolute;
+  z-index: 2;
+  border: 2px solid;
+  border-radius: 0.25rem;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
