@@ -4,29 +4,32 @@ set -euo pipefail
 TOOL_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$TOOL_ROOT"
 
-REGISTRY="https://npm.pkg.github.com"
+REGISTRY="https://registry.npmjs.org"
 DRY_RUN=0
 TAG="latest"
 SKIP_VERIFY=0
+OTP=""
 
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [options]
 
-Publish @maayanalbert/prototype privately to GitHub Packages.
+Publish proto-plugin to npm.
 
 Options:
   --dry-run        Validate the tarball without publishing
   --tag <tag>      npm dist-tag (default: latest)
+  --otp <code>     One-time password from your authenticator app
   --skip-verify    Skip pre-publish verification scripts
   -h, --help       Show this help message
 
 Examples:
   pnpm publish-package
+  pnpm publish-package --otp 123456
   pnpm publish-package --dry-run
   pnpm publish-package --tag next
 
-Requires: gh auth login (read:packages + write:packages) or GITHUB_TOKEN.
+Requires: npm login (npm whoami must succeed).
 EOF
 }
 
@@ -43,6 +46,10 @@ while [[ $# -gt 0 ]]; do
     --skip-verify)
       SKIP_VERIFY=1
       shift
+      ;;
+    --otp)
+      OTP="${2:?Missing value for --otp}"
+      shift 2
       ;;
     -h | --help)
       usage
@@ -62,16 +69,10 @@ if [[ "$(node -pe "require('./package.json').private === true")" == "true" ]]; t
   exit 1
 fi
 
-if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-  if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-    GITHUB_TOKEN="$(gh auth token)"
-  else
-    echo "Set GITHUB_TOKEN or run: gh auth login" >&2
-    exit 1
-  fi
+if ! npm whoami --registry "$REGISTRY" >/dev/null 2>&1; then
+  echo "Not logged in to npm. Run: npm login" >&2
+  exit 1
 fi
-
-export GITHUB_TOKEN
 
 find_host_with_prototypes() {
   local dir="$TOOL_ROOT/.."
@@ -100,33 +101,47 @@ PACKAGE_VERSION="$(node -pe "require('./package.json').version")"
 
 echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION}"
 echo "Registry: ${REGISTRY}"
-echo "Access: private (GitHub Packages)"
-
-NPM_CONFIG_USERCONFIG="$(mktemp)"
-trap 'rm -f "$NPM_CONFIG_USERCONFIG"' EXIT
-
-cat >"$NPM_CONFIG_USERCONFIG" <<EOF
-@maayanalbert:registry=${REGISTRY}/
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-EOF
+echo "Access: public (unscoped)"
 
 PUBLISH_ARGS=(--registry "$REGISTRY" --tag "$TAG")
+
+if [[ -n "$OTP" ]]; then
+  PUBLISH_ARGS+=(--otp "$OTP")
+fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
   PUBLISH_ARGS+=(--dry-run)
   echo "Dry run — tarball will not be uploaded."
 fi
 
-# Bypass org Socket Firewall npm proxy for GitHub Packages.
 env -u NPM_CONFIG_REGISTRY -u NPM_CONFIG_CAFILE \
-  NPM_CONFIG_USERCONFIG="$NPM_CONFIG_USERCONFIG" \
-  npm publish "${PUBLISH_ARGS[@]}"
+  npm publish "${PUBLISH_ARGS[@]}" || {
+  status=$?
+  if [[ "$DRY_RUN" -eq 0 && "$status" -ne 0 ]]; then
+    echo >&2
+    echo "Publish failed." >&2
+    if [[ "$PACKAGE_NAME" == @*/* ]]; then
+      scope="${PACKAGE_NAME%%/*}"
+      scope="${scope#@}"
+      whoami="$(npm whoami --registry "$REGISTRY" 2>/dev/null || true)"
+      echo "Logged in as: ${whoami:-unknown}" >&2
+      echo "Package scope: @${scope}" >&2
+      if [[ -n "$whoami" && "$whoami" != "$scope" ]]; then
+        echo >&2
+        echo "npm often returns 404 when your account cannot publish to this scope." >&2
+        echo "Fix one of:" >&2
+        echo "  1. npm logout && npm login   # sign in as the @${scope} npm user/org owner" >&2
+        echo "  2. Add @${whoami} to the @${scope} org at https://www.npmjs.com/settings/${scope}/members" >&2
+        echo "  3. Rename the package to @${whoami}/prototype in package.json" >&2
+      fi
+    fi
+  fi
+  exit "$status"
+}
 
 if [[ "$DRY_RUN" -eq 0 ]]; then
   echo "Published successfully."
   echo "Install with:"
   echo "  npm install ${PACKAGE_NAME}@${PACKAGE_VERSION}"
-  echo "Add to .npmrc in consuming repos:"
-  echo "  @maayanalbert:registry=${REGISTRY}/"
-  echo "  //npm.pkg.github.com/:_authToken=<GITHUB_TOKEN>"
+  echo "  pnpm add ${PACKAGE_NAME}@${PACKAGE_VERSION}"
 fi

@@ -14,7 +14,7 @@ export function withPrototype(
     ...nextConfig,
     transpilePackages: [
       ...(nextConfig.transpilePackages ?? []),
-      "prototype",
+      "proto-plugin",
     ],
   };
 }

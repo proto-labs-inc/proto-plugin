@@ -1,6 +1,6 @@
 # Proto
 
-Source repository for **`@maayanalbert/prototype`** — a Next.js framework for building shareable UI prototypes that look and feel like the real product.
+Source repository for **`proto-plugin`** — a Next.js framework for building shareable UI prototypes that look and feel like the real product.
 
 Host apps install the package, register prototypes in `prototype.config.ts`, and keep project-specific UI under `src/prototypes/`. The package provides the reusable tooling: review shell, anchored comments, variant exploration, a prototype gallery, source-app sync scripts, and Vercel preview sharing.
 
@@ -17,7 +17,7 @@ Host apps install the package, register prototypes in `prototype.config.ts`, and
 In a host Next.js app, add the package and follow the setup steps in the package README — register prototypes, wire gallery and slug routes, and configure Tailwind to scan package components.
 
 ```bash
-pnpm add @maayanalbert/prototype
+pnpm add proto-plugin
 ```
 
 See [`packages/prototype/README.md`](packages/prototype/README.md) for the full host setup checklist.

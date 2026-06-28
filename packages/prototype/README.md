@@ -1,25 +1,17 @@
-# prototype
+# Proto
 
 Shared framework for building shareable UI prototypes in Next.js — review shell, comment anchoring, variant exploration, and the prototype home gallery.
 
 Host apps keep **project-specific** code: prototypes under `src/prototypes/`, design tokens in `globals.css`, synced `@/components/ui`, and styleguide pages. The `prototype` package owns everything reusable across projects.
 
-## Install (workspace)
+## Install
 
-In a pnpm monorepo:
+From npm (public):
 
-```yaml
-# pnpm-workspace.yaml
-packages:
-  - "packages/*"
-```
-
-```json
-{
-  "dependencies": {
-    "prototype": "workspace:*"
-  }
-}
+```bash
+pnpm add proto-plugin
+# or
+npm install proto-plugin
 ```
 
 ## Host setup
@@ -27,7 +19,7 @@ packages:
 1. **Register prototypes** in `prototype.config.ts` at the repo root:
 
 ```ts
-import { definePrototypeConfig } from "prototype";
+import { definePrototypeConfig } from "proto-plugin";
 import MyPrototype from "./src/prototypes/my-slug";
 import { myComponentRegistry } from "./src/prototypes/my-slug/component-ids";
 
@@ -44,19 +36,19 @@ export default definePrototypeConfig({
 });
 ```
 
-2. **Gallery home** — `src/app/(platform-gallery)/page.tsx`:
+1. **Gallery home** — `src/app/(platform-gallery)/page.tsx`:
 
 ```tsx
-import { createPrototypeGalleryPage } from "prototype";
+import { createPrototypeGalleryPage } from "proto-plugin";
 import prototypeConfig from "../../../prototype.config";
 
 export default createPrototypeGalleryPage(prototypeConfig);
 ```
 
-3. **Prototype route** — `src/app/(source-prototype)/prototypes/[slug]/page.tsx`:
+1. **Prototype route** — `src/app/(source-prototype)/prototypes/[slug]/page.tsx`:
 
 ```tsx
-import { createPrototypePage } from "prototype";
+import { createPrototypePage } from "proto-plugin";
 import prototypeConfig from "../../../../../prototype.config";
 
 const page = createPrototypePage(prototypeConfig);
@@ -64,7 +56,7 @@ export default page.default;
 export const generateStaticParams = page.generateStaticParams;
 ```
 
-4. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
+1. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
 
 ```ts
 import { withPrototype } from "./packages/prototype/src/config/with-prototype";
@@ -72,21 +64,21 @@ import { withPrototype } from "./packages/prototype/src/config/with-prototype";
 export default withPrototype({ nextConfig: { /* … */ } });
 ```
 
-5. **Tailwind** — scan prototype package components from the host `globals.css`:
+1. **Tailwind** — scan prototype package components from the host `globals.css`:
 
 ```css
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
 ```
 
-6. **tsconfig paths** (optional, for tool internal `@prototype/*` alias when developing the package):
+1. **tsconfig paths** (optional, for tool internal `@prototype/`* alias when developing the package):
 
 ```json
 {
   "compilerOptions": {
     "paths": {
-      "prototype": ["./packages/prototype/src/index.ts"],
-      "prototype/server": ["./packages/prototype/src/server.ts"]
+      "proto-plugin": ["./packages/prototype/src/index.ts"],
+      "proto-plugin/server": ["./packages/prototype/src/server.ts"]
     }
   }
 }
@@ -94,20 +86,22 @@ export default withPrototype({ nextConfig: { /* … */ } });
 
 ## Public API
 
-| Export | Use |
-| --- | --- |
-| `definePrototypeConfig` | Register prototypes (sets global config as a side effect) |
-| `createPrototypePage` | Factory for `/prototypes/[slug]` page + `generateStaticParams` |
-| `createPrototypeRegistry` | Server helpers: `getAllPrototypes`, `getPrototype`, … |
-| `PrototypeComponent`, `PrototypeControl` | Comment-anchorable UI wrappers |
-| `PrototypeShell` | Review chrome (comments sidebar, screenshot capture) |
-| `PrototypeVariantExplorer` | Multi-variant design exploration |
-| `usePrototypeComments` | Live state + comment restore |
-| `PrototypeGalleryClient` | Card grid for prototype home |
-| `PrototypeGalleryShell`, `PrototypeGalleryHeader`, `PrototypeGalleryPage` | Tool-styled gallery layout (wrap in host route at `/`) |
-| `definePrototypeComponentRegistry` | Per-prototype component id registry |
 
-**Server-only** (import from `prototype/server`):
+| Export                                                                    | Use                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `definePrototypeConfig`                                                   | Register prototypes (sets global config as a side effect)      |
+| `createPrototypePage`                                                     | Factory for `/prototypes/[slug]` page + `generateStaticParams` |
+| `createPrototypeRegistry`                                                 | Server helpers: `getAllPrototypes`, `getPrototype`, …          |
+| `PrototypeComponent`, `PrototypeControl`                                  | Comment-anchorable UI wrappers                                 |
+| `PrototypeShell`                                                          | Review chrome (comments sidebar, screenshot capture)           |
+| `PrototypeVariantExplorer`                                                | Multi-variant design exploration                               |
+| `usePrototypeComments`                                                    | Live state + comment restore                                   |
+| `PrototypeGalleryClient`                                                  | Card grid for prototype home                                   |
+| `PrototypeGalleryShell`, `PrototypeGalleryHeader`, `PrototypeGalleryPage` | Tool-styled gallery layout (wrap in host route at `/`)         |
+| `definePrototypeComponentRegistry`                                        | Per-prototype component id registry                            |
+
+
+**Server-only** (import from `proto-plugin/server`):
 
 - `readScreenshotManifest`
 - `touchScreenshotManifest`
@@ -116,13 +110,26 @@ export default withPrototype({ nextConfig: { /* … */ } });
 
 The `prototype` package uses the **host design system** — same tokens and Tailwind utilities as prototype pages.
 
-| Layer | Path |
-| --- | --- |
-| Host tokens + Tailwind | Host `src/app/globals.css` |
-| shadcn primitives | `src/components/ui/` |
+
+| Layer                                            | Path                          |
+| ------------------------------------------------ | ----------------------------- |
+| Host tokens + Tailwind                           | Host `src/app/globals.css`    |
+| shadcn primitives                                | `src/components/ui/`          |
 | Tool composites (sidebar, panel, toolbar, menus) | `src/components/platform-ui/` |
 
+
 Host `globals.css` must `@source` prototype package TSX for Tailwind utilities.
+
+## Publish
+
+From `packages/prototype/`:
+
+```bash
+npm login
+pnpm publish-package
+```
+
+Uses the public npm registry (`registry.npmjs.org`).
 
 ## Verify component ids
 
@@ -185,6 +192,94 @@ pnpm download-mobbin-references
 pnpm download-mobbin-references -- --ids=uuid1,uuid2
 ```
 
+## Starter prompt (for AI agents)
+
+Copy the block below into a new agent chat **from an empty host app root** (a directory you already created, named, and opened). The agent should ask you for a couple of values up front, then scaffold Next.js into the current directory and finish setup (including inferring what to sync from source).
+
+```markdown
+Set up a Next.js host app for `proto-plugin` — a framework for shareable UI prototypes.
+
+**Context:** I am already in the host app root. The directory is empty (or only has `.git`). Do not ask where to create the project or what to name it — scaffold into the **current directory**. Do not `cd` elsewhere or create a nested subdirectory for the app.
+
+## Before you start — ask me for these
+
+Do not run setup commands until I answer. Ask in one message:
+
+1. **Source app path** — absolute path to the real product repo whose UI we will prototype (used for `source/` symlink and sync).
+2. **Optional env** — whether I want comment/screenshot persistence configured now (`KV_REST_API_URL`, `KV_REST_API_TOKEN`, `BLOB_READ_WRITE_TOKEN`) or to skip for later.
+
+Wait for my answers, then do all setup yourself.
+
+## 1. Scaffold the app in the current directory
+
+Initialize a vanilla Next.js app **here** (`.`):
+
+- App Router, TypeScript, Tailwind CSS v4, ESLint, pnpm
+- React 19 + Next.js 15+
+- `src/app/…` layout (use `--src-dir`)
+
+```bash
+pnpm create next-app@latest . --typescript --tailwind --eslint --app --src-dir --use-pnpm
+```
+
+Then install the package:
+
+```bash
+pnpm add proto-plugin
+```
+
+## 2. Wire the host app
+
+Follow the package README (`node_modules/proto-plugin/README.md`) and implement every host step:
+
+1. **`prototype.config.ts`** at the repo root — start with an empty `prototypes: []` array using `definePrototypeConfig` from `proto-plugin`.
+2. **Gallery home** — `src/app/page.tsx` via `createPrototypeGalleryPage(prototypeConfig)`.
+3. **Prototype route** — `src/app/prototypes/[slug]/page.tsx` via `createPrototypePage(prototypeConfig)` (export `default` + `generateStaticParams`).
+4. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`.
+5. **API catch-all** — `src/app/api/[...path]/route.ts` using `createPrototypeApiRoute(prototypeConfig)` from `proto-plugin/server`; export `GET`, `POST`, and `PUT` handlers that call `dispatch`.
+6. **`next.config.ts`** — wrap with `withPrototype` from `proto-plugin/with-prototype` and ensure `proto-plugin` is transpiled.
+7. **`src/app/globals.css`** — keep Tailwind v4 setup and add:
+
+   ```css
+   @source "../../node_modules/proto-plugin/src/**/*.{js,ts,jsx,tsx}";
+   ```
+
+8. **`package.json` scripts** — forward CLI commands to the installed package:
+
+   ```json
+   {
+     "link-source": "pnpm --dir node_modules/proto-plugin link-source",
+     "sync-from-source": "pnpm --dir node_modules/proto-plugin sync-from-source",
+     "link-source-db": "pnpm --dir node_modules/proto-plugin link-source-db",
+     "verify:prototype-ids": "pnpm --dir node_modules/proto-plugin verify:prototype-ids",
+     "share-prototype": "pnpm --dir node_modules/proto-plugin share-prototype"
+   }
+   ```
+
+9. **`.env.example` and `.env.local`** — document and set `SOURCE_PATH` to the source app path I provided. Add comment/screenshot storage vars only if I asked for them in step 2 — the app should run without them, but comments won't persist.
+
+Run `pnpm dev` and confirm `/` shows the empty gallery and the app builds cleanly before continuing.
+
+## 3. Link the source app
+
+The host reads the real product codebase through a read-only `source/` symlink — never import from it at runtime.
+
+1. Copy `node_modules/proto-plugin/scripts/lib/host-config.example.sh` to **`prototype.sync.config.sh`** at the host repo root.
+2. Inspect the linked source app and fill in `SYNC_FILES`, `SYNC_DIRS`, and `SYNC_GLOBS` yourself — start with design tokens and base UI (`src/app/globals.css`, `src/components/ui/`, fonts, shared utils) and add anything else the source clearly depends on. Do not ask me to confirm the list.
+3. Set `SOURCE_PATH` in `.env.local` to the source app path I provided.
+4. Run `pnpm link-source` — creates `source/` → source app symlink.
+5. Run `pnpm sync-from-source` — copies declared paths from source into the host.
+6. If I asked for local DB/API env vars, configure `SOURCE_DB_ENV_VARS` in `prototype.sync.config.sh` and run `pnpm link-source-db`.
+
+After sync, re-check `globals.css` still includes the `@source` line for `proto-plugin`.
+
+## 4. Ready for prototypes
+
+When setup is done, tell me the host is ready and summarize what was synced. For building individual prototypes, read and follow **`node_modules/proto-plugin/AGENTS.md`** — that is the ground truth for prototype structure, `PrototypeComponent` ids, source fidelity, and verification (`pnpm verify:prototype-ids`).
+
+Do not modify files inside `node_modules/proto-plugin/`. All host-specific work stays in the host repo (`prototype.config.ts`, `prototype.sync.config.sh`, `src/prototypes/`, synced design system files).
+```
+
 ## Agent instructions
 
-See [`AGENTS.md`](./AGENTS.md) — ground truth for building prototypes with this tool.
+See `[AGENTS.md](./AGENTS.md)` — ground truth for building prototypes with this tool.
