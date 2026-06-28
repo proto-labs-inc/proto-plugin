@@ -64,14 +64,32 @@ import { withPrototype } from "./packages/prototype/src/config/with-prototype";
 export default withPrototype({ nextConfig: { /* … */ } });
 ```
 
-5. **Tailwind** — scan prototype package components from the host `globals.css`:
+5. **Tailwind** — scan prototype package components from the host `globals.css`. Register semantic `--color-*` tokens as self-referential vars so utilities like `text-muted-foreground` resolve from `[data-prototype-root]` at runtime — **do not** map `--color-foreground` / `--color-background` to product `:root` tokens (that breaks gallery contrast):
 
 ```css
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
+
+@theme inline {
+  --color-foreground: var(--color-foreground);
+  --color-muted-foreground: var(--color-muted-foreground);
+  /* …other semantic colors used by proto-plugin */
+}
 ```
 
-6. **tsconfig paths** (optional, for tool internal `@prototype/*` alias when developing the package):
+Product tokens use separate names (e.g. `--product-background`) scoped to `[data-prototype-screenshot]`.
+
+6. **Root layout + tool themes** — wrap routes with `createPrototypeSiteLayout()` and import package chrome CSS (dark/light themes live here, not in host `globals.css`):
+
+```tsx
+import { createPrototypeSiteLayout } from "proto-plugin";
+import "proto-plugin/styles/globals.css";
+import "./globals.css";
+
+const PrototypeSiteLayout = createPrototypeSiteLayout();
+```
+
+7. **tsconfig paths** (optional, for tool internal `@prototype/*` alias when developing the package):
 
 ```json
 {
@@ -83,6 +101,18 @@ export default withPrototype({ nextConfig: { /* … */ } });
   }
 }
 ```
+
+8. **Dev server port** — run the host on port **1985** so it stays separate from a typical source app on 3000. In the host `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev -p 1985"
+  }
+}
+```
+
+Open [http://localhost:1985](http://localhost:1985) when developing.
 
 ## Public API
 
@@ -115,6 +145,8 @@ The `prototype` package uses the **host design system** — same tokens and Tail
 | Tool composites (sidebar, panel, toolbar, menus) | `src/components/platform-ui/` |
 
 Host `globals.css` must `@source` prototype package TSX for Tailwind utilities.
+
+**Do not** implement gallery/review dark or light mode in host `globals.css`. Import `proto-plugin/styles/globals.css` in `layout.tsx` — the package defines both themes on `[data-prototype-root]` (default dark; `data-prototype-comment-theme="light"` for light). Host `globals.css` is for **product** tokens synced from the source app (prototype preview content only).
 
 ## Publish
 
@@ -190,21 +222,21 @@ pnpm download-mobbin-references -- --ids=uuid1,uuid2
 
 ## Starter prompt (for AI agents)
 
-Copy the block below into a new agent chat to scaffold a host app from scratch. The agent should ask you for a few values up front, then handle the rest (including inferring what to sync from source).
+Copy the block below into a new agent chat to scaffold a host app from scratch. The agent should ask you for a few values up front — **one question at a time** — then handle the rest (including inferring what to sync from source).
 
 ````markdown
 Set up a new Next.js host app for `proto-plugin` — a framework for shareable UI prototypes.
 
 ## Before you start — ask me for these
 
-Do not scaffold or run commands until I answer. Ask in one message:
+Do not scaffold or run commands until I answer all four questions. Ask **one question at a time** — wait for my reply before asking the next:
 
-1. **Host app name** — directory name for the new Next.js project.
-2. **Where to create it** — parent directory (absolute path), or confirm the current workspace.
-3. **Source app path** — absolute path to the real product repo whose UI we will prototype (used for `source/` symlink and sync).
-4. **Optional env** — whether I want comment/screenshot persistence configured now (`KV_REST_API_URL`, `KV_REST_API_TOKEN`, `BLOB_READ_WRITE_TOKEN`) or to skip for later.
+1. **Host app name** — What should the new Next.js project directory be called? (e.g. `my-product-prototypes`)
+2. **Where to create it** — Parent directory as an absolute path (e.g. `/Users/maayanalbert/Projects`), or confirm you want it in the current workspace.
+3. **Source app path** — Absolute path to the real product repo whose UI we'll prototype (used for the `source/` symlink and sync).
+4. **Optional env** — Should I configure comment/screenshot persistence now (`KV_REST_API_URL`, `KV_REST_API_TOKEN`, `BLOB_READ_WRITE_TOKEN`), or skip that for later?
 
-Wait for my answers, then do all setup yourself.
+After I answer all four, do all setup yourself.
 
 ## 1. Scaffold the app
 
@@ -229,19 +261,29 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 1. **`prototype.config.ts`** at the repo root — start with an empty `prototypes: []` array using `definePrototypeConfig` from `proto-plugin`.
 2. **Gallery home** — `src/app/page.tsx` via `createPrototypeGalleryPage(prototypeConfig)`.
 3. **Prototype route** — `src/app/prototypes/[slug]/page.tsx` via `createPrototypePage(prototypeConfig)` (export `default` + `generateStaticParams`).
-4. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`.
+4. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`, and import the tool chrome theme:
+
+   ```tsx
+   import { createPrototypeSiteLayout } from "proto-plugin";
+   import "proto-plugin/styles/globals.css";
+   import "./globals.css";
+   ```
 5. **API catch-all** — `src/app/api/[...path]/route.ts` using `createPrototypeApiRoute(prototypeConfig)` from `proto-plugin/server`; export `GET`, `POST`, and `PUT` handlers that call `dispatch`.
 6. **`next.config.ts`** — wrap with `withPrototype` from `proto-plugin/with-prototype` and ensure `proto-plugin` is transpiled.
-7. **`src/app/globals.css`** — keep Tailwind v4 setup and add:
+7. **`src/app/globals.css`** — Tailwind v4 + product tokens synced from source. **Do not** put tool chrome dark/light mode here (no `prefers-color-scheme`, no hardcoded gallery colors). Scan package components:
 
    ```css
+   @import "tailwindcss";
    @source "../../node_modules/proto-plugin/src/**/*.{js,ts,jsx,tsx}";
    ```
 
-8. **`package.json` scripts** — forward CLI commands to the installed package:
+   Tool themes live in `proto-plugin/styles/globals.css` (import in layout). The package toggles dark/light on `[data-prototype-root]` via `data-prototype-comment-theme`.
+
+8. **`package.json` scripts** — set dev to port 1985 and forward CLI commands to the installed package:
 
    ```json
    {
+     "dev": "next dev -p 1985",
      "link-source": "pnpm --dir node_modules/proto-plugin link-source",
      "sync-from-source": "pnpm --dir node_modules/proto-plugin sync-from-source",
      "link-source-db": "pnpm --dir node_modules/proto-plugin link-source-db",
@@ -252,7 +294,7 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 
 9. **`.env.example` and `.env.local`** — document and set `SOURCE_PATH` to the source app path I provided. Add comment/screenshot storage vars only if I asked for them in step 5 — the app should run without them, but comments won't persist.
 
-Run `pnpm dev` and confirm `/` shows the empty gallery and the app builds cleanly before continuing.
+Run `pnpm dev` and confirm [http://localhost:1985](http://localhost:1985) shows the empty gallery and the app builds cleanly before continuing.
 
 ## 3. Link the source app
 

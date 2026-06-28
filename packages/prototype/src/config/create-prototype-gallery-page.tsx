@@ -31,15 +31,6 @@ export function createPrototypeGalleryPage(
         ? await readScreenshotManifest()
         : {};
 
-    if (prototypes.length === 0) {
-      return (
-        <p className="text-muted-foreground py-12 text-sm">
-          No prototypes yet. Add one in{" "}
-          <code className="text-foreground">prototype.config.ts</code>.
-        </p>
-      );
-    }
-
     return (
       <PrototypeGalleryClient
         prototypes={prototypes}

@@ -85,7 +85,7 @@ export function getStateCanvasNodeHeight(
   const count = callouts?.length ?? 0;
   if (count === 0) return bodyHeight;
 
-  const calloutsHeight = callouts.reduce((sum, callout, index) => {
+  const calloutsHeight = (callouts ?? []).reduce((sum, callout, index) => {
     const gap = index > 0 ? PROTOTYPE_STATE_NODE_CALLOUT_GAP : 0;
     return sum + gap + getStateCanvasCalloutHeight(callout);
   }, 0);

@@ -1,23 +1,28 @@
-# Proto
+# proto-prototypes
 
-Source repository for **`proto-plugin`** — a Next.js framework for building shareable UI prototypes that look and feel like the real product.
+Next.js host app for [**proto-plugin**](packages/prototype/) — shareable UI prototypes that match the real product.
 
-Host apps install the package, register prototypes in `prototype.config.ts`, and keep project-specific UI under `src/prototypes/`. The package provides the reusable tooling: review shell, anchored comments, variant exploration, a prototype gallery, source-app sync scripts, and Vercel preview sharing.
+## Getting started
 
-## What's in this repo
+```bash
+pnpm install
+pnpm dev
+```
+
+The dev server runs on port **1985** (see `"dev": "next dev -p 1985"` in `package.json`). Open [http://localhost:1985](http://localhost:1985).
+
+## Docs
 
 | Path | Description |
 | --- | --- |
-| [`packages/prototype/`](packages/prototype/) | The publishable `prototype` package — shell, comment system, gallery, config helpers, and CLI scripts |
-| [`packages/prototype/README.md`](packages/prototype/README.md) | Install, host setup, public API, and script reference |
-| [`packages/prototype/AGENTS.md`](packages/prototype/AGENTS.md) | Ground truth for AI agents building prototypes in host apps |
+| [`packages/prototype/README.md`](packages/prototype/README.md) | Host setup, API, and scripts |
+| [`packages/prototype/AGENTS.md`](packages/prototype/AGENTS.md) | Building prototypes |
 
-## Quick start
+## Source app
 
-In a host Next.js app, add the package and follow the setup steps in the package README — register prototypes, wire gallery and slug routes, and configure Tailwind to scan package components.
+Set `SOURCE_PATH` in `.env.local`, then:
 
 ```bash
-pnpm add proto-plugin
+pnpm link-source
+pnpm sync-from-source
 ```
-
-See [`packages/prototype/README.md`](packages/prototype/README.md) for the full host setup checklist.

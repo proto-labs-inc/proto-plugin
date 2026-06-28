@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@prototype/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -100,16 +101,15 @@ export function PrototypeCreateExplorationModal({
         />
 
         <div className="flex items-center justify-end gap-2 px-5 py-4">
-          <button
+          <Button
             type="button"
             disabled={!canCopy}
             onClick={handleCopy}
-            className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors duration-200 ease hover:bg-primary-dark disabled:pointer-events-none disabled:opacity-50"
             aria-label="Copy exploration brief and prompt"
           >
             {isCopied ? "Copied" : "Copy prompt"}
             {icon}
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

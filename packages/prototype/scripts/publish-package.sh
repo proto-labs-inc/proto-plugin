@@ -8,6 +8,8 @@ REGISTRY="https://registry.npmjs.org"
 DRY_RUN=0
 TAG="latest"
 SKIP_VERIFY=0
+SKIP_BUMP=0
+BUMP="patch"
 OTP=""
 
 usage() {
@@ -21,6 +23,8 @@ Options:
   --tag <tag>      npm dist-tag (default: latest)
   --otp <code>     One-time password from your authenticator app
   --skip-verify    Skip pre-publish verification scripts
+  --no-bump        Publish package.json version as-is (fail if already published)
+  --bump <level>   Bump level when current version exists on npm: patch, minor, major (default: patch)
   -h, --help       Show this help message
 
 Examples:
@@ -46,6 +50,21 @@ while [[ $# -gt 0 ]]; do
     --skip-verify)
       SKIP_VERIFY=1
       shift
+      ;;
+    --no-bump)
+      SKIP_BUMP=1
+      shift
+      ;;
+    --bump)
+      BUMP="${2:?Missing value for --bump}"
+      case "$BUMP" in
+        patch | minor | major) ;;
+        *)
+          echo "Invalid --bump value: $BUMP (expected patch, minor, or major)" >&2
+          exit 1
+          ;;
+      esac
+      shift 2
       ;;
     --otp)
       OTP="${2:?Missing value for --otp}"
@@ -99,6 +118,25 @@ fi
 PACKAGE_NAME="$(node -pe "require('./package.json').name")"
 PACKAGE_VERSION="$(node -pe "require('./package.json').version")"
 
+version_is_published() {
+  npm view "${PACKAGE_NAME}@${1}" version --registry "$REGISTRY" >/dev/null 2>&1
+}
+
+ensure_unpublished_version() {
+  local bump_level="$1"
+  while version_is_published "$(node -pe "require('./package.json').version")"; do
+    local current
+    current="$(node -pe "require('./package.json').version")"
+    echo "Version ${current} is already on npm; bumping ${bump_level}..."
+    npm version "$bump_level" --no-git-tag-version
+  done
+}
+
+if [[ "$SKIP_BUMP" -eq 0 ]]; then
+  ensure_unpublished_version "$BUMP"
+  PACKAGE_VERSION="$(node -pe "require('./package.json').version")"
+fi
+
 echo "Publishing ${PACKAGE_NAME}@${PACKAGE_VERSION}"
 echo "Registry: ${REGISTRY}"
 echo "Access: public (unscoped)"
@@ -144,4 +182,7 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
   echo "Install with:"
   echo "  npm install ${PACKAGE_NAME}@${PACKAGE_VERSION}"
   echo "  pnpm add ${PACKAGE_NAME}@${PACKAGE_VERSION}"
+  if [[ "$SKIP_BUMP" -eq 0 ]]; then
+    echo "Commit the version bump in package.json when ready."
+  fi
 fi

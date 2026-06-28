@@ -1,4 +1,5 @@
 export { definePrototypeConfig } from "./config/define-prototype-config";
+export { createPrototypeGalleryPage } from "./config/create-prototype-gallery-page";
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
 export { withPrototype } from "./config/with-prototype";
@@ -64,6 +65,12 @@ export {
   buildCreatePreviewStateCopyText,
   buildCreatePreviewStatePrompt,
 } from "./lib/prototypes/prototype-preview-state-types";
+
+export {
+  buildCreatePrototypeCopyText,
+  buildCreatePrototypePrompt,
+  suggestPrototypeSlug,
+} from "./lib/prototypes/create-prototype-prompt";
 export type { PrototypePreviewState } from "./lib/prototypes/prototype-preview-state-types";
 
 export {

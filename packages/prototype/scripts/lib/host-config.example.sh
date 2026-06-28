@@ -33,7 +33,7 @@ SYNC_GLOBS=(
 # the source version, which the blanket copy overwrites and you must re-apply.
 # Leave empty if the host does not diverge from source.
 SYNC_LOCAL_EXTENSIONS=(
-  # "my-component (local variant + semantic token classes)"
+  # "src/app/globals.css (keep @source line; tool theme lives in layout via proto-plugin/styles/globals.css)"
 )
 
 # --- pnpm link-source-db ---------------------------------------------------

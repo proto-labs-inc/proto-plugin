@@ -212,8 +212,11 @@ export function buildPreviewStateCanvasLayout<T extends string>(
   };
 }
 
-function resolvePreviewStateRegistryLayout<TPrimary extends string>(
-  registry: PrototypePreviewStateRegistry<TPrimary>,
+function resolvePreviewStateRegistryLayout<
+  TPrimary extends string,
+  TVariant extends string = never,
+>(
+  registry: PrototypePreviewStateRegistry<TPrimary, TVariant>,
 ): {
   states: ResolvedPrototypePreviewStateDefinition<TPrimary>[];
   sections: PrototypeStateCanvasSection[];
