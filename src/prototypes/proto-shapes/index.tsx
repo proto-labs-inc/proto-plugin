@@ -18,7 +18,7 @@ export default function ProtoShapesPage() {
   return (
     <PrototypeComponent
       id="scroll-container"
-      className="flex min-h-full flex-col overflow-hidden bg-white"
+      className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white"
     >
       <PrototypeComponent
         id="page"

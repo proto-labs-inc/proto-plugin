@@ -12,7 +12,7 @@ const COLOR1: [number, number, number] = [43, 220, 120];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100;
-const GRAVITY_Y = 0.1;
+const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
 const DOT_SCALE = 1 / 0.8;
@@ -20,6 +20,7 @@ const WEB_SCALE = 1;
 const DOT_RADIUS = (10 * DOT_SCALE) / 2;
 /** Hit area is much larger than the visible handle so corners are easy to grab. */
 export const PARTICLE_PICK_RADIUS = Math.max(DOT_RADIUS * 6, 32);
+export const PARTICLE_PICK_RADIUS_TOUCH = 48;
 
 export type SpringsTriangleInput = {
   pointerX: number;
@@ -185,6 +186,7 @@ export function pickClosestParticle(
   sim: SpringsTriangleSimulation,
   x: number,
   y: number,
+  pickRadius = PARTICLE_PICK_RADIUS,
 ) {
   let grabbedIndex = -1;
   let closestDist = Infinity;
@@ -199,7 +201,7 @@ export function pickClosestParticle(
     }
   }
 
-  if (closestDist > PARTICLE_PICK_RADIUS) {
+  if (closestDist > pickRadius) {
     grabbedIndex = -1;
   }
 

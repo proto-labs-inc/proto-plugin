@@ -14,6 +14,8 @@ import {
 import {
   createSpringsTriangleSimulation,
   drawSpringsTriangleSimulation,
+  PARTICLE_PICK_RADIUS,
+  PARTICLE_PICK_RADIUS_TOUCH,
   pickClosestParticle as pickClosestTriangleParticle,
   stepSpringsTriangleSimulation,
   updateSpringsTriangleSimulationBounds,
@@ -122,6 +124,8 @@ export function SpringsShapesCanvas() {
     observer.observe(container);
     resize();
 
+    const prefersCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+
     const pointerToCanvas = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) {
@@ -138,9 +142,13 @@ export function SpringsShapesCanvas() {
       if (!triangle || !pentagon) return;
 
       const { x, y } = pointerToCanvas(event.clientX, event.clientY);
+      const pickRadius =
+        event.pointerType === "touch"
+          ? PARTICLE_PICK_RADIUS_TOUCH
+          : PARTICLE_PICK_RADIUS;
 
-      pickClosestTriangleParticle(triangle, x, y);
-      pickClosestPentagonParticle(pentagon, x, y);
+      pickClosestTriangleParticle(triangle, x, y, pickRadius);
+      pickClosestPentagonParticle(pentagon, x, y, pickRadius);
 
       const triangleDist = distanceToGrabbed(triangle, x, y);
       const pentagonDist = distanceToGrabbed(pentagon, x, y);
@@ -162,7 +170,7 @@ export function SpringsShapesCanvas() {
 
       clickedRef.current = true;
       event.preventDefault();
-      container.setPointerCapture(event.pointerId);
+      canvas.setPointerCapture(event.pointerId);
       inputRef.current.pointerX = x;
       inputRef.current.pointerY = y;
       inputRef.current.pointerDown = true;
@@ -175,8 +183,8 @@ export function SpringsShapesCanvas() {
     };
 
     const endPointer = (event: PointerEvent) => {
-      if (container.hasPointerCapture(event.pointerId)) {
-        container.releasePointerCapture(event.pointerId);
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId);
       }
       inputRef.current.pointerDown = false;
       grabbedShapeRef.current = null;
@@ -184,10 +192,10 @@ export function SpringsShapesCanvas() {
       if (pentagonRef.current) pentagonRef.current.grabbedIndex = -1;
     };
 
-    container.addEventListener("pointerdown", onPointerDown);
-    container.addEventListener("pointermove", onPointerMove);
-    container.addEventListener("pointerup", endPointer);
-    container.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
 
     const frame = () => {
       const triangle = triangleRef.current;
@@ -225,7 +233,11 @@ export function SpringsShapesCanvas() {
         const alpha = Math.min(1, (frameCountRef.current - 80) / 30) * 0.3;
         ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
         ctx.font = "20px Avenir, system-ui, sans-serif";
-        ctx.fillText("Grab a point!", 20, cssHeight - 20);
+        ctx.fillText(
+          prefersCoarsePointer ? "Tap a point!" : "Grab a point!",
+          20,
+          cssHeight - 20,
+        );
       }
 
       rafRef.current = requestAnimationFrame(frame);
@@ -235,10 +247,10 @@ export function SpringsShapesCanvas() {
 
     return () => {
       observer.disconnect();
-      container.removeEventListener("pointerdown", onPointerDown);
-      container.removeEventListener("pointermove", onPointerMove);
-      container.removeEventListener("pointerup", endPointer);
-      container.removeEventListener("pointercancel", endPointer);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", endPointer);
+      canvas.removeEventListener("pointercancel", endPointer);
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
       }
@@ -255,7 +267,10 @@ export function SpringsShapesCanvas() {
         className="relative min-h-0 flex-1 touch-none"
         aria-label="Interactive springs shapes sketch"
       >
-        <canvas ref={canvasRef} className="absolute inset-0 block" />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 block touch-none select-none"
+        />
       </div>
     </PrototypeComponent>
   );
