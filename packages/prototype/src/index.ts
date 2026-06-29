@@ -52,7 +52,10 @@ export {
   readPersistedPrototypeLiveState,
 } from "./lib/prototypes/use-persisted-local-state";
 
-export type { DesignExplorationConfig } from "./lib/prototypes/design-exploration-types";
+export type {
+  DesignExplorationBaselineOption,
+  DesignExplorationConfig,
+} from "./lib/prototypes/design-exploration-types";
 
 export {
   buildCreateDesignExplorationCopyText,
@@ -60,7 +63,11 @@ export {
   buildMoreDesignExplorationVariantsCopyText,
   buildMoreDesignExplorationVariantsPrompt,
   buildResetBriefDefaultsPrompt,
+  DESIGN_EXPLORATION_BASELINE_LABEL,
   getAdjacentDesignExplorationVariant,
+  getDesignExplorationDisplayOptions,
+  getDesignExplorationVariantOptions,
+  resolveDesignExplorationBaselineOption,
 } from "./lib/prototypes/design-exploration-types";
 
 export { buildDesignExplorationRenderers } from "./lib/prototypes/build-design-exploration-renderers";

@@ -47,18 +47,32 @@ export type DesignExplorationVariantsSection = {
   description?: string;
 };
 
+/** Pre-exploration UI — always pinned at the bottom of the variant list. */
+export type DesignExplorationBaselineOption<TVariant extends string> = {
+  value: TVariant;
+  /** Shown in the brief and tabs. Default: "Original". */
+  label?: string;
+  hint?: string;
+};
+
 export type DesignExplorationConfig<TVariant extends string> = {
   componentIdPrefix: string;
   variantTabsIdPrefix: string;
   storageKeyPrefix: string;
   variant: TVariant;
   onVariantChange: (variant: TVariant) => void;
+  /** Layout directions being explored — newest first. Excludes baseline. */
   options: DesignExplorationVariantOption<TVariant>[];
   renderers: Record<TVariant, () => ReactNode>;
   brief: DesignExplorationBrief;
   context?: DesignExplorationContext;
   mobbin?: DesignExplorationMobbin;
   variantsSection?: DesignExplorationVariantsSection;
+  /**
+   * UI state before this exploration was added. Rendered last in the brief
+   * and tabs; deduped from `options` when the same value appears there.
+   */
+  baseline: DesignExplorationBaselineOption<TVariant>;
   /**
    * Default variant stored in the codebase (e.g. `DEFAULT_*_VARIANT`). Marks
    * the "Default" option in the design brief. Falls back to the first option.
@@ -69,6 +83,43 @@ export type DesignExplorationConfig<TVariant extends string> = {
   /** Path to design exploration config — included in copy prompts. */
   briefConfigFilePath?: string;
 };
+
+export const DESIGN_EXPLORATION_BASELINE_LABEL = "Original";
+
+export function resolveDesignExplorationBaselineOption<
+  TVariant extends string,
+>(
+  baseline: DesignExplorationBaselineOption<TVariant>,
+): DesignExplorationVariantOption<TVariant> {
+  return {
+    value: baseline.value,
+    label: baseline.label ?? DESIGN_EXPLORATION_BASELINE_LABEL,
+    hint: baseline.hint,
+  };
+}
+
+/** Exploration options only — baseline value removed when duplicated. */
+export function getDesignExplorationVariantOptions<
+  TVariant extends string,
+>(
+  options: DesignExplorationVariantOption<TVariant>[],
+  baseline: DesignExplorationBaselineOption<TVariant>,
+): DesignExplorationVariantOption<TVariant>[] {
+  return options.filter((option) => option.value !== baseline.value);
+}
+
+/** Exploration options plus baseline pinned at the bottom (for tabs / cycling). */
+export function getDesignExplorationDisplayOptions<
+  TVariant extends string,
+>(
+  options: DesignExplorationVariantOption<TVariant>[],
+  baseline: DesignExplorationBaselineOption<TVariant>,
+): DesignExplorationVariantOption<TVariant>[] {
+  return [
+    ...getDesignExplorationVariantOptions(options, baseline),
+    resolveDesignExplorationBaselineOption(baseline),
+  ];
+}
 
 /** Plain-text copy of the overview fields as shown in the design brief modal. */
 export function buildBriefOverviewCopyText(
@@ -87,11 +138,13 @@ export function buildCreateDesignExplorationPrompt({
   existingExplorations = [],
   origin = "http://localhost:3003",
   briefText,
+  includeMobbin = true,
 }: {
   slug: string;
   existingExplorations?: Array<{ id: string; label: string }>;
   origin?: string;
   briefText?: string;
+  includeMobbin?: boolean;
 }): string {
   const prototypeUrl = `${origin}/prototypes/${slug}`;
   const variantSetsRegistrar = `src/prototypes/${slug}/_components/*-variant-sets.tsx`;
@@ -125,19 +178,27 @@ export function buildCreateDesignExplorationPrompt({
     "## Prototype",
     `- Slug: \`${slug}\``,
     `- Preview: ${prototypeUrl}`,
-    "",
-    "## Mobbin references",
-    "Before building variants, pull real-world reference screens from Mobbin. Use the Mobbin MCP `search_screens` tool when available; otherwise search on mobbin.com.",
-    "",
-    "1. Search for **3–5 screens** that match the brief and the distinct layout directions you plan to explore. Prefer specific UI descriptions (e.g. \"settings page with profile photo and bio field\") over vague style words.",
-    "2. Pick references that clarify layout, hierarchy, and copy patterns — not just visual polish.",
-    "3. In `*-design-exploration-config.tsx`, add a `mobbin` block:",
-    "   - `references`: `{ id, appName, imageUrl, mobbinUrl, relevance, variantHint? }[]` — use each screen UUID as `id`",
-    "   - `imagePathForReference`: `(id) => \\`/prototypes/mobbin-references/${id}.webp\\``",
-    "4. Register `mobbin-inspiration-gallery` and `mobbin-inspiration-gallery.` in `component-ids.ts` (or pass a custom `mobbinGalleryId` to `PrototypeVariantExplorer`).",
-    "5. Download local assets: `pnpm download-mobbin-references -- --ids=<comma-separated-ids>`",
-    "",
-    "Reference: `src/prototypes/proto-partner-page/_components/invite-copy-design-exploration-config.tsx`.",
+  );
+
+  if (includeMobbin) {
+    lines.push(
+      "",
+      "## Mobbin references",
+      "Before building variants, pull real-world reference screens from Mobbin. Use the Mobbin MCP `search_screens` tool when available; otherwise search on mobbin.com.",
+      "",
+      "1. Search for **3–5 screens** that match the brief and the distinct layout directions you plan to explore. Prefer specific UI descriptions (e.g. \"settings page with profile photo and bio field\") over vague style words.",
+      "2. Pick references that clarify layout, hierarchy, and copy patterns — not just visual polish.",
+      "3. In `*-design-exploration-config.tsx`, add a `mobbin` block:",
+      "   - `references`: `{ id, appName, imageUrl, mobbinUrl, relevance, variantHint? }[]` — use each screen UUID as `id`",
+      "   - `imagePathForReference`: `(id) => \\`/prototypes/mobbin-references/${id}.webp\\``",
+      "4. Register `mobbin-inspiration-gallery` and `mobbin-inspiration-gallery.` in `component-ids.ts` (or pass a custom `mobbinGalleryId` to `PrototypeVariantExplorer`).",
+      "5. Download local assets: `pnpm download-mobbin-references -- --ids=<comma-separated-ids>`",
+      "",
+      "Reference: `src/prototypes/proto-partner-page/_components/invite-copy-design-exploration-config.tsx`.",
+    );
+  }
+
+  lines.push(
     "",
     "## Instructions",
     "Follow AGENTS.md → Design exploration. Do not register a new prototype slug — add a design exploration variant set on this page.",
@@ -145,8 +206,10 @@ export function buildCreateDesignExplorationPrompt({
     "1. Add `{ id, label, previewMode? }` to the variant sets registrar (e.g. `" +
       variantSetsRegistrar +
       "`).",
-    "2. Create `*-design-exploration-config.tsx` with options, renderers, brief defaults, and the Mobbin references above.",
-    "   - Build renderers with `buildDesignExplorationRenderers(options, (variant) => …)` — one preview per option.",
+    `2. Create \`*-design-exploration-config.tsx\` with options, renderers, brief defaults, baseline,${includeMobbin ? " and the Mobbin references above" : ""}.`,
+    "   - `baseline`: the UI before this exploration existed — `{ value, label?, hint? }`, pinned at the bottom of the variant list.",
+    "   - `options`: layout directions to compare — exclude the baseline value when possible.",
+    "   - Build renderers with `buildDesignExplorationRenderers(options, (variant) => …, baseline)` — one preview per option plus baseline.",
     "   - Wrap overlay-style variants in `DesignExplorationVariantPreviewShell` with `layout=\"overlay\"` for sidebar previews.",
     "3. Create `*-variant-toggle.tsx` mounting `PrototypeVariantExplorer` with matching `variantSet={{ id, label }}`.",
     "4. Register static ids + any `dynamicPrefixes` in `src/prototypes/" +
@@ -167,11 +230,13 @@ export function buildCreateDesignExplorationCopyText({
   existingExplorations = [],
   origin = "http://localhost:3003",
   briefText,
+  includeMobbin = true,
 }: {
   slug: string;
   existingExplorations?: Array<{ id: string; label: string }>;
   origin?: string;
   briefText: string;
+  includeMobbin?: boolean;
 }): string {
   const trimmedBrief = briefText.trim();
   const prompt = buildCreateDesignExplorationPrompt({
@@ -179,6 +244,7 @@ export function buildCreateDesignExplorationCopyText({
     existingExplorations,
     origin,
     briefText: trimmedBrief,
+    includeMobbin,
   });
 
   return `${trimmedBrief}\n\n---\n\n${prompt}`;
@@ -193,6 +259,7 @@ export function buildMoreDesignExplorationVariantsPrompt({
   configFilePath,
   origin = "http://localhost:3003",
   briefText,
+  multipleVersions = true,
 }: {
   slug: string;
   explorationLabel: string;
@@ -202,6 +269,8 @@ export function buildMoreDesignExplorationVariantsPrompt({
   configFilePath?: string;
   origin?: string;
   briefText?: string;
+  /** When false, prompt asks for one targeted derivative variant. */
+  multipleVersions?: boolean;
 }): string {
   const prototypeUrl = `${origin}/prototypes/${slug}`;
   const configTarget = configFilePath ?? "the design exploration config file";
@@ -215,11 +284,17 @@ export function buildMoreDesignExplorationVariantsPrompt({
 
   if (trimmedBrief) {
     lines.push(trimmedBrief);
-  } else {
+  } else if (multipleVersions) {
     lines.push(
       "Describe the new directions to explore:",
       "- What to try:",
       "- Target count: 3–5 new variants",
+    );
+  } else {
+    lines.push(
+      "Describe the variation to explore:",
+      "- What to try:",
+      "- Target count: 1 new variant",
     );
   }
 
@@ -255,9 +330,13 @@ export function buildMoreDesignExplorationVariantsPrompt({
     "## Instructions",
     "Follow AGENTS.md → Design exploration → Iterating on variants.",
     "",
-    "Supply **3–5 new variant options** unless the brief specifies a different count.",
+    multipleVersions
+      ? "Supply **3–5 new variant options** unless the brief specifies a different count."
+      : "Add **one new derivative variant** unless the brief specifies otherwise.",
     "",
-    "When modifying an existing option, add **new variants** (do not replace in place).",
+    multipleVersions
+      ? "When modifying an existing option, add **new variants** (do not replace in place)."
+      : "When modifying an existing option, add a **single new variant** (do not replace in place). Keep all existing variants.",
     "",
     "1. Prepend new entries to the top of `*_VARIANT_OPTIONS` so newest explorations appear first.",
     "2. Add matching renderers via `buildDesignExplorationRenderers` and any new component ids.",
@@ -277,6 +356,7 @@ export function buildMoreDesignExplorationVariantsCopyText({
   configFilePath,
   origin = "http://localhost:3003",
   briefText,
+  multipleVersions = true,
 }: {
   slug: string;
   explorationLabel: string;
@@ -286,6 +366,7 @@ export function buildMoreDesignExplorationVariantsCopyText({
   configFilePath?: string;
   origin?: string;
   briefText: string;
+  multipleVersions?: boolean;
 }): string {
   const trimmedBrief = briefText.trim();
   const prompt = buildMoreDesignExplorationVariantsPrompt({
@@ -297,6 +378,7 @@ export function buildMoreDesignExplorationVariantsCopyText({
     configFilePath,
     origin,
     briefText: trimmedBrief,
+    multipleVersions,
   });
 
   return `${trimmedBrief}\n\n---\n\n${prompt}`;

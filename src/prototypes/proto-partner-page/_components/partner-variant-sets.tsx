@@ -3,6 +3,11 @@
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 import { useLayoutEffect } from "react";
 
+export const SHAPE_COLOR_PICKER_VARIANT_SET = {
+  id: "shape-color-picker",
+  label: "Shape & color picker",
+} as const;
+
 export const PROTO_SHAPES_VARIANT_SET = {
   id: "proto-shapes",
   label: "Proto shapes",
@@ -13,7 +18,14 @@ export const INVITE_COPY_VARIANT_SET = {
   label: "Invite copy",
 } as const;
 
+export const INVITE_ANIMATIONS_VARIANT_SET = {
+  id: "invite-animations",
+  label: "Invite animations",
+} as const;
+
 export const PROTO_PARTNER_PAGE_VARIANT_SETS = [
+  INVITE_ANIMATIONS_VARIANT_SET,
+  SHAPE_COLOR_PICKER_VARIANT_SET,
   PROTO_SHAPES_VARIANT_SET,
   INVITE_COPY_VARIANT_SET,
 ] as const;

@@ -76,10 +76,14 @@ export const INVITE_COPY_VARIANT_OPTIONS: Array<{
   { value: "split-rule", label: "Split rule" },
   { value: "hero-stack", label: "Hero stack" },
   { value: "left-rail", label: "Left rail" },
-  { value: "type-contrast", label: "Type contrast" },
   { value: "inline-actions", label: "Inline actions" },
   { value: "two-beat", label: "Two beat" },
 ];
+
+export const INVITE_COPY_BASELINE = {
+  value: "type-contrast" as const satisfies InviteCopyVariant,
+  hint: "Partner invite layout before copy exploration",
+};
 
 export const DEFAULT_INVITE_COPY_VARIANT: InviteCopyVariant =
   INVITE_COPY_VARIANT_OPTIONS[0].value;
@@ -88,9 +92,10 @@ const COMPONENT_ID_PREFIX = "invite-copy-explorer";
 const VARIANT_TABS_ID_PREFIX = "invite-copy-variant-tabs";
 const STORAGE_KEY_PREFIX = "proto-partner-page-invite-copy";
 
-const renderers = buildDesignExplorationRenderers(
+const renderers = buildDesignExplorationRenderers<InviteCopyVariant>(
   INVITE_COPY_VARIANT_OPTIONS,
   (variant) => <InviteCopyBlock variant={variant} />,
+  INVITE_COPY_BASELINE,
 );
 
 export function buildInviteCopyDesignExplorationConfig(
@@ -104,6 +109,7 @@ export function buildInviteCopyDesignExplorationConfig(
     variant,
     onVariantChange,
     options: INVITE_COPY_VARIANT_OPTIONS,
+    baseline: INVITE_COPY_BASELINE,
     defaultVariant: DEFAULT_INVITE_COPY_VARIANT,
     renderers,
     brief: {

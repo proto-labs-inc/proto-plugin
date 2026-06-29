@@ -47,6 +47,7 @@ import {
 } from "../proto-shapes/springs-triangle-simulation";
 
 import {
+  DEFAULT_PROTO_COLOR_ID,
   getProtoColor,
   type ProtoColorId,
   type ProtoRgb,
@@ -231,22 +232,109 @@ function rgbNearEqual(a: ProtoRgb, b: ProtoRgb, epsilon = 0.5): boolean {
 }
 
 const MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
-const MOBILE_SHAPE_SCALE = 0.75;
+/** Three-pyramid chain is wide; keep it smaller on narrow viewports. */
+const MOBILE_THREE_PART_SHAPE_SCALE = 0.9;
+const MOBILE_SHAPE_SCALE = 1;
 /** Match proto-shapes vertical placement (yFactor 0.33). */
 const SHAPE_SPAWN_Y_FACTOR = 0.33;
 const WARM_START_FRAMES = 120;
+/**
+ * If the sim is created while the canvas is shorter than this, the shape gets
+ * clamped between the top and bottom margins into a flat horizontal line — and
+ * a collinear line never recovers, because the springs only push along it. This
+ * happens at mount/remount before layout settles, so we wait for a real height
+ * and recreate the sim if it was last sized while too short.
+ */
+const MIN_VALID_CANVAS_HEIGHT = 120;
 
 function isMobileViewport() {
   if (typeof window === "undefined") return false;
   return window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches;
 }
 
-function getPartnerShapeLayout(cssHeight: number) {
+function getPartnerShapeLayout(cssHeight: number, shapeId: ProtoShapeId) {
   const mobile = isMobileViewport();
+  const mobileScale =
+    shapeId === "square" ? MOBILE_THREE_PART_SHAPE_SCALE : MOBILE_SHAPE_SCALE;
   return {
-    scale: mobile ? MOBILE_SHAPE_SCALE : 1,
+    scale: mobile ? mobileScale : 1,
     spawnY: cssHeight * SHAPE_SPAWN_Y_FACTOR,
   };
+}
+
+function getSimulationCentroid(sim: SpringsSimulation) {
+  let sumX = 0;
+  let sumY = 0;
+  for (const particle of sim.particles) {
+    sumX += particle.px;
+    sumY += particle.py;
+  }
+  const count = sim.particles.length;
+  return { x: sumX / count, y: sumY / count };
+}
+
+type SimulationPose = {
+  centroid: { x: number; y: number };
+  angle: number;
+  scale: number;
+};
+
+function getSimulationPose(sim: SpringsSimulation): SimulationPose {
+  const centroid = getSimulationCentroid(sim);
+  let sumXX = 0;
+  let sumYY = 0;
+  let sumXY = 0;
+  let sumDistSq = 0;
+  const count = sim.particles.length;
+
+  for (const particle of sim.particles) {
+    const dx = particle.px - centroid.x;
+    const dy = particle.py - centroid.y;
+    sumXX += dx * dx;
+    sumYY += dy * dy;
+    sumXY += dx * dy;
+    sumDistSq += dx * dx + dy * dy;
+  }
+
+  return {
+    centroid,
+    angle: 0.5 * Math.atan2(2 * sumXY, sumXX - sumYY),
+    scale: Math.sqrt(sumDistSq / count),
+  };
+}
+
+function applySimulationPose(
+  sim: SpringsSimulation,
+  targetPose: SimulationPose,
+  defaultPose: SimulationPose,
+  preserveScale = true,
+) {
+  const rotation = targetPose.angle - defaultPose.angle;
+  const scaleFactor =
+    preserveScale && defaultPose.scale > 0
+      ? targetPose.scale / defaultPose.scale
+      : 1;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const currentCentroid = getSimulationCentroid(sim);
+  const { x: targetX, y: targetY } = targetPose.centroid;
+
+  for (const particle of sim.particles) {
+    let dx = particle.px - currentCentroid.x;
+    let dy = particle.py - currentCentroid.y;
+    dx *= scaleFactor;
+    dy *= scaleFactor;
+    const rdx = dx * cos - dy * sin;
+    const rdy = dx * sin + dy * cos;
+    particle.px = targetX + rdx;
+    particle.py = targetY + rdy;
+    particle.vx = 0;
+    particle.vy = 0;
+  }
+
+  if (scaleFactor !== 1) {
+    sim.restLength *= scaleFactor;
+  }
 }
 
 function scaleSimulationAroundCentroid(sim: SpringsSimulation, scale: number) {
@@ -260,34 +348,16 @@ function scaleSimulationAroundCentroid(sim: SpringsSimulation, scale: number) {
   sim.restLength *= scale;
 }
 
-function getShapeRestPoint(cssWidth: number, cssHeight: number) {
-  const { spawnY } = getPartnerShapeLayout(cssHeight);
+function getShapeRestPoint(
+  cssWidth: number,
+  cssHeight: number,
+  shapeId: ProtoShapeId,
+) {
+  const { spawnY } = getPartnerShapeLayout(cssHeight, shapeId);
   return {
     x: cssWidth * 0.5,
     y: spawnY,
   };
-}
-
-function applyInitialDropFromTop(sim: SpringsSimulation, cssHeight: number) {
-  const { scale } = getPartnerShapeLayout(cssHeight);
-  const dropOffsetY = -(cssHeight * 0.45 + 80 * scale);
-
-  for (const particle of sim.particles) {
-    particle.py += dropOffsetY;
-    particle.vx = 0;
-    particle.vy = 0;
-  }
-}
-
-function getSimulationCentroid(sim: SpringsSimulation) {
-  let sumX = 0;
-  let sumY = 0;
-  for (const particle of sim.particles) {
-    sumX += particle.px;
-    sumY += particle.py;
-  }
-  const count = sim.particles.length;
-  return { x: sumX / count, y: sumY / count };
 }
 
 function warmStartSimulation(runtime: ShapeRuntime, sim: SpringsSimulation) {
@@ -302,21 +372,68 @@ function warmStartSimulation(runtime: ShapeRuntime, sim: SpringsSimulation) {
   }
 }
 
+/**
+ * Shrink the (already correctly-shaped) sim down to a near-point at the given
+ * target, keeping the relative structure and leaving restLength alone. With dh
+ * now far below restLength, the springs see a large distention and explode the
+ * shape outward into its full form on the first live frames — a "pop" that
+ * originates from the target location.
+ */
+const INITIAL_POP_COLLAPSE_FACTOR = 0.04;
+
+function collapseShapeForPop(
+  sim: SpringsSimulation,
+  targetX: number,
+  targetY: number,
+) {
+  const centroid = getSimulationCentroid(sim);
+  for (const particle of sim.particles) {
+    particle.px =
+      targetX + (particle.px - centroid.x) * INITIAL_POP_COLLAPSE_FACTOR;
+    particle.py =
+      targetY + (particle.py - centroid.y) * INITIAL_POP_COLLAPSE_FACTOR;
+    particle.vx = 0;
+    particle.vy = 0;
+  }
+}
+
+type CreateSimulationOptions = {
+  preservedPose?: SimulationPose | null;
+  /** When false, only position + rotation carry over; scale stays at the new shape's default. */
+  preserveScale?: boolean;
+};
+
 function createSimulationAtSpawn(
   runtime: ShapeRuntime,
   cssWidth: number,
   cssHeight: number,
+  shapeId: ProtoShapeId,
   spawnPoint: { x: number; y: number } | null,
+  options: CreateSimulationOptions = {},
 ) {
-  const isInitialDrop = spawnPoint === null;
-  const spawn = spawnPoint ?? getShapeRestPoint(cssWidth, cssHeight);
+  const isInitialReveal = spawnPoint === null && !options.preservedPose;
+  const spawn = spawnPoint ?? getShapeRestPoint(cssWidth, cssHeight, shapeId);
   const sim = runtime.create(cssWidth, cssHeight, spawn.x, spawn.y);
-  const { scale } = getPartnerShapeLayout(cssHeight);
+  const { scale } = getPartnerShapeLayout(cssHeight, shapeId);
   scaleSimulationAroundCentroid(sim, scale);
-  warmStartSimulation(runtime, sim);
 
-  if (isInitialDrop) {
-    applyInitialDropFromTop(sim, cssHeight);
+  if (options.preservedPose) {
+    warmStartSimulation(runtime, sim);
+    const defaultPose = getSimulationPose(sim);
+    applySimulationPose(
+      sim,
+      options.preservedPose,
+      defaultPose,
+      options.preserveScale ?? true,
+    );
+  } else if (isInitialReveal) {
+    // Pre-settle into the resolved shape, then collapse it to a point at the
+    // screen center so the springs pop it back open from the middle on the
+    // first rendered frames.
+    warmStartSimulation(runtime, sim);
+    collapseShapeForPop(sim, cssWidth * 0.5, cssHeight * 0.5);
+  } else {
+    warmStartSimulation(runtime, sim);
   }
 
   return sim;
@@ -346,18 +463,19 @@ type PartnerShapeCanvasProps = {
 
 export function PartnerShapeCanvas({
   className,
-  shapeId = "triangle",
+  shapeId = "cube",
   colorId,
   color,
   transparentBackground = false,
 }: PartnerShapeCanvasProps) {
-  const resolvedColor = color ?? getProtoColor(colorId ?? "green").rgb;
+  const resolvedColor = color ?? getProtoColor(colorId ?? DEFAULT_PROTO_COLOR_ID).rgb;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const simRef = useRef<SpringsSimulation | null>(null);
   const activeShapeRef = useRef<ProtoShapeId>(shapeId);
   const runtimeRef = useRef(SHAPE_RUNTIMES[shapeId]);
   const spawnPointRef = useRef<{ x: number; y: number } | null>(null);
+  const preservedPoseRef = useRef<SimulationPose | null>(null);
   const targetColorRef = useRef<ProtoRgb>(resolvedColor);
   const displayColorRef = useRef<ProtoRgb>(resolvedColor);
   const sizeRef = useRef<CanvasSize>({ cssWidth: 1, cssHeight: 1, dpr: 1 });
@@ -378,17 +496,35 @@ export function PartnerShapeCanvas({
     const oldSim = simRef.current;
 
     if (oldSim) {
-      spawnPointRef.current = getSimulationCentroid(oldSim);
+      preservedPoseRef.current = getSimulationPose(oldSim);
+      spawnPointRef.current = preservedPoseRef.current.centroid;
     }
 
     activeShapeRef.current = shapeId;
     runtimeRef.current = SHAPE_RUNTIMES[shapeId];
-    simRef.current = createSimulationAtSpawn(
-      runtimeRef.current,
-      cssWidth,
-      cssHeight,
-      spawnPointRef.current,
-    );
+    // If the canvas isn't measured yet, leave the sim null; the resize handler
+    // will create it with the new runtime once a real height is available.
+    simRef.current =
+      cssHeight < MIN_VALID_CANVAS_HEIGHT
+        ? null
+        : createSimulationAtSpawn(
+            runtimeRef.current,
+            cssWidth,
+            cssHeight,
+            shapeId,
+            spawnPointRef.current,
+            {
+              preservedPose: preservedPoseRef.current,
+              // Deformed/stretched particles inflate RMS scale; baking that into
+              // restLength compounds on every switch and slowly grows the shape.
+              preserveScale: false,
+            },
+          );
+
+    if (simRef.current) {
+      preservedPoseRef.current = getSimulationPose(simRef.current);
+    }
+
     inputRef.current.pointerDown = false;
   }, [shapeId]);
 
@@ -406,17 +542,28 @@ export function PartnerShapeCanvas({
       const dpr = setupHiDpiCanvas(canvas, cssWidth, cssHeight);
       sizeRef.current = { cssWidth, cssHeight, dpr };
 
+      // Don't run physics until the canvas has a real height; otherwise the
+      // shape collapses to a flat line it can never recover from. Drop any sim
+      // that was created while too short so it gets recreated cleanly.
+      if (cssHeight < MIN_VALID_CANVAS_HEIGHT) {
+        simRef.current = null;
+        return;
+      }
+
       const mobile = isMobileViewport();
       const mobileLayoutChanged = mobile !== mobileLayoutRef.current;
       mobileLayoutRef.current = mobile;
 
       if (mobileLayoutChanged && simRef.current) {
-        spawnPointRef.current = getSimulationCentroid(simRef.current);
+        preservedPoseRef.current = getSimulationPose(simRef.current);
+        spawnPointRef.current = preservedPoseRef.current.centroid;
         simRef.current = createSimulationAtSpawn(
           runtimeRef.current,
           cssWidth,
           cssHeight,
+          activeShapeRef.current,
           spawnPointRef.current,
+          { preservedPose: preservedPoseRef.current },
         );
         return;
       }
@@ -428,7 +575,9 @@ export function PartnerShapeCanvas({
           runtimeRef.current,
           cssWidth,
           cssHeight,
+          activeShapeRef.current,
           spawnPointRef.current,
+          { preservedPose: preservedPoseRef.current },
         );
       }
     };

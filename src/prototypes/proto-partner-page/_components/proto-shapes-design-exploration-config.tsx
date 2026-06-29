@@ -100,11 +100,6 @@ export const PROTO_SHAPES_VARIANT_OPTIONS: Array<{
     hint: "Tight bottom picker dock under invite copy",
   },
   {
-    value: "compact-minimal-dock",
-    label: "Compact minimal dock",
-    hint: "Smallest picker tiles with padded icons",
-  },
-  {
     value: "dual-row-reserved",
     label: "Dual row reserved",
     hint: "Dual rows with canvas inset to keep the shape visible",
@@ -151,6 +146,11 @@ export const PROTO_SHAPES_VARIANT_OPTIONS: Array<{
   },
 ];
 
+export const PROTO_SHAPES_BASELINE = {
+  value: "compact-minimal-dock" as const satisfies ProtoShapeCustomizerVariant,
+  hint: "Compact shape and color rows at bottom with bouncing preview",
+};
+
 export const DEFAULT_PROTO_SHAPES_VARIANT: ProtoShapeCustomizerVariant =
   "compact-minimal-dock";
 
@@ -164,7 +164,7 @@ export function buildProtoShapesDesignExplorationConfig(
   selection: ProtoShapeSelection,
   onSelectionChange: (next: ProtoShapeSelection) => void,
 ): DesignExplorationConfig<ProtoShapeCustomizerVariant> {
-  const renderers = buildDesignExplorationRenderers(
+  const renderers = buildDesignExplorationRenderers<ProtoShapeCustomizerVariant>(
     PROTO_SHAPES_VARIANT_OPTIONS,
     (optionVariant) => (
       <DesignExplorationVariantPreviewShell
@@ -181,6 +181,7 @@ export function buildProtoShapesDesignExplorationConfig(
         />
       </DesignExplorationVariantPreviewShell>
     ),
+    PROTO_SHAPES_BASELINE,
   );
 
   return {
@@ -190,6 +191,7 @@ export function buildProtoShapesDesignExplorationConfig(
     variant,
     onVariantChange,
     options: PROTO_SHAPES_VARIANT_OPTIONS,
+    baseline: PROTO_SHAPES_BASELINE,
     defaultVariant: DEFAULT_PROTO_SHAPES_VARIANT,
     renderers,
     brief: {

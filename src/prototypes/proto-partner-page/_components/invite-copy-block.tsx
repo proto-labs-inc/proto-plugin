@@ -35,16 +35,16 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
     return (
       <PrototypeComponent
         id="invite-copy-block"
-        className="shrink-0 px-4 pt-4 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5 sm:pt-9"
+        className="shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5"
       >
-        <div className="mx-auto max-w-md px-4 pt-4 pb-0 sm:px-6 sm:pt-10">
+        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
           <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
             Design partner invite
           </p>
           <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
             {INVITE_COPY.headline}
           </h1>
-          <div className="flex flex-col gap-3 pb-6 sm:gap-4 sm:pb-8">
+          <div className="flex flex-col gap-3 sm:gap-4">
             <p className={equalBodyClass}>
               <InviteWithBoldProto />
             </p>

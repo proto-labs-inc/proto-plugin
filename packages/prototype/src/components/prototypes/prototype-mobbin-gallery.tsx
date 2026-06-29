@@ -2,10 +2,15 @@
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { Button } from "@prototype/components/ui/button";
+import { getPrototypePortalContainer } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
 import type { MobbinReference } from "@prototype/lib/prototypes/design-exploration-types";
 import { ChevronLeft, ChevronRight, ExternalLink, X, ZoomIn } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
+/** Above prototype preview + design brief dialog (z-50), below review chrome (1050). */
+const MOBBIN_LIGHTBOX_Z_INDEX = 1040;
 
 const GALLERY_SECTION_TITLE_CLASS = "tool-chip tool-chip-pink";
 
@@ -137,6 +142,12 @@ function MobbinReferenceLightbox({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goNext, goPrev, onClose]);
 
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setPortalTarget(getPrototypePortalContainer() ?? null);
+  }, []);
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -145,10 +156,11 @@ function MobbinReferenceLightbox({
     };
   }, []);
 
-  return (
+  const lightbox = (
     <PrototypeComponent
       id={`${galleryId}.lightbox`}
-      className="fixed inset-0 z-(--z-modal) flex items-center justify-center p-4 sm:p-8"
+      className="fixed inset-0 flex items-center justify-center p-4 sm:p-8"
+      style={{ zIndex: MOBBIN_LIGHTBOX_Z_INDEX }}
       role="dialog"
       aria-modal="true"
       aria-label={`${reference.appName} Mobbin reference`}
@@ -254,6 +266,10 @@ function MobbinReferenceLightbox({
       </div>
     </PrototypeComponent>
   );
+
+  if (!portalTarget) return null;
+
+  return createPortal(lightbox, portalTarget);
 }
 
 export function PrototypeMobbinGallery({

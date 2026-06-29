@@ -11,6 +11,7 @@ import {
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { buildBriefOverviewCopyText } from "@prototype/lib/prototypes/design-exploration-types";
 import type {
+  DesignExplorationBaselineOption,
   DesignExplorationBrief,
   DesignExplorationContext,
   DesignExplorationMobbin,
@@ -38,6 +39,7 @@ type PrototypeDesignBriefModalProps<TVariant extends string> = {
   onVariantChange: (variant: TVariant) => void;
   options: DesignExplorationVariantOption<TVariant>[];
   renderers: Record<TVariant, () => ReactNode>;
+  baseline: DesignExplorationBaselineOption<TVariant>;
   defaultVariantValue?: TVariant;
   briefConfigFilePath?: string;
 };
@@ -56,6 +58,7 @@ export function PrototypeDesignBriefModal<TVariant extends string>({
   onVariantChange,
   options,
   renderers,
+  baseline,
   defaultVariantValue,
   briefConfigFilePath,
 }: PrototypeDesignBriefModalProps<TVariant>) {
@@ -114,6 +117,7 @@ export function PrototypeDesignBriefModal<TVariant extends string>({
           onVariantChange={onVariantChange}
           options={options}
           renderers={renderers}
+          baseline={baseline}
           defaultVariantValue={defaultVariantValue}
           briefConfigFilePath={briefConfigFilePath}
           className="overflow-y-auto overscroll-contain"

@@ -1,6 +1,7 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { cn } from "@prototype/lib/utils";
 
 import type { ProtoColorId, ProtoRgb, ProtoShapeId } from "./proto-shape-content";
 
@@ -23,15 +24,21 @@ export function ProtoShapeIcon({
   return (
     <PrototypeComponent
       id="proto-shape-icons.proto-shape-icon"
-      className={`inline-flex ${className ?? ""}`}
+      className={cn(
+        className
+          ? "flex size-full items-center justify-center"
+          : "inline-flex",
+      )}
     >
       <svg
-        width={size}
-        height={size}
+        {...(className ? {} : { width: size, height: size })}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
-        className="[&_path]:transition-[fill,stroke] [&_path]:duration-300 [&_path]:ease-out [&_polygon]:transition-[fill,stroke] [&_polygon]:duration-300 [&_polygon]:ease-out [&_rect]:transition-[fill,stroke] [&_rect]:duration-300 [&_rect]:ease-out"
+        className={cn(
+          "block shrink-0 [&_path]:transition-[fill,stroke] [&_path]:duration-300 [&_path]:ease-out [&_polygon]:transition-[fill,stroke] [&_polygon]:duration-300 [&_polygon]:ease-out [&_rect]:transition-[fill,stroke] [&_rect]:duration-300 [&_rect]:ease-out",
+          className,
+        )}
       >
         {shapeId === "triangle" ? (
           <polygon
@@ -114,7 +121,7 @@ type ColorSwatchProps = {
   colorId: ProtoColorId;
   rgb: ProtoRgb;
   selected?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "mobile-md";
   className?: string;
 };
 
@@ -122,6 +129,7 @@ const SWATCH_SIZES = {
   sm: "size-6",
   md: "size-7",
   lg: "size-9",
+  "mobile-md": "size-7 sm:size-6",
 } as const;
 
 export function ProtoColorSwatch({

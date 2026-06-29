@@ -459,6 +459,16 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   white-space: nowrap;
 }
 
+[data-prototype-root] .tool-variant-original-badge {
+  color: var(--tool-chrome-text-muted);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 [data-prototype-root] .tool-variant-card [data-prototype-screenshot] {
   pointer-events: none;
   overflow: hidden;

@@ -169,14 +169,14 @@ import { DesignExplorationVariantPreviewShell } from "@prototype/components/prot
 
 const renderers = buildDesignExplorationRenderers(VARIANT_OPTIONS, (variant) => (
   <MyBlock variant={variant} />
-));
+), BASELINE);
 
 // Overlay-style variants (absolute positioning on the live page):
 const renderers = buildDesignExplorationRenderers(VARIANT_OPTIONS, (variant) => (
   <DesignExplorationVariantPreviewShell layout={isOverlay(variant) ? "overlay" : "inline"}>
     <MyBlock variant={variant} />
   </DesignExplorationVariantPreviewShell>
-));
+), BASELINE);
 ```
 
 Do not hand-roll renderer maps that return `null` for some variants — the helper maps every option and warns in dev when a renderer returns empty content.
@@ -189,15 +189,20 @@ Do not hand-roll renderer maps that return `null` for some variants — the help
   variantTabsIdPrefix: string;
   storageKeyPrefix: string;
   variant, onVariantChange,
-  options: { value, label, hint? }[];
+  options: { value, label, hint? }[]; // exploration directions — newest first; exclude baseline when possible
   renderers: Record<TVariant, ComponentType>;
   brief: { titleDefault, descriptionDefault };
+  baseline: { value, label?, hint? }; // pre-exploration UI — always pinned at the bottom of the variant list
   defaultVariant?: TVariant; // codebase-stored default (e.g. DEFAULT_*_VARIANT); marked "Default" in the brief
   context?: { label, data: unknown, render?, defaultExpanded?, panelId? };
   mobbin?: { references, title?, description?, imagePathForReference? };
   variantsSection?: { title?, description? };
 }
 ```
+
+Every exploration **must** define `baseline` — the UI as it existed before the exploration was added. The design brief shows it last with an **Original** badge. Use `getDesignExplorationDisplayOptions(options, baseline)` for tabs and keyboard cycling; use `getDesignExplorationVariantOptions(options, baseline)` when listing directions in prompts.
+
+Build renderers with `buildDesignExplorationRenderers(options, renderVariant, baseline)` so the baseline preview is included.
 
 The default variant lives in the codebase config (`defaultVariant`, typically `DEFAULT_*_VARIANT`) — not KV. In the brief, each non-default option shows a **Make default** button that copies a prompt (`buildSetDefaultVariantPrompt`) asking an agent to update that constant; the current default is marked **Default**.
 

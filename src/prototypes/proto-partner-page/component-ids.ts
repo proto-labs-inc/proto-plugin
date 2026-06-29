@@ -4,10 +4,16 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "page",
   "scroll-container",
   "partner-shape-canvas",
+  "partner-page-flow-block",
   "proto-shape-customizer-block",
   "proto-shape-icons.proto-shape-icon",
   "proto-shape-icons.proto-color-swatch",
   "invite-copy-block",
+  "invite-animations-block",
+  "invite-animations-variant-toggle",
+  "invite-animations-explorer",
+  "invite-animations-variant-tabs",
+  "invite-animations-mobbin-inspiration-gallery",
   "invite-copy-variant-toggle",
   "invite-copy-explorer",
   "invite-copy-variant-tabs",
@@ -16,16 +22,28 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "proto-shapes-explorer",
   "proto-shapes-variant-tabs",
   "protoshapes-mobbin-inspiration-gallery",
+  "shape-color-picker-block",
+  "shape-color-picker-block.shape-color-picker-controls",
+  "shape-color-picker-variant-toggle",
+  "shape-color-picker-explorer",
+  "shape-color-picker-variant-tabs",
+  "shape-color-picker-mobbin-inspiration-gallery",
 ] as const;
 
 /** Nested ids from PrototypeVariantExplorer / PrototypeDesignBriefPanel. */
 export const DYNAMIC_TARGET_PREFIXES = [
+  "invite-animations-explorer.",
+  "invite-animations-variant-tabs.",
+  "invite-animations-mobbin-inspiration-gallery.",
   "invite-copy-explorer.",
   "invite-copy-variant-tabs.",
   "mobbin-inspiration-gallery.",
   "proto-shapes-explorer.",
   "proto-shapes-variant-tabs.",
   "protoshapes-mobbin-inspiration-gallery.",
+  "shape-color-picker-explorer.",
+  "shape-color-picker-variant-tabs.",
+  "shape-color-picker-mobbin-inspiration-gallery.",
 ] as const;
 
 export const protoPartnerPageComponentRegistry = definePrototypeComponentRegistry({

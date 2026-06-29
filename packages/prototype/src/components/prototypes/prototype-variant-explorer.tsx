@@ -8,6 +8,7 @@ import { PrototypeComponent } from "@prototype/components/prototypes/prototype-t
 import { PrototypeVariantTabs } from "@prototype/components/prototypes/prototype-variant-tabs";
 import {
   buildBriefOverviewCopyText,
+  getDesignExplorationDisplayOptions,
   type DesignExplorationConfig,
 } from "@prototype/lib/prototypes/design-exploration-types";
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
@@ -46,6 +47,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   onVariantChange,
   options,
   renderers,
+  baseline,
   brief,
   context,
   mobbin,
@@ -62,6 +64,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   // Default is stored in the codebase config — not KV. "Make default" copies a
   // prompt to update `defaultVariant` in the exploration config file.
   const effectiveDefault = defaultVariant ?? options[0]?.value;
+  const displayOptions = getDesignExplorationDisplayOptions(options, baseline);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const { copy: copyOverview, icon: copyIcon } = useCopyToClipboard();
   const { value: overviewTitle } = usePersistedLocalString(
@@ -73,7 +76,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
     brief.descriptionDefault,
   );
 
-  const fallbackVariant = options[0]?.value;
+  const fallbackVariant = displayOptions[0]?.value;
   const ActiveVariantRenderer =
     renderers[variant] ?? (fallbackVariant ? renderers[fallbackVariant] : null);
   const hideInlineControls = Boolean(review);
@@ -91,6 +94,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
       onVariantChange,
       options,
       renderers,
+      baseline,
       defaultVariantValue: effectiveDefault,
       briefConfigFilePath,
       explorationLabel: variantSet?.label ?? brief.titleDefault,
@@ -107,6 +111,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
       onVariantChange,
       options,
       renderers,
+      baseline,
       storageKeyPrefix,
       variant,
       variantSet?.id,
@@ -134,8 +139,9 @@ export function PrototypeVariantExplorer<TVariant extends string>({
         overviewTitle,
         overviewDescription,
         options.map((option) => option.value).join(","),
+        baseline.value,
       ].join("|"),
-    [variant, effectiveDefault, overviewTitle, overviewDescription, options],
+    [variant, effectiveDefault, overviewTitle, overviewDescription, options, baseline.value],
   );
 
   const variantSetId = variantSet?.id ?? null;
@@ -188,7 +194,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
             <div className="flex flex-wrap items-center gap-2">
               <PrototypeVariantTabs
                 idPrefix={variantTabsIdPrefix}
-                options={options}
+                options={displayOptions}
                 value={variant}
                 onValueChange={onVariantChange}
                 keyboardScopeActive={!overviewOpen}
@@ -239,7 +245,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
       copyOverview,
       effectiveDefault,
       onVariantChange,
-      options,
+      displayOptions,
       overviewDescription,
       overviewOpen,
       overviewTitle,
@@ -274,6 +280,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
           onVariantChange={onVariantChange}
           options={options}
           renderers={renderers}
+          baseline={baseline}
           defaultVariantValue={effectiveDefault}
           briefConfigFilePath={briefConfigFilePath}
         />

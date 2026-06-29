@@ -20,16 +20,16 @@ export type ProtoColorOption = {
   rgb: ProtoRgb;
 };
 
-/** Five shapes from the proto-shapes prototype. */
+/** Five shapes from the proto-shapes prototype. Cube sits in the center slot. */
 export const PROTO_SHAPES: ProtoShapeOption[] = [
   { id: "triangle", label: "Triangle" },
-  { id: "cube", label: "Cube" },
   { id: "pentagon", label: "Pentagon" },
+  { id: "cube", label: "Cube" },
   { id: "square", label: "Square" },
   { id: "prism", label: "Prism" },
 ];
 
-/** Five colors from the proto-shapes prototype (one per default shape). */
+/** Five colors from the proto-shapes prototype. */
 export const PROTO_COLORS: ProtoColorOption[] = [
   { id: "green", label: "Green", rgb: [43, 220, 120] },
   { id: "purple", label: "Purple", rgb: [110, 16, 250] },
@@ -38,7 +38,7 @@ export const PROTO_COLORS: ProtoColorOption[] = [
   { id: "gold", label: "Gold", rgb: [255, 200, 50] },
 ];
 
-export const DEFAULT_PROTO_SHAPE_ID: ProtoShapeId = "triangle";
+export const DEFAULT_PROTO_SHAPE_ID: ProtoShapeId = "cube";
 export const DEFAULT_PROTO_COLOR_ID: ProtoColorId = "green";
 
 export function getProtoShape(id: ProtoShapeId): ProtoShapeOption {
@@ -68,10 +68,10 @@ export type ProtoShapeCustomizerVariant =
 export const PROTO_SHAPE_CUSTOMIZER_CANVAS_INSET: Partial<
   Record<ProtoShapeCustomizerVariant, string>
 > = {
+  "compact-minimal-dock": "bottom-[11.5rem] sm:bottom-[9rem]",
   "compact-nudge-inline": "bottom-[8.25rem]",
   "compact-nudge-text-first": "bottom-[8.25rem]",
   "compact-link-nudge": "bottom-[8rem]",
-  "compact-minimal-dock": "bottom-[7.75rem]",
   "dual-row-reserved": "bottom-[12rem]",
   "dual-row-nudge-first": "bottom-[12rem]",
   "dual-row-columns": "bottom-[11.5rem]",

@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@prototype/components/ui/dialog";
+import { Switch } from "@prototype/components/ui/switch";
 import { buildCreateDesignExplorationCopyText } from "@prototype/lib/prototypes/design-exploration-types";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { X } from "lucide-react";
@@ -32,6 +33,7 @@ export function PrototypeCreateExplorationModal({
   existingExplorations,
 }: PrototypeCreateExplorationModalProps) {
   const [brief, setBrief] = useState("");
+  const [includeMobbin, setIncludeMobbin] = useState(true);
   const { copy, icon, isCopied } = useCopyToClipboard();
   const canCopy = brief.trim().length > 0;
 
@@ -52,6 +54,7 @@ export function PrototypeCreateExplorationModal({
         existingExplorations,
         origin,
         briefText: brief,
+        includeMobbin,
       }),
     );
   };
@@ -100,7 +103,18 @@ export function PrototypeCreateExplorationModal({
           aria-hidden
         />
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3">
+        <div className="flex items-center justify-between gap-4 px-5 py-3">
+          <label className="flex cursor-pointer items-center gap-2">
+            <Switch
+              checked={includeMobbin}
+              onCheckedChange={setIncludeMobbin}
+              aria-label="Gather references from Mobbin"
+              className="data-[state=checked]:bg-foreground"
+            />
+            <span className="text-sm text-muted-foreground">
+              Gather references from Mobbin
+            </span>
+          </label>
           <Button
             type="button"
             variant="chrome"

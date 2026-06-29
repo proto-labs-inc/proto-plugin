@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@prototype/components/ui/button";
+import { Switch } from "@prototype/components/ui/switch";
 import {
   PrototypeComponent,
   usePrototypeSlug,
@@ -12,6 +13,10 @@ import {
   buildMoreDesignExplorationVariantsCopyText,
   buildResetBriefDefaultsPrompt,
   buildSetDefaultVariantPrompt,
+  getDesignExplorationDisplayOptions,
+  getDesignExplorationVariantOptions,
+  resolveDesignExplorationBaselineOption,
+  type DesignExplorationBaselineOption,
   type DesignExplorationBrief,
   type DesignExplorationContext,
   type DesignExplorationMobbin,
@@ -63,6 +68,8 @@ export type PrototypeDesignBriefPanelProps<TVariant extends string> = {
   onVariantChange: (variant: TVariant) => void;
   options: DesignExplorationVariantOption<TVariant>[];
   renderers: Record<TVariant, () => React.ReactNode>;
+  /** Pre-exploration UI — pinned at the bottom of the variant list. */
+  baseline: DesignExplorationBaselineOption<TVariant>;
   /**
    * Marked "Default" in the brief — the codebase-stored default variant
    * (`config.defaultVariant`). Other options offer a "Make default" prompt.
@@ -131,6 +138,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
   onVariantChange,
   options,
   renderers,
+  baseline,
   defaultVariantValue,
   briefConfigFilePath,
   explorationLabel,
@@ -171,6 +179,13 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
   );
   const { value: moreVariantsBrief, updateValue: updateMoreVariantsBrief } =
     usePersistedLocalString(`${storageKeyPrefix}-more-variants-brief`, "");
+  const {
+    value: multipleVersions,
+    updateValue: updateMultipleVersions,
+  } = usePersistedLocalBoolean(
+    `${storageKeyPrefix}-more-variants-multiple-versions`,
+    true,
+  );
   const canCopyMoreVariants = moreVariantsBrief.trim().length > 0 && Boolean(slug);
 
   const variantsTitle = variantsSection?.title ?? "Design variants";
@@ -274,7 +289,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
         slug,
         explorationLabel: resolvedExplorationLabel,
         explorationId,
-        options,
+        options: explorationOptions,
         brief: {
           titleDefault: effectiveTitle,
           descriptionDefault: effectiveDescription,
@@ -282,6 +297,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
         configFilePath: briefConfigFilePath,
         origin,
         briefText: moreVariantsBrief,
+        multipleVersions,
       }),
     );
   };
@@ -293,11 +309,26 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
           value={moreVariantsBrief}
           onChange={(event) => updateMoreVariantsBrief(event.target.value)}
           minHeightClass="min-h-[5rem]"
-          placeholder="Describe more variations to explore…"
+          placeholder={
+            multipleVersions
+              ? "Describe more variations to explore…"
+              : "Describe one variation to explore…"
+          }
           aria-label="More variations brief"
         />
       </PrototypeComponent>
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4">
+        <PrototypeComponent id={`${componentIdPrefix}.more-variants-multiple-versions`}>
+          <label className="flex cursor-pointer items-center gap-2">
+            <Switch
+              checked={multipleVersions}
+              onCheckedChange={updateMultipleVersions}
+              aria-label="Multiple versions"
+              className="data-[state=checked]:bg-foreground"
+            />
+            <span className="text-sm text-muted-foreground">Multiple versions</span>
+          </label>
+        </PrototypeComponent>
         <PrototypeComponent id={`${componentIdPrefix}.more-variants-copy-prompt`}>
           <Button
             type="button"
@@ -315,6 +346,104 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
       </div>
     </div>
   ) : null;
+
+  const explorationOptions = getDesignExplorationVariantOptions(options, baseline);
+  const resolvedBaseline = resolveDesignExplorationBaselineOption(baseline);
+
+  const renderVariantCard = (
+    option: DesignExplorationVariantOption<TVariant>,
+    {
+      isBaseline = false,
+      badgeSuffix,
+    }: { isBaseline?: boolean; badgeSuffix?: string } = {},
+  ) => {
+    const VariantPreview = renderers[option.value];
+    const isActive = option.value === variant;
+    const isDefaultOption =
+      !isBaseline &&
+      defaultVariantValue !== undefined &&
+      option.value === defaultVariantValue;
+    const optionIdSuffix = badgeSuffix ?? option.value;
+
+    return (
+      <PrototypeComponent
+        key={option.value}
+        id={`${componentIdPrefix}.overview-option.${optionIdSuffix}`}
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-2 px-0.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <p className={cn(cardTitleClass, "min-w-0 truncate")}>
+                {option.label}
+              </p>
+              {isBaseline ? (
+                <PrototypeComponent
+                  id={`${componentIdPrefix}.overview-option.${optionIdSuffix}.baseline`}
+                  className="tool-variant-original-badge shrink-0"
+                >
+                  <span aria-label="Original state before exploration">
+                    ORIGINAL
+                  </span>
+                </PrototypeComponent>
+              ) : null}
+              {isDefaultOption ? (
+                <PrototypeComponent
+                  id={`${componentIdPrefix}.overview-option.${optionIdSuffix}.default`}
+                  className="tool-variant-default-badge shrink-0"
+                >
+                  <span aria-label="Current default variant">DEFAULT</span>
+                </PrototypeComponent>
+              ) : null}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
+              {!isBaseline && !isDefaultOption ? (
+                <MakeDefaultButton
+                  componentId={`${componentIdPrefix}.overview-option.${optionIdSuffix}.set-default`}
+                  optionLabel={option.label}
+                  optionValue={option.value}
+                  configFilePath={briefConfigFilePath}
+                />
+              ) : null}
+            </div>
+          </div>
+
+          <div
+            role="button"
+            tabIndex={0}
+            aria-pressed={isActive}
+            aria-label={`Select ${option.label} variant`}
+            onClick={() => onVariantChange(option.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onVariantChange(option.value);
+              }
+            }}
+            className={cn(
+              "tool-variant-card",
+              isActive && "is-active",
+            )}
+          >
+            <div
+              style={{ zoom: variantPreviewScale }}
+              className="w-full"
+              data-prototype-screenshot
+            >
+              {variantPreviewsReady ? (
+                VariantPreview()
+              ) : (
+                <div
+                  className="bg-bg-subtle min-h-32 w-full"
+                  aria-hidden
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </PrototypeComponent>
+    );
+  };
 
   const variantsSectionContent = (
     <section
@@ -334,81 +463,10 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
       </div>
 
       <div className={cn("flex flex-col", isSidebar ? "gap-6" : "gap-10")}>
-        {options.map((option) => {
-          const VariantPreview = renderers[option.value];
-          const isActive = option.value === variant;
-          const isDefaultOption =
-            defaultVariantValue !== undefined &&
-            option.value === defaultVariantValue;
-
-          return (
-            <PrototypeComponent
-              key={option.value}
-              id={`${componentIdPrefix}.overview-option.${option.value}`}
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between gap-2 px-0.5">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <p className={cn(cardTitleClass, "min-w-0 truncate")}>
-                      {option.label}
-                    </p>
-                    {isDefaultOption ? (
-                      <PrototypeComponent
-                        id={`${componentIdPrefix}.overview-option.${option.value}.default`}
-                        className="tool-variant-default-badge shrink-0"
-                      >
-                        <span aria-label="Current default variant">DEFAULT</span>
-                      </PrototypeComponent>
-                    ) : null}
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-3">
-                    {!isDefaultOption ? (
-                      <MakeDefaultButton
-                        componentId={`${componentIdPrefix}.overview-option.${option.value}.set-default`}
-                        optionLabel={option.label}
-                        optionValue={option.value}
-                        configFilePath={briefConfigFilePath}
-                      />
-                    ) : null}
-                  </div>
-                </div>
-
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={isActive}
-                  aria-label={`Select ${option.label} variant`}
-                  onClick={() => onVariantChange(option.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      onVariantChange(option.value);
-                    }
-                  }}
-                  className={cn(
-                    "tool-variant-card",
-                    isActive && "is-active",
-                  )}
-                >
-                  <div
-                    style={{ zoom: variantPreviewScale }}
-                    className="w-full"
-                    data-prototype-screenshot
-                  >
-                    {variantPreviewsReady ? (
-                      VariantPreview()
-                    ) : (
-                      <div
-                        className="bg-bg-subtle min-h-32 w-full"
-                        aria-hidden
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </PrototypeComponent>
-          );
+        {explorationOptions.map((option) => renderVariantCard(option))}
+        {renderVariantCard(resolvedBaseline, {
+          isBaseline: true,
+          badgeSuffix: "baseline",
         })}
       </div>
     </section>
