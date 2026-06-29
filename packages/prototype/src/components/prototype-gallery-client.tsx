@@ -14,13 +14,16 @@ type PrototypeGalleryClientProps = {
   screenshotVersions: Record<string, number>;
 };
 
+const prototypeGalleryTitleClassName =
+  "text-muted-foreground group-hover:text-foreground mt-2 text-sm transition-colors duration-300 ease-out";
+
 function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="New prototype"
-      className="group cursor-pointer text-left"
+      className="group block w-full cursor-pointer text-left"
     >
       <div
         className={cn(
@@ -34,6 +37,9 @@ function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
           <Plus size={20} strokeWidth={2} aria-hidden />
         </div>
       </div>
+      <p className={cn(prototypeGalleryTitleClassName, "invisible")} aria-hidden>
+        &nbsp;
+      </p>
     </button>
   );
 }
@@ -47,7 +53,6 @@ export function PrototypeGalleryClient({
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
         {prototypes.map((prototype) => (
           <Link
             key={prototype.slug}
@@ -77,11 +82,10 @@ export function PrototypeGalleryClient({
                 />
               </div>
             </div>
-            <p className="text-muted-foreground group-hover:text-foreground mt-2 text-sm transition-colors duration-300 ease-out">
-              {prototype.title}
-            </p>
+            <p className={prototypeGalleryTitleClassName}>{prototype.title}</p>
           </Link>
         ))}
+        <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
       </div>
 
       <PrototypeCreatePrototypeModal

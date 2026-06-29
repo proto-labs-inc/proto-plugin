@@ -4,6 +4,24 @@ import { PrototypeComponent } from "@prototype/components/prototypes/prototype-t
 import { useEffect, useRef } from "react";
 
 import {
+  createSpringsSquareSimulation,
+  drawSpringsSquareSimulation,
+  pickClosestParticle as pickClosestSquareParticle,
+  SQUARE_COLLISION_EDGES,
+  SQUARE_SPRING_PAIRS,
+  stepSpringsSquareSimulation,
+  updateSpringsSquareSimulationBounds,
+  type SpringsSquareSimulation,
+} from "./springs-square-simulation";
+import {
+  createSpringsCubeSimulation,
+  drawSpringsCubeSimulation,
+  pickClosestParticle as pickClosestCubeParticle,
+  stepSpringsCubeSimulation,
+  updateSpringsCubeSimulationBounds,
+  type SpringsCubeSimulation,
+} from "./springs-cube-simulation";
+import {
   createSpringsPentagonSimulation,
   drawSpringsPentagonSimulation,
   pickClosestParticle as pickClosestPentagonParticle,
@@ -11,6 +29,21 @@ import {
   updateSpringsPentagonSimulationBounds,
   type SpringsPentagonSimulation,
 } from "./springs-pentagon-simulation";
+import {
+  createSpringsPrismSimulation,
+  drawSpringsPrismSimulation,
+  pickClosestParticle as pickClosestPrismParticle,
+  stepSpringsPrismSimulation,
+  updateSpringsPrismSimulationBounds,
+  type SpringsPrismSimulation,
+} from "./springs-prism-simulation";
+import {
+  getShapeStackDepth,
+  resolveInterShapeCollisions,
+  resolveSelfCollisions,
+  type CollidableParticle,
+  type CollisionSurface,
+} from "./springs-inter-shape-collisions";
 import {
   createSpringsTriangleSimulation,
   drawSpringsTriangleSimulation,
@@ -34,7 +67,254 @@ type PointerInput = {
   pointerDown: boolean;
 };
 
-type GrabbedShape = "triangle" | "pentagon" | null;
+type SpringsSimulation =
+  | SpringsTriangleSimulation
+  | SpringsCubeSimulation
+  | SpringsPentagonSimulation
+  | SpringsPrismSimulation
+  | SpringsSquareSimulation;
+
+type ShapeId =
+  | "triangle"
+  | "cube"
+  | "pentagon"
+  | "prism"
+  | "square";
+
+type ShapeSlot = {
+  id: ShapeId;
+  sim: SpringsSimulation | null;
+  xFactor: number;
+  yFactor: number;
+  create: (width: number, height: number, x: number, y: number) => SpringsSimulation;
+  updateBounds: (sim: SpringsSimulation, width: number, height: number) => void;
+  pick: (
+    sim: SpringsSimulation,
+    x: number,
+    y: number,
+    pickRadius: number,
+  ) => void;
+  step: (sim: SpringsSimulation, input: PointerInput) => void;
+  draw: (ctx: CanvasRenderingContext2D, sim: SpringsSimulation) => void;
+  collisionEdges: readonly (readonly [number, number])[];
+};
+
+const TRIANGLE_COLLISION_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 0],
+  [0, 4],
+  [1, 4],
+  [2, 4],
+  [3, 4],
+  [2, 0],
+  [1, 3],
+] as const;
+
+const CUBE_COLLISION_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 0],
+  [0, 4],
+  [1, 5],
+  [2, 6],
+  [3, 7],
+  [4, 5],
+  [5, 6],
+  [6, 7],
+  [0, 2],
+  [4, 3],
+  [6, 4],
+  [2, 5],
+  [7, 2],
+  [4, 1],
+] as const;
+
+const PENTAGON_COLLISION_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 0],
+  [0, 5],
+  [1, 5],
+  [2, 5],
+  [3, 5],
+  [4, 5],
+] as const;
+
+const PRISM_COLLISION_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 0],
+  [3, 4],
+  [4, 5],
+  [5, 3],
+  [0, 3],
+  [1, 4],
+  [2, 5],
+] as const;
+
+function createShapeSlots(): ShapeSlot[] {
+  return [
+    {
+      id: "triangle",
+      sim: null,
+      xFactor: 0.17,
+      yFactor: 0.33,
+      create: (width, height, x, y) =>
+        createSpringsTriangleSimulation(width, height, x, y),
+      updateBounds: (sim, width, height) =>
+        updateSpringsTriangleSimulationBounds(
+          sim as SpringsTriangleSimulation,
+          width,
+          height,
+        ),
+      pick: (sim, x, y, pickRadius) =>
+        pickClosestTriangleParticle(
+          sim as SpringsTriangleSimulation,
+          x,
+          y,
+          pickRadius,
+        ),
+      step: (sim, input) =>
+        stepSpringsTriangleSimulation(
+          sim as SpringsTriangleSimulation,
+          input,
+        ),
+      draw: (ctx, sim) =>
+        drawSpringsTriangleSimulation(ctx, sim as SpringsTriangleSimulation, {
+          clearBackground: false,
+          showHint: false,
+        }),
+      collisionEdges: TRIANGLE_COLLISION_EDGES,
+    },
+    {
+      id: "cube",
+      sim: null,
+      xFactor: 0.5,
+      yFactor: 0.33,
+      create: (width, height, x, y) =>
+        createSpringsCubeSimulation(width, height, x, y),
+      updateBounds: (sim, width, height) =>
+        updateSpringsCubeSimulationBounds(
+          sim as SpringsCubeSimulation,
+          width,
+          height,
+        ),
+      pick: (sim, x, y, pickRadius) =>
+        pickClosestCubeParticle(
+          sim as SpringsCubeSimulation,
+          x,
+          y,
+          pickRadius,
+        ),
+      step: (sim, input) =>
+        stepSpringsCubeSimulation(sim as SpringsCubeSimulation, input),
+      draw: (ctx, sim) =>
+        drawSpringsCubeSimulation(ctx, sim as SpringsCubeSimulation, {
+          clearBackground: false,
+          showHint: false,
+        }),
+      collisionEdges: CUBE_COLLISION_EDGES,
+    },
+    {
+      id: "pentagon",
+      sim: null,
+      xFactor: 0.83,
+      yFactor: 0.33,
+      create: (width, height, x, y) =>
+        createSpringsPentagonSimulation(width, height, x, y),
+      updateBounds: (sim, width, height) =>
+        updateSpringsPentagonSimulationBounds(
+          sim as SpringsPentagonSimulation,
+          width,
+          height,
+        ),
+      pick: (sim, x, y, pickRadius) =>
+        pickClosestPentagonParticle(
+          sim as SpringsPentagonSimulation,
+          x,
+          y,
+          pickRadius,
+        ),
+      step: (sim, input) =>
+        stepSpringsPentagonSimulation(
+          sim as SpringsPentagonSimulation,
+          input,
+        ),
+      draw: (ctx, sim) =>
+        drawSpringsPentagonSimulation(ctx, sim as SpringsPentagonSimulation, {
+          clearBackground: false,
+          showHint: false,
+        }),
+      collisionEdges: PENTAGON_COLLISION_EDGES,
+    },
+    {
+      id: "square",
+      sim: null,
+      xFactor: 0.33,
+      yFactor: 0.67,
+      create: (width, height, x, y) =>
+        createSpringsSquareSimulation(width, height, x, y),
+      updateBounds: (sim, width, height) =>
+        updateSpringsSquareSimulationBounds(
+          sim as SpringsSquareSimulation,
+          width,
+          height,
+        ),
+      pick: (sim, x, y, pickRadius) =>
+        pickClosestSquareParticle(
+          sim as SpringsSquareSimulation,
+          x,
+          y,
+          pickRadius,
+        ),
+      step: (sim, input) =>
+        stepSpringsSquareSimulation(
+          sim as SpringsSquareSimulation,
+          input,
+        ),
+      draw: (ctx, sim) =>
+        drawSpringsSquareSimulation(ctx, sim as SpringsSquareSimulation, {
+          clearBackground: false,
+          showHint: false,
+        }),
+      collisionEdges: SQUARE_COLLISION_EDGES,
+    },
+    {
+      id: "prism",
+      sim: null,
+      xFactor: 0.67,
+      yFactor: 0.67,
+      create: (width, height, x, y) =>
+        createSpringsPrismSimulation(width, height, x, y),
+      updateBounds: (sim, width, height) =>
+        updateSpringsPrismSimulationBounds(
+          sim as SpringsPrismSimulation,
+          width,
+          height,
+        ),
+      pick: (sim, x, y, pickRadius) =>
+        pickClosestPrismParticle(
+          sim as SpringsPrismSimulation,
+          x,
+          y,
+          pickRadius,
+        ),
+      step: (sim, input) =>
+        stepSpringsPrismSimulation(sim as SpringsPrismSimulation, input),
+      draw: (ctx, sim) =>
+        drawSpringsPrismSimulation(ctx, sim as SpringsPrismSimulation, {
+          clearBackground: false,
+          showHint: false,
+        }),
+      collisionEdges: PRISM_COLLISION_EDGES,
+    },
+  ];
+}
 
 function setupHiDpiCanvas(
   canvas: HTMLCanvasElement,
@@ -49,11 +329,7 @@ function setupHiDpiCanvas(
   return dpr;
 }
 
-function distanceToGrabbed(
-  sim: SpringsTriangleSimulation | SpringsPentagonSimulation,
-  x: number,
-  y: number,
-) {
+function distanceToGrabbed(sim: SpringsSimulation, x: number, y: number) {
   if (sim.grabbedIndex < 0) return Infinity;
   const particle = sim.particles[sim.grabbedIndex];
   return Math.hypot(x - particle.px, y - particle.py);
@@ -62,9 +338,8 @@ function distanceToGrabbed(
 export function SpringsShapesCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const triangleRef = useRef<SpringsTriangleSimulation | null>(null);
-  const pentagonRef = useRef<SpringsPentagonSimulation | null>(null);
-  const grabbedShapeRef = useRef<GrabbedShape>(null);
+  const shapesRef = useRef<ShapeSlot[]>(createShapeSlots());
+  const grabbedShapeIdRef = useRef<ShapeId | null>(null);
   const sizeRef = useRef<CanvasSize>({ cssWidth: 1, cssHeight: 1, dpr: 1 });
   const inputRef = useRef<PointerInput>({
     pointerX: 0,
@@ -89,34 +364,15 @@ export function SpringsShapesCanvas() {
       const dpr = setupHiDpiCanvas(canvas, cssWidth, cssHeight);
       sizeRef.current = { cssWidth, cssHeight, dpr };
 
-      if (triangleRef.current) {
-        updateSpringsTriangleSimulationBounds(
-          triangleRef.current,
-          cssWidth,
-          cssHeight,
-        );
-      } else {
-        triangleRef.current = createSpringsTriangleSimulation(
-          cssWidth,
-          cssHeight,
-          cssWidth * 0.32,
-          cssHeight / 2,
-        );
-      }
+      for (const slot of shapesRef.current) {
+        const centerX = cssWidth * slot.xFactor;
+        const centerY = cssHeight * slot.yFactor;
 
-      if (pentagonRef.current) {
-        updateSpringsPentagonSimulationBounds(
-          pentagonRef.current,
-          cssWidth,
-          cssHeight,
-        );
-      } else {
-        pentagonRef.current = createSpringsPentagonSimulation(
-          cssWidth,
-          cssHeight,
-          cssWidth * 0.68,
-          cssHeight / 2,
-        );
+        if (slot.sim) {
+          slot.updateBounds(slot.sim, cssWidth, cssHeight);
+        } else {
+          slot.sim = slot.create(cssWidth, cssHeight, centerX, centerY);
+        }
       }
     };
 
@@ -137,37 +393,41 @@ export function SpringsShapesCanvas() {
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      const triangle = triangleRef.current;
-      const pentagon = pentagonRef.current;
-      if (!triangle || !pentagon) return;
-
+      const shapes = shapesRef.current;
       const { x, y } = pointerToCanvas(event.clientX, event.clientY);
       const pickRadius =
         event.pointerType === "touch"
           ? PARTICLE_PICK_RADIUS_TOUCH
           : PARTICLE_PICK_RADIUS;
 
-      pickClosestTriangleParticle(triangle, x, y, pickRadius);
-      pickClosestPentagonParticle(pentagon, x, y, pickRadius);
+      let closestId: ShapeId | null = null;
+      let closestDist = Infinity;
 
-      const triangleDist = distanceToGrabbed(triangle, x, y);
-      const pentagonDist = distanceToGrabbed(pentagon, x, y);
+      for (const slot of shapes) {
+        if (!slot.sim) continue;
+        slot.pick(slot.sim, x, y, pickRadius);
+        const dist = distanceToGrabbed(slot.sim, x, y);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestId = slot.id;
+        }
+      }
 
-      if (triangleDist === Infinity && pentagonDist === Infinity) {
-        grabbedShapeRef.current = null;
+      if (!closestId || closestDist === Infinity) {
+        grabbedShapeIdRef.current = null;
         return;
       }
 
-      if (triangleDist <= pentagonDist) {
-        pentagon.grabbedIndex = -1;
-        grabbedShapeRef.current = "triangle";
-        triangle.clicked = true;
-      } else {
-        triangle.grabbedIndex = -1;
-        grabbedShapeRef.current = "pentagon";
-        pentagon.clicked = true;
+      for (const slot of shapes) {
+        if (!slot.sim) continue;
+        if (slot.id === closestId) {
+          slot.sim.clicked = true;
+        } else {
+          slot.sim.grabbedIndex = -1;
+        }
       }
 
+      grabbedShapeIdRef.current = closestId;
       clickedRef.current = true;
       event.preventDefault();
       canvas.setPointerCapture(event.pointerId);
@@ -187,9 +447,10 @@ export function SpringsShapesCanvas() {
         canvas.releasePointerCapture(event.pointerId);
       }
       inputRef.current.pointerDown = false;
-      grabbedShapeRef.current = null;
-      if (triangleRef.current) triangleRef.current.grabbedIndex = -1;
-      if (pentagonRef.current) pentagonRef.current.grabbedIndex = -1;
+      grabbedShapeIdRef.current = null;
+      for (const slot of shapesRef.current) {
+        if (slot.sim) slot.sim.grabbedIndex = -1;
+      }
     };
 
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -198,20 +459,63 @@ export function SpringsShapesCanvas() {
     canvas.addEventListener("pointercancel", endPointer);
 
     const frame = () => {
-      const triangle = triangleRef.current;
-      const pentagon = pentagonRef.current;
+      const shapes = shapesRef.current;
       const { cssWidth, cssHeight, dpr } = sizeRef.current;
-      if (!triangle || !pentagon) return;
+      const grabbedId = grabbedShapeIdRef.current;
 
-      const grabbed = grabbedShapeRef.current;
-      stepSpringsTriangleSimulation(triangle, {
-        ...inputRef.current,
-        pointerDown: inputRef.current.pointerDown && grabbed === "triangle",
-      });
-      stepSpringsPentagonSimulation(pentagon, {
-        ...inputRef.current,
-        pointerDown: inputRef.current.pointerDown && grabbed === "pentagon",
-      });
+      for (const slot of shapes) {
+        if (!slot.sim) continue;
+        slot.step(slot.sim, {
+          ...inputRef.current,
+          pointerDown:
+            inputRef.current.pointerDown && grabbedId === slot.id,
+        });
+      }
+
+      const particleGroups: CollidableParticle[][] = [];
+      const collisionSurfaces: (CollisionSurface | undefined)[] = [];
+      const pinnedParticles: CollidableParticle[] = [];
+
+      for (const slot of shapes) {
+        if (!slot.sim) continue;
+        particleGroups.push(slot.sim.particles);
+        collisionSurfaces.push({
+          particles: slot.sim.particles,
+          edges: slot.collisionEdges,
+        });
+        if (
+          grabbedId === slot.id &&
+          inputRef.current.pointerDown &&
+          slot.sim.grabbedIndex > -1
+        ) {
+          pinnedParticles.push(slot.sim.particles[slot.sim.grabbedIndex]!);
+        }
+      }
+
+      resolveInterShapeCollisions(
+        particleGroups,
+        pinnedParticles,
+        collisionSurfaces,
+      );
+
+      for (const slot of shapes) {
+        if (slot.id !== "square" || !slot.sim) continue;
+        const squarePinned =
+          grabbedId === "square" &&
+          inputRef.current.pointerDown &&
+          slot.sim.grabbedIndex > -1
+            ? [slot.sim.particles[slot.sim.grabbedIndex]!]
+            : [];
+        resolveSelfCollisions(
+          slot.sim.particles,
+          {
+            particles: slot.sim.particles,
+            edges: SQUARE_COLLISION_EDGES,
+          },
+          SQUARE_SPRING_PAIRS,
+          squarePinned,
+        );
+      }
 
       frameCountRef.current += 1;
 
@@ -220,14 +524,17 @@ export function SpringsShapesCanvas() {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, cssWidth, cssHeight);
 
-      drawSpringsTriangleSimulation(ctx, triangle, {
-        clearBackground: false,
-        showHint: false,
+      const drawOrder = [...shapes].sort((a, b) => {
+        if (!a.sim || !b.sim) return 0;
+        const aGrabbed = grabbedId === a.id;
+        const bGrabbed = grabbedId === b.id;
+        if (aGrabbed !== bGrabbed) return aGrabbed ? 1 : -1;
+        return getShapeStackDepth(a.sim.particles) - getShapeStackDepth(b.sim.particles);
       });
-      drawSpringsPentagonSimulation(ctx, pentagon, {
-        clearBackground: false,
-        showHint: false,
-      });
+
+      for (const slot of drawOrder) {
+        if (slot.sim) slot.draw(ctx, slot.sim);
+      }
 
       if (!clickedRef.current && frameCountRef.current > 80) {
         const alpha = Math.min(1, (frameCountRef.current - 80) / 30) * 0.3;
