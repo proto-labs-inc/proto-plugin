@@ -153,11 +153,33 @@ Use when comparing **2+ UI directions** for the same user problem.
 
 | Layer         | Location                                               | Owns                                                                                         |
 | ------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| **Tool**      | `prototype` (`PrototypeVariantExplorer`, etc.) | Modal chrome, variant tabs, rationale popover, Mobbin gallery, localStorage for brief fields |
-| **Prototype** | `src/prototypes/<slug>/_components/`                   | Variant renderers, copy, rationale, context JSON, Mobbin references, `component-ids.ts`      |
+| **Tool**      | `prototype` (`PrototypeVariantExplorer`, etc.) | Modal chrome, variant tabs, Mobbin gallery, localStorage for brief fields |
+| **Prototype** | `src/prototypes/<slug>/_components/`                   | Variant renderers, context JSON, Mobbin references, `component-ids.ts`      |
 
 
-Reference: `example-feature/_components/no-data-design-exploration-config.tsx` + `no-data-variant-toggle.tsx`.
+Reference: `src/prototypes/proto-partner-page/_components/invite-copy-design-exploration-config.tsx` + `invite-copy-variant-toggle.tsx`.
+
+### Renderers
+
+Build one preview per option with `buildDesignExplorationRenderers`. In host prototype files (client components), import from `@prototype/...` — not the `proto-plugin` barrel, which includes server-only modules:
+
+```ts
+import { buildDesignExplorationRenderers } from "@prototype/lib/prototypes/build-design-exploration-renderers";
+import { DesignExplorationVariantPreviewShell } from "@prototype/components/prototypes/design-exploration-variant-preview-shell";
+
+const renderers = buildDesignExplorationRenderers(VARIANT_OPTIONS, (variant) => (
+  <MyBlock variant={variant} />
+));
+
+// Overlay-style variants (absolute positioning on the live page):
+const renderers = buildDesignExplorationRenderers(VARIANT_OPTIONS, (variant) => (
+  <DesignExplorationVariantPreviewShell layout={isOverlay(variant) ? "overlay" : "inline"}>
+    <MyBlock variant={variant} />
+  </DesignExplorationVariantPreviewShell>
+));
+```
+
+Do not hand-roll renderer maps that return `null` for some variants — the helper maps every option and warns in dev when a renderer returns empty content.
 
 ### Config shape
 
@@ -168,20 +190,24 @@ Reference: `example-feature/_components/no-data-design-exploration-config.tsx` +
   storageKeyPrefix: string;
   variant, onVariantChange,
   options: { value, label, hint? }[];
-  rationale: Record<TVariant, { good, bad }>;
   renderers: Record<TVariant, ComponentType>;
   brief: { titleDefault, descriptionDefault };
+  defaultVariant?: TVariant; // codebase-stored default (e.g. DEFAULT_*_VARIANT); marked "Default" in the brief
   context?: { label, data: unknown, render?, defaultExpanded?, panelId? };
   mobbin?: { references, title?, description?, imagePathForReference? };
   variantsSection?: { title?, description? };
 }
 ```
 
+The default variant lives in the codebase config (`defaultVariant`, typically `DEFAULT_*_VARIANT`) — not KV. In the brief, each non-default option shows a **Make default** button that copies a prompt (`buildSetDefaultVariantPrompt`) asking an agent to update that constant; the current default is marked **Default**.
+
 ### Iterating on variants
 
 When asked to **modify an existing option**, add a **new variant** (do not replace in place), register ids, and update `DEFAULT_*_VARIANT`.
 
 **Variant list order:** prepend each new entry to the top of `*_VARIANT_OPTIONS` (first item in the array). That order drives the design-brief sidebar/modal scroll view and variant tabs — newest explorations appear at the top.
+
+In review mode, each exploration sidebar includes a brief field and **Copy prompt** button below the header. It copies `buildMoreDesignExplorationVariantsCopyText` with the typed brief, existing variants, and config path — use that to request more layout directions from an agent.
 
 
 | Prompt intent         | Action                                          |
@@ -326,6 +352,34 @@ setSpecContent(
 
 ---
 
+## Consuming the review context in effects
+
+`usePrototypeReview()` / `usePrototypeReviewOptional()` return a **new context object on most renders** — the provider's `value` memo rebuilds whenever review state changes (e.g. `variantSets`, panel open state). Several of its methods (`registerVariantSet`, `unregisterVariantSet`, etc.) also call `setState`.
+
+**Never put the whole `review` object in an effect dependency array.** Doing so creates an infinite loop ("Maximum update depth exceeded"): the effect calls a method → state changes → `value` gets a new identity → the effect re-runs → its cleanup undoes the work → the body redoes it → repeat.
+
+Depend on the **specific stable callbacks** instead. The context methods are wrapped in `useCallback(..., [])`, so their identities are stable across renders.
+
+```tsx
+// ❌ loops forever — `review` identity changes whenever it registers/unregisters
+useLayoutEffect(() => {
+  if (!review) return;
+  review.registerVariantSet(set);
+  return () => review.unregisterVariantSet(set.id);
+}, [review]);
+
+// ✅ stable deps — runs once, cleans up once
+const registerVariantSet = review?.registerVariantSet;
+const unregisterVariantSet = review?.unregisterVariantSet;
+useLayoutEffect(() => {
+  if (!registerVariantSet || !unregisterVariantSet) return;
+  registerVariantSet(set);
+  return () => unregisterVariantSet(set.id);
+}, [registerVariantSet, unregisterVariantSet]);
+```
+
+---
+
 ## Comment system
 
 - Storage: Upstash Redis key `prototype-comments:<slug>`
@@ -347,4 +401,5 @@ Before finishing, confirm side-by-side with source or a screenshot:
 - Importing from `source/` at runtime
 - Reimplementing synced `@/components/ui` primitives
 - Approximating layout dimensions or colors
+- Depending on the whole `review` context object in an effect's deps (see "Consuming the review context in effects") — use the specific stable callbacks instead
 

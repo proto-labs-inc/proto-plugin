@@ -241,13 +241,16 @@ function applySpringForce(
   q.addForce(fx, fy);
 }
 
+type DrawColor = [number, number, number];
+
 function drawSpring(
   ctx: CanvasRenderingContext2D,
   p: Particle,
   q: Particle,
   visibility: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.strokeStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${visibility})`;
+  ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${visibility})`;
   ctx.beginPath();
   ctx.moveTo(p.px, p.py);
   ctx.lineTo(q.px, q.py);
@@ -290,8 +293,9 @@ function fillPolygon(
   particles: Particle[],
   indices: number[],
   alpha: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.fillStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${alpha})`;
+  ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   ctx.beginPath();
   const first = particles[indices[0]!];
   ctx.moveTo(first.px, first.py);
@@ -341,6 +345,7 @@ export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
+  color?: DrawColor;
 };
 
 export function drawSpringsCubeSimulation(
@@ -348,7 +353,7 @@ export function drawSpringsCubeSimulation(
   sim: SpringsCubeSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -356,11 +361,11 @@ export function drawSpringsCubeSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [2, 3, 7, 1], 100 / 255);
-  fillPolygon(ctx, particles, [7, 1, 4], 100 / 255);
-  fillPolygon(ctx, particles, [6, 7, 4, 5], 100 / 255);
-  fillPolygon(ctx, particles, [7, 3, 0, 4], 50 / 255);
-  fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255);
+  fillPolygon(ctx, particles, [2, 3, 7, 1], 100 / 255, color);
+  fillPolygon(ctx, particles, [7, 1, 4], 100 / 255, color);
+  fillPolygon(ctx, particles, [6, 7, 4, 5], 100 / 255, color);
+  fillPolygon(ctx, particles, [7, 3, 0, 4], 50 / 255, color);
+  fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255, color);
 
   ctx.lineWidth = 1;
 
@@ -369,34 +374,34 @@ export function drawSpringsCubeSimulation(
     const b = particles[(i + 1) % BASE_POINTS];
     const c = particles[i + BASE_POINTS];
 
-    drawSpring(ctx, a, b, springVisible(i, (i + 1) % BASE_POINTS, 1));
-    drawSpring(ctx, a, c, 1);
+    drawSpring(ctx, a, b, springVisible(i, (i + 1) % BASE_POINTS, 1), color);
+    drawSpring(ctx, a, c, 1, color);
   }
 
   for (let i = BASE_POINTS; i < BASE_POINTS + 3; i++) {
     const a = particles[i];
     const b = particles[i + 1];
-    drawSpring(ctx, a, b, 1);
+    drawSpring(ctx, a, b, 1, color);
   }
 
-  drawSpring(ctx, particles[0], particles[2], 0);
-  drawSpring(ctx, particles[4], particles[3], 0);
-  drawSpring(ctx, particles[6], particles[4], 0);
-  drawSpring(ctx, particles[2], particles[5], 0);
-  drawSpring(ctx, particles[7], particles[2], 0);
-  drawSpring(ctx, particles[4], particles[1], 0);
-  drawSpring(ctx, particles[6], particles[3], 0);
-  drawSpring(ctx, particles[5], particles[0], 0);
-  drawSpring(ctx, particles[6], particles[0], 0);
-  drawSpring(ctx, particles[5], particles[3], 0);
-  drawSpring(ctx, particles[7], particles[4], 1);
+  drawSpring(ctx, particles[0], particles[2], 0, color);
+  drawSpring(ctx, particles[4], particles[3], 0, color);
+  drawSpring(ctx, particles[6], particles[4], 0, color);
+  drawSpring(ctx, particles[2], particles[5], 0, color);
+  drawSpring(ctx, particles[7], particles[2], 0, color);
+  drawSpring(ctx, particles[4], particles[1], 0, color);
+  drawSpring(ctx, particles[6], particles[3], 0, color);
+  drawSpring(ctx, particles[5], particles[0], 0, color);
+  drawSpring(ctx, particles[6], particles[0], 0, color);
+  drawSpring(ctx, particles[5], particles[3], 0, color);
+  drawSpring(ctx, particles[7], particles[4], 1, color);
 
   const dotRadius = DOT_RADIUS;
   for (let i = 0; i < particles.length; i++) {
     if (i === 1) continue;
 
     const particle = particles[i];
-    ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 1;
     ctx.beginPath();

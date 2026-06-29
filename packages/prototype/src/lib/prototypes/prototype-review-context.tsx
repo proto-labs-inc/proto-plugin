@@ -732,8 +732,8 @@ export function PrototypeReviewProvider({
     showProdReference,
   ]);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    return {
       slug,
       open,
       sidebarPanel,
@@ -806,8 +806,8 @@ export function PrototypeReviewProvider({
       viewportLayout,
       setViewportLayout,
       toggleViewportLayout,
-    }),
-    [
+    };
+  }, [
       slug,
       open,
       sidebarPanel,

@@ -247,10 +247,7 @@ function buildSpringPairSet() {
       addPair(pyramid.apex, baseIndex);
     }
     for (let i = 0; i < pyramid.base.length; i++) {
-      addPair(
-        pyramid.base[i]!,
-        pyramid.base[(i + 1) % pyramid.base.length]!,
-      );
+      addPair(pyramid.base[i]!, pyramid.base[(i + 1) % pyramid.base.length]!);
     }
   }
 
@@ -282,14 +279,17 @@ export const SQUARE_COLLISION_EDGES = [
   [6, 1],
 ] as const;
 
+type DrawColor = [number, number, number];
+
 function fillTriangle(
   ctx: CanvasRenderingContext2D,
   a: Particle,
   b: Particle,
   c: Particle,
   alpha: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.fillStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${alpha})`;
+  ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   ctx.beginPath();
   ctx.moveTo(a.px, a.py);
   ctx.lineTo(b.px, b.py);
@@ -302,8 +302,9 @@ function drawSpring(
   ctx: CanvasRenderingContext2D,
   p: Particle,
   q: Particle,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+  ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
   ctx.beginPath();
   ctx.moveTo(p.px, p.py);
   ctx.lineTo(q.px, q.py);
@@ -315,13 +316,14 @@ function drawPyramidFaces(
   apexIndex: number,
   baseIndices: readonly number[],
   particles: Particle[],
+  color: DrawColor = COLOR1,
 ) {
   const apex = particles[apexIndex]!;
   const [a, b, c] = baseIndices.map((index) => particles[index]!);
-  fillTriangle(ctx, apex, a, b, 100 / 255);
-  fillTriangle(ctx, apex, b, c, 85 / 255);
-  fillTriangle(ctx, apex, c, a, 75 / 255);
-  fillTriangle(ctx, a, b, c, 50 / 255);
+  fillTriangle(ctx, apex, a, b, 100 / 255, color);
+  fillTriangle(ctx, apex, b, c, 85 / 255, color);
+  fillTriangle(ctx, apex, c, a, 75 / 255, color);
+  fillTriangle(ctx, a, b, c, 50 / 255, color);
 }
 
 function drawPyramidSprings(
@@ -329,17 +331,18 @@ function drawPyramidSprings(
   apexIndex: number,
   baseIndices: readonly number[],
   particles: Particle[],
+  color: DrawColor = COLOR1,
 ) {
   const apex = particles[apexIndex]!;
 
   for (const baseIndex of baseIndices) {
-    drawSpring(ctx, apex, particles[baseIndex]!);
+    drawSpring(ctx, apex, particles[baseIndex]!, color);
   }
 
   for (let i = 0; i < baseIndices.length; i++) {
     const a = particles[baseIndices[i]!]!;
     const b = particles[baseIndices[(i + 1) % baseIndices.length]!]!;
-    drawSpring(ctx, a, b);
+    drawSpring(ctx, a, b, color);
   }
 }
 
@@ -368,6 +371,7 @@ export function stepSpringsSquareSimulation(
 export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   showHint?: boolean;
+  color?: DrawColor;
 };
 
 export function drawSpringsSquareSimulation(
@@ -375,7 +379,7 @@ export function drawSpringsSquareSimulation(
   sim: SpringsSquareSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -384,18 +388,18 @@ export function drawSpringsSquareSimulation(
   }
 
   for (const pyramid of PYRAMIDS) {
-    drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles);
+    drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles, color);
   }
 
   ctx.lineWidth = 1;
 
   for (const pyramid of PYRAMIDS) {
-    drawPyramidSprings(ctx, pyramid.apex, pyramid.base, particles);
+    drawPyramidSprings(ctx, pyramid.apex, pyramid.base, particles, color);
   }
 
   const dotRadius = DOT_RADIUS;
   for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 1;
     ctx.beginPath();

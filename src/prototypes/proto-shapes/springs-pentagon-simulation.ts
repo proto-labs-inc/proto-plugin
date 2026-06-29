@@ -236,13 +236,16 @@ function applySpringForce(
   q.addForce(fx, fy);
 }
 
+type DrawColor = [number, number, number];
+
 function drawSpring(
   ctx: CanvasRenderingContext2D,
   p: Particle,
   q: Particle,
   visibility: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.strokeStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${visibility})`;
+  ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${visibility})`;
   ctx.beginPath();
   ctx.moveTo(p.px, p.py);
   ctx.lineTo(q.px, q.py);
@@ -273,8 +276,9 @@ function fillTriangle(
   b: Particle,
   c: Particle,
   alpha: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.fillStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${alpha})`;
+  ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   ctx.beginPath();
   ctx.moveTo(a.px, a.py);
   ctx.lineTo(b.px, b.py);
@@ -310,6 +314,7 @@ export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
+  color?: DrawColor;
 };
 
 export function drawSpringsPentagonSimulation(
@@ -317,7 +322,7 @@ export function drawSpringsPentagonSimulation(
   sim: SpringsPentagonSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
   const { width, height, particles, margin } = sim;
   const apex = particles[BASE_POINTS];
 
@@ -330,7 +335,7 @@ export function drawSpringsPentagonSimulation(
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
     const b = particles[(i + 1) % BASE_POINTS];
-    fillTriangle(ctx, a, b, apex, faceAlpha);
+    fillTriangle(ctx, a, b, apex, faceAlpha, color);
   }
 
   ctx.lineWidth = 1;
@@ -339,13 +344,13 @@ export function drawSpringsPentagonSimulation(
     const a = particles[i];
     const b = particles[(i + 1) % BASE_POINTS];
 
-    drawSpring(ctx, a, b, 1);
-    drawSpring(ctx, a, apex, 1);
+    drawSpring(ctx, a, b, 1, color);
+    drawSpring(ctx, a, apex, 1, color);
   }
 
   const dotRadius = DOT_RADIUS;
   for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 1;
     ctx.beginPath();

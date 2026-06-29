@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import { createPrototypeSiteLayout } from "proto-plugin";
 import "proto-plugin/styles/globals.css";
 
@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Prototypes",
   description: "UI experiments and concept explorations.",
@@ -30,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <PrototypeSiteLayout>{children}</PrototypeSiteLayout>

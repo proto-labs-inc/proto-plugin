@@ -8,12 +8,21 @@ import type {
 
 export const TOOLBAR_PANEL_HOVER_OPEN_DELAY_MS = 100;
 export const TOOLBAR_PANEL_HOVER_CLOSE_DELAY_MS = 150;
+export const TOOLBAR_HOVER_CAPABLE_MEDIA_QUERY =
+  "(hover: hover) and (pointer: fine)";
+
+export function supportsToolbarHover() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia(TOOLBAR_HOVER_CAPABLE_MEDIA_QUERY).matches;
+}
 
 export function preventToolbarHoverButtonActivation(
   event:
     | ReactMouseEvent<HTMLButtonElement>
     | ReactPointerEvent<HTMLButtonElement>,
 ) {
+  if (!supportsToolbarHover()) return;
+
   event.preventDefault();
   event.stopPropagation();
 }
@@ -59,7 +68,7 @@ export function useToolbarHoverPanel({
 
   const scheduleOpen = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.pointerType === "touch") return;
+      if (!supportsToolbarHover() || event.pointerType === "touch") return;
 
       clearCloseTimer();
       clearOpenTimer();
@@ -71,6 +80,8 @@ export function useToolbarHoverPanel({
   );
 
   const scheduleClose = useCallback(() => {
+    if (!supportsToolbarHover()) return;
+
     clearOpenTimer();
     clearCloseTimer();
     closeTimerRef.current = setTimeout(() => {

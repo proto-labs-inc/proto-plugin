@@ -100,14 +100,17 @@ export function PrototypeCreateStateModal({
           aria-hidden
         />
 
-        <div className="flex items-center justify-end gap-2 px-5 py-4">
+        <div className="flex items-center justify-end gap-2 px-5 py-3">
           <Button
             type="button"
+            variant="chrome"
+            size="sm"
+            className="h-8 gap-1.5"
             disabled={!canCopy}
             onClick={handleCopy}
             aria-label="Copy state brief and prompt"
           >
-            {isCopied ? "Copied" : "Copy prompt"}
+            {isCopied ? "Copied prompt" : "Copy prompt"}
             {icon}
           </Button>
         </div>

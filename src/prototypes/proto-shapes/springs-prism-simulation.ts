@@ -218,13 +218,16 @@ function applySpringForces(sim: SpringsPrismSimulation) {
   }
 }
 
+type DrawColor = [number, number, number];
+
 function fillPolygon(
   ctx: CanvasRenderingContext2D,
   particles: Particle[],
   indices: number[],
   alpha: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.fillStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${alpha})`;
+  ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   ctx.beginPath();
   const first = particles[indices[0]!];
   ctx.moveTo(first.px, first.py);
@@ -241,8 +244,9 @@ function drawSpring(
   p: Particle,
   q: Particle,
   visibility: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.strokeStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${visibility})`;
+  ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${visibility})`;
   ctx.beginPath();
   ctx.moveTo(p.px, p.py);
   ctx.lineTo(q.px, q.py);
@@ -274,6 +278,7 @@ export function stepSpringsPrismSimulation(
 export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   showHint?: boolean;
+  color?: DrawColor;
 };
 
 export function drawSpringsPrismSimulation(
@@ -281,7 +286,7 @@ export function drawSpringsPrismSimulation(
   sim: SpringsPrismSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -289,11 +294,11 @@ export function drawSpringsPrismSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [0, 1, 4, 3], 100 / 255);
-  fillPolygon(ctx, particles, [1, 2, 5, 4], 100 / 255);
-  fillPolygon(ctx, particles, [2, 0, 3, 5], 75 / 255);
-  fillPolygon(ctx, particles, [0, 1, 2], 50 / 255);
-  fillPolygon(ctx, particles, [3, 4, 5], 50 / 255);
+  fillPolygon(ctx, particles, [0, 1, 4, 3], 100 / 255, color);
+  fillPolygon(ctx, particles, [1, 2, 5, 4], 100 / 255, color);
+  fillPolygon(ctx, particles, [2, 0, 3, 5], 75 / 255, color);
+  fillPolygon(ctx, particles, [0, 1, 2], 50 / 255, color);
+  fillPolygon(ctx, particles, [3, 4, 5], 50 / 255, color);
 
   ctx.lineWidth = 1;
 
@@ -302,14 +307,14 @@ export function drawSpringsPrismSimulation(
     const back = particles[i + BASE_POINTS];
     const next = particles[(i + 1) % BASE_POINTS];
 
-    drawSpring(ctx, front, next, 1);
-    drawSpring(ctx, back, particles[((i + 1) % BASE_POINTS) + BASE_POINTS], 1);
-    drawSpring(ctx, front, back, 1);
+    drawSpring(ctx, front, next, 1, color);
+    drawSpring(ctx, back, particles[((i + 1) % BASE_POINTS) + BASE_POINTS], 1, color);
+    drawSpring(ctx, front, back, 1, color);
   }
 
   const dotRadius = DOT_RADIUS;
   for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 1;
     ctx.beginPath();

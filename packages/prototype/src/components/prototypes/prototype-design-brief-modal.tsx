@@ -14,7 +14,6 @@ import type {
   DesignExplorationBrief,
   DesignExplorationContext,
   DesignExplorationMobbin,
-  DesignExplorationRationale,
   DesignExplorationVariantOption,
   DesignExplorationVariantsSection,
 } from "@prototype/lib/prototypes/design-exploration-types";
@@ -38,10 +37,9 @@ type PrototypeDesignBriefModalProps<TVariant extends string> = {
   variant: TVariant;
   onVariantChange: (variant: TVariant) => void;
   options: DesignExplorationVariantOption<TVariant>[];
-  rationale: Record<TVariant, DesignExplorationRationale>;
   renderers: Record<TVariant, () => ReactNode>;
   defaultVariantValue?: TVariant;
-  onSetDefaultVariant?: (value: TVariant) => void;
+  briefConfigFilePath?: string;
 };
 
 export function PrototypeDesignBriefModal<TVariant extends string>({
@@ -57,10 +55,9 @@ export function PrototypeDesignBriefModal<TVariant extends string>({
   variant,
   onVariantChange,
   options,
-  rationale,
   renderers,
   defaultVariantValue,
-  onSetDefaultVariant,
+  briefConfigFilePath,
 }: PrototypeDesignBriefModalProps<TVariant>) {
   const { copy: copyOverview, icon: copyIcon } = useCopyToClipboard();
   const { value: title } = usePersistedLocalString(
@@ -116,10 +113,9 @@ export function PrototypeDesignBriefModal<TVariant extends string>({
           variant={variant}
           onVariantChange={onVariantChange}
           options={options}
-          rationale={rationale}
           renderers={renderers}
           defaultVariantValue={defaultVariantValue}
-          onSetDefaultVariant={onSetDefaultVariant}
+          briefConfigFilePath={briefConfigFilePath}
           className="overflow-y-auto overscroll-contain"
         />
       </DialogContent>

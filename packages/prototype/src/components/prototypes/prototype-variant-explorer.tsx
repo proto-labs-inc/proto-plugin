@@ -4,19 +4,15 @@ import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { PrototypeControlGroup } from "@prototype/components/prototypes/prototype-control";
 import { PrototypeDesignBriefModal } from "@prototype/components/prototypes/prototype-design-brief-modal";
 import { PrototypeDesignBriefPanel } from "@prototype/components/prototypes/prototype-design-brief-panel";
-import {
-  PrototypeComponent,
-  usePrototypeSlug,
-} from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { PrototypeVariantTabs } from "@prototype/components/prototypes/prototype-variant-tabs";
 import {
   buildBriefOverviewCopyText,
   type DesignExplorationConfig,
 } from "@prototype/lib/prototypes/design-exploration-types";
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
-import { useDesignExplorationDefault } from "@prototype/lib/prototypes/use-design-exploration-default";
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
-import { ChevronDown, ChevronUp, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const OVERVIEW_CONTROL_BUTTON_CLASS = "tool-toolbar-button";
@@ -49,12 +45,12 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   variant,
   onVariantChange,
   options,
-  rationale,
   renderers,
   brief,
   context,
   mobbin,
   variantsSection,
+  defaultVariant,
   variantTabAriaLabel = "variant",
   mobbinGalleryId = "mobbin-inspiration-gallery",
   wrapRoot = true,
@@ -63,20 +59,9 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   variantSet,
 }: PrototypeVariantExplorerProps<TVariant>) {
   const review = usePrototypeReviewOptional();
-  const slug = usePrototypeSlug();
-  const validValues = useMemo(
-    () => options.map((option) => option.value),
-    [options],
-  );
-  const {
-    effectiveDefault,
-    setDefaultVariant,
-  } = useDesignExplorationDefault({
-    slug,
-    storageKeyPrefix,
-    validValues,
-  });
-  const [notesExpanded, setNotesExpanded] = useState(false);
+  // Default is stored in the codebase config — not KV. "Make default" copies a
+  // prompt to update `defaultVariant` in the exploration config file.
+  const effectiveDefault = defaultVariant ?? options[0]?.value;
   const [overviewOpen, setOverviewOpen] = useState(false);
   const { copy: copyOverview, icon: copyIcon } = useCopyToClipboard();
   const { value: overviewTitle } = usePersistedLocalString(
@@ -89,8 +74,6 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   );
 
   const fallbackVariant = options[0]?.value;
-  const activeRationale =
-    rationale[variant] ?? (fallbackVariant ? rationale[fallbackVariant] : undefined);
   const ActiveVariantRenderer =
     renderers[variant] ?? (fallbackVariant ? renderers[fallbackVariant] : null);
   const hideInlineControls = Boolean(review);
@@ -107,11 +90,11 @@ export function PrototypeVariantExplorer<TVariant extends string>({
       variant,
       onVariantChange,
       options,
-      rationale,
       renderers,
       defaultVariantValue: effectiveDefault,
-      onSetDefaultVariant: setDefaultVariant,
       briefConfigFilePath,
+      explorationLabel: variantSet?.label ?? brief.titleDefault,
+      explorationId: variantSet?.id,
     }),
     [
       brief,
@@ -123,11 +106,11 @@ export function PrototypeVariantExplorer<TVariant extends string>({
       mobbinGalleryId,
       onVariantChange,
       options,
-      rationale,
       renderers,
-      setDefaultVariant,
       storageKeyPrefix,
       variant,
+      variantSet?.id,
+      variantSet?.label,
       variantsSection,
     ],
   );
@@ -242,63 +225,19 @@ export function PrototypeVariantExplorer<TVariant extends string>({
                     <LayoutGrid className="size-3.5" />
                   </button>
                 </PrototypeComponent>
-
-                <button
-                  type="button"
-                  className={OVERVIEW_CONTROL_BUTTON_CLASS}
-                  onClick={() => setNotesExpanded((expanded) => !expanded)}
-                  aria-expanded={notesExpanded}
-                  aria-controls={`${componentIdPrefix}-notes`}
-                  aria-label={notesExpanded ? "Hide notes" : "Show notes"}
-                >
-                  {notesExpanded ? (
-                    <ChevronUp className="size-3.5" />
-                  ) : (
-                    <ChevronDown className="size-3.5" />
-                  )}
-                </button>
               </div>
             </div>
-
-            {notesExpanded && activeRationale ? (
-              <PrototypeComponent
-                id={`${componentIdPrefix}.rationale`}
-                className="border-border bg-muted absolute right-0 top-full z-10 mt-2 max-w-md rounded-lg border px-3 py-2.5 text-left"
-              >
-                <div
-                  id={`${componentIdPrefix}-notes`}
-                  className="flex flex-col gap-2"
-                >
-                  <p className="text-sm leading-relaxed">
-                    <span className="text-foreground font-medium">Good</span>
-                    {" · "}
-                    <span className="text-muted-foreground">
-                      {activeRationale.good}
-                    </span>
-                  </p>
-                  <p className="text-sm leading-relaxed">
-                    <span className="text-foreground font-medium">Bad</span>
-                    {" · "}
-                    <span className="text-muted-foreground">
-                      {activeRationale.bad}
-                    </span>
-                  </p>
-                </div>
-              </PrototypeComponent>
-            ) : null}
           </div>
         </PrototypeControlGroup>
       </div>
     ),
     [
-      activeRationale,
       brief.descriptionDefault,
       brief.titleDefault,
       componentIdPrefix,
       copyIcon,
       copyOverview,
       effectiveDefault,
-      notesExpanded,
       onVariantChange,
       options,
       overviewDescription,
@@ -334,10 +273,9 @@ export function PrototypeVariantExplorer<TVariant extends string>({
           variant={variant}
           onVariantChange={onVariantChange}
           options={options}
-          rationale={rationale}
           renderers={renderers}
           defaultVariantValue={effectiveDefault}
-          onSetDefaultVariant={setDefaultVariant}
+          briefConfigFilePath={briefConfigFilePath}
         />
       ) : null}
 

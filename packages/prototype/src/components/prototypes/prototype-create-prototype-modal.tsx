@@ -9,6 +9,10 @@ import {
 } from "@prototype/components/ui/dialog";
 import { Input } from "@prototype/components/ui/input";
 import { Label } from "@prototype/components/ui/label";
+import {
+  PROTOTYPE_BRIEF_FIELD_BORDER_CLASS,
+  PrototypeBriefTextarea,
+} from "@prototype/components/prototypes/prototype-brief-field";
 import { buildCreatePrototypeCopyText } from "@prototype/lib/prototypes/create-prototype-prompt";
 import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
@@ -17,12 +21,6 @@ import { useEffect, useId, useState } from "react";
 
 const MODAL_CHROME_BUTTON_CLASS =
   "text-muted-foreground hover:text-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 opacity-70 transition-opacity duration-200 ease hover:opacity-100 outline-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40 disabled:hover:opacity-40 disabled:hover:text-muted-foreground motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
-
-const MODAL_FIELD_BORDER_CLASS =
-  "border border-border shadow-none outline-none transition-colors focus-visible:border-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 focus-visible:ring-offset-0";
-
-const DESCRIPTION_TEXTAREA_CLASS =
-  `field-sizing-content min-h-[min(40vh,14rem)] w-full resize-y rounded-md bg-transparent px-3 py-2 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground ${MODAL_FIELD_BORDER_CLASS}`;
 
 export type PrototypeCreatePrototypeModalProps = {
   open: boolean;
@@ -102,32 +100,34 @@ export function PrototypeCreatePrototypeModal({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="ex. Team Settings"
-              className={MODAL_FIELD_BORDER_CLASS}
+              className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
             />
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-1.5">
             <Label htmlFor={descriptionFieldId} className="text-foreground">
               Description
             </Label>
-            <textarea
+            <PrototypeBriefTextarea
               id={descriptionFieldId}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="ex. Replicate the team settings page from the source app — members list, invite flow, and role badges."
               aria-label="Prototype description"
-              className={DESCRIPTION_TEXTAREA_CLASS}
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-4">
+        <div className="flex items-center justify-end gap-2 px-5 py-3">
           <Button
             type="button"
+            variant="chrome"
+            size="sm"
+            className="h-8 gap-1.5"
             disabled={!canCopy}
             onClick={handleCopy}
             aria-label="Copy prototype brief and prompt"
           >
-            {isCopied ? "Copied" : "Copy prompt"}
+            {isCopied ? "Copied prompt" : "Copy prompt"}
             {icon}
           </Button>
         </div>

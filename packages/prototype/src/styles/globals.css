@@ -445,8 +445,18 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 }
 
 [data-prototype-root] .tool-variant-card.is-active {
-  border-color: color-mix(in srgb, var(--tool-chrome-blue) 55%, transparent);
-  box-shadow: var(--tool-review-card-shadow-hover);
+  border: 2px solid var(--tool-chrome-blue);
+  box-shadow: none;
+}
+
+[data-prototype-root] .tool-variant-default-badge {
+  color: var(--tool-chrome-blue);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 [data-prototype-root] .tool-variant-card [data-prototype-screenshot] {
@@ -504,7 +514,11 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 [data-prototype-root] [role="tab"][data-state="active"] {
   color: var(--tool-chrome-text-heading);
-  box-shadow: var(--shadow-xs);
+  background: color-mix(in srgb, var(--tool-chrome-blue) 12%, var(--tool-chrome-surface-muted));
+  box-shadow:
+    var(--shadow-xs),
+    inset 0 0 0 1px color-mix(in srgb, var(--tool-chrome-blue) 35%, transparent);
+  font-weight: 600;
 }
 
 /* Section labels — compact nav chip scale */

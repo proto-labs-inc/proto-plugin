@@ -12,7 +12,6 @@ export {
   createPrototypeChangelogMetaRoute,
   createPrototypeCommentIdRoute,
   createPrototypeCommentsRoute,
-  createPrototypeDesignExplorationDefaultRoute,
   createPrototypeScreenshotRoute,
 } from "./server/create-prototype-api-routes";
 
@@ -42,10 +41,3 @@ export {
   getPrototypeChangelogMeta,
   setPrototypeChangelogMeta,
 } from "./server/redis/prototype-changelog-meta";
-
-export {
-  getPrototypeDesignExplorationDefault,
-  setPrototypeDesignExplorationDefault,
-} from "./server/redis/prototype-design-exploration-default";
-
-export { prototypeDesignExplorationDefaultRedisKey } from "./lib/prototypes/design-exploration-default";

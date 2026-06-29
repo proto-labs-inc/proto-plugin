@@ -57,9 +57,19 @@ export type { DesignExplorationConfig } from "./lib/prototypes/design-exploratio
 export {
   buildCreateDesignExplorationCopyText,
   buildCreateDesignExplorationPrompt,
+  buildMoreDesignExplorationVariantsCopyText,
+  buildMoreDesignExplorationVariantsPrompt,
   buildResetBriefDefaultsPrompt,
   getAdjacentDesignExplorationVariant,
 } from "./lib/prototypes/design-exploration-types";
+
+export { buildDesignExplorationRenderers } from "./lib/prototypes/build-design-exploration-renderers";
+
+export {
+  DesignExplorationVariantPreviewShell,
+  type DesignExplorationVariantPreviewLayout,
+  type DesignExplorationVariantPreviewShellProps,
+} from "./components/prototypes/design-exploration-variant-preview-shell";
 
 export {
   buildCreatePreviewStateCopyText,
@@ -252,15 +262,6 @@ export {
   useChangelogMeta,
   useChangelogMetaOptional,
 } from "./lib/prototypes/changelog-meta-context";
-
-export {
-  prototypeDesignExplorationDefaultRedisKey,
-  parseDesignExplorationDefault,
-  isValidDesignExplorationDefaultRecord,
-} from "./lib/prototypes/design-exploration-default";
-export type { DesignExplorationDefaultRecord } from "./lib/prototypes/design-exploration-default";
-export { createDesignExplorationDefaultStorageAdapter } from "./lib/prototypes/design-exploration-default-storage";
-export { useDesignExplorationDefault } from "./lib/prototypes/use-design-exploration-default";
 
 export {
   filterAnnotationsByChannel,

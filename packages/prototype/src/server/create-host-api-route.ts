@@ -6,7 +6,6 @@ import {
   createPrototypeChangelogMetaRoute,
   createPrototypeCommentIdRoute,
   createPrototypeCommentsRoute,
-  createPrototypeDesignExplorationDefaultRoute,
   createPrototypeScreenshotRoute,
 } from "./create-prototype-api-routes";
 import { createGalleryApi } from "./gallery/create-gallery-api";
@@ -20,8 +19,6 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
   const commentsRoute = createPrototypeCommentsRoute(_config);
   const commentIdRoute = createPrototypeCommentIdRoute(_config);
   const changelogMetaRoute = createPrototypeChangelogMetaRoute(_config);
-  const designExplorationDefaultRoute =
-    createPrototypeDesignExplorationDefaultRoute(_config);
   const screenshotRoute = createPrototypeScreenshotRoute(_config);
   const galleryApi =
     _config.gallery === false ? null : createGalleryApi(_config.gallery);
@@ -69,19 +66,6 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
         }
         if (method === "PUT") {
           return changelogMetaRoute.PUT(request, { params: Promise.resolve({ slug }) });
-        }
-      }
-
-      if (path.length === 3 && path[2] === "design-exploration-default") {
-        if (method === "GET") {
-          return designExplorationDefaultRoute.GET(request, {
-            params: Promise.resolve({ slug }),
-          });
-        }
-        if (method === "PUT") {
-          return designExplorationDefaultRoute.PUT(request, {
-            params: Promise.resolve({ slug }),
-          });
         }
       }
 

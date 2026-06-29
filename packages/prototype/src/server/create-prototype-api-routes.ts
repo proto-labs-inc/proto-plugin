@@ -26,17 +26,9 @@ import {
   upsertPrototypeComment,
 } from "./redis/prototype-comments";
 import {
-  isValidDesignExplorationDefaultRecord,
-  normalizeDesignExplorationDefaultPayload,
-} from "@prototype/lib/prototypes/design-exploration-default";
-import {
   getPrototypeChangelogMeta,
   setPrototypeChangelogMeta,
 } from "./redis/prototype-changelog-meta";
-import {
-  getPrototypeDesignExplorationDefault,
-  setPrototypeDesignExplorationDefault,
-} from "./redis/prototype-design-exploration-default";
 
 type SlugRouteContext = {
   params: Promise<{ slug: string }>;
@@ -62,17 +54,6 @@ function changelogStorageUnavailableResponse() {
   return NextResponse.json(
     {
       error: "Change log storage is not configured.",
-      missing: status.missing,
-    },
-    { status: 503 },
-  );
-}
-
-function designDefaultStorageUnavailableResponse() {
-  const status = getRedisStatus();
-  return NextResponse.json(
-    {
-      error: "Design default storage is not configured.",
       missing: status.missing,
     },
     { status: 503 },
@@ -262,102 +243,6 @@ export function createPrototypeChangelogMetaRoute(config: PrototypeConfig) {
       console.error("Prototype changelog-meta PUT error:", error);
       return NextResponse.json(
         { error: "Failed to save change log overview" },
-        { status: 500 },
-      );
-    }
-  }
-
-  return { GET, PUT };
-}
-
-export function createPrototypeDesignExplorationDefaultRoute(
-  config: PrototypeConfig,
-) {
-  const registry = createPrototypeRegistry(config);
-
-  async function GET(request: NextRequest, { params }: SlugRouteContext) {
-    const { slug } = await params;
-    const prototype = registry.getPrototype(slug);
-
-    if (!prototype) {
-      return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
-    }
-
-    const storageKeyPrefix = request.nextUrl.searchParams.get("key")?.trim();
-    if (!storageKeyPrefix) {
-      return NextResponse.json(
-        { error: "Missing key query parameter." },
-        { status: 400 },
-      );
-    }
-
-    const redisStatus = getRedisStatus();
-    if (!redisStatus.ok) {
-      return designDefaultStorageUnavailableResponse();
-    }
-
-    try {
-      const record = await getPrototypeDesignExplorationDefault(storageKeyPrefix);
-      return NextResponse.json(record);
-    } catch (error) {
-      console.error("Prototype design-exploration-default GET error:", error);
-      return NextResponse.json(
-        { error: "Failed to load design default variant" },
-        { status: 500 },
-      );
-    }
-  }
-
-  async function PUT(request: NextRequest, { params }: SlugRouteContext) {
-    const { slug } = await params;
-    const prototype = registry.getPrototype(slug);
-
-    if (!prototype) {
-      return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
-    }
-
-    const storageKeyPrefix = request.nextUrl.searchParams.get("key")?.trim();
-    if (!storageKeyPrefix) {
-      return NextResponse.json(
-        { error: "Missing key query parameter." },
-        { status: 400 },
-      );
-    }
-
-    const redisStatus = getRedisStatus();
-    if (!redisStatus.ok) {
-      return designDefaultStorageUnavailableResponse();
-    }
-
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    if (!isValidDesignExplorationDefaultRecord(body)) {
-      return NextResponse.json(
-        { error: "Invalid design default record body" },
-        { status: 400 },
-      );
-    }
-
-    const record = normalizeDesignExplorationDefaultPayload(body);
-    if (!record) {
-      return NextResponse.json(
-        { error: "Invalid design default record body" },
-        { status: 400 },
-      );
-    }
-
-    try {
-      await setPrototypeDesignExplorationDefault(storageKeyPrefix, record);
-      return NextResponse.json({ ok: true });
-    } catch (error) {
-      console.error("Prototype design-exploration-default PUT error:", error);
-      return NextResponse.json(
-        { error: "Failed to save design default variant" },
         { status: 500 },
       );
     }

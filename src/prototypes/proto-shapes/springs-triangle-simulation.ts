@@ -231,13 +231,16 @@ function applySpringForce(
   q.addForce(fx, fy);
 }
 
+type DrawColor = [number, number, number];
+
 function drawSpring(
   ctx: CanvasRenderingContext2D,
   p: Particle,
   q: Particle,
   visibility: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.strokeStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${visibility})`;
+  ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${visibility})`;
   ctx.beginPath();
   ctx.moveTo(p.px, p.py);
   ctx.lineTo(q.px, q.py);
@@ -266,8 +269,9 @@ function fillPolygon(
   particles: Particle[],
   indices: number[],
   alpha: number,
+  color: DrawColor = COLOR1,
 ) {
-  ctx.fillStyle = `rgba(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]}, ${alpha})`;
+  ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   ctx.beginPath();
   const first = particles[indices[0]];
   ctx.moveTo(first.px, first.py);
@@ -306,6 +310,7 @@ export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
+  color?: DrawColor;
 };
 
 export function drawSpringsTriangleSimulation(
@@ -313,7 +318,7 @@ export function drawSpringsTriangleSimulation(
   sim: SpringsTriangleSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -321,9 +326,9 @@ export function drawSpringsTriangleSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [0, 1, 3, 2], 50 / 255);
-  fillPolygon(ctx, particles, [0, 1, 4], 100 / 255);
-  fillPolygon(ctx, particles, [2, 3, 4], 100 / 255);
+  fillPolygon(ctx, particles, [0, 1, 3, 2], 50 / 255, color);
+  fillPolygon(ctx, particles, [0, 1, 4], 100 / 255, color);
+  fillPolygon(ctx, particles, [2, 3, 4], 100 / 255, color);
 
   ctx.lineWidth = 1;
 
@@ -332,16 +337,16 @@ export function drawSpringsTriangleSimulation(
     const b = particles[(i + 1) % BASE_POINTS];
     const c = particles[BASE_POINTS];
 
-    drawSpring(ctx, a, b, i === 0 || i === 2 ? 1 : 0);
-    drawSpring(ctx, a, c, 1);
+    drawSpring(ctx, a, b, i === 0 || i === 2 ? 1 : 0, color);
+    drawSpring(ctx, a, c, 1, color);
   }
 
-  drawSpring(ctx, particles[2], particles[0], 1);
-  drawSpring(ctx, particles[1], particles[3], 1);
+  drawSpring(ctx, particles[2], particles[0], 1, color);
+  drawSpring(ctx, particles[1], particles[3], 1, color);
 
   const dotRadius = DOT_RADIUS;
   for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
+    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
     ctx.lineWidth = 1;
     ctx.beginPath();
