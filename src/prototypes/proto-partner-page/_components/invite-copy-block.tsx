@@ -3,6 +3,13 @@
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 
 import { INVITE_COPY, type InviteCopyVariant } from "./invite-copy-content";
+import {
+  inviteBodyClass,
+  inviteBodyStackClass,
+  inviteContentShellClass,
+  inviteEyebrowClass,
+  inviteHeadlineClass,
+} from "./invite-layout-classes";
 
 type InviteCopyBlockProps = {
   variant: InviteCopyVariant;
@@ -37,18 +44,18 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
         id="invite-copy-block"
         className="shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5"
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
-          <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
+        <div className={inviteContentShellClass}>
+          <p className={inviteEyebrowClass}>
             Design partner invite
           </p>
-          <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
+          <h1 className={inviteHeadlineClass}>
             {INVITE_COPY.headline}
           </h1>
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <p className={equalBodyClass}>
+          <div className={inviteBodyStackClass}>
+            <p className={inviteBodyClass}>
               <InviteWithBoldProto />
             </p>
-            <p className={equalBodyClass}>{INVITE_COPY.followUp}</p>
+            <p className={inviteBodyClass}>{INVITE_COPY.followUp}</p>
           </div>
         </div>
       </PrototypeComponent>
@@ -371,7 +378,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
   }
 
   if (variant === "inline-actions") {
-    const followUpParts = INVITE_COPY.followUp.split("customize your protoshape");
+    const followUpParts = INVITE_COPY.followUp.split("customize your Proto Shape");
 
     return (
       <PrototypeComponent
@@ -386,7 +393,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             <p className="text-foreground">{INVITE_COPY.invite}</p>
             <p className="text-muted-foreground">
               {followUpParts[0]}
-              <ActionHint>customize your protoshape</ActionHint>
+              <ActionHint>customize your Proto Shape</ActionHint>
               {followUpParts[1]}
             </p>
           </div>

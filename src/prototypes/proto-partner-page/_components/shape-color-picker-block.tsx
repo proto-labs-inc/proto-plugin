@@ -8,22 +8,31 @@ import {
   PartnerMotionFadeUp,
   partnerCustomizeColorDelay,
   partnerCustomizeShapeDelay,
+  partnerCustomizeTextureDelay,
   usePartnerEntranceMotion,
 } from "./partner-page-motion";
-import { ProtoColorSwatch, ProtoShapeIcon } from "./proto-shape-icons";
+import {
+  ProtoColorSwatch,
+  ProtoShapeIcon,
+  ProtoTextureSwatch,
+  ProtoTextureTooltip,
+} from "./proto-shape-icons";
 import {
   getProtoColor,
   PROTO_COLORS,
   PROTO_SHAPES,
+  PROTO_TEXTURE_OPTIONS,
   type ProtoColorId,
   type ProtoRgb,
   type ProtoShapeId,
+  type ProtoTextureId,
 } from "./proto-shape-content";
 import type { ShapeColorPickerVariant } from "./shape-color-picker-content";
 
 export type ShapeColorPickerSelection = {
   shapeId: ProtoShapeId;
   colorId: ProtoColorId;
+  textureId: ProtoTextureId;
 };
 
 type ShapeColorPickerControlsProps = {
@@ -188,6 +197,63 @@ function ShapeColorPickerRows({
       <div className={`flex flex-col ${sectionGap}`}>
         <SectionLabel>Color</SectionLabel>
         {variant === "list-radio" ? listRadioColorSection : colorRowContent}
+      </div>
+      <div className={`flex flex-col ${sectionGap}`}>
+        <SectionLabel>Texture</SectionLabel>
+        {variant === "list-radio" ? (
+          <div className="flex flex-col gap-1">
+            {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
+              const selected = textureOption.id === selection.textureId;
+              const button = (
+                <button
+                  key={textureOption.id}
+                  type="button"
+                  onClick={() =>
+                    onSelectionChange({ ...selection, textureId: textureOption.id })
+                  }
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors",
+                    selected ? "bg-muted" : "hover:bg-muted/50",
+                  )}
+                >
+                  <ProtoTextureSwatch
+                    textureId={textureOption.id}
+                    color={color}
+                    selected={false}
+                    size="sm"
+                  />
+                  <span className="flex-1 text-[0.8125rem] font-medium">
+                    {textureOption.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "size-4 rounded-full border-2",
+                      selected ? "border-foreground bg-foreground" : "border-border",
+                    )}
+                  />
+                </button>
+              );
+              return (
+                <EntranceWrap
+                  key={textureOption.id}
+                  animateEntrance={motionOn}
+                  delay={partnerCustomizeTextureDelay(textureIndex)}
+                >
+                  {button}
+                </EntranceWrap>
+              );
+            })}
+          </div>
+        ) : (
+          <TextureRow
+            variant={variant}
+            selection={selection}
+            onSelect={(textureId) => onSelectionChange({ ...selection, textureId })}
+            color={color}
+            animateEntrance={motionOn}
+          />
+        )}
       </div>
     </div>
   );
@@ -692,6 +758,169 @@ function ColorButtonContent({
       size="mobile-md"
     />
   );
+}
+
+function TextureRow({
+  variant,
+  selection,
+  onSelect,
+  color,
+  animateEntrance = false,
+}: {
+  variant: ShapeColorPickerVariant;
+  selection: ShapeColorPickerSelection;
+  onSelect: (textureId: ProtoTextureId) => void;
+  color: ProtoRgb;
+  animateEntrance?: boolean;
+}) {
+  const wrapTexture = (
+    textureId: string,
+    textureIndex: number,
+    node: ReactNode,
+    className?: string,
+  ) => (
+    <EntranceWrap
+      key={textureId}
+      animateEntrance={animateEntrance}
+      delay={partnerCustomizeTextureDelay(textureIndex)}
+      className={className}
+    >
+      {node}
+    </EntranceWrap>
+  );
+
+  if (variant === "pill-labels") {
+    return (
+      <div className="flex flex-wrap justify-center gap-3 [&_button]:cursor-pointer">
+        {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
+          const selected = textureOption.id === selection.textureId;
+          const button = (
+            <button
+              type="button"
+              onClick={() => onSelect(textureOption.id)}
+              aria-pressed={selected}
+              className="flex flex-col items-center gap-1"
+            >
+              <ProtoTextureSwatch
+                textureId={textureOption.id}
+                color={color}
+                selected={selected}
+                size="sm"
+              />
+              <span
+                className={cn(
+                  "text-[0.625rem] font-medium",
+                  selected ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {textureOption.label}
+              </span>
+            </button>
+          );
+          return wrapTexture(textureOption.id, textureIndex, button);
+        })}
+      </div>
+    );
+  }
+
+  if (variant === "minimal-underline") {
+    return (
+      <div className="flex flex-wrap justify-center gap-3 [&_button]:cursor-pointer">
+        {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
+          const selected = textureOption.id === selection.textureId;
+          const button = (
+            <ProtoTextureTooltip label={textureOption.label}>
+              <button
+                type="button"
+                onClick={() => onSelect(textureOption.id)}
+                aria-pressed={selected}
+                aria-label={textureOption.label}
+                className="flex flex-col items-center gap-1.5 pb-0.5"
+              >
+                <ProtoTextureSwatch
+                  textureId={textureOption.id}
+                  color={color}
+                  selected={false}
+                  size="sm"
+                />
+                <span
+                  className={cn(
+                    "h-0.5 w-5 rounded-full transition-colors",
+                    selected ? "bg-foreground" : "bg-transparent",
+                  )}
+                />
+              </button>
+            </ProtoTextureTooltip>
+          );
+          return wrapTexture(textureOption.id, textureIndex, button);
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center gap-2.5 [&_button]:cursor-pointer">
+      {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
+        const selected = textureOption.id === selection.textureId;
+        const button = (
+          <ProtoTextureTooltip label={textureOption.label}>
+            <button
+              type="button"
+              onClick={() => onSelect(textureOption.id)}
+              aria-pressed={selected}
+              aria-label={textureOption.label}
+              className={textureButtonClass(variant, selected, color)}
+            >
+              <ProtoTextureSwatch
+                textureId={textureOption.id}
+                color={color}
+                selected={selected}
+                size={variant === "stamp-outlined" ? "sm" : "md"}
+              />
+            </button>
+          </ProtoTextureTooltip>
+        );
+        return wrapTexture(textureOption.id, textureIndex, button);
+      })}
+    </div>
+  );
+}
+
+function textureButtonClass(
+  variant: ShapeColorPickerVariant,
+  selected: boolean,
+  rgb: ProtoRgb,
+): string {
+  if (variant === "neon-glow") {
+    const glow = selected
+      ? `shadow-[0_0_14px_rgb(${rgb[0]}_${rgb[1]}_${rgb[2]}/0.65)]`
+      : "";
+    return cn("rounded-md p-0.5 transition-transform hover:scale-105", glow);
+  }
+
+  if (variant === "stamp-outlined") {
+    return cn(
+      "rounded-sm p-0.5 transition-transform hover:scale-105",
+      selected && "ring-2 ring-foreground ring-offset-2 ring-offset-[#1a1a22]",
+    );
+  }
+
+  if (variant === "ring-gradient") {
+    return cn(
+      "rounded-md p-0.5 transition-transform hover:scale-105",
+      selected &&
+        "ring-2 ring-offset-2 ring-offset-background ring-[color-mix(in_srgb,rgb(var(--ring))_70%,transparent)]",
+    );
+  }
+
+  if (variant === "material-tonal") {
+    return cn(
+      "rounded-xl p-0.5 transition-transform hover:scale-105",
+      selected && "bg-muted shadow-sm",
+    );
+  }
+
+  return cn("rounded-md p-0.5 transition-transform hover:scale-105");
 }
 
 export function ShapeColorPickerControls({

@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { inviteCtaButtonClass, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
 import {
   PARTNER_CUSTOMIZE_ENTRANCE_INDEX,
   PartnerMotionSpringButton,
@@ -15,7 +16,7 @@ import {
 } from "./partner-page-motion";
 
 const saveButtonClassName =
-  "border border-border bg-muted/40 text-muted-foreground hover:border-foreground/30 hover:bg-foreground/[0.08] inline-flex shrink-0 cursor-pointer items-center rounded-lg px-3.5 py-1.5 text-[0.8125rem] font-medium transition-all";
+  "border border-border bg-muted/40 text-muted-foreground hover:border-foreground/30 hover:bg-foreground/[0.08] inline-flex shrink-0 cursor-pointer items-center rounded-lg px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors";
 
 /** How long "Saved!" stays visible before fading back. */
 const SAVE_LABEL_REVERT_MS = 3_000;
@@ -76,6 +77,7 @@ function SaveShapeButton({
       <PartnerMotionSpringButton
         type="button"
         delay={delay}
+        key={entranceKey}
         onClick={handleSave}
         className={saveButtonClassName}
       >
@@ -114,17 +116,18 @@ export function PartnerPageFlowBlock({
       <PrototypeComponent
         id="partner-page-flow-block"
         className={cn(
-          "pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 font-[family-name:var(--font-dm-sans)]! sm:px-5 sm:pb-6 sm:pt-4",
+          inviteCtaSectionClass,
+          "font-[family-name:var(--font-dm-sans)]!",
           className,
         )}
       >
-        <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+        <div className={inviteCtaShellClass}>
           <button
             type="button"
             onClick={() => onPageChange("customize")}
-            className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+            className={inviteCtaButtonClass}
           >
-            <span>Customize your protoshape</span>
+            <span>Customize your Proto Shape</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden

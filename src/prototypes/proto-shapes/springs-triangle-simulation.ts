@@ -1,3 +1,10 @@
+import {
+  drawParticlesWithShadow,
+  drawTexturedFace,
+  SHAPE_TEXTURE_ANCHORS,
+  type ProtoTextureId,
+} from "./shape-textures";
+
 const BASE_POINTS = 4;
 
 const SHAPE_OFFSETS = [
@@ -311,6 +318,9 @@ export type DrawSpringsSimulationOptions = {
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
   color?: DrawColor;
+  texture?: ProtoTextureId;
+  /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
+  dotScale?: number;
 };
 
 export function drawSpringsTriangleSimulation(
@@ -318,7 +328,13 @@ export function drawSpringsTriangleSimulation(
   sim: SpringsTriangleSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    color = COLOR1,
+    texture,
+    dotScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -326,9 +342,24 @@ export function drawSpringsTriangleSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [0, 1, 3, 2], 50 / 255, color);
-  fillPolygon(ctx, particles, [0, 1, 4], 100 / 255, color);
-  fillPolygon(ctx, particles, [2, 3, 4], 100 / 255, color);
+  if (texture) {
+    const anchors = SHAPE_TEXTURE_ANCHORS.triangle!;
+    const faceBase = {
+      particles,
+      texture,
+      color,
+      canvasWidth: width,
+      canvasHeight: height,
+      ...anchors,
+    };
+    drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 3, 2] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 4] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [2, 3, 4] });
+  } else {
+    fillPolygon(ctx, particles, [0, 1, 3, 2], 50 / 255, color);
+    fillPolygon(ctx, particles, [0, 1, 4], 100 / 255, color);
+    fillPolygon(ctx, particles, [2, 3, 4], 100 / 255, color);
+  }
 
   ctx.lineWidth = 1;
 
@@ -344,15 +375,19 @@ export function drawSpringsTriangleSimulation(
   drawSpring(ctx, particles[2], particles[0], 1, color);
   drawSpring(ctx, particles[1], particles[3], 1, color);
 
-  const dotRadius = DOT_RADIUS;
-  for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+  const dotRadius = DOT_RADIUS * dotScale;
+  if (texture) {
+    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+  } else {
+    for (const particle of particles) {
+      ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+      ctx.fillStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   if (showHint && !sim.clicked && sim.frameCount > 80) {

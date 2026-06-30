@@ -14,6 +14,7 @@ import {
 import {
   DEFAULT_PROTO_COLOR_ID,
   DEFAULT_PROTO_SHAPE_ID,
+  DEFAULT_PROTO_TEXTURE_ID,
   isOverlayProtoShapeCustomizerVariant,
   PROTO_SHAPE_CUSTOMIZER_CONTEXT,
   type ProtoShapeCustomizerVariant,
@@ -253,6 +254,7 @@ export function defaultProtoShapeSelection(): ProtoShapeSelection {
   return {
     shapeId: DEFAULT_PROTO_SHAPE_ID,
     colorId: DEFAULT_PROTO_COLOR_ID,
+    textureId: DEFAULT_PROTO_TEXTURE_ID,
   };
 }
 

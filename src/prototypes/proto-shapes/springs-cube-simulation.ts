@@ -1,3 +1,10 @@
+import {
+  drawParticlesWithShadow,
+  drawTexturedFace,
+  SHAPE_TEXTURE_ANCHORS,
+  type ProtoTextureId,
+} from "./shape-textures";
+
 const BASE_POINTS = 4;
 const SHAPE_SCALE = 0.7;
 
@@ -21,13 +28,27 @@ const COLOR1: [number, number, number] = [110, 16, 250];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
+const INV_SQRT2 = Math.SQRT1_2;
 const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
 const DOT_SCALE = 1 / 0.8;
 const WEB_SCALE = 1;
 const DOT_RADIUS = (12 * DOT_SCALE) / 2;
-const INV_SQRT2 = 1 / Math.SQRT2;
+/** Hidden edge midpoint — not rendered as a draggable dot. */
+const HIDDEN_PARTICLE_INDEX = 1;
+
+const CUBE_TEXTURE_FACES: Array<{
+  indices: number[];
+  geometryIndices?: number[];
+  opacity?: number;
+}> = [
+  { indices: [2, 3, 7, 1], geometryIndices: [2, 3, 7], opacity: 100 / 255 },
+  { indices: [7, 1, 4], geometryIndices: [7, 4], opacity: 100 / 255 },
+  { indices: [6, 7, 4, 5], opacity: 100 / 255 },
+  { indices: [7, 3, 0, 4], opacity: 50 / 255 },
+  { indices: [7, 1, 2, 6], geometryIndices: [7, 2, 6], opacity: 50 / 255 },
+];
 /** Hit area is much larger than the visible handle so corners are easy to grab. */
 export const PARTICLE_PICK_RADIUS = Math.max(DOT_RADIUS * 6, 32);
 export const PARTICLE_PICK_RADIUS_TOUCH = 48;
@@ -346,6 +367,9 @@ export type DrawSpringsSimulationOptions = {
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
   color?: DrawColor;
+  texture?: ProtoTextureId;
+  /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
+  dotScale?: number;
 };
 
 export function drawSpringsCubeSimulation(
@@ -353,7 +377,13 @@ export function drawSpringsCubeSimulation(
   sim: SpringsCubeSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    color = COLOR1,
+    texture,
+    dotScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -361,11 +391,26 @@ export function drawSpringsCubeSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [2, 3, 7, 1], 100 / 255, color);
-  fillPolygon(ctx, particles, [7, 1, 4], 100 / 255, color);
-  fillPolygon(ctx, particles, [6, 7, 4, 5], 100 / 255, color);
-  fillPolygon(ctx, particles, [7, 3, 0, 4], 50 / 255, color);
-  fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255, color);
+  if (texture) {
+    const anchors = SHAPE_TEXTURE_ANCHORS.cube!;
+    const faceBase = {
+      particles,
+      texture,
+      color,
+      canvasWidth: width,
+      canvasHeight: height,
+      ...anchors,
+    };
+    for (const face of CUBE_TEXTURE_FACES) {
+      drawTexturedFace(ctx, { ...faceBase, ...face });
+    }
+  } else {
+    fillPolygon(ctx, particles, [2, 3, 7, 1], 100 / 255, color);
+    fillPolygon(ctx, particles, [7, 1, 4], 100 / 255, color);
+    fillPolygon(ctx, particles, [6, 7, 4, 5], 100 / 255, color);
+    fillPolygon(ctx, particles, [7, 3, 0, 4], 50 / 255, color);
+    fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255, color);
+  }
 
   ctx.lineWidth = 1;
 
@@ -396,18 +441,25 @@ export function drawSpringsCubeSimulation(
   drawSpring(ctx, particles[5], particles[3], 0, color);
   drawSpring(ctx, particles[7], particles[4], 1, color);
 
-  const dotRadius = DOT_RADIUS;
-  for (let i = 0; i < particles.length; i++) {
-    if (i === 1) continue;
+  const dotRadius = DOT_RADIUS * dotScale;
+  const visibleParticles = particles.filter(
+    (_, i) => i !== HIDDEN_PARTICLE_INDEX,
+  );
+  if (texture) {
+    drawParticlesWithShadow(ctx, visibleParticles, dotRadius, color);
+  } else {
+    for (let i = 0; i < particles.length; i++) {
+      if (i === HIDDEN_PARTICLE_INDEX) continue;
 
-    const particle = particles[i];
-    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+      const particle = particles[i];
+      ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+      ctx.fillStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   if (showHint && !sim.clicked && sim.frameCount > 80) {

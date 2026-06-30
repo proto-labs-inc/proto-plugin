@@ -9,6 +9,34 @@ export type ProtoColorId = "green" | "purple" | "teal" | "pink" | "gold";
 
 export type ProtoRgb = [number, number, number];
 
+export {
+  DEFAULT_PROTO_TEXTURE_ID,
+  PROTO_TEXTURES,
+  type ProtoTextureId,
+} from "../../proto-shapes/shape-textures";
+
+import {
+  DEFAULT_PROTO_TEXTURE_ID,
+  PROTO_TEXTURES,
+  type ProtoTextureId,
+} from "../../proto-shapes/shape-textures";
+
+export type ProtoTextureOption = {
+  id: ProtoTextureId;
+  label: string;
+};
+
+export const PROTO_TEXTURE_OPTIONS: ProtoTextureOption[] = PROTO_TEXTURES.map(
+  (id) => ({ id, label: id }),
+);
+
+export function getProtoTexture(id: ProtoTextureId): ProtoTextureOption {
+  return (
+    PROTO_TEXTURE_OPTIONS.find((texture) => texture.id === id) ??
+    PROTO_TEXTURE_OPTIONS[0]!
+  );
+}
+
 export type ProtoShapeOption = {
   id: ProtoShapeId;
   label: string;
@@ -68,18 +96,18 @@ export type ProtoShapeCustomizerVariant =
 export const PROTO_SHAPE_CUSTOMIZER_CANVAS_INSET: Partial<
   Record<ProtoShapeCustomizerVariant, string>
 > = {
-  "compact-minimal-dock": "bottom-[11.5rem] sm:bottom-[9rem]",
-  "compact-nudge-inline": "bottom-[8.25rem]",
-  "compact-nudge-text-first": "bottom-[8.25rem]",
-  "compact-link-nudge": "bottom-[8rem]",
-  "dual-row-reserved": "bottom-[12rem]",
-  "dual-row-nudge-first": "bottom-[12rem]",
-  "dual-row-columns": "bottom-[11.5rem]",
-  "dual-row-lifted-card": "bottom-[13.5rem]",
-  "bottom-dock": "bottom-[11rem]",
-  "dual-row": "bottom-[12rem]",
-  "shape-carousel": "bottom-[11.5rem]",
-  "floating-toolbar": "bottom-[8.5rem]",
+  "compact-minimal-dock": "bottom-[14.5rem] sm:bottom-[12rem]",
+  "compact-nudge-inline": "bottom-[11.25rem]",
+  "compact-nudge-text-first": "bottom-[11.25rem]",
+  "compact-link-nudge": "bottom-[11rem]",
+  "dual-row-reserved": "bottom-[15rem]",
+  "dual-row-nudge-first": "bottom-[15rem]",
+  "dual-row-columns": "bottom-[14.5rem]",
+  "dual-row-lifted-card": "bottom-[16.5rem]",
+  "bottom-dock": "bottom-[14rem]",
+  "dual-row": "bottom-[15rem]",
+  "shape-carousel": "bottom-[14.5rem]",
+  "floating-toolbar": "bottom-[11.5rem]",
 };
 
 export function getProtoShapeCustomizerCanvasInset(
@@ -117,6 +145,8 @@ export function isOverlayProtoShapeCustomizerVariant(
 export const PROTO_SHAPE_CUSTOMIZER_CONTEXT = {
   shapes: PROTO_SHAPES,
   colors: PROTO_COLORS.map(({ id, label }) => ({ id, label })),
+  textures: PROTO_TEXTURE_OPTIONS.map(({ id, label }) => ({ id, label })),
   defaultShape: DEFAULT_PROTO_SHAPE_ID,
   defaultColor: DEFAULT_PROTO_COLOR_ID,
+  defaultTexture: DEFAULT_PROTO_TEXTURE_ID,
 } as const;

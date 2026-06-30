@@ -52,7 +52,9 @@ import {
   type ProtoColorId,
   type ProtoRgb,
   type ProtoShapeId,
+  type ProtoTextureId,
 } from "./_components/proto-shape-content";
+import { DEFAULT_PROTO_TEXTURE_ID } from "../proto-shapes/shape-textures";
 
 type CanvasSize = {
   cssWidth: number;
@@ -92,6 +94,8 @@ type ShapeRuntime = {
     ctx: CanvasRenderingContext2D,
     sim: SpringsSimulation,
     color: ProtoRgb,
+    texture: ProtoTextureId,
+    dotScale: number,
   ) => void;
 };
 
@@ -114,11 +118,13 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsTriangleSimulation(sim as SpringsTriangleSimulation, input),
-    draw: (ctx, sim, color) =>
+    draw: (ctx, sim, color, texture, dotScale) =>
       drawSpringsTriangleSimulation(ctx, sim as SpringsTriangleSimulation, {
         clearBackground: false,
         showHint: false,
         color,
+        texture,
+        dotScale,
       }),
   },
   cube: {
@@ -134,11 +140,13 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       pickClosestCubeParticle(sim as SpringsCubeSimulation, x, y, pickRadius),
     step: (sim, input) =>
       stepSpringsCubeSimulation(sim as SpringsCubeSimulation, input),
-    draw: (ctx, sim, color) =>
+    draw: (ctx, sim, color, texture, dotScale) =>
       drawSpringsCubeSimulation(ctx, sim as SpringsCubeSimulation, {
         clearBackground: false,
         showHint: false,
         color,
+        texture,
+        dotScale,
       }),
   },
   pentagon: {
@@ -159,11 +167,13 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsPentagonSimulation(sim as SpringsPentagonSimulation, input),
-    draw: (ctx, sim, color) =>
+    draw: (ctx, sim, color, texture, dotScale) =>
       drawSpringsPentagonSimulation(ctx, sim as SpringsPentagonSimulation, {
         clearBackground: false,
         showHint: false,
         color,
+        texture,
+        dotScale,
       }),
   },
   square: {
@@ -184,11 +194,13 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsSquareSimulation(sim as SpringsSquareSimulation, input),
-    draw: (ctx, sim, color) =>
+    draw: (ctx, sim, color, texture, dotScale) =>
       drawSpringsSquareSimulation(ctx, sim as SpringsSquareSimulation, {
         clearBackground: false,
         showHint: false,
         color,
+        texture,
+        dotScale,
       }),
   },
   prism: {
@@ -204,11 +216,13 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       pickClosestPrismParticle(sim as SpringsPrismSimulation, x, y, pickRadius),
     step: (sim, input) =>
       stepSpringsPrismSimulation(sim as SpringsPrismSimulation, input),
-    draw: (ctx, sim, color) =>
+    draw: (ctx, sim, color, texture, dotScale) =>
       drawSpringsPrismSimulation(ctx, sim as SpringsPrismSimulation, {
         clearBackground: false,
         showHint: false,
         color,
+        texture,
+        dotScale,
       }),
   },
 };
@@ -235,6 +249,10 @@ const MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
 /** Three-pyramid chain is wide; keep it smaller on narrow viewports. */
 const MOBILE_THREE_PART_SHAPE_SCALE = 0.9;
 const MOBILE_SHAPE_SCALE = 1;
+/** Give the protoshape more room on desktop invite/home layouts. */
+const DESKTOP_SHAPE_SCALE = 1.38;
+/** Handle dots grow less than the shape so they stay visually balanced. */
+const DESKTOP_DOT_SCALE = 1.12;
 /** Match proto-shapes vertical placement (yFactor 0.33). */
 const SHAPE_SPAWN_Y_FACTOR = 0.33;
 const WARM_START_FRAMES = 120;
@@ -257,7 +275,8 @@ function getPartnerShapeLayout(cssHeight: number, shapeId: ProtoShapeId) {
   const mobileScale =
     shapeId === "square" ? MOBILE_THREE_PART_SHAPE_SCALE : MOBILE_SHAPE_SCALE;
   return {
-    scale: mobile ? mobileScale : 1,
+    scale: mobile ? mobileScale : DESKTOP_SHAPE_SCALE,
+    dotScale: mobile ? mobileScale : DESKTOP_DOT_SCALE,
     spawnY: cssHeight * SHAPE_SPAWN_Y_FACTOR,
   };
 }
@@ -456,6 +475,7 @@ type PartnerShapeCanvasProps = {
   className?: string;
   shapeId?: ProtoShapeId;
   colorId?: ProtoColorId;
+  textureId?: ProtoTextureId;
   color?: ProtoRgb;
   /** Skip opaque white clears so copy layered beneath stays visible. */
   transparentBackground?: boolean;
@@ -465,6 +485,7 @@ export function PartnerShapeCanvas({
   className,
   shapeId = "cube",
   colorId,
+  textureId = DEFAULT_PROTO_TEXTURE_ID,
   color,
   transparentBackground = false,
 }: PartnerShapeCanvasProps) {
@@ -486,6 +507,9 @@ export function PartnerShapeCanvas({
   });
   const rafRef = useRef<number | null>(null);
   const mobileLayoutRef = useRef(isMobileViewport());
+
+  const targetTextureRef = useRef<ProtoTextureId>(textureId);
+  targetTextureRef.current = textureId;
 
   targetColorRef.current = resolvedColor;
 
@@ -664,7 +688,18 @@ export function PartnerShapeCanvas({
         ctx.fillRect(0, 0, cssWidth, cssHeight);
       }
 
-      runtime.draw(ctx, sim, displayColorRef.current);
+      const { dotScale } = getPartnerShapeLayout(
+        cssHeight,
+        activeShapeRef.current,
+      );
+
+      runtime.draw(
+        ctx,
+        sim,
+        displayColorRef.current,
+        targetTextureRef.current,
+        dotScale,
+      );
 
       rafRef.current = requestAnimationFrame(frame);
     };

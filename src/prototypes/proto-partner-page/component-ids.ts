@@ -8,6 +8,7 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "proto-shape-customizer-block",
   "proto-shape-icons.proto-shape-icon",
   "proto-shape-icons.proto-color-swatch",
+  "proto-shape-icons.proto-texture-swatch",
   "invite-copy-block",
   "invite-animations-block",
   "invite-animations-variant-toggle",

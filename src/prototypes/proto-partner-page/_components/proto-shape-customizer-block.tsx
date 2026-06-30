@@ -5,14 +5,21 @@ import { cn } from "@prototype/lib/utils";
 import { useState } from "react";
 
 import { PartnerMotionFadeUp, usePartnerEntranceMotion } from "./partner-page-motion";
-import { ProtoColorSwatch, ProtoShapeIcon } from "./proto-shape-icons";
+import {
+  ProtoColorSwatch,
+  ProtoShapeIcon,
+  ProtoTextureSwatch,
+  ProtoTextureTooltip,
+} from "./proto-shape-icons";
 import {
   getProtoColor,
   PROTO_COLORS,
   PROTO_SHAPES,
+  PROTO_TEXTURE_OPTIONS,
   type ProtoColorId,
   type ProtoShapeCustomizerVariant,
   type ProtoShapeId,
+  type ProtoTextureId,
 } from "./proto-shape-content";
 import { ShapeColorPickerControls } from "./shape-color-picker-block";
 import type { ShapeColorPickerVariant } from "./shape-color-picker-content";
@@ -20,6 +27,7 @@ import type { ShapeColorPickerVariant } from "./shape-color-picker-content";
 export type ProtoShapeSelection = {
   shapeId: ProtoShapeId;
   colorId: ProtoColorId;
+  textureId: ProtoTextureId;
 };
 
 type ProtoShapeCustomizerBlockProps = {
@@ -96,11 +104,23 @@ function DualRowControls({
     </div>
   );
 
+  const textureBlock = (
+    <div className={`flex flex-col ${sectionGap}`}>
+      <p className={labelClass}>Texture</p>
+      <TexturePicker
+        selection={selection}
+        onSelect={(textureId) => onSelectionChange({ ...selection, textureId })}
+        density={density}
+      />
+    </div>
+  );
+
   if (motionOn) {
     return (
       <>
         <PartnerMotionFadeUp delay={0.12}>{shapeBlock}</PartnerMotionFadeUp>
         <PartnerMotionFadeUp delay={0.26}>{colorBlock}</PartnerMotionFadeUp>
+        <PartnerMotionFadeUp delay={0.4}>{textureBlock}</PartnerMotionFadeUp>
       </>
     );
   }
@@ -109,6 +129,7 @@ function DualRowControls({
     <>
       {shapeBlock}
       {colorBlock}
+      {textureBlock}
     </>
   );
 }
@@ -340,6 +361,50 @@ function ColorPicker({
       )}
     >
       {swatches}
+    </div>
+  );
+}
+
+function TexturePicker({
+  selection,
+  onSelect,
+  density = "default",
+}: {
+  selection: ProtoShapeSelection;
+  onSelect: (textureId: ProtoTextureId) => void;
+  density?: "default" | "compact";
+}) {
+  const color = getProtoColor(selection.colorId).rgb;
+  const swatchSize = density === "compact" ? "sm" : "md";
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap justify-center [&>button]:cursor-pointer",
+        density === "compact" ? "gap-2" : "gap-2.5",
+      )}
+    >
+      {PROTO_TEXTURE_OPTIONS.map((texture) => {
+        const selected = texture.id === selection.textureId;
+        return (
+          <ProtoTextureTooltip key={texture.id} label={texture.label}>
+            <button
+              type="button"
+              onClick={() => onSelect(texture.id)}
+              aria-pressed={selected}
+              aria-label={texture.label}
+              className="rounded-md p-0.5 transition-transform hover:scale-105"
+            >
+              <ProtoTextureSwatch
+                textureId={texture.id}
+                color={color}
+                selected={selected}
+                size={swatchSize}
+              />
+            </button>
+          </ProtoTextureTooltip>
+        );
+      })}
     </div>
   );
 }

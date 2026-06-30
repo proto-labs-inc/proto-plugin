@@ -24,9 +24,7 @@ import {
 } from "./_components/partner-page-flow-block";
 import { useCustomizeShapeEntranceReady } from "./_components/partner-page-motion";
 import type { ProtoShapeSelection } from "./_components/proto-shape-customizer-block";
-import {
-  getProtoShapeCustomizerCanvasInset,
-} from "./_components/proto-shape-content";
+import { getProtoShapeCustomizerCanvasInset } from "./_components/proto-shape-content";
 import {
   DEFAULT_PROTO_SHAPES_VARIANT,
   defaultProtoShapeSelection,
@@ -62,8 +60,10 @@ export default function ProtoPartnerPage() {
   const [customizeMotionEpoch, setCustomizeMotionEpoch] = useState(0);
 
   const onInvitePage = activePage === "invite";
-  const overlayLayout = onInvitePage && isInviteCopyOverlayVariant(inviteCopyVariant);
-  const animatedInviteLayout = onInvitePage && inviteCopyVariant === "open-card";
+  const overlayLayout =
+    onInvitePage && isInviteCopyOverlayVariant(inviteCopyVariant);
+  const animatedInviteLayout =
+    onInvitePage && inviteCopyVariant === "open-card";
   const customizeEntranceMotion =
     inviteCopyVariant === "open-card" && inviteAnimationsVariant !== "none";
   const customizeEntranceKey = customizeMotionEpoch;
@@ -122,12 +122,6 @@ export default function ProtoPartnerPage() {
               <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-center">
                 {inviteSection}
               </div>
-              <PartnerShapeCanvas
-                className="absolute inset-x-0 top-0 z-10 min-h-0"
-                shapeId={shapeSelection.shapeId}
-                colorId={shapeSelection.colorId}
-                transparentBackground
-              />
               <div className="relative z-30 flex shrink-0 flex-col gap-2">
                 <InviteAnimationsVariantToggle
                   variant={inviteAnimationsVariant}
@@ -172,6 +166,7 @@ export default function ProtoPartnerPage() {
               <PartnerShapeCanvas
                 shapeId={shapeSelection.shapeId}
                 colorId={shapeSelection.colorId}
+                textureId={shapeSelection.textureId}
                 className={cn(
                   "absolute inset-x-0 top-0 z-10 min-h-0",
                   canvasBottomInset ?? "bottom-0",

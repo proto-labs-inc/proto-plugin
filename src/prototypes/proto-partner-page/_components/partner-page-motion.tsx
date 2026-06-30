@@ -3,6 +3,8 @@
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { PROTO_TEXTURES } from "../../proto-shapes/shape-textures";
+
 export const partnerEaseOut = [0.22, 1, 0.36, 1] as const;
 
 export const partnerFadeUpHidden = { opacity: 0, y: 18 };
@@ -117,13 +119,13 @@ export function partnerStaggerDelay(base: number, index: number, step = 0.06) {
   return base + index * step;
 }
 
-/** Customize page: back → shape₁ color₁ … shape₅ color₅ → save. */
+/** Customize page: back → shape₁ color₁ texture₁ … → save (after last texture). */
 export const PARTNER_CUSTOMIZE_ENTRANCE_BASE = 0.05;
 export const PARTNER_CUSTOMIZE_ENTRANCE_STEP = 0.06;
 
 export const PARTNER_CUSTOMIZE_ENTRANCE_INDEX = {
   back: 0,
-  save: 11,
+  save: 3 + (PROTO_TEXTURES.length - 1) * 2 + 1,
 } as const;
 
 export function partnerCustomizeEntranceDelay(index: number) {
@@ -138,6 +140,10 @@ export function partnerCustomizeShapeDelay(shapeIndex: number) {
 
 export function partnerCustomizeColorDelay(colorIndex: number) {
   return partnerCustomizeEntranceDelay(2 + colorIndex * 2);
+}
+
+export function partnerCustomizeTextureDelay(textureIndex: number) {
+  return partnerCustomizeEntranceDelay(3 + textureIndex * 2);
 }
 
 /** Extra pause after the save CTA lands before the canvas shape appears. */

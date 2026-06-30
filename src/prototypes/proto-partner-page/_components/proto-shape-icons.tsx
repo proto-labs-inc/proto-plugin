@@ -1,9 +1,16 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@prototype/components/ui/tooltip";
 import { cn } from "@prototype/lib/utils";
+import { useEffect, useRef, type ReactElement } from "react";
 
-import type { ProtoColorId, ProtoRgb, ProtoShapeId } from "./proto-shape-content";
+import { drawTexturePreview } from "../../proto-shapes/shape-textures";
+import type { ProtoColorId, ProtoRgb, ProtoShapeId, ProtoTextureId } from "./proto-shape-content";
 
 type ProtoShapeIconProps = {
   shapeId: ProtoShapeId;
@@ -150,6 +157,83 @@ export function ProtoColorSwatch({
             : "0 0 0 1px rgb(0 0 0 / 0.08)",
         }}
       />
+    </PrototypeComponent>
+  );
+}
+
+type TextureSwatchProps = {
+  textureId: ProtoTextureId;
+  color: ProtoRgb;
+  selected?: boolean;
+  size?: "sm" | "md";
+  className?: string;
+};
+
+const TEXTURE_SWATCH_SIZES = {
+  sm: 24,
+  md: 36,
+} as const;
+
+export function ProtoTextureTooltip({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactElement;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+export function ProtoTextureSwatch({
+  textureId,
+  color,
+  selected = false,
+  size = "md",
+  className,
+}: TextureSwatchProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pixelSize = TEXTURE_SWATCH_SIZES[size];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(pixelSize * dpr);
+    canvas.height = Math.round(pixelSize * dpr);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawTexturePreview(ctx, pixelSize, textureId, color);
+  }, [textureId, color, pixelSize]);
+
+  return (
+    <PrototypeComponent id="proto-shape-icons.proto-texture-swatch">
+      <span
+        className={cn(
+          "inline-flex shrink-0 overflow-hidden rounded-md",
+          className,
+        )}
+        style={{
+          width: pixelSize,
+          height: pixelSize,
+          boxShadow: selected
+            ? "0 0 0 2px white, 0 0 0 4px rgb(0 0 0 / 0.85)"
+            : "0 0 0 1px rgb(0 0 0 / 0.08)",
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          width={pixelSize}
+          height={pixelSize}
+          className="block size-full"
+          aria-hidden
+        />
+      </span>
     </PrototypeComponent>
   );
 }

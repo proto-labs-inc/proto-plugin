@@ -1,3 +1,10 @@
+import {
+  drawParticlesWithShadow,
+  drawTexturedFace,
+  SHAPE_TEXTURE_ANCHORS,
+  type ProtoTextureId,
+} from "./shape-textures";
+
 const BASE_POINTS = 5;
 
 /**
@@ -315,6 +322,9 @@ export type DrawSpringsSimulationOptions = {
   /** Render the "Grab a point!" idle hint. Disable when sharing a canvas. */
   showHint?: boolean;
   color?: DrawColor;
+  texture?: ProtoTextureId;
+  /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
+  dotScale?: number;
 };
 
 export function drawSpringsPentagonSimulation(
@@ -322,7 +332,13 @@ export function drawSpringsPentagonSimulation(
   sim: SpringsPentagonSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    color = COLOR1,
+    texture,
+    dotScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
   const apex = particles[BASE_POINTS];
 
@@ -331,11 +347,29 @@ export function drawSpringsPentagonSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  const faceAlpha = 75 / 255;
-  for (let i = 0; i < BASE_POINTS; i++) {
-    const a = particles[i];
-    const b = particles[(i + 1) % BASE_POINTS];
-    fillTriangle(ctx, a, b, apex, faceAlpha, color);
+  if (texture) {
+    const anchors = SHAPE_TEXTURE_ANCHORS.pentagon!;
+    const faceBase = {
+      particles,
+      texture,
+      color,
+      canvasWidth: width,
+      canvasHeight: height,
+      ...anchors,
+    };
+    for (let i = 0; i < BASE_POINTS; i++) {
+      drawTexturedFace(ctx, {
+        ...faceBase,
+        indices: [i, (i + 1) % BASE_POINTS, BASE_POINTS],
+      });
+    }
+  } else {
+    const faceAlpha = 75 / 255;
+    for (let i = 0; i < BASE_POINTS; i++) {
+      const a = particles[i];
+      const b = particles[(i + 1) % BASE_POINTS];
+      fillTriangle(ctx, a, b, apex, faceAlpha, color);
+    }
   }
 
   ctx.lineWidth = 1;
@@ -348,15 +382,19 @@ export function drawSpringsPentagonSimulation(
     drawSpring(ctx, a, apex, 1, color);
   }
 
-  const dotRadius = DOT_RADIUS;
-  for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+  const dotRadius = DOT_RADIUS * dotScale;
+  if (texture) {
+    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+  } else {
+    for (const particle of particles) {
+      ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+      ctx.fillStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   if (showHint && !sim.clicked && sim.frameCount > 80) {

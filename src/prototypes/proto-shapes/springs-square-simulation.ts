@@ -1,3 +1,10 @@
+import {
+  drawParticlesWithShadow,
+  drawTexturedFace,
+  SHAPE_TEXTURE_ANCHORS,
+  type ProtoTextureId,
+} from "./shape-textures";
+
 const J1_INDEX = 0;
 const J2_INDEX = 1;
 const LEFT_BASE = [2, 3, 4] as const;
@@ -14,11 +21,19 @@ const PYRAMIDS = [
   { apex: J2_INDEX, base: RIGHT_BASE },
 ] as const;
 
-/** Collapsed diagonal; springs pull into the connected chain. */
-const SHAPE_OFFSETS = Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-  x: i * (50 * SHAPE_SCALE),
-  y: i * (50 * SHAPE_SCALE),
-}));
+/** Three pyramids: outer pair point up, middle points down; J1/J2 sit on opposite top corners. */
+const SHAPE_OFFSETS = [
+  { x: 80 * SHAPE_SCALE, y: 60 * SHAPE_SCALE }, // 0 J1 — left inner joint
+  { x: 220 * SHAPE_SCALE, y: 60 * SHAPE_SCALE }, // 1 J2 — right inner joint
+  { x: 30 * SHAPE_SCALE, y: 160 * SHAPE_SCALE }, // 2 left outer base
+  { x: 90 * SHAPE_SCALE, y: 160 * SHAPE_SCALE }, // 3
+  { x: 30 * SHAPE_SCALE, y: 110 * SHAPE_SCALE }, // 4
+  { x: 150 * SHAPE_SCALE, y: 160 * SHAPE_SCALE }, // 5 middle apex (down)
+  { x: 150 * SHAPE_SCALE, y: 20 * SHAPE_SCALE }, // 6 middle back (top center)
+  { x: 210 * SHAPE_SCALE, y: 160 * SHAPE_SCALE }, // 7 right outer base
+  { x: 270 * SHAPE_SCALE, y: 160 * SHAPE_SCALE }, // 8
+  { x: 270 * SHAPE_SCALE, y: 110 * SHAPE_SCALE }, // 9
+] as const;
 
 const COLOR1: [number, number, number] = [255, 95, 155];
 
@@ -311,6 +326,35 @@ function drawSpring(
   ctx.stroke();
 }
 
+function drawTexturedPyramidFaces(
+  ctx: CanvasRenderingContext2D,
+  apexIndex: number,
+  baseIndices: readonly number[],
+  particles: Particle[],
+  texture: ProtoTextureId,
+  color: DrawColor,
+  canvasWidth: number,
+  canvasHeight: number,
+) {
+  const anchors = SHAPE_TEXTURE_ANCHORS.square!;
+  const faceBase = {
+    particles,
+    texture,
+    color,
+    canvasWidth,
+    canvasHeight,
+    backParticleIndex: anchors.backParticleIndex,
+    gradientParticleIndices: [J1_INDEX, J2_INDEX],
+    gradientWorldSpace: true,
+    ringParticleIndex: anchors.ringParticleIndex,
+  };
+  const [aIdx, bIdx, cIdx] = baseIndices;
+  drawTexturedFace(ctx, { ...faceBase, indices: [apexIndex, aIdx!, bIdx!] });
+  drawTexturedFace(ctx, { ...faceBase, indices: [apexIndex, bIdx!, cIdx!] });
+  drawTexturedFace(ctx, { ...faceBase, indices: [apexIndex, cIdx!, aIdx!] });
+  drawTexturedFace(ctx, { ...faceBase, indices: [aIdx!, bIdx!, cIdx!] });
+}
+
 function drawPyramidFaces(
   ctx: CanvasRenderingContext2D,
   apexIndex: number,
@@ -372,6 +416,9 @@ export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   showHint?: boolean;
   color?: DrawColor;
+  texture?: ProtoTextureId;
+  /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
+  dotScale?: number;
 };
 
 export function drawSpringsSquareSimulation(
@@ -379,7 +426,13 @@ export function drawSpringsSquareSimulation(
   sim: SpringsSquareSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    color = COLOR1,
+    texture,
+    dotScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -388,7 +441,20 @@ export function drawSpringsSquareSimulation(
   }
 
   for (const pyramid of PYRAMIDS) {
-    drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles, color);
+    if (texture) {
+      drawTexturedPyramidFaces(
+        ctx,
+        pyramid.apex,
+        pyramid.base,
+        particles,
+        texture,
+        color,
+        width,
+        height,
+      );
+    } else {
+      drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles, color);
+    }
   }
 
   ctx.lineWidth = 1;
@@ -397,15 +463,19 @@ export function drawSpringsSquareSimulation(
     drawPyramidSprings(ctx, pyramid.apex, pyramid.base, particles, color);
   }
 
-  const dotRadius = DOT_RADIUS;
-  for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+  const dotRadius = DOT_RADIUS * dotScale;
+  if (texture) {
+    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+  } else {
+    for (const particle of particles) {
+      ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+      ctx.fillStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   if (showHint && !sim.clicked && sim.frameCount > 80) {

@@ -1,3 +1,10 @@
+import {
+  drawParticlesWithShadow,
+  drawTexturedFace,
+  SHAPE_TEXTURE_ANCHORS,
+  type ProtoTextureId,
+} from "./shape-textures";
+
 const BASE_POINTS = 3;
 const SHAPE_SCALE = 0.75;
 
@@ -279,6 +286,9 @@ export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   showHint?: boolean;
   color?: DrawColor;
+  texture?: ProtoTextureId;
+  /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
+  dotScale?: number;
 };
 
 export function drawSpringsPrismSimulation(
@@ -286,7 +296,13 @@ export function drawSpringsPrismSimulation(
   sim: SpringsPrismSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true, color = COLOR1 } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    color = COLOR1,
+    texture,
+    dotScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
 
   if (clearBackground) {
@@ -294,11 +310,30 @@ export function drawSpringsPrismSimulation(
     ctx.fillRect(0, 0, width, height);
   }
 
-  fillPolygon(ctx, particles, [0, 1, 4, 3], 100 / 255, color);
-  fillPolygon(ctx, particles, [1, 2, 5, 4], 100 / 255, color);
-  fillPolygon(ctx, particles, [2, 0, 3, 5], 75 / 255, color);
-  fillPolygon(ctx, particles, [0, 1, 2], 50 / 255, color);
-  fillPolygon(ctx, particles, [3, 4, 5], 50 / 255, color);
+  if (texture) {
+    const anchors = SHAPE_TEXTURE_ANCHORS.prism!;
+    const faceBase = {
+      particles,
+      texture,
+      color,
+      canvasWidth: width,
+      canvasHeight: height,
+      backParticleIndex: anchors.backParticleIndex,
+      gradientParticleIndices: [0, 3],
+      ringParticleIndex: anchors.ringParticleIndex,
+    };
+    drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 4, 3] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [1, 2, 5, 4] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [2, 0, 3, 5] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 2] });
+    drawTexturedFace(ctx, { ...faceBase, indices: [3, 4, 5] });
+  } else {
+    fillPolygon(ctx, particles, [0, 1, 4, 3], 100 / 255, color);
+    fillPolygon(ctx, particles, [1, 2, 5, 4], 100 / 255, color);
+    fillPolygon(ctx, particles, [2, 0, 3, 5], 75 / 255, color);
+    fillPolygon(ctx, particles, [0, 1, 2], 50 / 255, color);
+    fillPolygon(ctx, particles, [3, 4, 5], 50 / 255, color);
+  }
 
   ctx.lineWidth = 1;
 
@@ -312,15 +347,19 @@ export function drawSpringsPrismSimulation(
     drawSpring(ctx, front, back, 1, color);
   }
 
-  const dotRadius = DOT_RADIUS;
-  for (const particle of particles) {
-    ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-    ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+  const dotRadius = DOT_RADIUS * dotScale;
+  if (texture) {
+    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+  } else {
+    for (const particle of particles) {
+      ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+      ctx.fillStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
 
   if (showHint && !sim.clicked && sim.frameCount > 80) {

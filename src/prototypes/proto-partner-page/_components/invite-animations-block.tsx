@@ -8,6 +8,18 @@ import { useMemo, type ReactNode } from "react";
 
 import type { InviteAnimationsVariant } from "./invite-animations-content";
 import { INVITE_COPY } from "./invite-copy-content";
+import {
+  inviteBlockClassName,
+  inviteBodyClass,
+  inviteBodyStackClass,
+  inviteBodyStackTightClass,
+  inviteContentShellClass,
+  inviteCtaButtonClass,
+  inviteCtaSectionClass,
+  inviteCtaShellClass,
+  inviteEyebrowClass,
+  inviteHeadlineClass,
+} from "./invite-layout-classes";
 
 type InviteAnimationsBlockProps = {
   variant: InviteAnimationsVariant;
@@ -47,35 +59,26 @@ function StaticInviteContent({
   return (
     <PrototypeComponent
       id="invite-animations-block"
-      className={cn(
-        "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-        className,
-      )}
+      className={cn(inviteBlockClassName, className)}
     >
-      <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
-        <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-          Design partner invite
-        </p>
-        <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-          {INVITE_COPY.headline}
-        </h1>
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <p className="text-foreground text-[0.875rem] leading-[1.6]">
+      <div className={inviteContentShellClass}>
+        <p className={inviteEyebrowClass}>Design partner invite</p>
+        <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
+        <div className={inviteBodyStackClass}>
+          <p className={inviteBodyClass}>
             <InviteWithBoldProto />
           </p>
-          <p className="text-foreground text-[0.875rem] leading-[1.6]">
-            {INVITE_COPY.followUp}
-          </p>
+          <p className={inviteBodyClass}>{INVITE_COPY.followUp}</p>
         </div>
       </div>
-      <div className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4">
-        <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+      <div className={inviteCtaSectionClass}>
+        <div className={inviteCtaShellClass}>
           <button
             type="button"
             onClick={onContinue}
-            className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+            className={inviteCtaButtonClass}
           >
-            <span>Customize your protoshape</span>
+            <span>Customize your Proto Shape</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden
@@ -129,8 +132,8 @@ function SpringCtaSection({
   delay?: number;
 }) {
   return (
-    <div className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4">
-      <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+    <div className={inviteCtaSectionClass}>
+      <div className={inviteCtaShellClass}>
         <motion.button
           type="button"
           onClick={onContinue}
@@ -144,7 +147,7 @@ function SpringCtaSection({
             delay: delay + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <span>Customize your protoshape</span>
+          <span>Customize your Proto Shape</span>
           <ArrowRight
             className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
             aria-hidden
@@ -154,9 +157,6 @@ function SpringCtaSection({
     </div>
   );
 }
-
-const inviteBlockClassName =
-  "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5";
 
 function AnimatedInviteContent({
   variant,
@@ -175,7 +175,7 @@ function AnimatedInviteContent({
     );
   }
 
-  const bodyClass = "text-foreground text-[0.875rem] leading-[1.6]";
+  const bodyClass = inviteBodyClass;
 
   if (variant === "word-pop-button-spring") {
     return (
@@ -184,13 +184,13 @@ function AnimatedInviteContent({
         className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
-          <h1 className="text-foreground mb-3 flex flex-wrap gap-x-[0.28em] text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
+          <h1
+            className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
+          >
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
@@ -207,7 +207,7 @@ function AnimatedInviteContent({
               </motion.span>
             ))}
           </h1>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem delay={0.38}>
               <p className={bodyClass}>
                 <InviteWithBoldProto />
@@ -233,16 +233,14 @@ function AnimatedInviteContent({
         className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem
             delay={0.04}
             hidden={blurHidden}
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -250,11 +248,9 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-              {INVITE_COPY.headline}
-            </h1>
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           </MotionItem>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem
               delay={0.22}
               hidden={blurHidden}
@@ -287,9 +283,9 @@ function AnimatedInviteContent({
         className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <motion.p
-            className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4"
+            className={inviteEyebrowClass}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
@@ -297,7 +293,7 @@ function AnimatedInviteContent({
             Design partner invite
           </motion.p>
           <motion.h1
-            className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]"
+            className={inviteHeadlineClass}
             initial={{ opacity: 0, scale: 0.94, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOut, delay: 0.08 }}
@@ -305,7 +301,7 @@ function AnimatedInviteContent({
             {INVITE_COPY.headline}
           </motion.h1>
           <motion.div
-            className="flex flex-col gap-3 pb-2 sm:gap-4 sm:pb-3"
+            className={cn(inviteBodyStackClass, inviteBodyStackTightClass)}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: easeOut, delay: 0.26 }}
@@ -328,18 +324,14 @@ function AnimatedInviteContent({
         className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
           <MotionItem delay={0.12}>
-            <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-              {INVITE_COPY.headline}
-            </h1>
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           </MotionItem>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem delay={0.18}>
               <p className={bodyClass}>
                 <InviteWithBoldProto />
@@ -359,19 +351,16 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
-          <h1 className="text-foreground mb-3 flex flex-wrap gap-x-[0.28em] text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
+          <h1
+            className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
+          >
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
@@ -388,7 +377,7 @@ function AnimatedInviteContent({
               </motion.span>
             ))}
           </h1>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem delay={0.38}>
               <p className={bodyClass}>
                 <InviteWithBoldProto />
@@ -400,7 +389,7 @@ function AnimatedInviteContent({
           </div>
         </div>
         <motion.div
-          className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4"
+          className={inviteCtaSectionClass}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -409,13 +398,13 @@ function AnimatedInviteContent({
             delay: 0.82 + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+          <div className={inviteCtaShellClass}>
             <button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -434,22 +423,17 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem
             delay={0.04}
             hidden={blurHidden}
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -457,11 +441,9 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-              {INVITE_COPY.headline}
-            </h1>
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           </MotionItem>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem
               delay={0.22}
               hidden={blurHidden}
@@ -483,19 +465,19 @@ function AnimatedInviteContent({
           </div>
         </div>
         <MotionItem
-          className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4"
+          className={inviteCtaSectionClass}
           delay={0.56 + CTA_ENTRANCE_DELAY_EXTRA}
           hidden={blurHidden}
           visible={blurVisible}
           transition={{ duration: 0.65 }}
         >
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+          <div className={inviteCtaShellClass}>
             <button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -511,32 +493,25 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem
             delay={0.04}
             hidden={{ opacity: 0 }}
             visible={{ opacity: 1 }}
           >
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
           <MotionItem
             delay={0.1}
             hidden={{ opacity: 0 }}
             visible={{ opacity: 1 }}
           >
-            <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-              {INVITE_COPY.headline}
-            </h1>
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           </MotionItem>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem
               delay={0.14}
               hidden={{ opacity: 0 }}
@@ -555,12 +530,12 @@ function AnimatedInviteContent({
             </MotionItem>
           </div>
         </div>
-        <div className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4">
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+        <div className={inviteCtaSectionClass}>
+          <div className={inviteCtaShellClass}>
             <motion.button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
               initial={{ opacity: 0, scale: 0.88, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{
@@ -570,7 +545,7 @@ function AnimatedInviteContent({
                 delay: 0.48 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -586,15 +561,12 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <motion.p
-            className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4"
+            className={inviteEyebrowClass}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
@@ -602,7 +574,7 @@ function AnimatedInviteContent({
             Design partner invite
           </motion.p>
           <motion.h1
-            className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]"
+            className={inviteHeadlineClass}
             initial={{ opacity: 0, scale: 0.94, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOut, delay: 0.08 }}
@@ -610,7 +582,7 @@ function AnimatedInviteContent({
             {INVITE_COPY.headline}
           </motion.h1>
           <motion.div
-            className="flex flex-col gap-3 pb-2 sm:gap-4 sm:pb-3"
+            className={cn(inviteBodyStackClass, inviteBodyStackTightClass)}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: easeOut, delay: 0.26 }}
@@ -622,7 +594,7 @@ function AnimatedInviteContent({
           </motion.div>
         </div>
         <motion.div
-          className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4"
+          className={inviteCtaSectionClass}
           initial={{ opacity: 0, x: 28 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{
@@ -631,13 +603,13 @@ function AnimatedInviteContent({
             delay: 0.62 + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+          <div className={inviteCtaShellClass}>
             <button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -653,24 +625,17 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
+        <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-              Design partner invite
-            </p>
+            <p className={inviteEyebrowClass}>Design partner invite</p>
           </MotionItem>
           <MotionItem delay={0.12}>
-            <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-              {INVITE_COPY.headline}
-            </h1>
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           </MotionItem>
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className={inviteBodyStackClass}>
             <MotionItem delay={0.18}>
               <p className={bodyClass}>
                 <InviteWithBoldProto />
@@ -681,14 +646,14 @@ function AnimatedInviteContent({
             </MotionItem>
           </div>
         </div>
-        <div className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4">
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+        <div className={inviteCtaSectionClass}>
+          <div className={inviteCtaShellClass}>
             <button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -704,20 +669,13 @@ function AnimatedInviteContent({
     return (
       <PrototypeComponent
         id="invite-animations-block"
-        className={cn(
-          "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-          className,
-        )}
+        className={cn(inviteBlockClassName, className)}
         key={mountKey}
       >
-        <div className="mx-auto max-w-md px-4 pb-0 sm:px-6">
-          <p className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4">
-            Design partner invite
-          </p>
-          <h1 className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]">
-            {INVITE_COPY.headline}
-          </h1>
-          <div className="flex flex-col gap-3 sm:gap-4">
+        <div className={inviteContentShellClass}>
+          <p className={inviteEyebrowClass}>Design partner invite</p>
+          <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
+          <div className={inviteBodyStackClass}>
             <p className={bodyClass}>
               <InviteWithBoldProto />
             </p>
@@ -725,7 +683,7 @@ function AnimatedInviteContent({
           </div>
         </div>
         <motion.div
-          className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4"
+          className={inviteCtaSectionClass}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -734,11 +692,11 @@ function AnimatedInviteContent({
             delay: 0.35 + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+          <div className={inviteCtaShellClass}>
             <motion.button
               type="button"
               onClick={onContinue}
-              className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+              className={inviteCtaButtonClass}
               initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{
@@ -747,7 +705,7 @@ function AnimatedInviteContent({
                 delay: 0.45 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>Customize your protoshape</span>
+              <span>Customize your Proto Shape</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -762,14 +720,11 @@ function AnimatedInviteContent({
   return (
     <PrototypeComponent
       id="invite-animations-block"
-      className={cn(
-        "shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5",
-        className,
-      )}
+      className={cn(inviteBlockClassName, className)}
       key={mountKey}
     >
       <motion.div
-        className="mx-auto max-w-md px-4 pb-0 sm:px-6"
+        className={inviteContentShellClass}
         initial="hidden"
         animate="visible"
         variants={{
@@ -780,7 +735,7 @@ function AnimatedInviteContent({
         }}
       >
         <motion.p
-          className="text-muted-foreground mb-3 text-[0.6875rem] font-medium tracking-[0.18em] uppercase sm:mb-4"
+          className={inviteEyebrowClass}
           variants={{
             hidden: fadeUpHidden,
             visible: fadeUpVisible,
@@ -790,7 +745,7 @@ function AnimatedInviteContent({
           Design partner invite
         </motion.p>
         <motion.h1
-          className="text-foreground mb-3 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:mb-4 sm:text-[1.875rem]"
+          className={inviteHeadlineClass}
           variants={{
             hidden: fadeUpHidden,
             visible: fadeUpVisible,
@@ -799,29 +754,31 @@ function AnimatedInviteContent({
         >
           {INVITE_COPY.headline}
         </motion.h1>
-        <motion.p
-          className={bodyClass}
-          variants={{
-            hidden: fadeUpHidden,
-            visible: fadeUpVisible,
-          }}
-          transition={{ duration: 0.5, ease: easeOut, delay: -0.06 }}
-        >
-          <InviteWithBoldProto />
-        </motion.p>
-        <motion.p
-          className={cn(bodyClass, "mt-3 pb-2 sm:mt-4 sm:pb-3")}
-          variants={{
-            hidden: fadeUpHidden,
-            visible: fadeUpVisible,
-          }}
-          transition={{ duration: 0.5, ease: easeOut }}
-        >
-          {INVITE_COPY.followUp}
-        </motion.p>
+        <div className={inviteBodyStackClass}>
+          <motion.p
+            className={bodyClass}
+            variants={{
+              hidden: fadeUpHidden,
+              visible: fadeUpVisible,
+            }}
+            transition={{ duration: 0.5, ease: easeOut, delay: -0.06 }}
+          >
+            <InviteWithBoldProto />
+          </motion.p>
+          <motion.p
+            className={bodyClass}
+            variants={{
+              hidden: fadeUpHidden,
+              visible: fadeUpVisible,
+            }}
+            transition={{ duration: 0.5, ease: easeOut }}
+          >
+            {INVITE_COPY.followUp}
+          </motion.p>
+        </div>
       </motion.div>
       <motion.div
-        className="pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-3 sm:px-5 sm:pb-6 sm:pt-4"
+        className={inviteCtaSectionClass}
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
@@ -830,13 +787,13 @@ function AnimatedInviteContent({
           delay: 0.58 + CTA_ENTRANCE_DELAY_EXTRA,
         }}
       >
-        <div className="mx-auto flex max-w-md justify-end px-4 sm:px-6">
+        <div className={inviteCtaShellClass}>
           <button
             type="button"
             onClick={onContinue}
-            className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+            className={inviteCtaButtonClass}
           >
-            <span>Customize your protoshape</span>
+            <span>Customize your Proto Shape</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden

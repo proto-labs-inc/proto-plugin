@@ -11,6 +11,7 @@ import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
 import {
   DEFAULT_PROTO_COLOR_ID,
   DEFAULT_PROTO_SHAPE_ID,
+  DEFAULT_PROTO_TEXTURE_ID,
 } from "./proto-shape-content";
 import {
   ShapeColorPickerBlock,
@@ -182,7 +183,7 @@ export function buildShapeColorPickerDesignExplorationConfig(
     brief: {
       titleDefault: "Shape & color picker",
       descriptionDefault:
-        "Explore diverse ways to present the five proto shapes and five brand colors — tile grids, segmented bars, filled silhouettes, neon glow, list radios, and more.",
+        "Explore diverse ways to present the five proto shapes, five brand colors, and six canvas textures — tile grids, segmented bars, filled silhouettes, neon glow, list radios, and more.",
     },
     context: {
       label: "Options",
@@ -208,10 +209,18 @@ export function buildShapeColorPickerDesignExplorationConfig(
               </span>
             </p>
             <p>
+              <span className="text-foreground font-medium">Textures</span>
+              <br />
+              <span className="text-muted-foreground">
+                {context.textures.map((texture) => texture.label).join(", ")}
+              </span>
+            </p>
+            <p>
               <span className="text-foreground font-medium">Defaults</span>
               <br />
               <span className="text-muted-foreground">
-                {context.defaultShape} / {context.defaultColor}
+                {context.defaultShape} / {context.defaultColor} /{" "}
+                {context.defaultTexture}
               </span>
             </p>
           </div>
@@ -221,7 +230,7 @@ export function buildShapeColorPickerDesignExplorationConfig(
     variantsSection: {
       title: "Picker styles",
       description:
-        "Each option keeps the same compact dock placement but changes how shape and color controls look and feel.",
+        "Each option keeps the same compact dock placement but changes how shape, color, and texture controls look and feel.",
     },
     mobbin: {
       references: MOBBIN_REFERENCES,
@@ -238,6 +247,7 @@ export function defaultShapeColorPickerSelection(): ShapeColorPickerSelection {
   return {
     shapeId: DEFAULT_PROTO_SHAPE_ID,
     colorId: DEFAULT_PROTO_COLOR_ID,
+    textureId: DEFAULT_PROTO_TEXTURE_ID,
   };
 }
 
