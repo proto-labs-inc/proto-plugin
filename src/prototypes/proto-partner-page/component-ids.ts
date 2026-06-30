@@ -5,6 +5,13 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "scroll-container",
   "partner-shape-canvas",
   "partner-page-flow-block",
+  "submit-shape-modal",
+  "submit-shape-modal-block",
+  "submit-shape-modal.partner-shape-canvas",
+  "submit-modal-variant-toggle",
+  "submit-modal-explorer",
+  "submit-modal-variant-tabs",
+  "submit-modal-mobbin-inspiration-gallery",
   "partner-page-motion.partner-motion-fade-up",
   "partner-page-motion.partner-motion-spring-pop",
   "partner-page-motion.partner-motion-spring-button",
@@ -48,6 +55,9 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
 
 /** Nested ids from PrototypeVariantExplorer / PrototypeDesignBriefPanel. */
 export const DYNAMIC_TARGET_PREFIXES = [
+  "submit-modal-explorer.",
+  "submit-modal-variant-tabs.",
+  "submit-modal-mobbin-inspiration-gallery.",
   "invite-animations-explorer.",
   "invite-animations-variant-tabs.",
   "invite-animations-mobbin-inspiration-gallery.",

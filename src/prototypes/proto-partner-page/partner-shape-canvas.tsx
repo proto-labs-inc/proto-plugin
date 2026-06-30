@@ -54,7 +54,14 @@ import {
   type ProtoShapeId,
   type ProtoTextureId,
 } from "./_components/proto-shape-content";
-import { DEFAULT_PROTO_TEXTURE_ID } from "../proto-shapes/shape-textures";
+import { bindSpringsCanvasPointerHandlers } from "../proto-shapes/springs-canvas-pointer";
+import {
+  DEFAULT_PROTO_TEXTURE_ID,
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_HANDLE_DOT_RADIUS,
+  SHAPE_SPRING_LINE_WIDTH,
+  withShapeRenderScale,
+} from "../proto-shapes/shape-textures";
 
 type CanvasSize = {
   cssWidth: number;
@@ -96,6 +103,7 @@ type ShapeRuntime = {
     color: ProtoRgb,
     texture: ProtoTextureId,
     dotScale: number,
+    renderScale: number,
   ) => void;
 };
 
@@ -118,13 +126,14 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsTriangleSimulation(sim as SpringsTriangleSimulation, input),
-    draw: (ctx, sim, color, texture, dotScale) =>
+    draw: (ctx, sim, color, texture, dotScale, renderScale) =>
       drawSpringsTriangleSimulation(ctx, sim as SpringsTriangleSimulation, {
         clearBackground: false,
         showHint: false,
         color,
         texture,
         dotScale,
+        renderScale,
       }),
   },
   cube: {
@@ -140,13 +149,14 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       pickClosestCubeParticle(sim as SpringsCubeSimulation, x, y, pickRadius),
     step: (sim, input) =>
       stepSpringsCubeSimulation(sim as SpringsCubeSimulation, input),
-    draw: (ctx, sim, color, texture, dotScale) =>
+    draw: (ctx, sim, color, texture, dotScale, renderScale) =>
       drawSpringsCubeSimulation(ctx, sim as SpringsCubeSimulation, {
         clearBackground: false,
         showHint: false,
         color,
         texture,
         dotScale,
+        renderScale,
       }),
   },
   pentagon: {
@@ -167,13 +177,14 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsPentagonSimulation(sim as SpringsPentagonSimulation, input),
-    draw: (ctx, sim, color, texture, dotScale) =>
+    draw: (ctx, sim, color, texture, dotScale, renderScale) =>
       drawSpringsPentagonSimulation(ctx, sim as SpringsPentagonSimulation, {
         clearBackground: false,
         showHint: false,
         color,
         texture,
         dotScale,
+        renderScale,
       }),
   },
   square: {
@@ -194,13 +205,14 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       ),
     step: (sim, input) =>
       stepSpringsSquareSimulation(sim as SpringsSquareSimulation, input),
-    draw: (ctx, sim, color, texture, dotScale) =>
+    draw: (ctx, sim, color, texture, dotScale, renderScale) =>
       drawSpringsSquareSimulation(ctx, sim as SpringsSquareSimulation, {
         clearBackground: false,
         showHint: false,
         color,
         texture,
         dotScale,
+        renderScale,
       }),
   },
   prism: {
@@ -216,13 +228,14 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
       pickClosestPrismParticle(sim as SpringsPrismSimulation, x, y, pickRadius),
     step: (sim, input) =>
       stepSpringsPrismSimulation(sim as SpringsPrismSimulation, input),
-    draw: (ctx, sim, color, texture, dotScale) =>
+    draw: (ctx, sim, color, texture, dotScale, renderScale) =>
       drawSpringsPrismSimulation(ctx, sim as SpringsPrismSimulation, {
         clearBackground: false,
         showHint: false,
         color,
         texture,
         dotScale,
+        renderScale,
       }),
   },
 };
@@ -271,12 +284,17 @@ function isMobileViewport() {
   return window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches;
 }
 
-function getPartnerShapeLayout(cssHeight: number, shapeId: ProtoShapeId) {
+function getPartnerShapeLayout(
+  cssHeight: number,
+  shapeId: ProtoShapeId,
+  visualScale = 1,
+) {
   const mobile = isMobileViewport();
   const baseScale = mobile ? MOBILE_SHAPE_SCALE : DESKTOP_SHAPE_SCALE;
   const dotScale = mobile ? MOBILE_DOT_SCALE : DESKTOP_DOT_SCALE;
   const shapeScale =
-    shapeId === "square" ? baseScale * THREE_PART_SHAPE_SCALE : baseScale;
+    (shapeId === "square" ? baseScale * THREE_PART_SHAPE_SCALE : baseScale) *
+    visualScale;
   return {
     scale: shapeScale,
     dotScale,
@@ -419,10 +437,53 @@ function collapseShapeForPop(
   }
 }
 
+function resolveEffectiveShapeMargin(
+  cssHeight: number,
+  shapeId: ProtoShapeId,
+  visualScale: number,
+  dotBoost: number,
+  shapeMargin?: number,
+) {
+  if (shapeMargin == null) return undefined;
+
+  const { dotScale } = getPartnerShapeLayout(cssHeight, shapeId, visualScale);
+  const renderBleed =
+    withShapeRenderScale(
+      SHAPE_HANDLE_DOT_RADIUS * dotScale * dotBoost,
+      visualScale,
+    ) +
+    SHAPE_DOT_OUTLINE_WIDTH +
+    withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, visualScale) / 2;
+
+  return Math.ceil(shapeMargin + renderBleed);
+}
+
+function applyShapeMargin(
+  sim: SpringsSimulation,
+  cssHeight: number,
+  shapeId: ProtoShapeId,
+  visualScale: number,
+  dotBoost: number,
+  shapeMargin?: number,
+) {
+  const resolved = resolveEffectiveShapeMargin(
+    cssHeight,
+    shapeId,
+    visualScale,
+    dotBoost,
+    shapeMargin,
+  );
+  if (resolved != null) {
+    sim.margin = resolved;
+  }
+}
+
 type CreateSimulationOptions = {
   preservedPose?: SimulationPose | null;
   /** When false, only position + rotation carry over; scale stays at the new shape's default. */
   preserveScale?: boolean;
+  /** Override sim boundary inset — smaller values let the shape travel closer to canvas edges. */
+  shapeMargin?: number;
 };
 
 function createSimulationAtSpawn(
@@ -432,11 +493,13 @@ function createSimulationAtSpawn(
   shapeId: ProtoShapeId,
   spawnPoint: { x: number; y: number } | null,
   options: CreateSimulationOptions = {},
+  visualScale = 1,
+  dotBoost = 1,
 ) {
   const isInitialReveal = spawnPoint === null && !options.preservedPose;
   const spawn = spawnPoint ?? getShapeRestPoint(cssWidth, cssHeight, shapeId);
   const sim = runtime.create(cssWidth, cssHeight, spawn.x, spawn.y);
-  const { scale } = getPartnerShapeLayout(cssHeight, shapeId);
+  const { scale } = getPartnerShapeLayout(cssHeight, shapeId, visualScale);
   scaleSimulationAroundCentroid(sim, scale);
 
   if (options.preservedPose) {
@@ -458,6 +521,14 @@ function createSimulationAtSpawn(
     warmStartSimulation(runtime, sim);
   }
 
+  applyShapeMargin(
+    sim,
+    cssHeight,
+    shapeId,
+    visualScale,
+    dotBoost,
+    options.shapeMargin,
+  );
   return sim;
 }
 
@@ -482,6 +553,17 @@ type PartnerShapeCanvasProps = {
   color?: ProtoRgb;
   /** Skip opaque white clears so copy layered beneath stays visible. */
   transparentBackground?: boolean;
+  /** Canvas fill color when not transparent. Defaults to white. */
+  backgroundColor?: string;
+  /** Uniform render scale — scales sim geometry, strokes, and dots together. */
+  shapeScale?: number;
+  /** Extra multiplier on handle dots when shapeScale is below 1. */
+  shapeDotBoost?: number;
+  /** Tighter boundary inset so the shape can reach closer to canvas edges. */
+  shapeMargin?: number;
+  /** Fill a positioned parent (e.g. submit-modal card inset). */
+  embedded?: boolean;
+  prototypeId?: string;
 };
 
 export function PartnerShapeCanvas({
@@ -491,8 +573,15 @@ export function PartnerShapeCanvas({
   textureId = DEFAULT_PROTO_TEXTURE_ID,
   color,
   transparentBackground = false,
+  backgroundColor = "#ffffff",
+  shapeScale = 1,
+  shapeDotBoost = 1,
+  shapeMargin,
+  embedded = false,
+  prototypeId = "partner-shape-canvas",
 }: PartnerShapeCanvasProps) {
-  const resolvedColor = color ?? getProtoColor(colorId ?? DEFAULT_PROTO_COLOR_ID).rgb;
+  const resolvedColor =
+    color ?? getProtoColor(colorId ?? DEFAULT_PROTO_COLOR_ID).rgb;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const simRef = useRef<SpringsSimulation | null>(null);
@@ -510,11 +599,29 @@ export function PartnerShapeCanvas({
   });
   const rafRef = useRef<number | null>(null);
   const mobileLayoutRef = useRef(isMobileViewport());
+  const shapeScaleRef = useRef(shapeScale);
+  const shapeDotBoostRef = useRef(shapeDotBoost);
+  const shapeMarginRef = useRef(shapeMargin);
+  shapeScaleRef.current = shapeScale;
+  shapeDotBoostRef.current = shapeDotBoost;
+  shapeMarginRef.current = shapeMargin;
+
+  const buildCreateOptions = (
+    options: CreateSimulationOptions = {},
+  ): CreateSimulationOptions => ({
+    ...options,
+    shapeMargin: shapeMarginRef.current,
+  });
 
   const targetTextureRef = useRef<ProtoTextureId>(textureId);
   targetTextureRef.current = textureId;
 
   targetColorRef.current = resolvedColor;
+
+  useEffect(() => {
+    simRef.current = null;
+    preservedPoseRef.current = null;
+  }, [shapeScale, shapeMargin]);
 
   useEffect(() => {
     if (activeShapeRef.current === shapeId) return;
@@ -540,12 +647,14 @@ export function PartnerShapeCanvas({
             cssHeight,
             shapeId,
             spawnPointRef.current,
-            {
+            buildCreateOptions({
               preservedPose: preservedPoseRef.current,
               // Deformed/stretched particles inflate RMS scale; baking that into
               // restLength compounds on every switch and slowly grows the shape.
               preserveScale: false,
-            },
+            }),
+            shapeScaleRef.current,
+            shapeDotBoostRef.current,
           );
 
     if (simRef.current) {
@@ -590,13 +699,23 @@ export function PartnerShapeCanvas({
           cssHeight,
           activeShapeRef.current,
           spawnPointRef.current,
-          { preservedPose: preservedPoseRef.current },
+          buildCreateOptions({ preservedPose: preservedPoseRef.current }),
+          shapeScaleRef.current,
+          shapeDotBoostRef.current,
         );
         return;
       }
 
       if (simRef.current) {
         runtimeRef.current.updateBounds(simRef.current, cssWidth, cssHeight);
+        applyShapeMargin(
+          simRef.current,
+          cssHeight,
+          activeShapeRef.current,
+          shapeScaleRef.current,
+          shapeDotBoostRef.current,
+          shapeMarginRef.current,
+        );
       } else {
         simRef.current = createSimulationAtSpawn(
           runtimeRef.current,
@@ -604,7 +723,9 @@ export function PartnerShapeCanvas({
           cssHeight,
           activeShapeRef.current,
           spawnPointRef.current,
-          { preservedPose: preservedPoseRef.current },
+          buildCreateOptions({ preservedPose: preservedPoseRef.current }),
+          shapeScaleRef.current,
+          shapeDotBoostRef.current,
         );
       }
     };
@@ -624,46 +745,37 @@ export function PartnerShapeCanvas({
       return { x, y };
     };
 
-    const onPointerDown = (event: PointerEvent) => {
-      const sim = simRef.current;
-      if (!sim) return;
+    const cleanupPointer = bindSpringsCanvasPointerHandlers(canvas, {
+      onPointerDown: (event) => {
+        const sim = simRef.current;
+        if (!sim) return false;
 
-      const { x, y } = pointerToCanvas(event.clientX, event.clientY);
-      const pickRadius =
-        event.pointerType === "touch"
-          ? PARTICLE_PICK_RADIUS_TOUCH
-          : PARTICLE_PICK_RADIUS;
+        const { x, y } = pointerToCanvas(event.clientX, event.clientY);
+        const pickRadius =
+          event.pointerType === "touch"
+            ? PARTICLE_PICK_RADIUS_TOUCH
+            : PARTICLE_PICK_RADIUS;
 
-      runtimeRef.current.pick(sim, x, y, pickRadius);
-      if (sim.grabbedIndex < 0) return;
+        runtimeRef.current.pick(sim, x, y, pickRadius);
+        if (sim.grabbedIndex < 0) return false;
 
-      sim.clicked = true;
-      event.preventDefault();
-      canvas.setPointerCapture(event.pointerId);
-      inputRef.current.pointerX = x;
-      inputRef.current.pointerY = y;
-      inputRef.current.pointerDown = true;
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      const { x, y } = pointerToCanvas(event.clientX, event.clientY);
-      inputRef.current.pointerX = x;
-      inputRef.current.pointerY = y;
-    };
-
-    const endPointer = (event: PointerEvent) => {
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-      inputRef.current.pointerDown = false;
-      const sim = simRef.current;
-      if (sim) sim.grabbedIndex = -1;
-    };
-
-    canvas.addEventListener("pointerdown", onPointerDown);
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", endPointer);
-    canvas.addEventListener("pointercancel", endPointer);
+        sim.clicked = true;
+        inputRef.current.pointerX = x;
+        inputRef.current.pointerY = y;
+        inputRef.current.pointerDown = true;
+        return true;
+      },
+      onPointerMove: (event) => {
+        const { x, y } = pointerToCanvas(event.clientX, event.clientY);
+        inputRef.current.pointerX = x;
+        inputRef.current.pointerY = y;
+      },
+      onPointerEnd: () => {
+        inputRef.current.pointerDown = false;
+        const sim = simRef.current;
+        if (sim) sim.grabbedIndex = -1;
+      },
+    });
 
     const frame = () => {
       const sim = simRef.current;
@@ -687,21 +799,25 @@ export function PartnerShapeCanvas({
       if (transparentBackground) {
         ctx.clearRect(0, 0, cssWidth, cssHeight);
       } else {
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, cssWidth, cssHeight);
       }
 
+      const visualScale = shapeScaleRef.current;
       const { dotScale } = getPartnerShapeLayout(
         cssHeight,
         activeShapeRef.current,
+        visualScale,
       );
+      const renderDotScale = dotScale * shapeDotBoostRef.current;
 
       runtime.draw(
         ctx,
         sim,
         displayColorRef.current,
         targetTextureRef.current,
-        dotScale,
+        renderDotScale,
+        visualScale,
       );
 
       rafRef.current = requestAnimationFrame(frame);
@@ -711,24 +827,23 @@ export function PartnerShapeCanvas({
 
     return () => {
       observer.disconnect();
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", endPointer);
-      canvas.removeEventListener("pointercancel", endPointer);
+      cleanupPointer();
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [transparentBackground]);
+  }, [transparentBackground, backgroundColor, shapeScale, shapeMargin]);
 
   return (
     <PrototypeComponent
-      id="partner-shape-canvas"
-      className={`relative flex min-h-0 flex-1 flex-col ${transparentBackground ? "bg-transparent" : "bg-white"} ${className ?? ""}`}
+      id={prototypeId}
+      className={`${embedded ? "absolute inset-0 size-full min-h-0" : "relative flex min-h-0 flex-1 flex-col"} ${transparentBackground ? "bg-transparent" : ""} ${className ?? ""}`}
+      style={transparentBackground ? undefined : { backgroundColor }}
     >
       <div
         ref={containerRef}
-        className={`relative min-h-0 flex-1 touch-none ${transparentBackground ? "bg-transparent" : "bg-white"}`}
+        className={`relative size-full min-h-0 touch-none ${transparentBackground ? "bg-transparent" : ""}`}
+        style={transparentBackground ? undefined : { backgroundColor }}
         aria-label="Interactive proto shape"
       >
         <canvas

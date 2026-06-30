@@ -33,7 +33,13 @@ export const MOBILE_PANEL_MOTION_VARIANT_SET = {
   label: "Mobile panel motion",
 } as const;
 
+export const SUBMIT_MODAL_VARIANT_SET = {
+  id: "submit-modal",
+  label: "Submit modal",
+} as const;
+
 export const PROTO_PARTNER_PAGE_VARIANT_SETS = [
+  SUBMIT_MODAL_VARIANT_SET,
   MOBILE_PANEL_MOTION_VARIANT_SET,
   MOBILE_PICKER_LAYOUT_VARIANT_SET,
   INVITE_ANIMATIONS_VARIANT_SET,

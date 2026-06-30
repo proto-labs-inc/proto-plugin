@@ -47,6 +47,11 @@ import {
   type ShapeColorPickerVariant,
 } from "./_components/shape-color-picker-content";
 import { ShapeColorPickerVariantToggle } from "./_components/shape-color-picker-variant-toggle";
+import {
+  DEFAULT_SUBMIT_MODAL_VARIANT,
+  type SubmitModalVariant,
+} from "./_components/submit-modal-design-exploration-config";
+import { SubmitModalVariantToggle } from "./_components/submit-modal-variant-toggle";
 import { useRegisterPartnerVariantSets } from "./_components/partner-variant-sets";
 import { PartnerShapeCanvas } from "./partner-shape-canvas";
 
@@ -68,6 +73,8 @@ export default function ProtoPartnerPage() {
     useState<MobilePickerLayoutVariant>(DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT);
   const [mobilePanelMotionVariant, setMobilePanelMotionVariant] =
     useState<MobilePanelMotionVariant>(DEFAULT_MOBILE_PANEL_MOTION_VARIANT);
+  const [submitModalVariant, setSubmitModalVariant] =
+    useState<SubmitModalVariant>(DEFAULT_SUBMIT_MODAL_VARIANT);
   const [shapeSelection, setShapeSelection] = useState<ProtoShapeSelection>(
     defaultProtoShapeSelection(),
   );
@@ -124,6 +131,55 @@ export default function ProtoPartnerPage() {
     </>
   );
 
+  const variantSidebarRegistration = (
+    <div className="sr-only" aria-hidden>
+      <SubmitModalVariantToggle
+        variant={submitModalVariant}
+        onVariantChange={setSubmitModalVariant}
+        selection={shapeSelection}
+        registerOnly
+      />
+      <MobilePanelMotionVariantToggle
+        variant={mobilePanelMotionVariant}
+        onVariantChange={setMobilePanelMotionVariant}
+        selection={shapeSelection}
+        onSelectionChange={setShapeSelection}
+        registerOnly
+      />
+      <MobilePickerLayoutVariantToggle
+        variant={mobilePickerLayoutVariant}
+        onVariantChange={setMobilePickerLayoutVariant}
+        selection={shapeSelection}
+        onSelectionChange={setShapeSelection}
+        registerOnly
+      />
+      <ShapeColorPickerVariantToggle
+        variant={shapeColorPickerVariant}
+        onVariantChange={setShapeColorPickerVariant}
+        selection={shapeSelection}
+        onSelectionChange={setShapeSelection}
+        registerOnly
+      />
+      <ProtoShapesVariantToggle
+        variant={protoShapesVariant}
+        onVariantChange={setProtoShapesVariant}
+        selection={shapeSelection}
+        onSelectionChange={setShapeSelection}
+        registerOnly
+      />
+      <InviteCopyVariantToggle
+        variant={inviteCopyVariant}
+        onVariantChange={setInviteCopyVariant}
+        registerOnly
+      />
+      <InviteAnimationsVariantToggle
+        variant={inviteAnimationsVariant}
+        onVariantChange={setInviteAnimationsVariant}
+        registerOnly
+      />
+    </div>
+  );
+
   return (
     <PrototypeComponent
       id="scroll-container"
@@ -142,20 +198,6 @@ export default function ProtoPartnerPage() {
             <>
               <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-center">
                 {inviteSection}
-              </div>
-              <div className="relative z-30 flex shrink-0 flex-col gap-2">
-                <InviteAnimationsVariantToggle
-                  variant={inviteAnimationsVariant}
-                  onVariantChange={setInviteAnimationsVariant}
-                  overlayLayout
-                  registerOnly
-                />
-                <InviteCopyVariantToggle
-                  variant={inviteCopyVariant}
-                  onVariantChange={setInviteCopyVariant}
-                  overlayLayout
-                  registerOnly
-                />
               </div>
             </>
           ) : (
@@ -183,6 +225,8 @@ export default function ProtoPartnerPage() {
               animateEntrance={customizeEntranceMotion}
               entranceKey={customizeEntranceKey}
               panelMotionVariant={mobilePanelMotionVariant}
+              shapeSelection={shapeSelection}
+              submitModalVariant={submitModalVariant}
             />
             {dockInFlowLayout ? (
               <div className="relative z-10 min-h-0 flex-1">
@@ -194,7 +238,10 @@ export default function ProtoPartnerPage() {
                     className="absolute inset-0 min-h-0"
                   />
                 ) : (
-                  <div className="absolute inset-0 min-h-0 bg-white" aria-hidden />
+                  <div
+                    className="absolute inset-0 min-h-0 bg-white"
+                    aria-hidden
+                  />
                 )}
               </div>
             ) : shapeRenderReady ? (
@@ -227,53 +274,9 @@ export default function ProtoPartnerPage() {
               animateEntrance={customizeEntranceMotion}
               entranceKey={customizeEntranceKey}
             />
-            <div
-              className={cn(
-                "pointer-events-none relative z-30 flex shrink-0 flex-col gap-2",
-                dockInFlowLayout ? "sr-only" : "mt-auto",
-              )}
-            >
-              <MobilePanelMotionVariantToggle
-                variant={mobilePanelMotionVariant}
-                onVariantChange={setMobilePanelMotionVariant}
-                selection={shapeSelection}
-                onSelectionChange={setShapeSelection}
-                registerOnly
-              />
-              <MobilePickerLayoutVariantToggle
-                variant={mobilePickerLayoutVariant}
-                onVariantChange={setMobilePickerLayoutVariant}
-                selection={shapeSelection}
-                onSelectionChange={setShapeSelection}
-                registerOnly
-              />
-              <ShapeColorPickerVariantToggle
-                variant={shapeColorPickerVariant}
-                onVariantChange={setShapeColorPickerVariant}
-                selection={shapeSelection}
-                onSelectionChange={setShapeSelection}
-                registerOnly
-              />
-              <ProtoShapesVariantToggle
-                variant={protoShapesVariant}
-                onVariantChange={setProtoShapesVariant}
-                selection={shapeSelection}
-                onSelectionChange={setShapeSelection}
-                registerOnly
-              />
-              <InviteCopyVariantToggle
-                variant={inviteCopyVariant}
-                onVariantChange={setInviteCopyVariant}
-                registerOnly
-              />
-              <InviteAnimationsVariantToggle
-                variant={inviteAnimationsVariant}
-                onVariantChange={setInviteAnimationsVariant}
-                registerOnly
-              />
-            </div>
           </>
         )}
+        {variantSidebarRegistration}
       </PrototypeComponent>
     </PrototypeComponent>
   );

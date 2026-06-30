@@ -1,9 +1,6 @@
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
 
-@custom-variant prototype-mobile ([data-prototype-viewport-layout="mobile"] &);
-@custom-variant prototype-desktop ([data-prototype-viewport-layout="desktop"] &);
-
 /*
  * Product design tokens (synced from source via pnpm sync-from-source).
  * Scoped names — do not map to --color-* (those come from [data-prototype-root]).

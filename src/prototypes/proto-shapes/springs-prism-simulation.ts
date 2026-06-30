@@ -5,6 +5,7 @@ import {
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
   SHAPE_TEXTURE_ANCHORS,
+  withShapeRenderScale,
   type ProtoTextureId,
 } from "./shape-textures";
 
@@ -291,6 +292,7 @@ export type DrawSpringsSimulationOptions = {
   texture?: ProtoTextureId;
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
+  renderScale?: number;
 };
 
 export function drawSpringsPrismSimulation(
@@ -304,6 +306,7 @@ export function drawSpringsPrismSimulation(
     color = COLOR1,
     texture,
     dotScale = 1,
+    renderScale = 1,
   } = options;
   const { width, height, particles, margin } = sim;
 
@@ -337,7 +340,7 @@ export function drawSpringsPrismSimulation(
     fillPolygon(ctx, particles, [3, 4, 5], 50 / 255, color);
   }
 
-  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const front = particles[i];
@@ -349,14 +352,14 @@ export function drawSpringsPrismSimulation(
     drawSpring(ctx, front, back, 1, color);
   }
 
-  const dotRadius = DOT_RADIUS * dotScale;
+  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
   if (texture) {
     drawParticlesWithShadow(ctx, particles, dotRadius, color);
   } else {
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
+      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

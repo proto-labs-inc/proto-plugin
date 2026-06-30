@@ -16,6 +16,17 @@ export function getPrototypePortalContainer(): HTMLElement | undefined {
   return document.getElementById(PROTOTYPE_ROOT_ID) ?? undefined;
 }
 
+/** Dialogs/overlays inside prototype content — scoped to the preview viewport, not the review sidebar. */
+export function getPrototypeDialogPortalContainer(): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined;
+  return (
+    document.getElementById(PROTOTYPE_VIEWPORT_ID) ??
+    document.getElementById(PROTOTYPE_PREVIEW_STAGE_ID) ??
+    document.getElementById(PROTOTYPE_ROOT_ID) ??
+    undefined
+  );
+}
+
 export function getPrototypePreviewStage(): HTMLElement | undefined {
   if (typeof document === "undefined") return undefined;
   return document.getElementById(PROTOTYPE_PREVIEW_STAGE_ID) ?? undefined;

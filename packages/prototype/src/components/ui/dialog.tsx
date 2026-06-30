@@ -4,7 +4,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import * as React from "react";
 
-import { getPrototypePortalContainer } from "@prototype/lib/tool-portal";
+import { isCommentCaptureBlockedTarget } from "@prototype/lib/prototype-comments/core/comment-capture-blocked";
+import { getPrototypeDialogPortalContainer } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
 
 import styles from "./dialog.module.scss";
@@ -13,6 +14,19 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 const DialogPortal = DialogPrimitive.Portal;
+
+function isPrototypeToolOutsideEventTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && isCommentCaptureBlockedTarget(target);
+}
+
+function ignorePrototypeToolOutsideEvent(event: {
+  preventDefault: () => void;
+  target: EventTarget | null;
+}): void {
+  if (isPrototypeToolOutsideEventTarget(event.target)) {
+    event.preventDefault();
+  }
+}
 
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
@@ -34,10 +48,11 @@ const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean;
+    overlayClassName?: string;
   }
->(({ className, children, showCloseButton = true, ...props }, ref) => (
-  <DialogPortal container={getPrototypePortalContainer()}>
-    <DialogOverlay />
+>(({ className, children, showCloseButton = true, overlayClassName, onPointerDownOutside, onInteractOutside, onFocusOutside, ...props }, ref) => (
+  <DialogPortal container={getPrototypeDialogPortalContainer()}>
+    <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
@@ -45,6 +60,18 @@ const DialogContent = React.forwardRef<
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
         className,
       )}
+      onPointerDownOutside={(event) => {
+        ignorePrototypeToolOutsideEvent(event);
+        onPointerDownOutside?.(event);
+      }}
+      onInteractOutside={(event) => {
+        ignorePrototypeToolOutsideEvent(event);
+        onInteractOutside?.(event);
+      }}
+      onFocusOutside={(event) => {
+        ignorePrototypeToolOutsideEvent(event);
+        onFocusOutside?.(event);
+      }}
       {...props}
     >
       {children}

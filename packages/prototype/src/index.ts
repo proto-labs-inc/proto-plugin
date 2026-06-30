@@ -251,6 +251,7 @@ export {
   PROTOTYPE_SCREENSHOT_ATTR,
   PROTOTYPE_VIEWPORT_ID,
   getPrototypeChromeRoot,
+  getPrototypeDialogPortalContainer,
   getPrototypePreviewStage,
   getPrototypeScreenshotRoot,
 } from "./lib/tool-portal";

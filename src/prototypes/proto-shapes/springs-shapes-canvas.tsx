@@ -3,6 +3,7 @@
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { useEffect, useRef } from "react";
 
+import { bindSpringsCanvasPointerHandlers } from "./springs-canvas-pointer";
 import {
   createSpringsSquareSimulation,
   drawSpringsSquareSimulation,
@@ -392,71 +393,62 @@ export function SpringsShapesCanvas() {
       return { x, y };
     };
 
-    const onPointerDown = (event: PointerEvent) => {
-      const shapes = shapesRef.current;
-      const { x, y } = pointerToCanvas(event.clientX, event.clientY);
-      const pickRadius =
-        event.pointerType === "touch"
-          ? PARTICLE_PICK_RADIUS_TOUCH
-          : PARTICLE_PICK_RADIUS;
+    const cleanupPointer = bindSpringsCanvasPointerHandlers(canvas, {
+      onPointerDown: (event) => {
+        const shapes = shapesRef.current;
+        const { x, y } = pointerToCanvas(event.clientX, event.clientY);
+        const pickRadius =
+          event.pointerType === "touch"
+            ? PARTICLE_PICK_RADIUS_TOUCH
+            : PARTICLE_PICK_RADIUS;
 
-      let closestId: ShapeId | null = null;
-      let closestDist = Infinity;
+        let closestId: ShapeId | null = null;
+        let closestDist = Infinity;
 
-      for (const slot of shapes) {
-        if (!slot.sim) continue;
-        slot.pick(slot.sim, x, y, pickRadius);
-        const dist = distanceToGrabbed(slot.sim, x, y);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestId = slot.id;
+        for (const slot of shapes) {
+          if (!slot.sim) continue;
+          slot.pick(slot.sim, x, y, pickRadius);
+          const dist = distanceToGrabbed(slot.sim, x, y);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestId = slot.id;
+          }
         }
-      }
 
-      if (!closestId || closestDist === Infinity) {
+        if (!closestId || closestDist === Infinity) {
+          grabbedShapeIdRef.current = null;
+          return false;
+        }
+
+        for (const slot of shapes) {
+          if (!slot.sim) continue;
+          if (slot.id === closestId) {
+            slot.sim.clicked = true;
+          } else {
+            slot.sim.grabbedIndex = -1;
+          }
+        }
+
+        grabbedShapeIdRef.current = closestId;
+        clickedRef.current = true;
+        inputRef.current.pointerX = x;
+        inputRef.current.pointerY = y;
+        inputRef.current.pointerDown = true;
+        return true;
+      },
+      onPointerMove: (event) => {
+        const { x, y } = pointerToCanvas(event.clientX, event.clientY);
+        inputRef.current.pointerX = x;
+        inputRef.current.pointerY = y;
+      },
+      onPointerEnd: () => {
+        inputRef.current.pointerDown = false;
         grabbedShapeIdRef.current = null;
-        return;
-      }
-
-      for (const slot of shapes) {
-        if (!slot.sim) continue;
-        if (slot.id === closestId) {
-          slot.sim.clicked = true;
-        } else {
-          slot.sim.grabbedIndex = -1;
+        for (const slot of shapesRef.current) {
+          if (slot.sim) slot.sim.grabbedIndex = -1;
         }
-      }
-
-      grabbedShapeIdRef.current = closestId;
-      clickedRef.current = true;
-      event.preventDefault();
-      canvas.setPointerCapture(event.pointerId);
-      inputRef.current.pointerX = x;
-      inputRef.current.pointerY = y;
-      inputRef.current.pointerDown = true;
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      const { x, y } = pointerToCanvas(event.clientX, event.clientY);
-      inputRef.current.pointerX = x;
-      inputRef.current.pointerY = y;
-    };
-
-    const endPointer = (event: PointerEvent) => {
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        canvas.releasePointerCapture(event.pointerId);
-      }
-      inputRef.current.pointerDown = false;
-      grabbedShapeIdRef.current = null;
-      for (const slot of shapesRef.current) {
-        if (slot.sim) slot.sim.grabbedIndex = -1;
-      }
-    };
-
-    canvas.addEventListener("pointerdown", onPointerDown);
-    canvas.addEventListener("pointermove", onPointerMove);
-    canvas.addEventListener("pointerup", endPointer);
-    canvas.addEventListener("pointercancel", endPointer);
+      },
+    });
 
     const frame = () => {
       const shapes = shapesRef.current;
@@ -554,10 +546,7 @@ export function SpringsShapesCanvas() {
 
     return () => {
       observer.disconnect();
-      canvas.removeEventListener("pointerdown", onPointerDown);
-      canvas.removeEventListener("pointermove", onPointerMove);
-      canvas.removeEventListener("pointerup", endPointer);
-      canvas.removeEventListener("pointercancel", endPointer);
+      cleanupPointer();
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
       }

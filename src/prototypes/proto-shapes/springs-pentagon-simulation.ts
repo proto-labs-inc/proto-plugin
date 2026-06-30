@@ -5,6 +5,7 @@ import {
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
   SHAPE_TEXTURE_ANCHORS,
+  withShapeRenderScale,
   type ProtoTextureId,
 } from "./shape-textures";
 
@@ -327,6 +328,7 @@ export type DrawSpringsSimulationOptions = {
   texture?: ProtoTextureId;
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
+  renderScale?: number;
 };
 
 export function drawSpringsPentagonSimulation(
@@ -340,6 +342,7 @@ export function drawSpringsPentagonSimulation(
     color = COLOR1,
     texture,
     dotScale = 1,
+    renderScale = 1,
   } = options;
   const { width, height, particles, margin } = sim;
   const apex = particles[BASE_POINTS];
@@ -374,7 +377,7 @@ export function drawSpringsPentagonSimulation(
     }
   }
 
-  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -384,14 +387,14 @@ export function drawSpringsPentagonSimulation(
     drawSpring(ctx, a, apex, 1, color);
   }
 
-  const dotRadius = DOT_RADIUS * dotScale;
+  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
   if (texture) {
     drawParticlesWithShadow(ctx, particles, dotRadius, color);
   } else {
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
+      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

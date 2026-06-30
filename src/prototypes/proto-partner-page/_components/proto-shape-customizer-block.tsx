@@ -59,17 +59,17 @@ const PICKER_TILE_BASE_CLASS =
 const PICKER_SHAPE_TEXTURE_HOVER_CLASS = "hover:scale-[1.12]";
 
 const PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 prototype-desktop:md:gap-2 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 md:gap-2 [&>button]:cursor-pointer";
 
 const SHAPE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 prototype-desktop:md:gap-4 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 md:gap-4 [&>button]:cursor-pointer";
 
 const TEXTURE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 prototype-desktop:md:gap-3 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-3 [&>button]:cursor-pointer";
 
 const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_2px_rgb(0_0_0/0.85)]";
 
-const SHAPE_TILE_ICON_CLASS = "size-8 prototype-desktop:md:size-7";
+const SHAPE_TILE_ICON_CLASS = "size-8 md:size-7";
 
 function pickerTileClasses(selected: boolean) {
   return cn(
@@ -108,7 +108,7 @@ function DualRowControls({
   if (mobileLayoutVariant) {
     return (
       <>
-        <div className="prototype-desktop:hidden">
+        <div className="md:hidden">
           <MobilePickerLayoutControls
             variant={mobileLayoutVariant}
             selection={selection}
@@ -119,7 +119,7 @@ function DualRowControls({
             layoutGroupScope={layoutGroupScope}
           />
         </div>
-        <div className="hidden prototype-desktop:block">
+        <div className="hidden md:block">
           <ShapeColorPickerControls
             variant={pickerVariant ?? "labeled-tiles"}
             selection={selection}
@@ -660,7 +660,7 @@ function CompactMinimalDockControls({
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col px-4 pt-2 pb-3 sm:px-5 sm:pt-4 sm:pb-3 prototype-desktop:md:max-w-none prototype-desktop:md:px-8 prototype-desktop:md:pt-4 prototype-desktop:md:pb-4">
+    <div className="mx-auto flex w-full max-w-md flex-col px-4 pt-2 pb-3 sm:px-5 sm:pt-4 sm:pb-3 md:max-w-none md:px-8 md:pt-4 md:pb-4">
       <DualRowControls
         selection={selection}
         onSelectionChange={onSelectionChange}

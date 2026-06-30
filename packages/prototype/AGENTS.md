@@ -26,6 +26,25 @@ Host prototypes import framework from `prototype` and UI from `@/components/ui`.
 
 ---
 
+## Viewport layout vs responsive UI
+
+The review toolbar **Layout** toggle (desktop / mobile) only changes the **preview frame** — it sets `#prototype-viewport` dimensions and `data-prototype-viewport-layout` for shell chrome (device frame, footer behavior). It must **not** drive product UI differences inside prototype content.
+
+**Host prototype content** must respond to **viewport width** only:
+
+- Tailwind breakpoints (`sm:`, `md:`, …) or container queries for CSS
+- `matchMedia` / resize observers when JS must branch
+
+**Do not use** for layout or component swaps inside `src/prototypes/`:
+
+- `prototype-desktop:` / `prototype-mobile:` variants (deprecated; do not reintroduce)
+- `usePrototypeMobileViewportFrame()` / `usePrototypeViewportFrame()` for UI branching
+- `review.viewportLayout` or `data-prototype-viewport-layout` in prototype components
+
+The mobile preview frame is 390×844px; the desktop frame fills the preview stage. Breakpoints apply to the **content viewport width** — the same surface users see in production.
+
+---
+
 ## Relationship to source app (host apps)
 
 Host apps replicate product UI from the **source application** (linked read-only via `SOURCE_PATH` and `pnpm link-source`) **exactly** — standalone code, no runtime imports from the source monorepo.

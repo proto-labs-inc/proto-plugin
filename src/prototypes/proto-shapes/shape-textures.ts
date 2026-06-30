@@ -13,6 +13,11 @@ export const DEFAULT_PROTO_TEXTURE_ID: ProtoTextureId = "Solid";
 
 export type ShapeTextureColor = [number, number, number];
 
+/** Scale spring strokes and dot metrics for smaller preview renders. */
+export function withShapeRenderScale(value: number, renderScale = 1) {
+  return value * renderScale;
+}
+
 /** Spring edge strokes on canvas-drawn proto shapes. */
 export const SHAPE_SPRING_LINE_WIDTH = 1.5;
 /** Outline stroke around handle dots. */

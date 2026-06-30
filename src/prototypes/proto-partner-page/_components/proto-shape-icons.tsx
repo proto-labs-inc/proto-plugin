@@ -137,10 +137,10 @@ type ColorSwatchProps = {
 };
 
 const SWATCH_SIZES = {
-  sm: "size-6",
-  md: "size-7",
-  lg: "size-9",
-  "mobile-md": "size-8 sm:size-6",
+  sm: "size-5",
+  md: "size-6",
+  lg: "size-8",
+  "mobile-md": "size-7 sm:size-5",
 } as const;
 
 const PICKER_SELECTED_RING = "0 0 0 2px rgb(0 0 0 / 0.85)";
@@ -176,9 +176,9 @@ type TextureSwatchProps = {
 };
 
 const TEXTURE_SWATCH_SIZES = {
-  sm: 24,
-  md: 36,
-  tile: 36,
+  sm: 20,
+  md: 28,
+  tile: 28,
 } as const;
 
 export function ProtoTextureSwatch({

@@ -51,22 +51,22 @@ const LABEL_CLASS =
   "text-muted-foreground text-[0.625rem] font-medium tracking-[0.14em] uppercase";
 
 const PICKER_TILE_BASE_CLASS =
-  "flex aspect-square size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg p-0 transition-transform duration-150 ease-in-out prototype-desktop:md:size-9";
+  "flex aspect-square size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg p-0 transition-transform duration-150 ease-in-out md:size-9";
 
 const PICKER_SHAPE_TEXTURE_HOVER_CLASS = "hover:scale-[1.12]";
 
 const PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 prototype-desktop:md:gap-2 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 md:gap-2 [&>button]:cursor-pointer";
 
 const SHAPE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-5 py-1 prototype-desktop:md:gap-4 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-5 py-1 md:gap-4 [&>button]:cursor-pointer";
 
 const TEXTURE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 prototype-desktop:md:gap-3 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-2.5 [&>button]:cursor-pointer";
 
 const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_2px_rgb(0_0_0/0.85)]";
 
-const SHAPE_TILE_ICON_CLASS = "size-9 prototype-desktop:md:size-7";
+const SHAPE_TILE_ICON_CLASS = "size-9 md:size-7";
 
 function pickerTileClasses(selected: boolean) {
   return cn(
@@ -122,7 +122,7 @@ function ShapeColorPickerRows({
   const outerGap = density === "compact" ? "gap-7" : "gap-8";
   const sectionClass = cn(
     `flex flex-col ${sectionGap}`,
-    "prototype-desktop:md:shrink-0",
+    "md:shrink-0",
   );
 
   const shapeSection = showShape ? (
@@ -324,7 +324,7 @@ function ShapeColorPickerRows({
         "flex flex-col",
         visibleCount > 1 ? outerGap : "gap-0",
         visibleCount > 1 &&
-          "prototype-desktop:md:flex-row prototype-desktop:md:items-end prototype-desktop:md:justify-center prototype-desktop:md:gap-16",
+          "md:flex-row md:items-end md:justify-center md:gap-16",
       )}
       key={mk}
     >
@@ -721,7 +721,7 @@ function ColorRow({
   }
 
   return (
-    <div className={cn(PICKER_ROW_CLASS, "gap-4 prototype-desktop:md:gap-4")}>
+    <div className={cn(PICKER_ROW_CLASS, "gap-4 md:gap-4")}>
       {PROTO_COLORS.map((colorOption, colorIndex) => {
         const selected = colorOption.id === selection.colorId;
         const button = (
