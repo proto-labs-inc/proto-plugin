@@ -4,12 +4,13 @@ import { PrototypeComponent } from "@prototype/components/prototypes/prototype-t
 import { cn } from "@prototype/lib/utils";
 import { useState } from "react";
 
-import { PartnerMotionFadeUp, usePartnerEntranceMotion } from "./partner-page-motion";
+import {
+  partnerCustomizePanelDelay,
+} from "./partner-page-motion";
 import {
   ProtoColorSwatch,
   ProtoShapeIcon,
   ProtoTextureSwatch,
-  ProtoTextureTooltip,
 } from "./proto-shape-icons";
 import {
   getProtoColor,
@@ -23,6 +24,14 @@ import {
 } from "./proto-shape-content";
 import { ShapeColorPickerControls } from "./shape-color-picker-block";
 import type { ShapeColorPickerVariant } from "./shape-color-picker-content";
+import { MobilePickerLayoutControls } from "./mobile-picker-layout-block";
+import type { MobilePickerLayoutVariant } from "./mobile-picker-layout-content";
+import { MOBILE_PICKER_DOCK_DIVIDER_CLASS, MOBILE_PICKER_SURFACE } from "./mobile-picker-layout-content";
+import {
+  isUnifiedPanelMotionVariant,
+  type MobilePanelMotionVariant,
+} from "./mobile-panel-motion-content";
+import { MobilePanelMotionShell } from "./mobile-panel-motion-shell";
 
 export type ProtoShapeSelection = {
   shapeId: ProtoShapeId;
@@ -35,11 +44,40 @@ type ProtoShapeCustomizerBlockProps = {
   selection: ProtoShapeSelection;
   onSelectionChange: (next: ProtoShapeSelection) => void;
   pickerVariant?: ShapeColorPickerVariant;
+  mobileLayoutVariant?: MobilePickerLayoutVariant;
+  panelMotionVariant?: MobilePanelMotionVariant;
+  panelMotionReplayKey?: string | number;
   animateEntrance?: boolean;
   entranceKey?: string | number;
 };
 
 type CustomizerTab = "shape" | "color";
+
+const PICKER_TILE_BASE_CLASS =
+  "flex aspect-square size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg p-0 transition-transform duration-150 ease-in-out";
+
+const PICKER_SHAPE_TEXTURE_HOVER_CLASS = "hover:scale-[1.12]";
+
+const PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 prototype-desktop:md:gap-2 [&>button]:cursor-pointer";
+
+const SHAPE_PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 prototype-desktop:md:gap-4 [&>button]:cursor-pointer";
+
+const TEXTURE_PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 prototype-desktop:md:gap-3 [&>button]:cursor-pointer";
+
+const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_2px_rgb(0_0_0/0.85)]";
+
+const SHAPE_TILE_ICON_CLASS = "size-8 prototype-desktop:md:size-7";
+
+function pickerTileClasses(selected: boolean) {
+  return cn(
+    PICKER_TILE_BASE_CLASS,
+    PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+    selected && PICKER_TILE_SELECTED_CLASS,
+  );
+}
 
 function DualRowControls({
   selection,
@@ -48,8 +86,11 @@ function DualRowControls({
   colorLayout = "row",
   density = "default",
   pickerVariant,
-  animateEntrance = false,
+  mobileLayoutVariant,
+  panelMotionVariant = "none",
+  panelMotionReplayKey,
   entranceKey,
+  layoutGroupScope,
 }: {
   selection: ProtoShapeSelection;
   onSelectionChange: (next: ProtoShapeSelection) => void;
@@ -57,9 +98,41 @@ function DualRowControls({
   colorLayout?: "row" | "grid";
   density?: "default" | "compact";
   pickerVariant?: ShapeColorPickerVariant;
+  mobileLayoutVariant?: MobilePickerLayoutVariant;
+  panelMotionVariant?: MobilePanelMotionVariant;
+  panelMotionReplayKey?: string | number;
   animateEntrance?: boolean;
   entranceKey?: string | number;
+  layoutGroupScope?: string;
 }) {
+  if (mobileLayoutVariant) {
+    return (
+      <>
+        <div className="prototype-desktop:hidden">
+          <MobilePickerLayoutControls
+            variant={mobileLayoutVariant}
+            selection={selection}
+            onSelectionChange={onSelectionChange}
+            pickerVariant={pickerVariant}
+            animateEntrance={false}
+            entranceKey={entranceKey}
+            layoutGroupScope={layoutGroupScope}
+          />
+        </div>
+        <div className="hidden prototype-desktop:block">
+          <ShapeColorPickerControls
+            variant={pickerVariant ?? "labeled-tiles"}
+            selection={selection}
+            onSelectionChange={onSelectionChange}
+            density={density === "compact" ? "compact" : "default"}
+            animateEntrance={false}
+            entranceKey={entranceKey}
+          />
+        </div>
+      </>
+    );
+  }
+
   if (pickerVariant) {
     return (
       <ShapeColorPickerControls
@@ -67,7 +140,7 @@ function DualRowControls({
         selection={selection}
         onSelectionChange={onSelectionChange}
         density={density === "compact" ? "compact" : "default"}
-        animateEntrance={animateEntrance}
+        animateEntrance={false}
         entranceKey={entranceKey}
       />
     );
@@ -77,8 +150,7 @@ function DualRowControls({
     density === "compact"
       ? "text-muted-foreground text-[0.625rem] font-medium tracking-[0.14em] uppercase"
       : "text-muted-foreground text-[0.6875rem] font-medium tracking-[0.14em] uppercase";
-  const sectionGap = density === "compact" ? "gap-1" : "gap-2";
-  const motionOn = usePartnerEntranceMotion(animateEntrance);
+  const sectionGap = density === "compact" ? "gap-2.5" : "gap-2";
 
   const shapeBlock = (
     <div className={`flex flex-col ${sectionGap}`}>
@@ -114,16 +186,6 @@ function DualRowControls({
       />
     </div>
   );
-
-  if (motionOn) {
-    return (
-      <>
-        <PartnerMotionFadeUp delay={0.12}>{shapeBlock}</PartnerMotionFadeUp>
-        <PartnerMotionFadeUp delay={0.26}>{colorBlock}</PartnerMotionFadeUp>
-        <PartnerMotionFadeUp delay={0.4}>{textureBlock}</PartnerMotionFadeUp>
-      </>
-    );
-  }
 
   return (
     <>
@@ -180,14 +242,10 @@ function ShapePicker({
   density?: "default" | "compact";
 }) {
   const color = getProtoColor(selection.colorId).rgb;
-  const compactTileClass =
-    "flex aspect-square items-center justify-center overflow-hidden rounded-lg border p-1 transition-colors sm:aspect-auto sm:h-8";
-  const compactIconClass = "size-7 sm:size-5";
-  const defaultIconSize = 28;
 
   if (layout === "compact-tiles") {
     return (
-      <div className="grid grid-cols-5 gap-1.5 [&>button]:cursor-pointer">
+      <div className={SHAPE_PICKER_ROW_CLASS}>
         {PROTO_SHAPES.map((shape) => {
           const selected = shape.id === selection.shapeId;
           return (
@@ -197,17 +255,12 @@ function ShapePicker({
               onClick={() => onSelect(shape.id)}
               aria-pressed={selected}
               aria-label={shape.label}
-              className={cn(
-                compactTileClass,
-                selected
-                  ? "border-foreground bg-background shadow-sm"
-                  : "border-border bg-muted/40 hover:border-foreground/30",
-              )}
+              className={pickerTileClasses(selected)}
             >
               <ProtoShapeIcon
                 shapeId={shape.id}
                 color={color}
-                className={compactIconClass}
+                className={SHAPE_TILE_ICON_CLASS}
               />
             </button>
           );
@@ -244,12 +297,8 @@ function ShapePicker({
   }
 
   if (layout === "tiles") {
-    const iconSize = density === "compact" ? undefined : defaultIconSize;
-    const iconClass = density === "compact" ? compactIconClass : undefined;
-    const tileClass =
-      density === "compact"
-        ? compactTileClass
-        : "flex aspect-square items-center justify-center rounded-xl border";
+    const iconSize = density === "compact" ? undefined : 28;
+    const iconClass = density === "compact" ? SHAPE_TILE_ICON_CLASS : undefined;
 
     return (
       <div
@@ -268,11 +317,14 @@ function ShapePicker({
               aria-pressed={selected}
               aria-label={shape.label}
               className={cn(
-                tileClass,
-                "transition-colors",
-                selected
-                  ? "border-foreground bg-background shadow-sm"
-                  : "border-border bg-muted/40 hover:border-foreground/30",
+                density === "compact"
+                  ? pickerTileClasses(selected)
+                  : cn(
+                      "flex aspect-square items-center justify-center rounded-xl border transition-colors",
+                      selected
+                        ? "border-foreground bg-background shadow-sm"
+                        : "border-border bg-muted/40 hover:border-foreground/30",
+                    ),
               )}
             >
               <ProtoShapeIcon
@@ -337,7 +389,10 @@ function ColorPicker({
         onClick={() => onSelect(color.id)}
         aria-pressed={selected}
         aria-label={color.label}
-        className="rounded-full p-0.5 transition-transform hover:scale-105"
+        className={cn(
+          "cursor-pointer rounded-full p-0.5 transition-transform duration-150 ease-in-out",
+          "hover:scale-110",
+        )}
       >
         <ProtoColorSwatch
           colorId={color.id}
@@ -352,12 +407,12 @@ function ColorPicker({
   return (
     <div
       className={cn(
-        "[&>button]:cursor-pointer",
+        PICKER_ROW_CLASS,
         layout === "grid"
           ? "grid grid-cols-5 justify-items-center gap-3"
           : density === "compact"
-            ? "flex flex-wrap justify-center gap-2"
-            : "flex flex-wrap justify-center gap-3",
+            ? "gap-2"
+            : "gap-3",
       )}
     >
       {swatches}
@@ -375,34 +430,31 @@ function TexturePicker({
   density?: "default" | "compact";
 }) {
   const color = getProtoColor(selection.colorId).rgb;
-  const swatchSize = density === "compact" ? "sm" : "md";
 
   return (
-    <div
-      className={cn(
-        "flex flex-wrap justify-center [&>button]:cursor-pointer",
-        density === "compact" ? "gap-2" : "gap-2.5",
-      )}
-    >
+    <div className={TEXTURE_PICKER_ROW_CLASS}>
       {PROTO_TEXTURE_OPTIONS.map((texture) => {
         const selected = texture.id === selection.textureId;
         return (
-          <ProtoTextureTooltip key={texture.id} label={texture.label}>
-            <button
-              type="button"
-              onClick={() => onSelect(texture.id)}
-              aria-pressed={selected}
-              aria-label={texture.label}
-              className="rounded-md p-0.5 transition-transform hover:scale-105"
-            >
-              <ProtoTextureSwatch
-                textureId={texture.id}
-                color={color}
-                selected={selected}
-                size={swatchSize}
-              />
-            </button>
-          </ProtoTextureTooltip>
+          <button
+            key={texture.id}
+            type="button"
+            onClick={() => onSelect(texture.id)}
+            aria-pressed={selected}
+            aria-label={texture.label}
+            className={cn(
+              "cursor-pointer p-0 transition-transform duration-150 ease-in-out",
+              PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+            )}
+          >
+            <ProtoTextureSwatch
+              textureId={texture.id}
+              color={color}
+              selected={selected}
+              size="tile"
+              className="rounded-md"
+            />
+          </button>
         );
       })}
     </div>
@@ -562,6 +614,7 @@ function CompactDualRowCustomizer({
   onSelectionChange,
   shapeLayout = "tiles",
   pickerVariant,
+  mobileLayoutVariant,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant"> & {
@@ -579,6 +632,7 @@ function CompactDualRowCustomizer({
           shapeLayout={shapeLayout}
           density="compact"
           pickerVariant={pickerVariant}
+          mobileLayoutVariant={mobileLayoutVariant}
           animateEntrance={animateEntrance}
           entranceKey={entranceKey}
         />
@@ -587,29 +641,145 @@ function CompactDualRowCustomizer({
   );
 }
 
+const CUSTOMIZER_DOCK_DIVIDER_CLASS = MOBILE_PICKER_DOCK_DIVIDER_CLASS;
+
+function CompactMinimalDockControls({
+  selection,
+  onSelectionChange,
+  pickerVariant,
+  mobileLayoutVariant,
+  panelMotionVariant,
+  panelMotionReplayKey,
+  animateEntrance,
+  entranceKey,
+}: Omit<ProtoShapeCustomizerBlockProps, "variant"> & {
+  panelMotionVariant: MobilePanelMotionVariant;
+}) {
+  const layoutGroupScope = String(
+    panelMotionReplayKey ?? entranceKey ?? "customizer-dock",
+  );
+
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col px-4 pt-2 pb-3 sm:px-5 sm:pt-4 sm:pb-3 prototype-desktop:md:max-w-none prototype-desktop:md:px-8 prototype-desktop:md:pt-4 prototype-desktop:md:pb-4">
+      <DualRowControls
+        selection={selection}
+        onSelectionChange={onSelectionChange}
+        shapeLayout="compact-tiles"
+        density="compact"
+        pickerVariant={pickerVariant ?? "labeled-tiles"}
+        mobileLayoutVariant={mobileLayoutVariant}
+        panelMotionVariant={panelMotionVariant}
+        panelMotionReplayKey={panelMotionReplayKey}
+        animateEntrance={animateEntrance}
+        entranceKey={entranceKey}
+        layoutGroupScope={layoutGroupScope}
+      />
+    </div>
+  );
+}
+
 function CompactMinimalDockCustomizer({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
+  panelMotionVariant = "none",
+  panelMotionReplayKey,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant">) {
+  const unifiedPanel = isUnifiedPanelMotionVariant(panelMotionVariant);
+  const panelEntranceDelay = animateEntrance ? partnerCustomizePanelDelay() : 0;
+  const controls = (
+    <CompactMinimalDockControls
+      selection={selection}
+      onSelectionChange={onSelectionChange}
+      pickerVariant={pickerVariant}
+      mobileLayoutVariant={mobileLayoutVariant}
+      panelMotionVariant={panelMotionVariant}
+      panelMotionReplayKey={panelMotionReplayKey}
+      animateEntrance={animateEntrance}
+      entranceKey={entranceKey}
+    />
+  );
+
+  const dockChrome = (
+    <>
+      <div className={CUSTOMIZER_DOCK_DIVIDER_CLASS} aria-hidden />
+      <div
+        className="w-full"
+        style={{ backgroundColor: MOBILE_PICKER_SURFACE }}
+      >
+        {controls}
+      </div>
+    </>
+  );
+
+  if (unifiedPanel) {
+    return (
+      <PrototypeComponent
+        id="proto-shape-customizer-block"
+        className="pointer-events-auto relative z-40 w-full shrink-0 overflow-hidden"
+      >
+        <MobilePanelMotionShell
+          variant={panelMotionVariant}
+          replayKey={panelMotionReplayKey ?? entranceKey}
+          className="w-full"
+          entranceDelay={panelEntranceDelay}
+        >
+          {dockChrome}
+        </MobilePanelMotionShell>
+      </PrototypeComponent>
+    );
+  }
+
+  if (panelMotionVariant !== "none") {
+    return (
+      <PrototypeComponent
+        id="proto-shape-customizer-block"
+        className="pointer-events-auto relative z-40 w-full shrink-0"
+      >
+        <div className={CUSTOMIZER_DOCK_DIVIDER_CLASS} aria-hidden />
+        <div
+          className="w-full overflow-hidden"
+          style={{ backgroundColor: MOBILE_PICKER_SURFACE }}
+        >
+          <MobilePanelMotionShell
+            variant={panelMotionVariant}
+            replayKey={panelMotionReplayKey ?? entranceKey}
+            entranceDelay={panelEntranceDelay}
+          >
+            {controls}
+          </MobilePanelMotionShell>
+        </div>
+      </PrototypeComponent>
+    );
+  }
+
+  if (panelMotionVariant === "none" && animateEntrance) {
+    return (
+      <PrototypeComponent
+        id="proto-shape-customizer-block"
+        className="pointer-events-auto relative z-40 w-full shrink-0 overflow-hidden"
+      >
+        <MobilePanelMotionShell
+          variant="slide-up"
+          replayKey={panelMotionReplayKey ?? entranceKey}
+          className="w-full"
+          entranceDelay={panelEntranceDelay}
+        >
+          {dockChrome}
+        </MobilePanelMotionShell>
+      </PrototypeComponent>
+    );
+  }
+
   return (
     <PrototypeComponent
       id="proto-shape-customizer-block"
-      className="pointer-events-auto absolute inset-x-0 bottom-0 z-40"
+      className="pointer-events-auto relative z-40 w-full shrink-0"
     >
-      <div className="mx-auto flex max-w-md flex-col gap-2 px-4 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:pt-2">
-        <DualRowControls
-          selection={selection}
-          onSelectionChange={onSelectionChange}
-          shapeLayout="compact-tiles"
-          density="compact"
-          pickerVariant={pickerVariant ?? "labeled-tiles"}
-          animateEntrance={animateEntrance}
-          entranceKey={entranceKey}
-        />
-      </div>
+      {dockChrome}
     </PrototypeComponent>
   );
 }
@@ -618,6 +788,7 @@ function DualRowReservedCustomizer({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant">) {
@@ -631,6 +802,7 @@ function DualRowReservedCustomizer({
           selection={selection}
           onSelectionChange={onSelectionChange}
           pickerVariant={pickerVariant}
+          mobileLayoutVariant={mobileLayoutVariant}
           animateEntrance={animateEntrance}
           entranceKey={entranceKey}
         />
@@ -643,6 +815,7 @@ function DualRowNudgeFirstCustomizer({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant">) {
@@ -656,6 +829,7 @@ function DualRowNudgeFirstCustomizer({
           selection={selection}
           onSelectionChange={onSelectionChange}
           pickerVariant={pickerVariant}
+          mobileLayoutVariant={mobileLayoutVariant}
           animateEntrance={animateEntrance}
           entranceKey={entranceKey}
         />
@@ -668,6 +842,7 @@ function DualRowColumnsCustomizer({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant">) {
@@ -677,11 +852,12 @@ function DualRowColumnsCustomizer({
       className="border-border bg-background pointer-events-auto absolute inset-x-0 bottom-0 z-40 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
       <div className="mx-auto flex max-w-md flex-col gap-3">
-        {pickerVariant ? (
+        {pickerVariant || mobileLayoutVariant ? (
           <DualRowControls
             selection={selection}
             onSelectionChange={onSelectionChange}
             pickerVariant={pickerVariant}
+            mobileLayoutVariant={mobileLayoutVariant}
             animateEntrance={animateEntrance}
             entranceKey={entranceKey}
           />
@@ -722,6 +898,7 @@ function DualRowLiftedCardCustomizer({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
   animateEntrance = false,
   entranceKey,
 }: Omit<ProtoShapeCustomizerBlockProps, "variant">) {
@@ -739,6 +916,7 @@ function DualRowLiftedCardCustomizer({
             selection={selection}
             onSelectionChange={onSelectionChange}
             pickerVariant={pickerVariant}
+            mobileLayoutVariant={mobileLayoutVariant}
             animateEntrance={animateEntrance}
             entranceKey={entranceKey}
           />
@@ -753,6 +931,9 @@ export function ProtoShapeCustomizerBlock({
   selection,
   onSelectionChange,
   pickerVariant,
+  mobileLayoutVariant,
+  panelMotionVariant = "none",
+  panelMotionReplayKey,
   animateEntrance = false,
   entranceKey,
 }: ProtoShapeCustomizerBlockProps) {
@@ -797,6 +978,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -809,6 +991,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -821,6 +1004,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -833,6 +1017,9 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
+        panelMotionVariant={panelMotionVariant}
+        panelMotionReplayKey={panelMotionReplayKey}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -845,6 +1032,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -857,6 +1045,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -869,6 +1058,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -881,6 +1071,7 @@ export function ProtoShapeCustomizerBlock({
         selection={selection}
         onSelectionChange={onSelectionChange}
         pickerVariant={pickerVariant}
+        mobileLayoutVariant={mobileLayoutVariant}
         animateEntrance={animateEntrance}
         entranceKey={entranceKey}
       />
@@ -898,6 +1089,7 @@ export function ProtoShapeCustomizerBlock({
             selection={selection}
             onSelectionChange={onSelectionChange}
             pickerVariant={pickerVariant}
+            mobileLayoutVariant={mobileLayoutVariant}
             animateEntrance={animateEntrance}
             entranceKey={entranceKey}
           />

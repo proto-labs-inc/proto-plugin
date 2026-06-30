@@ -246,13 +246,14 @@ function rgbNearEqual(a: ProtoRgb, b: ProtoRgb, epsilon = 0.5): boolean {
 }
 
 const MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
-/** Three-pyramid chain is wide; keep it smaller on narrow viewports. */
-const MOBILE_THREE_PART_SHAPE_SCALE = 0.9;
-const MOBILE_SHAPE_SCALE = 1;
+const MOBILE_SHAPE_SCALE = 1.35;
+const MOBILE_DOT_SCALE = 1;
 /** Give the protoshape more room on desktop invite/home layouts. */
-const DESKTOP_SHAPE_SCALE = 1.38;
-/** Handle dots grow less than the shape so they stay visually balanced. */
+const DESKTOP_SHAPE_SCALE = 1.75;
+/** Handle dots stay smaller than the shape so they don't balloon with layout scale. */
 const DESKTOP_DOT_SCALE = 1.12;
+/** Three-pyramid chain reads smaller at the same base span; boost on partner page. */
+const THREE_PART_SHAPE_SCALE = 1.2;
 /** Match proto-shapes vertical placement (yFactor 0.33). */
 const SHAPE_SPAWN_Y_FACTOR = 0.33;
 const WARM_START_FRAMES = 120;
@@ -272,11 +273,13 @@ function isMobileViewport() {
 
 function getPartnerShapeLayout(cssHeight: number, shapeId: ProtoShapeId) {
   const mobile = isMobileViewport();
-  const mobileScale =
-    shapeId === "square" ? MOBILE_THREE_PART_SHAPE_SCALE : MOBILE_SHAPE_SCALE;
+  const baseScale = mobile ? MOBILE_SHAPE_SCALE : DESKTOP_SHAPE_SCALE;
+  const dotScale = mobile ? MOBILE_DOT_SCALE : DESKTOP_DOT_SCALE;
+  const shapeScale =
+    shapeId === "square" ? baseScale * THREE_PART_SHAPE_SCALE : baseScale;
   return {
-    scale: mobile ? mobileScale : DESKTOP_SHAPE_SCALE,
-    dotScale: mobile ? mobileScale : DESKTOP_DOT_SCALE,
+    scale: shapeScale,
+    dotScale,
     spawnY: cssHeight * SHAPE_SPAWN_Y_FACTOR,
   };
 }

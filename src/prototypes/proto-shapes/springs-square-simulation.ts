@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_HANDLE_DOT_RADIUS,
+  SHAPE_SPRING_LINE_WIDTH,
   SHAPE_TEXTURE_ANCHORS,
   type ProtoTextureId,
 } from "./shape-textures";
@@ -12,7 +15,8 @@ const MIDDLE_APEX = 5;
 const MIDDLE_BACK = 6;
 const RIGHT_BASE = [7, 8, 9] as const;
 const PARTICLE_COUNT = 10;
-const SHAPE_SCALE = 0.75;
+/** Tuned so the three-pyramid chain matches other shapes after warm start (~130px span). */
+const SHAPE_SCALE = 0.46;
 
 /** Three pyramids in a row; adjacent pairs meet at shared joint vertices. */
 const PYRAMIDS = [
@@ -42,9 +46,8 @@ const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
 const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
-const DOT_SCALE = 1 / 0.8;
 const WEB_SCALE = 1;
-const DOT_RADIUS = (12 * DOT_SCALE) / 2;
+const DOT_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
 export const PARTICLE_PICK_RADIUS = Math.max(DOT_RADIUS * 6, 32);
 export const PARTICLE_PICK_RADIUS_TOUCH = 48;
 
@@ -457,7 +460,7 @@ export function drawSpringsSquareSimulation(
     }
   }
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
 
   for (const pyramid of PYRAMIDS) {
     drawPyramidSprings(ctx, pyramid.apex, pyramid.base, particles, color);
@@ -470,7 +473,7 @@ export function drawSpringsSquareSimulation(
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

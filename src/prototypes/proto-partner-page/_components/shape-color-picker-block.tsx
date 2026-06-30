@@ -15,7 +15,6 @@ import {
   ProtoColorSwatch,
   ProtoShapeIcon,
   ProtoTextureSwatch,
-  ProtoTextureTooltip,
 } from "./proto-shape-icons";
 import {
   getProtoColor,
@@ -35,6 +34,8 @@ export type ShapeColorPickerSelection = {
   textureId: ProtoTextureId;
 };
 
+export type PickerSection = "shape" | "color" | "texture";
+
 type ShapeColorPickerControlsProps = {
   variant: ShapeColorPickerVariant;
   selection: ShapeColorPickerSelection;
@@ -42,10 +43,38 @@ type ShapeColorPickerControlsProps = {
   density?: "default" | "compact";
   animateEntrance?: boolean;
   entranceKey?: string | number;
+  visibleSections?: PickerSection[];
+  showSectionLabels?: boolean;
 };
 
 const LABEL_CLASS =
   "text-muted-foreground text-[0.625rem] font-medium tracking-[0.14em] uppercase";
+
+const PICKER_TILE_BASE_CLASS =
+  "flex aspect-square size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg p-0 transition-transform duration-150 ease-in-out prototype-desktop:md:size-9";
+
+const PICKER_SHAPE_TEXTURE_HOVER_CLASS = "hover:scale-[1.12]";
+
+const PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 prototype-desktop:md:gap-2 [&>button]:cursor-pointer";
+
+const SHAPE_PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-5 py-1 prototype-desktop:md:gap-4 [&>button]:cursor-pointer";
+
+const TEXTURE_PICKER_ROW_CLASS =
+  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 prototype-desktop:md:gap-3 [&>button]:cursor-pointer";
+
+const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_2px_rgb(0_0_0/0.85)]";
+
+const SHAPE_TILE_ICON_CLASS = "size-9 prototype-desktop:md:size-7";
+
+function pickerTileClasses(selected: boolean) {
+  return cn(
+    PICKER_TILE_BASE_CLASS,
+    PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+    selected && PICKER_TILE_SELECTED_CLASS,
+  );
+}
 
 function SectionLabel({ children }: { children: ReactNode }) {
   return <p className={LABEL_CLASS}>{children}</p>;
@@ -77,17 +106,28 @@ function ShapeColorPickerRows({
   density = "compact",
   animateEntrance = false,
   entranceKey,
+  visibleSections,
+  showSectionLabels = true,
 }: ShapeColorPickerControlsProps) {
+  const sections = visibleSections ?? (["shape", "color", "texture"] as const);
+  const showShape = sections.includes("shape");
+  const showColor = sections.includes("color");
+  const showTexture = sections.includes("texture");
+  const visibleCount = sections.length;
   const color = getProtoColor(selection.colorId).rgb;
   const mk = entranceKey ?? "live";
   const motionOn = usePartnerEntranceMotion(animateEntrance);
 
-  const sectionGap = density === "compact" ? "gap-1" : "gap-2";
-  const outerGap = sectionGap === "gap-1" ? "gap-4" : "gap-5";
+  const sectionGap = density === "compact" ? "gap-2.5" : "gap-2";
+  const outerGap = density === "compact" ? "gap-7" : "gap-8";
+  const sectionClass = cn(
+    `flex flex-col ${sectionGap}`,
+    "prototype-desktop:md:shrink-0",
+  );
 
-  const shapeSection = (
-    <div className={`flex flex-col ${sectionGap}`}>
-      <SectionLabel>Shape</SectionLabel>
+  const shapeSection = showShape ? (
+    <div className={sectionClass}>
+      {showSectionLabels ? <SectionLabel>Shape</SectionLabel> : null}
       {variant === "list-radio" ? (
         <div className="flex flex-col gap-1">
           {PROTO_SHAPES.map((shape, shapeIndex) => {
@@ -96,19 +136,30 @@ function ShapeColorPickerRows({
               <button
                 key={shape.id}
                 type="button"
-                onClick={() => onSelectionChange({ ...selection, shapeId: shape.id })}
+                onClick={() =>
+                  onSelectionChange({ ...selection, shapeId: shape.id })
+                }
                 aria-pressed={selected}
                 className={cn(
                   "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors",
                   selected ? "bg-muted" : "hover:bg-muted/50",
                 )}
               >
-                <ProtoShapeIcon shapeId={shape.id} color={color} size={20} />
-                <span className="flex-1 text-[0.8125rem] font-medium">{shape.label}</span>
+                <ProtoShapeIcon
+                  shapeId={shape.id}
+                  color={color}
+                  size={20}
+                  disableColorTransition
+                />
+                <span className="flex-1 text-[0.8125rem] font-medium">
+                  {shape.label}
+                </span>
                 <span
                   className={cn(
                     "size-4 rounded-full border-2",
-                    selected ? "border-foreground bg-foreground" : "border-border",
+                    selected
+                      ? "border-foreground bg-foreground"
+                      : "border-border",
                   )}
                 />
               </button>
@@ -134,7 +185,7 @@ function ShapeColorPickerRows({
         />
       )}
     </div>
-  );
+  ) : null;
 
   const colorRowContent = (
     <ColorRow
@@ -169,7 +220,9 @@ function ShapeColorPickerRows({
               selected={false}
               size="sm"
             />
-            <span className="flex-1 text-[0.8125rem] font-medium">{colorOption.label}</span>
+            <span className="flex-1 text-[0.8125rem] font-medium">
+              {colorOption.label}
+            </span>
             <span
               className={cn(
                 "size-4 rounded-full border-2",
@@ -191,70 +244,93 @@ function ShapeColorPickerRows({
     </div>
   );
 
-  return (
-    <div className={`flex flex-col ${outerGap}`} key={mk}>
-      {shapeSection}
-      <div className={`flex flex-col ${sectionGap}`}>
-        <SectionLabel>Color</SectionLabel>
-        {variant === "list-radio" ? listRadioColorSection : colorRowContent}
-      </div>
-      <div className={`flex flex-col ${sectionGap}`}>
-        <SectionLabel>Texture</SectionLabel>
-        {variant === "list-radio" ? (
-          <div className="flex flex-col gap-1">
-            {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
-              const selected = textureOption.id === selection.textureId;
-              const button = (
-                <button
-                  key={textureOption.id}
-                  type="button"
-                  onClick={() =>
-                    onSelectionChange({ ...selection, textureId: textureOption.id })
-                  }
-                  aria-pressed={selected}
+  const colorSection = showColor ? (
+    <div className={sectionClass}>
+      {showSectionLabels ? <SectionLabel>Color</SectionLabel> : null}
+      {variant === "list-radio" ? listRadioColorSection : colorRowContent}
+    </div>
+  ) : null;
+
+  const textureSection = showTexture ? (
+    <div className={sectionClass}>
+      {showSectionLabels ? <SectionLabel>Texture</SectionLabel> : null}
+      {variant === "list-radio" ? (
+        <div className="flex flex-col gap-1">
+          {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
+            const selected = textureOption.id === selection.textureId;
+            const button = (
+              <button
+                key={textureOption.id}
+                type="button"
+                onClick={() =>
+                  onSelectionChange({
+                    ...selection,
+                    textureId: textureOption.id,
+                  })
+                }
+                aria-pressed={selected}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors",
+                  selected ? "bg-muted" : "hover:bg-muted/50",
+                )}
+              >
+                <ProtoTextureSwatch
+                  textureId={textureOption.id}
+                  color={color}
+                  selected={false}
+                  size="sm"
+                />
+                <span className="flex-1 text-[0.8125rem] font-medium">
+                  {textureOption.label}
+                </span>
+                <span
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors",
-                    selected ? "bg-muted" : "hover:bg-muted/50",
+                    "size-4 rounded-full border-2",
+                    selected
+                      ? "border-foreground bg-foreground"
+                      : "border-border",
                   )}
-                >
-                  <ProtoTextureSwatch
-                    textureId={textureOption.id}
-                    color={color}
-                    selected={false}
-                    size="sm"
-                  />
-                  <span className="flex-1 text-[0.8125rem] font-medium">
-                    {textureOption.label}
-                  </span>
-                  <span
-                    className={cn(
-                      "size-4 rounded-full border-2",
-                      selected ? "border-foreground bg-foreground" : "border-border",
-                    )}
-                  />
-                </button>
-              );
-              return (
-                <EntranceWrap
-                  key={textureOption.id}
-                  animateEntrance={motionOn}
-                  delay={partnerCustomizeTextureDelay(textureIndex)}
-                >
-                  {button}
-                </EntranceWrap>
-              );
-            })}
-          </div>
-        ) : (
-          <TextureRow
-            variant={variant}
-            selection={selection}
-            onSelect={(textureId) => onSelectionChange({ ...selection, textureId })}
-            color={color}
-            animateEntrance={motionOn}
-          />
-        )}
-      </div>
+                />
+              </button>
+            );
+            return (
+              <EntranceWrap
+                key={textureOption.id}
+                animateEntrance={motionOn}
+                delay={partnerCustomizeTextureDelay(textureIndex)}
+              >
+                {button}
+              </EntranceWrap>
+            );
+          })}
+        </div>
+      ) : (
+        <TextureRow
+          variant={variant}
+          selection={selection}
+          onSelect={(textureId) =>
+            onSelectionChange({ ...selection, textureId })
+          }
+          color={color}
+          animateEntrance={motionOn}
+        />
+      )}
+    </div>
+  ) : null;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col",
+        visibleCount > 1 ? outerGap : "gap-0",
+        visibleCount > 1 &&
+          "prototype-desktop:md:flex-row prototype-desktop:md:items-end prototype-desktop:md:justify-center prototype-desktop:md:gap-16",
+      )}
+      key={mk}
+    >
+      {shapeSection}
+      {colorSection}
+      {textureSection}
     </div>
   );
 }
@@ -310,7 +386,12 @@ function ShapeRow({
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <ProtoShapeIcon shapeId={shape.id} color={color} size={20} />
+              <ProtoShapeIcon
+                shapeId={shape.id}
+                color={color}
+                size={20}
+                disableColorTransition
+              />
             </button>
           );
           return wrapShape(shape.id, shapeIndex, button, "flex flex-1");
@@ -358,7 +439,12 @@ function ShapeRow({
               aria-label={shape.label}
               className="flex flex-col items-center gap-1.5 pb-0.5"
             >
-              <ProtoShapeIcon shapeId={shape.id} color={color} size={22} />
+              <ProtoShapeIcon
+                shapeId={shape.id}
+                color={color}
+                size={22}
+                disableColorTransition
+              />
               <span
                 className={cn(
                   "h-0.5 w-5 rounded-full transition-colors",
@@ -374,7 +460,7 @@ function ShapeRow({
   }
 
   return (
-    <div className="grid w-full grid-cols-5 gap-1.5 [&_button]:w-full [&_button]:cursor-pointer">
+    <div className={SHAPE_PICKER_ROW_CLASS}>
       {PROTO_SHAPES.map((shape, shapeIndex) => {
         const selected = shape.id === selection.shapeId;
         const button = (
@@ -393,7 +479,7 @@ function ShapeRow({
             />
           </button>
         );
-        return wrapShape(shape.id, shapeIndex, button, "w-full");
+        return wrapShape(shape.id, shapeIndex, button);
       })}
     </div>
   );
@@ -469,10 +555,9 @@ function shapeButtonClass(
 
   return cn(
     base,
-    "aspect-square w-full overflow-hidden rounded-lg border p-1 sm:aspect-auto sm:h-10",
-    selected
-      ? "border-foreground bg-background shadow-sm"
-      : "border-border bg-muted/40 hover:border-foreground/30",
+    PICKER_TILE_BASE_CLASS,
+    PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+    selected && PICKER_TILE_SELECTED_CLASS,
   );
 }
 
@@ -488,7 +573,8 @@ function ShapeButtonContent({
   selected: boolean;
 }) {
   const muted: ProtoRgb = [160, 160, 170];
-  const iconColor = variant === "filled-silhouette" && !selected ? muted : color;
+  const iconColor =
+    variant === "filled-silhouette" && !selected ? muted : color;
 
   if (variant === "combo-mini") {
     return <ProtoShapeIcon shapeId={shapeId} color={iconColor} size={24} />;
@@ -502,7 +588,8 @@ function ShapeButtonContent({
     <ProtoShapeIcon
       shapeId={shapeId}
       color={iconColor}
-      className="size-7 sm:size-5"
+      className={SHAPE_TILE_ICON_CLASS}
+      disableColorTransition
     />
   );
 }
@@ -547,7 +634,10 @@ function ColorRow({
               onClick={() => onSelect(colorOption.id)}
               aria-pressed={selected}
               aria-label={colorOption.label}
-              className="rounded-full p-0.5 transition-transform hover:scale-105"
+              className={cn(
+                "rounded-full p-0.5 transition-transform duration-150 ease-in-out",
+                "hover:scale-110",
+              )}
             >
               <ProtoColorSwatch
                 colorId={colorOption.id}
@@ -631,7 +721,7 @@ function ColorRow({
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-4 [&_button]:cursor-pointer">
+    <div className={cn(PICKER_ROW_CLASS, "gap-4 prototype-desktop:md:gap-4")}>
       {PROTO_COLORS.map((colorOption, colorIndex) => {
         const selected = colorOption.id === selection.colorId;
         const button = (
@@ -665,25 +755,34 @@ function colorButtonClass(
     const glow = selected
       ? `shadow-[0_0_14px_rgb(${rgb[0]}_${rgb[1]}_${rgb[2]}/0.65)]`
       : "";
-    return cn("rounded-full p-0.5 transition-transform hover:scale-105", glow);
+    return cn(
+      "cursor-pointer rounded-full p-0.5 transition-transform duration-150 ease-in-out",
+      "hover:scale-110",
+      glow,
+    );
   }
 
   if (variant === "stamp-outlined") {
     return cn(
-      "rounded-sm p-0.5 transition-transform hover:scale-105",
+      "cursor-pointer rounded-sm p-0.5 transition-transform duration-150 ease-in-out",
+      "hover:scale-110",
       selected && "ring-2 ring-foreground ring-offset-2 ring-offset-[#1a1a22]",
     );
   }
 
   if (variant === "ring-gradient") {
     return cn(
-      "rounded-full p-0.5 transition-transform hover:scale-105",
+      "cursor-pointer rounded-full p-0.5 transition-transform duration-150 ease-in-out",
+      "hover:scale-110",
       selected &&
         "ring-2 ring-offset-2 ring-offset-background ring-[color-mix(in_srgb,rgb(var(--ring))_70%,transparent)]",
     );
   }
 
-  return cn("rounded-full p-0.5 transition-transform hover:scale-105");
+  return cn(
+    "cursor-pointer rounded-full p-0.5 transition-transform duration-150 ease-in-out",
+    "hover:scale-110",
+  );
 }
 
 function ColorButtonContent({
@@ -702,7 +801,8 @@ function ColorButtonContent({
       <span
         className={cn(
           "inline-flex size-8 items-center justify-center rounded-full",
-          selected && "ring-2 ring-foreground ring-offset-2 ring-offset-background",
+          selected &&
+            "ring-2 ring-foreground ring-offset-2 ring-offset-background",
         )}
         style={{ backgroundColor: `rgb(${colorOption.rgb.join(",")})` }}
       >
@@ -734,7 +834,8 @@ function ColorButtonContent({
       <span
         className={cn(
           "inline-flex size-9 items-center justify-center rounded-full shadow-[inset_0_2px_4px_rgb(255_255_255/0.35),0_2px_6px_rgb(0_0_0/0.06)]",
-          selected && "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background",
+          selected &&
+            "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background",
         )}
         style={{ backgroundColor: `rgb(${colorOption.rgb.join(",")})` }}
       />
@@ -829,28 +930,29 @@ function TextureRow({
         {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
           const selected = textureOption.id === selection.textureId;
           const button = (
-            <ProtoTextureTooltip label={textureOption.label}>
-              <button
-                type="button"
-                onClick={() => onSelect(textureOption.id)}
-                aria-pressed={selected}
-                aria-label={textureOption.label}
-                className="flex flex-col items-center gap-1.5 pb-0.5"
-              >
-                <ProtoTextureSwatch
-                  textureId={textureOption.id}
-                  color={color}
-                  selected={false}
-                  size="sm"
-                />
-                <span
-                  className={cn(
-                    "h-0.5 w-5 rounded-full transition-colors",
-                    selected ? "bg-foreground" : "bg-transparent",
-                  )}
-                />
-              </button>
-            </ProtoTextureTooltip>
+            <button
+              type="button"
+              onClick={() => onSelect(textureOption.id)}
+              aria-pressed={selected}
+              aria-label={textureOption.label}
+              className={cn(
+                "flex cursor-pointer flex-col items-center gap-1.5 pb-0.5 transition-transform duration-150 ease-in-out",
+                PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+              )}
+            >
+              <ProtoTextureSwatch
+                textureId={textureOption.id}
+                color={color}
+                selected={false}
+                size="sm"
+              />
+              <span
+                className={cn(
+                  "h-0.5 w-5 rounded-full transition-colors",
+                  selected ? "bg-foreground" : "bg-transparent",
+                )}
+              />
+            </button>
           );
           return wrapTexture(textureOption.id, textureIndex, button);
         })}
@@ -859,26 +961,29 @@ function TextureRow({
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-2.5 [&_button]:cursor-pointer">
+    <div className={TEXTURE_PICKER_ROW_CLASS}>
       {PROTO_TEXTURE_OPTIONS.map((textureOption, textureIndex) => {
         const selected = textureOption.id === selection.textureId;
+        const swatchSelection = textureSwatchSelectionProps(
+          variant,
+          selected,
+          color,
+        );
         const button = (
-          <ProtoTextureTooltip label={textureOption.label}>
-            <button
-              type="button"
-              onClick={() => onSelect(textureOption.id)}
-              aria-pressed={selected}
-              aria-label={textureOption.label}
-              className={textureButtonClass(variant, selected, color)}
-            >
-              <ProtoTextureSwatch
-                textureId={textureOption.id}
-                color={color}
-                selected={selected}
-                size={variant === "stamp-outlined" ? "sm" : "md"}
-              />
-            </button>
-          </ProtoTextureTooltip>
+          <button
+            type="button"
+            onClick={() => onSelect(textureOption.id)}
+            aria-pressed={selected}
+            aria-label={textureOption.label}
+            className={texturePickerButtonClass(variant)}
+          >
+            <ProtoTextureSwatch
+              textureId={textureOption.id}
+              color={color}
+              size="tile"
+              {...swatchSelection}
+            />
+          </button>
         );
         return wrapTexture(textureOption.id, textureIndex, button);
       })}
@@ -886,41 +991,77 @@ function TextureRow({
   );
 }
 
-function textureButtonClass(
+const TEXTURE_PICKER_BUTTON_CLASS = cn(
+  "cursor-pointer p-0 transition-transform duration-150 ease-in-out",
+  PICKER_SHAPE_TEXTURE_HOVER_CLASS,
+);
+
+function texturePickerButtonClass(_variant: ShapeColorPickerVariant): string {
+  return TEXTURE_PICKER_BUTTON_CLASS;
+}
+
+function textureSwatchSelectionProps(
   variant: ShapeColorPickerVariant,
   selected: boolean,
   rgb: ProtoRgb,
-): string {
+): {
+  selected: boolean;
+  bare: boolean;
+  className: string;
+} {
   if (variant === "neon-glow") {
-    const glow = selected
-      ? `shadow-[0_0_14px_rgb(${rgb[0]}_${rgb[1]}_${rgb[2]}/0.65)]`
-      : "";
-    return cn("rounded-md p-0.5 transition-transform hover:scale-105", glow);
+    return {
+      selected: false,
+      bare: true,
+      className: cn(
+        "rounded-md",
+        selected &&
+          `shadow-[0_0_14px_rgb(${rgb[0]}_${rgb[1]}_${rgb[2]}/0.65)]`,
+      ),
+    };
   }
 
   if (variant === "stamp-outlined") {
-    return cn(
-      "rounded-sm p-0.5 transition-transform hover:scale-105",
-      selected && "ring-2 ring-foreground ring-offset-2 ring-offset-[#1a1a22]",
-    );
+    return {
+      selected: false,
+      bare: true,
+      className: cn(
+        "rounded-md",
+        selected &&
+          "ring-2 ring-foreground ring-offset-2 ring-offset-[#1a1a22]",
+      ),
+    };
   }
 
   if (variant === "ring-gradient") {
-    return cn(
-      "rounded-md p-0.5 transition-transform hover:scale-105",
-      selected &&
-        "ring-2 ring-offset-2 ring-offset-background ring-[color-mix(in_srgb,rgb(var(--ring))_70%,transparent)]",
-    );
+    return {
+      selected: false,
+      bare: true,
+      className: cn(
+        "rounded-md",
+        selected &&
+          "ring-2 ring-offset-2 ring-offset-background ring-[color-mix(in_srgb,rgb(var(--ring))_70%,transparent)]",
+      ),
+    };
   }
 
   if (variant === "material-tonal") {
-    return cn(
-      "rounded-xl p-0.5 transition-transform hover:scale-105",
-      selected && "bg-muted shadow-sm",
-    );
+    return {
+      selected: false,
+      bare: true,
+      className: cn(
+        "rounded-md",
+        selected &&
+          "shadow-sm ring-2 ring-foreground/20 ring-offset-1 ring-offset-background",
+      ),
+    };
   }
 
-  return cn("rounded-md p-0.5 transition-transform hover:scale-105");
+  return {
+    selected,
+    bare: false,
+    className: "rounded-md",
+  };
 }
 
 export function ShapeColorPickerControls({
@@ -930,6 +1071,8 @@ export function ShapeColorPickerControls({
   density = "compact",
   animateEntrance = false,
   entranceKey,
+  visibleSections,
+  showSectionLabels = true,
 }: ShapeColorPickerControlsProps) {
   const isNeon = variant === "neon-glow";
   const motionOn = usePartnerEntranceMotion(animateEntrance);
@@ -949,6 +1092,8 @@ export function ShapeColorPickerControls({
           density={density}
           animateEntrance={motionOn}
           entranceKey={entranceKey}
+          visibleSections={visibleSections}
+          showSectionLabels={showSectionLabels}
         />
       </div>
     </PrototypeComponent>

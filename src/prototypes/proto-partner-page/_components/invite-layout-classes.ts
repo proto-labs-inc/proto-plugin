@@ -27,4 +27,4 @@ export const inviteCtaSectionClass =
   "pointer-events-auto relative z-30 shrink-0 px-4 pb-4 pt-6 prototype-desktop:sm:px-5 prototype-desktop:sm:pb-6 prototype-desktop:sm:pt-5 prototype-desktop:md:px-8 prototype-desktop:md:pb-8 prototype-desktop:md:pt-7";
 
 export const inviteCtaButtonClass =
-  "group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[1rem] font-medium tracking-[-0.01em] transition-colors prototype-desktop:md:text-[0.875rem]";
+  "group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-[1rem] font-medium tracking-[-0.01em] transition-colors prototype-desktop:md:text-[0.875rem]";

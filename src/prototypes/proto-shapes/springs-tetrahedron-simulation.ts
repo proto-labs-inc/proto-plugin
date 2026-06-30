@@ -1,3 +1,8 @@
+import {
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_SPRING_LINE_WIDTH,
+} from "./shape-textures";
+
 const BASE_POINTS = 4;
 const SHAPE_SCALE = 1;
 
@@ -293,7 +298,7 @@ export function drawSpringsTetrahedronSimulation(
   fillTriangle(ctx, a, d, b, 75 / 255);
   fillTriangle(ctx, b, d, c, 50 / 255);
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
 
   drawSpring(ctx, a, b, 1);
   drawSpring(ctx, a, c, 1);
@@ -306,7 +311,7 @@ export function drawSpringsTetrahedronSimulation(
   for (const particle of particles) {
     ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
     ctx.beginPath();
     ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
     ctx.fill();

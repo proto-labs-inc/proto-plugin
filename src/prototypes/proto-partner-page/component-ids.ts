@@ -5,6 +5,9 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "scroll-container",
   "partner-shape-canvas",
   "partner-page-flow-block",
+  "partner-page-motion.partner-motion-fade-up",
+  "partner-page-motion.partner-motion-spring-pop",
+  "partner-page-motion.partner-motion-spring-button",
   "proto-shape-customizer-block",
   "proto-shape-icons.proto-shape-icon",
   "proto-shape-icons.proto-color-swatch",
@@ -29,6 +32,18 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "shape-color-picker-explorer",
   "shape-color-picker-variant-tabs",
   "shape-color-picker-mobbin-inspiration-gallery",
+  "mobile-picker-layout-block",
+  "mobile-picker-layout-block.mobile-picker-layout-controls",
+  "mobile-picker-layout-variant-toggle",
+  "mobile-picker-layout-explorer",
+  "mobile-picker-layout-variant-tabs",
+  "mobile-picker-layout-mobbin-inspiration-gallery",
+  "mobile-panel-motion-block",
+  "mobile-panel-motion-shell",
+  "mobile-panel-motion-variant-toggle",
+  "mobile-panel-motion-explorer",
+  "mobile-panel-motion-variant-tabs",
+  "mobile-panel-motion-mobbin-inspiration-gallery",
 ] as const;
 
 /** Nested ids from PrototypeVariantExplorer / PrototypeDesignBriefPanel. */
@@ -45,6 +60,12 @@ export const DYNAMIC_TARGET_PREFIXES = [
   "shape-color-picker-explorer.",
   "shape-color-picker-variant-tabs.",
   "shape-color-picker-mobbin-inspiration-gallery.",
+  "mobile-picker-layout-explorer.",
+  "mobile-picker-layout-variant-tabs.",
+  "mobile-picker-layout-mobbin-inspiration-gallery.",
+  "mobile-panel-motion-explorer.",
+  "mobile-panel-motion-variant-tabs.",
+  "mobile-panel-motion-mobbin-inspiration-gallery.",
 ] as const;
 
 export const protoPartnerPageComponentRegistry = definePrototypeComponentRegistry({

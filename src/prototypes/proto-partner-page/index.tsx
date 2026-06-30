@@ -19,6 +19,16 @@ import { isInviteCopyOverlayVariant } from "./_components/invite-copy-content";
 import { InviteCopyBlock } from "./_components/invite-copy-block";
 import { InviteCopyVariantToggle } from "./_components/invite-copy-variant-toggle";
 import {
+  DEFAULT_MOBILE_PANEL_MOTION_VARIANT,
+  type MobilePanelMotionVariant,
+} from "./_components/mobile-panel-motion-design-exploration-config";
+import { MobilePanelMotionVariantToggle } from "./_components/mobile-panel-motion-variant-toggle";
+import {
+  DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT,
+  type MobilePickerLayoutVariant,
+} from "./_components/mobile-picker-layout-design-exploration-config";
+import { MobilePickerLayoutVariantToggle } from "./_components/mobile-picker-layout-variant-toggle";
+import {
   PartnerPageFlowBlock,
   type PartnerPageId,
 } from "./_components/partner-page-flow-block";
@@ -54,6 +64,10 @@ export default function ProtoPartnerPage() {
     useState<ProtoShapeCustomizerVariant>(DEFAULT_PROTO_SHAPES_VARIANT);
   const [shapeColorPickerVariant, setShapeColorPickerVariant] =
     useState<ShapeColorPickerVariant>(DEFAULT_SHAPE_COLOR_PICKER_VARIANT);
+  const [mobilePickerLayoutVariant, setMobilePickerLayoutVariant] =
+    useState<MobilePickerLayoutVariant>(DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT);
+  const [mobilePanelMotionVariant, setMobilePanelMotionVariant] =
+    useState<MobilePanelMotionVariant>(DEFAULT_MOBILE_PANEL_MOTION_VARIANT);
   const [shapeSelection, setShapeSelection] = useState<ProtoShapeSelection>(
     defaultProtoShapeSelection(),
   );
@@ -67,9 +81,11 @@ export default function ProtoPartnerPage() {
   const customizeEntranceMotion =
     inviteCopyVariant === "open-card" && inviteAnimationsVariant !== "none";
   const customizeEntranceKey = customizeMotionEpoch;
+  const panelMotionReplayKey = `${customizeEntranceKey}-${mobilePanelMotionVariant}`;
   const shapeRenderReady = useCustomizeShapeEntranceReady(
     customizeEntranceMotion,
     customizeEntranceKey,
+    mobilePanelMotionVariant,
   );
 
   const handlePageChange = useCallback((page: PartnerPageId) => {
@@ -79,9 +95,14 @@ export default function ProtoPartnerPage() {
     setActivePage(page);
   }, []);
 
+  const dockInFlowLayout =
+    !onInvitePage && protoShapesVariant === "compact-minimal-dock";
+
   const canvasBottomInset = onInvitePage
     ? undefined
-    : getProtoShapeCustomizerCanvasInset(protoShapesVariant);
+    : dockInFlowLayout
+      ? undefined
+      : getProtoShapeCustomizerCanvasInset(protoShapesVariant);
 
   const onRestore = useCallback((_restored: LiveState) => {}, []);
 
@@ -161,8 +182,22 @@ export default function ProtoPartnerPage() {
               onPageChange={handlePageChange}
               animateEntrance={customizeEntranceMotion}
               entranceKey={customizeEntranceKey}
+              panelMotionVariant={mobilePanelMotionVariant}
             />
-            {shapeRenderReady ? (
+            {dockInFlowLayout ? (
+              <div className="relative z-10 min-h-0 flex-1">
+                {shapeRenderReady ? (
+                  <PartnerShapeCanvas
+                    shapeId={shapeSelection.shapeId}
+                    colorId={shapeSelection.colorId}
+                    textureId={shapeSelection.textureId}
+                    className="absolute inset-0 min-h-0"
+                  />
+                ) : (
+                  <div className="absolute inset-0 min-h-0 bg-white" aria-hidden />
+                )}
+              </div>
+            ) : shapeRenderReady ? (
               <PartnerShapeCanvas
                 shapeId={shapeSelection.shapeId}
                 colorId={shapeSelection.colorId}
@@ -186,10 +221,32 @@ export default function ProtoPartnerPage() {
               selection={shapeSelection}
               onSelectionChange={setShapeSelection}
               pickerVariant={shapeColorPickerVariant}
+              mobileLayoutVariant={mobilePickerLayoutVariant}
+              panelMotionVariant={mobilePanelMotionVariant}
+              panelMotionReplayKey={panelMotionReplayKey}
               animateEntrance={customizeEntranceMotion}
               entranceKey={customizeEntranceKey}
             />
-            <div className="pointer-events-none relative z-30 mt-auto flex shrink-0 flex-col gap-2">
+            <div
+              className={cn(
+                "pointer-events-none relative z-30 flex shrink-0 flex-col gap-2",
+                dockInFlowLayout ? "sr-only" : "mt-auto",
+              )}
+            >
+              <MobilePanelMotionVariantToggle
+                variant={mobilePanelMotionVariant}
+                onVariantChange={setMobilePanelMotionVariant}
+                selection={shapeSelection}
+                onSelectionChange={setShapeSelection}
+                registerOnly
+              />
+              <MobilePickerLayoutVariantToggle
+                variant={mobilePickerLayoutVariant}
+                onVariantChange={setMobilePickerLayoutVariant}
+                selection={shapeSelection}
+                onSelectionChange={setShapeSelection}
+                registerOnly
+              />
               <ShapeColorPickerVariantToggle
                 variant={shapeColorPickerVariant}
                 onVariantChange={setShapeColorPickerVariant}

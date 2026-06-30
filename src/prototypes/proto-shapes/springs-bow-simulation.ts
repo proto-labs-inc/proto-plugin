@@ -1,3 +1,8 @@
+import {
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_SPRING_LINE_WIDTH,
+} from "./shape-textures";
+
 const BASE_POINTS = 6;
 
 /** Collapsed diagonal start; springs pull into an abstract bow / hourglass. */
@@ -296,7 +301,7 @@ export function drawSpringsBowSimulation(
   fillPolygon(ctx, particles, [0, 1, 5], 55 / 255);
   fillPolygon(ctx, particles, [2, 3, 4], 55 / 255);
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -316,7 +321,7 @@ export function drawSpringsBowSimulation(
   for (const particle of particles) {
     ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
     ctx.beginPath();
     ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
     ctx.fill();

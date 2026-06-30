@@ -1,22 +1,23 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@prototype/components/ui/tooltip";
 import { cn } from "@prototype/lib/utils";
-import { useEffect, useRef, type ReactElement } from "react";
+import { useEffect, useRef } from "react";
 
 import { drawTexturePreview } from "../../proto-shapes/shape-textures";
-import type { ProtoColorId, ProtoRgb, ProtoShapeId, ProtoTextureId } from "./proto-shape-content";
+import type {
+  ProtoColorId,
+  ProtoRgb,
+  ProtoShapeId,
+  ProtoTextureId,
+} from "./proto-shape-content";
 
 type ProtoShapeIconProps = {
   shapeId: ProtoShapeId;
   color: ProtoRgb;
   className?: string;
   size?: number;
+  disableColorTransition?: boolean;
 };
 
 export function ProtoShapeIcon({
@@ -24,6 +25,7 @@ export function ProtoShapeIcon({
   color,
   className,
   size = 24,
+  disableColorTransition = false,
 }: ProtoShapeIconProps) {
   const stroke = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
   const fill = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.18)`;
@@ -43,7 +45,9 @@ export function ProtoShapeIcon({
         fill="none"
         aria-hidden
         className={cn(
-          "block shrink-0 [&_path]:transition-[fill,stroke] [&_path]:duration-300 [&_path]:ease-out [&_polygon]:transition-[fill,stroke] [&_polygon]:duration-300 [&_polygon]:ease-out [&_rect]:transition-[fill,stroke] [&_rect]:duration-300 [&_rect]:ease-out",
+          "block shrink-0",
+          !disableColorTransition &&
+            "[&_path]:transition-[fill,stroke] [&_path]:duration-300 [&_path]:ease-out [&_polygon]:transition-[fill,stroke] [&_polygon]:duration-300 [&_polygon]:ease-out [&_rect]:transition-[fill,stroke] [&_rect]:duration-300 [&_rect]:ease-out",
           className,
         )}
       >
@@ -136,8 +140,11 @@ const SWATCH_SIZES = {
   sm: "size-6",
   md: "size-7",
   lg: "size-9",
-  "mobile-md": "size-7 sm:size-6",
+  "mobile-md": "size-8 sm:size-6",
 } as const;
+
+const PICKER_SELECTED_RING = "0 0 0 2px rgb(0 0 0 / 0.85)";
+const PICKER_UNSELECTED_RING = "0 0 0 1px rgb(0 0 0 / 0.08)";
 
 export function ProtoColorSwatch({
   rgb,
@@ -152,9 +159,7 @@ export function ProtoColorSwatch({
         style={{
           backgroundColor: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`,
           transition: "background-color 300ms ease-out",
-          boxShadow: selected
-            ? "0 0 0 2px white, 0 0 0 4px rgb(0 0 0 / 0.85)"
-            : "0 0 0 1px rgb(0 0 0 / 0.08)",
+          boxShadow: selected ? PICKER_SELECTED_RING : PICKER_UNSELECTED_RING,
         }}
       />
     </PrototypeComponent>
@@ -165,34 +170,22 @@ type TextureSwatchProps = {
   textureId: ProtoTextureId;
   color: ProtoRgb;
   selected?: boolean;
-  size?: "sm" | "md";
+  bare?: boolean;
+  size?: "sm" | "md" | "tile";
   className?: string;
 };
 
 const TEXTURE_SWATCH_SIZES = {
   sm: 24,
   md: 36,
+  tile: 36,
 } as const;
-
-export function ProtoTextureTooltip({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactElement;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="top">{label}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 export function ProtoTextureSwatch({
   textureId,
   color,
   selected = false,
+  bare = false,
   size = "md",
   className,
 }: TextureSwatchProps) {
@@ -212,7 +205,10 @@ export function ProtoTextureSwatch({
   }, [textureId, color, pixelSize]);
 
   return (
-    <PrototypeComponent id="proto-shape-icons.proto-texture-swatch">
+    <PrototypeComponent
+      id="proto-shape-icons.proto-texture-swatch"
+      className="flex shrink-0 items-center justify-center"
+    >
       <span
         className={cn(
           "inline-flex shrink-0 overflow-hidden rounded-md",
@@ -221,9 +217,11 @@ export function ProtoTextureSwatch({
         style={{
           width: pixelSize,
           height: pixelSize,
-          boxShadow: selected
-            ? "0 0 0 2px white, 0 0 0 4px rgb(0 0 0 / 0.85)"
-            : "0 0 0 1px rgb(0 0 0 / 0.08)",
+          boxShadow: bare
+            ? undefined
+            : selected
+              ? PICKER_SELECTED_RING
+              : PICKER_UNSELECTED_RING,
         }}
       >
         <canvas

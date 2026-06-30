@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_HANDLE_DOT_RADIUS,
+  SHAPE_SPRING_LINE_WIDTH,
   SHAPE_TEXTURE_ANCHORS,
   type ProtoTextureId,
 } from "./shape-textures";
@@ -32,9 +35,8 @@ const INV_SQRT2 = Math.SQRT1_2;
 const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
-const DOT_SCALE = 1 / 0.8;
 const WEB_SCALE = 1;
-const DOT_RADIUS = (12 * DOT_SCALE) / 2;
+const DOT_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
 /** Hidden edge midpoint — not rendered as a draggable dot. */
 const HIDDEN_PARTICLE_INDEX = 1;
 
@@ -412,7 +414,7 @@ export function drawSpringsCubeSimulation(
     fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255, color);
   }
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -454,7 +456,7 @@ export function drawSpringsCubeSimulation(
       const particle = particles[i];
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

@@ -23,7 +23,19 @@ export const INVITE_ANIMATIONS_VARIANT_SET = {
   label: "Invite animations",
 } as const;
 
+export const MOBILE_PICKER_LAYOUT_VARIANT_SET = {
+  id: "mobile-picker-layout",
+  label: "Mobile picker layout",
+} as const;
+
+export const MOBILE_PANEL_MOTION_VARIANT_SET = {
+  id: "mobile-panel-motion",
+  label: "Mobile panel motion",
+} as const;
+
 export const PROTO_PARTNER_PAGE_VARIANT_SETS = [
+  MOBILE_PANEL_MOTION_VARIANT_SET,
+  MOBILE_PICKER_LAYOUT_VARIANT_SET,
   INVITE_ANIMATIONS_VARIANT_SET,
   SHAPE_COLOR_PICKER_VARIANT_SET,
   PROTO_SHAPES_VARIANT_SET,

@@ -1,9 +1,10 @@
 "use client";
 
+import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { PROTO_TEXTURES } from "../../proto-shapes/shape-textures";
+import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
 
 export const partnerEaseOut = [0.22, 1, 0.36, 1] as const;
 
@@ -25,6 +26,8 @@ export const partnerCtaSpring = {
 /** Extra beat after controls land before the primary action enters. */
 export const PARTNER_CTA_ENTRANCE_DELAY_EXTRA = 0.25;
 
+export const PARTNER_FADE_UP_DURATION = 0.55;
+
 export function usePartnerEntranceMotion(enabled: boolean) {
   const reduceMotion = useReducedMotion();
   return enabled && !reduceMotion;
@@ -42,18 +45,19 @@ export function PartnerMotionFadeUp({
   delay = 0,
 }: PartnerMotionFadeUpProps) {
   return (
-    <motion.div
-      className={className}
-      initial={partnerFadeUpHidden}
-      animate={partnerFadeUpVisible}
-      transition={{
-        duration: 0.55,
-        ease: partnerEaseOut,
-        delay,
-      }}
-    >
-      {children}
-    </motion.div>
+    <PrototypeComponent id="partner-page-motion.partner-motion-fade-up" className={className}>
+      <motion.div
+        initial={partnerFadeUpHidden}
+        animate={partnerFadeUpVisible}
+        transition={{
+          duration: PARTNER_FADE_UP_DURATION,
+          ease: partnerEaseOut,
+          delay,
+        }}
+      >
+        {children}
+      </motion.div>
+    </PrototypeComponent>
   );
 }
 
@@ -69,17 +73,18 @@ export function PartnerMotionSpringPop({
   delay = 0,
 }: PartnerMotionSpringPopProps) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 14, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        ...partnerPopSpring,
-        delay,
-      }}
-    >
-      {children}
-    </motion.div>
+    <PrototypeComponent id="partner-page-motion.partner-motion-spring-pop" className={className}>
+      <motion.div
+        initial={{ opacity: 0, y: 14, scale: 0.92 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          ...partnerPopSpring,
+          delay,
+        }}
+      >
+        {children}
+      </motion.div>
+    </PrototypeComponent>
   );
 }
 
@@ -100,18 +105,20 @@ export function PartnerMotionSpringButton({
   ...props
 }: PartnerMotionSpringButtonProps) {
   return (
-    <motion.button
-      {...props}
-      className={className}
-      initial={{ opacity: 0, scale: 0.88, y: 12 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{
-        ...partnerCtaSpring,
-        delay: delay + (withCtaBeat ? PARTNER_CTA_ENTRANCE_DELAY_EXTRA : 0),
-      }}
-    >
-      {children}
-    </motion.button>
+    <PrototypeComponent id="partner-page-motion.partner-motion-spring-button">
+      <motion.button
+        {...props}
+        className={className}
+        initial={{ opacity: 0, scale: 0.88, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{
+          ...partnerCtaSpring,
+          delay: delay + (withCtaBeat ? PARTNER_CTA_ENTRANCE_DELAY_EXTRA : 0),
+        }}
+      >
+        {children}
+      </motion.button>
+    </PrototypeComponent>
   );
 }
 
@@ -119,18 +126,60 @@ export function partnerStaggerDelay(base: number, index: number, step = 0.06) {
   return base + index * step;
 }
 
-/** Customize page: back → shape₁ color₁ texture₁ … → save (after last texture). */
-export const PARTNER_CUSTOMIZE_ENTRANCE_BASE = 0.05;
+/** Customize page: back → panel → save → shape. */
+export const PARTNER_CUSTOMIZE_ENTRANCE_BASE = 0;
+
+/** Choreography estimate — next beat starts before the prior spring fully settles. */
+export const PARTNER_CUSTOMIZE_CTA_SPRING_DURATION = 0.3;
+
+/** Brief beat after the panel lands before save enters. */
+export const PARTNER_CUSTOMIZE_SAVE_AFTER_PANEL_EXTRA = 0.04;
+
+/** Brief beat after save lands before the canvas shape appears. */
+export const PARTNER_SHAPE_REVEAL_DELAY_EXTRA = 0.14;
+
 export const PARTNER_CUSTOMIZE_ENTRANCE_STEP = 0.06;
 
 export const PARTNER_CUSTOMIZE_ENTRANCE_INDEX = {
   back: 0,
-  save: 3 + (PROTO_TEXTURES.length - 1) * 2 + 1,
+  panel: 1,
+  save: 2,
 } as const;
 
 export function partnerCustomizeEntranceDelay(index: number) {
   return (
     PARTNER_CUSTOMIZE_ENTRANCE_BASE + index * PARTNER_CUSTOMIZE_ENTRANCE_STEP
+  );
+}
+
+/** Choreography estimate for panel motion — tuned for overlap, not full settle. */
+export function partnerCustomizePanelEntranceDuration(
+  panelVariant: MobilePanelMotionVariant = "slide-up",
+): number {
+  switch (panelVariant) {
+    case "spring-sheet":
+    case "spring-sheet-whole-panel":
+      return 0.48;
+    case "stagger-inside":
+      return 0.58;
+    case "blur-fade":
+      return 0.46;
+    case "scale-reveal":
+      return 0.4;
+    case "curtain-expand":
+      return 0.44;
+    case "slide-up":
+    case "none":
+    default:
+      return 0.42;
+  }
+}
+
+/** Panel enters after the back button lands. */
+export function partnerCustomizePanelDelay() {
+  return (
+    partnerCustomizeEntranceDelay(PARTNER_CUSTOMIZE_ENTRANCE_INDEX.back) +
+    PARTNER_CUSTOMIZE_CTA_SPRING_DURATION
   );
 }
 
@@ -146,22 +195,33 @@ export function partnerCustomizeTextureDelay(textureIndex: number) {
   return partnerCustomizeEntranceDelay(3 + textureIndex * 2);
 }
 
-/** Extra pause after the save CTA lands before the canvas shape appears. */
-export const PARTNER_SHAPE_REVEAL_DELAY_EXTRA = 0.35;
+/** Save enters after the bottom panel lands. */
+export function partnerCustomizeSaveDelay(
+  panelVariant: MobilePanelMotionVariant = "slide-up",
+) {
+  return (
+    partnerCustomizePanelDelay() +
+    partnerCustomizePanelEntranceDuration(panelVariant) +
+    PARTNER_CUSTOMIZE_SAVE_AFTER_PANEL_EXTRA
+  );
+}
 
-/** Ms to wait before revealing the canvas after the save CTA lands. */
-export function partnerCustomizeEntranceCompleteMs() {
-  const saveDelay =
-    partnerCustomizeEntranceDelay(PARTNER_CUSTOMIZE_ENTRANCE_INDEX.save) +
-    PARTNER_CTA_ENTRANCE_DELAY_EXTRA;
+export function partnerCustomizeEntranceCompleteMs(
+  panelVariant: MobilePanelMotionVariant = "slide-up",
+) {
+  const saveDelay = partnerCustomizeSaveDelay(panelVariant);
   return Math.round(
-    (saveDelay + 0.55 + PARTNER_SHAPE_REVEAL_DELAY_EXTRA) * 1000,
+    (saveDelay +
+      PARTNER_CUSTOMIZE_CTA_SPRING_DURATION +
+      PARTNER_SHAPE_REVEAL_DELAY_EXTRA) *
+      1000,
   );
 }
 
 export function useCustomizeShapeEntranceReady(
   defer: boolean,
   entranceKey: string | number,
+  panelVariant: MobilePanelMotionVariant = "slide-up",
 ) {
   const reduceMotion = useReducedMotion();
   const [ready, setReady] = useState(!defer || !!reduceMotion);
@@ -175,10 +235,10 @@ export function useCustomizeShapeEntranceReady(
     setReady(false);
     const timer = window.setTimeout(
       () => setReady(true),
-      partnerCustomizeEntranceCompleteMs(),
+      partnerCustomizeEntranceCompleteMs(panelVariant),
     );
     return () => window.clearTimeout(timer);
-  }, [defer, entranceKey, reduceMotion]);
+  }, [defer, entranceKey, panelVariant, reduceMotion]);
 
   return ready;
 }

@@ -13,6 +13,13 @@ export const DEFAULT_PROTO_TEXTURE_ID: ProtoTextureId = "Solid";
 
 export type ShapeTextureColor = [number, number, number];
 
+/** Spring edge strokes on canvas-drawn proto shapes. */
+export const SHAPE_SPRING_LINE_WIDTH = 1.5;
+/** Outline stroke around handle dots. */
+export const SHAPE_DOT_OUTLINE_WIDTH = 1.5;
+/** Visible radius of draggable handle dots (12px diameter at 0.8 web scale). */
+export const SHAPE_HANDLE_DOT_RADIUS = (12 * (1 / 0.8)) / 2;
+
 /** Matches Solid fill — full-strength color in swatches and previews. */
 const SHAPE_PREVIEW_ALPHA = 235;
 
@@ -394,24 +401,6 @@ export function drawTexturedFace(
   const pts = geomIndices.map((i) => parts[i]!);
 
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(-100000, -100000, 200000, 200000);
-  ctx.moveTo(parts[indices[0]!]!.px, parts[indices[0]!]!.py);
-  for (let i = 1; i < indices.length; i++) {
-    ctx.lineTo(parts[indices[i]!]!.px, parts[indices[i]!]!.py);
-  }
-  ctx.closePath();
-  ctx.clip("evenodd");
-  ctx.shadowColor = "rgba(0,0,0,0.25)";
-  ctx.shadowBlur = 12;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 4;
-  ctx.fillStyle = "rgb(0,0,0)";
-  pathShape(ctx, parts, indices);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.save();
   pathShape(ctx, parts, indices);
   ctx.clip();
   ctx.globalAlpha = opacity;
@@ -491,21 +480,15 @@ export function drawParticlesWithShadow(
   dotRadius: number,
   color: ShapeTextureColor,
 ) {
-  ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.15)";
-  ctx.shadowBlur = 14;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 5;
   for (const particle of particles) {
     ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
     ctx.beginPath();
     ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
-  ctx.restore();
 }
 
 /** Render a texture preview into a square canvas (for picker swatches). */

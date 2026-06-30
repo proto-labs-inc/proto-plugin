@@ -137,7 +137,7 @@ function SpringCtaSection({
         <motion.button
           type="button"
           onClick={onContinue}
-          className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+          className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
           initial={{ opacity: 0, scale: 0.88, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{

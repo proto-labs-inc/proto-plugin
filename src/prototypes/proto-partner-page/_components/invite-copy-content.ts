@@ -37,7 +37,7 @@ export function isInviteCopyOverlayVariant(
 }
 
 export const INVITE_COPY = {
-  headline: "Congratulations Amelie!",
+  headline: "Congrats Amelie!",
   invite:
     "You've been invited to be a design partner for Maayan's new prototyping tool, Proto. This is because you're excellent and talented and also someone she thinks is cool.",
   followUp:

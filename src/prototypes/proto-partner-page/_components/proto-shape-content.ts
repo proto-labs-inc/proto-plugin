@@ -96,7 +96,7 @@ export type ProtoShapeCustomizerVariant =
 export const PROTO_SHAPE_CUSTOMIZER_CANVAS_INSET: Partial<
   Record<ProtoShapeCustomizerVariant, string>
 > = {
-  "compact-minimal-dock": "bottom-[14.5rem] sm:bottom-[12rem]",
+  "compact-minimal-dock": "bottom-[14.5rem]",
   "compact-nudge-inline": "bottom-[11.25rem]",
   "compact-nudge-text-first": "bottom-[11.25rem]",
   "compact-link-nudge": "bottom-[11rem]",

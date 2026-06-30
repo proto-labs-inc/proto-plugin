@@ -7,16 +7,20 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { inviteCtaButtonClass, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
+import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
 import {
   PARTNER_CUSTOMIZE_ENTRANCE_INDEX,
   PartnerMotionSpringButton,
   partnerCustomizeEntranceDelay,
+  partnerCustomizeSaveDelay,
   partnerEaseOut,
   usePartnerEntranceMotion,
 } from "./partner-page-motion";
 
-const saveButtonClassName =
-  "border border-border bg-muted/40 text-muted-foreground hover:border-foreground/30 hover:bg-foreground/[0.08] inline-flex shrink-0 cursor-pointer items-center rounded-lg px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors";
+const saveButtonClassName = cn(
+  inviteCtaButtonClass,
+  "shrink-0 px-3.5 py-2 text-[0.8125rem] prototype-desktop:md:text-[0.8125rem]",
+);
 
 /** How long "Saved!" stays visible before fading back. */
 const SAVE_LABEL_REVERT_MS = 3_000;
@@ -51,7 +55,7 @@ function SaveShapeButton({
   const label = (
     <span className="inline-grid">
       <span className="invisible col-start-1 row-start-1" aria-hidden>
-        Save your shape
+        Submit your shape
       </span>
       <span className="col-start-1 row-start-1">
         <AnimatePresence mode="wait" initial={false}>
@@ -65,7 +69,7 @@ function SaveShapeButton({
               ease: partnerEaseOut,
             }}
           >
-            {saved ? "Saved!" : "Save your shape"}
+            {saved ? "Saved!" : "Submit your shape"}
           </motion.span>
         </AnimatePresence>
       </span>
@@ -77,6 +81,7 @@ function SaveShapeButton({
       <PartnerMotionSpringButton
         type="button"
         delay={delay}
+        withCtaBeat={false}
         key={entranceKey}
         onClick={handleSave}
         className={saveButtonClassName}
@@ -101,6 +106,7 @@ type PartnerPageFlowBlockProps = {
   className?: string;
   animateEntrance?: boolean;
   entranceKey?: string | number;
+  panelMotionVariant?: MobilePanelMotionVariant;
 };
 
 export function PartnerPageFlowBlock({
@@ -109,6 +115,7 @@ export function PartnerPageFlowBlock({
   className,
   animateEntrance = false,
   entranceKey = "customize",
+  panelMotionVariant = "slide-up",
 }: PartnerPageFlowBlockProps) {
   const motionOn = usePartnerEntranceMotion(animateEntrance);
   if (activePage === "invite") {
@@ -156,7 +163,7 @@ export function PartnerPageFlowBlock({
             )}
             key={entranceKey}
             onClick={() => onPageChange("invite")}
-            className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+            className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
           >
             <ArrowLeft
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:-translate-x-1"
@@ -168,7 +175,7 @@ export function PartnerPageFlowBlock({
           <button
             type="button"
             onClick={() => onPageChange("invite")}
-            className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+            className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
           >
             <ArrowLeft
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:-translate-x-1"
@@ -179,9 +186,7 @@ export function PartnerPageFlowBlock({
         )}
         <SaveShapeButton
           motionOn={motionOn}
-          delay={partnerCustomizeEntranceDelay(
-            PARTNER_CUSTOMIZE_ENTRANCE_INDEX.save,
-          )}
+          delay={partnerCustomizeSaveDelay(panelMotionVariant)}
           entranceKey={entranceKey}
         />
       </div>

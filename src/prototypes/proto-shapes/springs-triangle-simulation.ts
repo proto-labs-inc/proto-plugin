@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  SHAPE_DOT_OUTLINE_WIDTH,
+  SHAPE_HANDLE_DOT_RADIUS,
+  SHAPE_SPRING_LINE_WIDTH,
   SHAPE_TEXTURE_ANCHORS,
   type ProtoTextureId,
 } from "./shape-textures";
@@ -22,9 +25,8 @@ const BASE_REST_LENGTH = 100;
 const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
-const DOT_SCALE = 1 / 0.8;
 const WEB_SCALE = 1;
-const DOT_RADIUS = (12 * DOT_SCALE) / 2;
+const DOT_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
 /** Hit area is much larger than the visible handle so corners are easy to grab. */
 export const PARTICLE_PICK_RADIUS = Math.max(DOT_RADIUS * 6, 32);
 export const PARTICLE_PICK_RADIUS_TOUCH = 48;
@@ -361,7 +363,7 @@ export function drawSpringsTriangleSimulation(
     fillPolygon(ctx, particles, [2, 3, 4], 100 / 255, color);
   }
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -382,7 +384,7 @@ export function drawSpringsTriangleSimulation(
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = 1;
+      ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();
