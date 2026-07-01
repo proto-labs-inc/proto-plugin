@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getShapeNormalizedRenderScale,
   SHAPE_DOT_OUTLINE_WIDTH,
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
@@ -41,7 +44,7 @@ const SHAPE_OFFSETS = [
   { x: 270 * SHAPE_SCALE, y: 110 * SHAPE_SCALE }, // 9
 ] as const;
 
-const COLOR1: [number, number, number] = [255, 95, 155];
+const COLOR1: [number, number, number] = [252, 56, 140];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
@@ -82,14 +85,14 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number) {
+  update(width: number, height: number, margin: number, physicsScale = 1) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
     this.vy *= this.damping;
 
     const speed = Math.hypot(this.vx, this.vy);
-    const maxSpeed = 10;
+    const maxSpeed = 10 * physicsScale;
     if (speed > maxSpeed) {
       this.vx *= maxSpeed / speed;
       this.vy *= maxSpeed / speed;
@@ -124,6 +127,7 @@ export type SpringsSquareSimulation = {
   width: number;
   height: number;
   restLength: number;
+  physicsScale: number;
   margin: number;
   frameCount: number;
   clicked: boolean;
@@ -166,6 +170,7 @@ export function createSpringsSquareSimulation(
     width,
     height,
     restLength: BASE_REST_LENGTH,
+    physicsScale: 1,
     margin: BASE_MARGIN,
     frameCount: 0,
     clicked: false,
@@ -221,7 +226,7 @@ function applySpringForce(
   const dy = p.py - q.py;
   const dh = Math.hypot(dx, dy) * WEB_SCALE;
 
-  if (dh <= 1) return;
+  if (dh <= sim.physicsScale) return;
 
   const distention = dh - sim.restLength;
   const restorativeForce = SPRING_CONSTANT * distention;
@@ -341,6 +346,7 @@ function drawTexturedPyramidFaces(
   canvasWidth: number,
   canvasHeight: number,
   textureEmanationCorner?: TextureEmanationCorner,
+  renderScale = 1,
 ) {
   const anchors = SHAPE_TEXTURE_ANCHORS.square!;
   const faceBase = {
@@ -354,6 +360,7 @@ function drawTexturedPyramidFaces(
     gradientWorldSpace: true,
     ringParticleIndex: anchors.ringParticleIndex,
     textureEmanationCorner,
+    renderScale,
   };
   const [aIdx, bIdx, cIdx] = baseIndices;
   drawTexturedFace(ctx, { ...faceBase, indices: [apexIndex, aIdx!, bIdx!] });
@@ -406,8 +413,8 @@ export function stepSpringsSquareSimulation(
   applySpringForces(sim);
 
   for (const particle of sim.particles) {
-    particle.addForce(0, GRAVITY_Y);
-    particle.update(sim.width, sim.height, sim.margin);
+    particle.addForce(0, GRAVITY_Y * sim.physicsScale);
+    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {
@@ -445,6 +452,7 @@ export function drawSpringsSquareSimulation(
     textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
+  const normalizedSize = getShapeNormalizedRenderScale(sim.physicsScale);
 
   if (clearBackground) {
     ctx.fillStyle = "#ffffff";
@@ -463,26 +471,27 @@ export function drawSpringsSquareSimulation(
         width,
         height,
         textureEmanationCorner,
+        renderScale,
       );
     } else {
       drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles, color);
     }
   }
 
-  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedSize);
 
   for (const pyramid of PYRAMIDS) {
     drawPyramidSprings(ctx, pyramid.apex, pyramid.base, particles, color);
   }
 
-  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
+  const dotRadius = getShapeHandleDotRadius(dotScale, normalizedSize);
   if (texture) {
-    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+    drawParticlesWithShadow(ctx, particles, dotRadius, color, normalizedSize);
   } else {
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
+      ctx.lineWidth = getShapeHandleDotOutlineWidth(normalizedSize);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

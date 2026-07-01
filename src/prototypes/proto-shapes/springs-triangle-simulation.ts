@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getShapeNormalizedRenderScale,
   SHAPE_DOT_OUTLINE_WIDTH,
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
@@ -20,7 +23,7 @@ const SHAPE_OFFSETS = [
   { x: 175, y: 175 },
 ] as const;
 
-const COLOR1: [number, number, number] = [43, 220, 120];
+const COLOR1: [number, number, number] = [12, 214, 118];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100;
@@ -72,22 +75,22 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number) {
+  update(width: number, height: number, margin: number, physicsScale = 1) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
     this.vy *= this.damping;
-    this.limitVelocities();
+    this.limitVelocities(physicsScale);
     this.px += this.vx;
     this.py += this.vy;
     this.handleBoundaries(width, height, margin);
   }
 
-  limitVelocities() {
+  limitVelocities(physicsScale = 1) {
     if (!this.bLimitVelocities) return;
 
     const speed = Math.hypot(this.vx, this.vy);
-    const maxSpeed = 10;
+    const maxSpeed = 10 * physicsScale;
     if (speed > maxSpeed) {
       this.vx *= maxSpeed / speed;
       this.vy *= maxSpeed / speed;
@@ -128,6 +131,7 @@ export type SpringsTriangleSimulation = {
   width: number;
   height: number;
   restLength: number;
+  physicsScale: number;
   margin: number;
   frameCount: number;
   clicked: boolean;
@@ -176,6 +180,7 @@ export function createSpringsTriangleSimulation(
     width,
     height,
     restLength: BASE_REST_LENGTH,
+    physicsScale: 1,
     margin: BASE_MARGIN,
     frameCount: 0,
     clicked: false,
@@ -232,7 +237,7 @@ function applySpringForce(
   const dy = p.py - q.py;
   const dh = factor * Math.hypot(dx, dy) * WEB_SCALE;
 
-  if (dh <= 1) return;
+  if (dh <= sim.physicsScale) return;
 
   const distention = dh - sim.restLength;
   const restorativeForce = SPRING_CONSTANT * distention;
@@ -303,8 +308,8 @@ export function stepSpringsTriangleSimulation(
   applySpringForces(sim);
 
   for (const particle of sim.particles) {
-    particle.addForce(0, GRAVITY_Y);
-    particle.update(sim.width, sim.height, sim.margin);
+    particle.addForce(0, GRAVITY_Y * sim.physicsScale);
+    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {
@@ -344,6 +349,7 @@ export function drawSpringsTriangleSimulation(
     textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
+  const normalizedSize = getShapeNormalizedRenderScale(sim.physicsScale);
 
   if (clearBackground) {
     ctx.fillStyle = "#ffffff";
@@ -359,6 +365,7 @@ export function drawSpringsTriangleSimulation(
       canvasWidth: width,
       canvasHeight: height,
       textureEmanationCorner,
+      renderScale,
       ...anchors,
     };
     drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 3, 2] });
@@ -370,7 +377,7 @@ export function drawSpringsTriangleSimulation(
     fillPolygon(ctx, particles, [2, 3, 4], 100 / 255, color);
   }
 
-  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedSize);
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -384,14 +391,14 @@ export function drawSpringsTriangleSimulation(
   drawSpring(ctx, particles[2], particles[0], 1, color);
   drawSpring(ctx, particles[1], particles[3], 1, color);
 
-  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
+  const dotRadius = getShapeHandleDotRadius(dotScale, normalizedSize);
   if (texture) {
-    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+    drawParticlesWithShadow(ctx, particles, dotRadius, color, normalizedSize);
   } else {
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
+      ctx.lineWidth = getShapeHandleDotOutlineWidth(normalizedSize);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

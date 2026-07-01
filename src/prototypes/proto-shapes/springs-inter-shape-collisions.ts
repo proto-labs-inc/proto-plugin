@@ -1,3 +1,5 @@
+import { SHAPE_HANDLE_DOT_RADIUS } from "./shape-textures";
+
 export type CollidableParticle = {
   px: number;
   py: number;
@@ -7,9 +9,9 @@ export type CollidableParticle = {
   bFixed?: boolean;
 };
 
-/** Match visible handle radius: (12 / 0.8) / 2 */
-const COLLISION_RADIUS = 7.5;
-const SEGMENT_COLLISION_RADIUS = 7.5;
+/** Match visible handle radius for inter-shape collision padding. */
+const COLLISION_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
+const SEGMENT_COLLISION_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
 const SOLVER_ITERATIONS = 6;
 /** Upper particle takes most of the vertical separation when stacking. */
 const STACK_UPPER_BIAS = 0.78;

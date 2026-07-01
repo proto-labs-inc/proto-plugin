@@ -57,13 +57,13 @@ export const PROTO_SHAPES: ProtoShapeOption[] = [
   { id: "prism", label: "Prism" },
 ];
 
-/** Five colors from the proto-shapes prototype. */
+/** Five colors — electric pop palette (home-page shape-colors exploration). */
 export const PROTO_COLORS: ProtoColorOption[] = [
-  { id: "green", label: "Green", rgb: [43, 220, 120] },
-  { id: "purple", label: "Purple", rgb: [110, 16, 250] },
-  { id: "teal", label: "Teal", rgb: [40, 200, 200] },
-  { id: "pink", label: "Pink", rgb: [255, 95, 155] },
-  { id: "gold", label: "Gold", rgb: [255, 200, 50] },
+  { id: "green", label: "Green", rgb: [12, 214, 118] },
+  { id: "purple", label: "Purple", rgb: [122, 48, 244] },
+  { id: "teal", label: "Teal", rgb: [16, 196, 226] },
+  { id: "pink", label: "Pink", rgb: [252, 56, 140] },
+  { id: "gold", label: "Gold", rgb: [252, 192, 40] },
 ];
 
 export const DEFAULT_PROTO_SHAPE_ID: ProtoShapeId = "cube";

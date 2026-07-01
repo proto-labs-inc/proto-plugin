@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getShapeNormalizedRenderScale,
   SHAPE_DOT_OUTLINE_WIDTH,
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
@@ -23,7 +26,7 @@ const SHAPE_OFFSETS = [
   { x: 175 * SHAPE_SCALE, y: 105 * SHAPE_SCALE },
 ] as const;
 
-const COLOR1: [number, number, number] = [255, 200, 50];
+const COLOR1: [number, number, number] = [252, 192, 40];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
@@ -64,14 +67,14 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number) {
+  update(width: number, height: number, margin: number, physicsScale = 1) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
     this.vy *= this.damping;
 
     const speed = Math.hypot(this.vx, this.vy);
-    const maxSpeed = 10;
+    const maxSpeed = 10 * physicsScale;
     if (speed > maxSpeed) {
       this.vx *= maxSpeed / speed;
       this.vy *= maxSpeed / speed;
@@ -106,6 +109,7 @@ export type SpringsPrismSimulation = {
   width: number;
   height: number;
   restLength: number;
+  physicsScale: number;
   margin: number;
   frameCount: number;
   clicked: boolean;
@@ -148,6 +152,7 @@ export function createSpringsPrismSimulation(
     width,
     height,
     restLength: BASE_REST_LENGTH,
+    physicsScale: 1,
     margin: BASE_MARGIN,
     frameCount: 0,
     clicked: false,
@@ -204,7 +209,7 @@ function applySpringForce(
   const dy = p.py - q.py;
   const dh = factor * Math.hypot(dx, dy) * WEB_SCALE;
 
-  if (dh <= 1) return;
+  if (dh <= sim.physicsScale) return;
 
   const distention = dh - sim.restLength;
   const restorativeForce = SPRING_CONSTANT * distention;
@@ -273,8 +278,8 @@ export function stepSpringsPrismSimulation(
   applySpringForces(sim);
 
   for (const particle of sim.particles) {
-    particle.addForce(0, GRAVITY_Y);
-    particle.update(sim.width, sim.height, sim.margin);
+    particle.addForce(0, GRAVITY_Y * sim.physicsScale);
+    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {
@@ -312,6 +317,7 @@ export function drawSpringsPrismSimulation(
     textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
+  const normalizedSize = getShapeNormalizedRenderScale(sim.physicsScale);
 
   if (clearBackground) {
     ctx.fillStyle = "#ffffff";
@@ -330,6 +336,7 @@ export function drawSpringsPrismSimulation(
       gradientParticleIndices: [0, 3],
       ringParticleIndex: anchors.ringParticleIndex,
       textureEmanationCorner,
+      renderScale,
     };
     drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 4, 3] });
     drawTexturedFace(ctx, { ...faceBase, indices: [1, 2, 5, 4] });
@@ -344,7 +351,7 @@ export function drawSpringsPrismSimulation(
     fillPolygon(ctx, particles, [3, 4, 5], 50 / 255, color);
   }
 
-  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedSize);
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const front = particles[i];
@@ -356,14 +363,14 @@ export function drawSpringsPrismSimulation(
     drawSpring(ctx, front, back, 1, color);
   }
 
-  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
+  const dotRadius = getShapeHandleDotRadius(dotScale, normalizedSize);
   if (texture) {
-    drawParticlesWithShadow(ctx, particles, dotRadius, color);
+    drawParticlesWithShadow(ctx, particles, dotRadius, color, normalizedSize);
   } else {
     for (const particle of particles) {
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
+      ctx.lineWidth = getShapeHandleDotOutlineWidth(normalizedSize);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

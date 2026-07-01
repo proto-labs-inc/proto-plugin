@@ -47,7 +47,6 @@ const SUBMIT_MODAL_SHAPE_MARGIN = 4;
 const GREY_CARD_SHELL_CLASS =
   "mx-auto flex w-full max-w-[min(23rem,calc(100%-2rem))] flex-col gap-4";
 const GREY_CARD_ACTIONS_CLASS = "mx-auto w-full max-w-[18.5rem] justify-center";
-const SUBMIT_MODAL_SHAPE_DOT_BOOST = 1.35;
 
 type SubmitModalLayoutProps = {
   selection: ProtoShapeSelection;
@@ -217,14 +216,12 @@ function ShapePreview({
   className,
   canvasBackground = CANVAS_WHITE,
   shapeScale,
-  shapeDotBoost = SUBMIT_MODAL_SHAPE_DOT_BOOST,
   transparentBackground = false,
 }: {
   selection: ProtoShapeSelection;
   className?: string;
   canvasBackground?: string;
   shapeScale?: number;
-  shapeDotBoost?: number;
   transparentBackground?: boolean;
 }) {
   const isMobileViewport = useMobileViewport();
@@ -243,7 +240,6 @@ function ShapePreview({
       backgroundColor={canvasBackground}
       transparentBackground={transparentBackground}
       shapeScale={resolvedShapeScale}
-      shapeDotBoost={shapeDotBoost}
       shapeMargin={SUBMIT_MODAL_SHAPE_MARGIN}
       embedded
     />

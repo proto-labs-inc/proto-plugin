@@ -495,9 +495,21 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   border-radius: calc(var(--radius) + 4px);
   border: 1px solid var(--tool-chrome-border);
   background: var(--tool-chrome-bg);
+  color: var(--tool-chrome-text);
   box-shadow:
     var(--shadow-lg),
     0 0 0 1px #333333;
+
+  /* Dialogs portal into #prototype-viewport ([data-prototype-screenshot]), which
+     resets semantic tokens to light preview values — re-bridge tool chrome here. */
+  --text-primary: var(--tool-chrome-text);
+  --text-secondary: var(--tool-chrome-text-muted);
+  --color-background: var(--tool-chrome-bg);
+  --color-foreground: var(--tool-chrome-text-heading);
+  --color-muted-foreground: var(--tool-chrome-text-muted);
+  --color-border: var(--tool-chrome-border);
+  --color-focus-ring: var(--tool-chrome-text-heading);
+  --color-ring: var(--tool-chrome-text-heading);
 }
 
 [data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {

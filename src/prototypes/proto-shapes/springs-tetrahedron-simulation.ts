@@ -1,6 +1,10 @@
 import {
-  SHAPE_DOT_OUTLINE_WIDTH,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getShapeNormalizedRenderScale,
+  SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
+  withShapeRenderScale,
 } from "./shape-textures";
 
 const BASE_POINTS = 4;
@@ -14,16 +18,15 @@ const SHAPE_OFFSETS = [
   { x: 75 * SHAPE_SCALE, y: 130 * SHAPE_SCALE },
 ] as const;
 
-const COLOR1: [number, number, number] = [255, 130, 50];
+const COLOR1: [number, number, number] = [252, 192, 40];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
 const GRAVITY_Y = 0.3;
 const DAMPING = 0.96;
 const BASE_MARGIN = 20;
-const DOT_SCALE = 1 / 0.8;
 const WEB_SCALE = 1;
-const DOT_RADIUS = (12 * DOT_SCALE) / 2;
+const DOT_RADIUS = SHAPE_HANDLE_DOT_RADIUS;
 export const PARTICLE_PICK_RADIUS = Math.max(DOT_RADIUS * 6, 32);
 export const PARTICLE_PICK_RADIUS_TOUCH = 48;
 
@@ -59,14 +62,14 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number) {
+  update(width: number, height: number, margin: number, physicsScale = 1) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
     this.vy *= this.damping;
 
     const speed = Math.hypot(this.vx, this.vy);
-    const maxSpeed = 10;
+    const maxSpeed = 10 * physicsScale;
     if (speed > maxSpeed) {
       this.vx *= maxSpeed / speed;
       this.vy *= maxSpeed / speed;
@@ -101,6 +104,7 @@ export type SpringsTetrahedronSimulation = {
   width: number;
   height: number;
   restLength: number;
+  physicsScale: number;
   margin: number;
   frameCount: number;
   clicked: boolean;
@@ -146,6 +150,7 @@ export function createSpringsTetrahedronSimulation(
     width,
     height,
     restLength: BASE_REST_LENGTH,
+    physicsScale: 1,
     margin: BASE_MARGIN,
     frameCount: 0,
     clicked: false,
@@ -202,7 +207,7 @@ function applySpringForce(
   const dy = p.py - q.py;
   const dh = factor * Math.hypot(dx, dy) * WEB_SCALE;
 
-  if (dh <= 1) return;
+  if (dh <= sim.physicsScale) return;
 
   const distention = dh - sim.restLength;
   const restorativeForce = SPRING_CONSTANT * distention;
@@ -261,8 +266,8 @@ export function stepSpringsTetrahedronSimulation(
   applySpringForces(sim);
 
   for (const particle of sim.particles) {
-    particle.addForce(0, GRAVITY_Y);
-    particle.update(sim.width, sim.height, sim.margin);
+    particle.addForce(0, GRAVITY_Y * sim.physicsScale);
+    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {
@@ -277,6 +282,8 @@ export function stepSpringsTetrahedronSimulation(
 export type DrawSpringsSimulationOptions = {
   clearBackground?: boolean;
   showHint?: boolean;
+  dotScale?: number;
+  renderScale?: number;
 };
 
 export function drawSpringsTetrahedronSimulation(
@@ -284,9 +291,15 @@ export function drawSpringsTetrahedronSimulation(
   sim: SpringsTetrahedronSimulation,
   options: DrawSpringsSimulationOptions = {},
 ) {
-  const { clearBackground = true, showHint = true } = options;
+  const {
+    clearBackground = true,
+    showHint = true,
+    dotScale = 1,
+    renderScale = 1,
+  } = options;
   const { width, height, particles, margin } = sim;
   const [a, b, c, d] = particles;
+  const normalizedSize = getShapeNormalizedRenderScale(sim.physicsScale);
 
   if (clearBackground) {
     ctx.fillStyle = "#ffffff";
@@ -298,7 +311,7 @@ export function drawSpringsTetrahedronSimulation(
   fillTriangle(ctx, a, d, b, 75 / 255);
   fillTriangle(ctx, b, d, c, 50 / 255);
 
-  ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedSize);
 
   drawSpring(ctx, a, b, 1);
   drawSpring(ctx, a, c, 1);
@@ -307,11 +320,11 @@ export function drawSpringsTetrahedronSimulation(
   drawSpring(ctx, c, d, 1);
   drawSpring(ctx, d, b, 1);
 
-  const dotRadius = DOT_RADIUS;
+  const dotRadius = getShapeHandleDotRadius(dotScale, normalizedSize);
   for (const particle of particles) {
     ctx.strokeStyle = `rgb(${COLOR1[0]}, ${COLOR1[1]}, ${COLOR1[2]})`;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = SHAPE_SPRING_LINE_WIDTH;
+    ctx.lineWidth = getShapeHandleDotOutlineWidth(normalizedSize);
     ctx.beginPath();
     ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
     ctx.fill();

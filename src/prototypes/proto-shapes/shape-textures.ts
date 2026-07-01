@@ -20,17 +20,116 @@ export type TextureEmanationCorner =
 
 export type ShapeTextureColor = [number, number, number];
 
-/** Scale spring strokes and dot metrics for smaller preview renders. */
-export function withShapeRenderScale(value: number, renderScale = 1) {
-  return value * renderScale;
+/**
+ * How much dot/line metrics outpace shape shrink (0 = locked ratio).
+ * Uses a continuous power curve — no cap as shapes get smaller.
+ */
+export const SHAPE_DETAIL_INVERSE_EXPONENT = 0.15;
+
+/** Shape size relative to the partner-page reference layout. */
+export function getShapeNormalizedRenderScale(physicsScale: number) {
+  return physicsScale / REFERENCE_PROTOTYPE_SHAPE_SCALE;
+}
+
+/**
+ * Stroke and dot scale — shrinks slower than the shape so smaller shapes keep
+ * slightly chunkier dots and spring lines.
+ */
+export function getShapeDetailRenderScale(normalizedShapeSize: number) {
+  const safe = Math.max(normalizedShapeSize, 1e-3);
+  return Math.pow(safe, 1 - SHAPE_DETAIL_INVERSE_EXPONENT);
+}
+
+/** Scale spring strokes and dot metrics from normalized shape size. */
+export function withShapeRenderScale(value: number, normalizedShapeSize = 1) {
+  return value * getShapeDetailRenderScale(normalizedShapeSize);
 }
 
 /** Spring edge strokes on canvas-drawn proto shapes. */
 export const SHAPE_SPRING_LINE_WIDTH = 1.5;
 /** Outline stroke around handle dots. */
 export const SHAPE_DOT_OUTLINE_WIDTH = 1.5;
-/** Visible radius of draggable handle dots (12px diameter at 0.8 web scale). */
-export const SHAPE_HANDLE_DOT_RADIUS = (12 * (1 / 0.8)) / 2;
+/** Global multiplier for draggable handle dots across all prototypes. */
+export const SHAPE_DOT_SIZE_SCALE = 1.056;
+/** Legacy handle-dot radius before {@link SHAPE_DOT_SIZE_SCALE}. */
+const SHAPE_HANDLE_DOT_BASE_RADIUS = (12 * (1 / 0.8)) / 2;
+/** Visible radius of draggable handle dots in canvas coordinates. */
+export const SHAPE_HANDLE_DOT_RADIUS =
+  SHAPE_HANDLE_DOT_BASE_RADIUS * SHAPE_DOT_SIZE_SCALE;
+
+/** Reference layout scales from proto-partner-page (desktop). */
+export const REFERENCE_PROTOTYPE_SHAPE_SCALE = 1.75;
+export const REFERENCE_PROTOTYPE_DOT_SCALE = 1.12;
+/** Dot scale divided by shape layout scale — keeps handle size consistent. */
+export const SHAPE_HANDLE_DOT_TO_SHAPE_RATIO =
+  REFERENCE_PROTOTYPE_DOT_SCALE / REFERENCE_PROTOTYPE_SHAPE_SCALE;
+
+export function getShapeHandleDotScaleForShapeScale(shapeScale: number) {
+  return shapeScale * SHAPE_HANDLE_DOT_TO_SHAPE_RATIO;
+}
+
+/** Three-pyramid chain reads smaller at the same base span. */
+export const THREE_PART_SHAPE_SCALE = 1.2;
+
+export type PrototypeShapeLayoutScales = {
+  shapeScale: number;
+  dotScale: number;
+  /** Linear scale for texture pattern density. */
+  renderScale: number;
+  /** Normalized shape size for spring strokes and handle dots. */
+  normalizedRenderScale: number;
+};
+
+type PrototypeShapeLayoutOptions = {
+  /** Base layout scale before per-slot visualScale (e.g. 1.75 partner desktop). */
+  layoutShapeScale: number;
+  visualScale?: number;
+  dotBoost?: number;
+  isThreePartShape?: boolean;
+};
+
+/**
+ * The single source of truth for shape + dot + stroke sizing across every
+ * prototype.
+ *
+ * `renderScale` is the linear shape size relative to the partner-page reference
+ * and drives texture pattern density. Spring strokes, dot outlines, and dot
+ * radii use {@link normalizedRenderScale} with {@link getShapeDetailRenderScale}
+ * so they shrink slower than the shape and stay legible when small.
+ */
+export function getPrototypeShapeLayoutScales({
+  layoutShapeScale,
+  visualScale = 1,
+  dotBoost = 1,
+  isThreePartShape = false,
+}: PrototypeShapeLayoutOptions): PrototypeShapeLayoutScales {
+  const shapeScale =
+    layoutShapeScale *
+    visualScale *
+    (isThreePartShape ? THREE_PART_SHAPE_SCALE : 1);
+  const normalizedRenderScale = shapeScale / REFERENCE_PROTOTYPE_SHAPE_SCALE;
+
+  return {
+    shapeScale,
+    dotScale: REFERENCE_PROTOTYPE_DOT_SCALE * dotBoost,
+    renderScale: (layoutShapeScale * visualScale) / REFERENCE_PROTOTYPE_SHAPE_SCALE,
+    normalizedRenderScale,
+  };
+}
+
+export function getShapeHandleDotRadius(dotScale = 1, normalizedShapeSize = 1) {
+  return withShapeRenderScale(
+    SHAPE_HANDLE_DOT_RADIUS * dotScale,
+    normalizedShapeSize,
+  );
+}
+
+export function getShapeHandleDotOutlineWidth(normalizedShapeSize = 1) {
+  return withShapeRenderScale(
+    SHAPE_DOT_OUTLINE_WIDTH * SHAPE_DOT_SIZE_SCALE,
+    normalizedShapeSize,
+  );
+}
 
 /** Matches Solid fill — full-strength color in swatches and previews. */
 const SHAPE_PREVIEW_ALPHA = 235;
@@ -374,7 +473,7 @@ function paintEmanationTextureLayer(
     ctx.fillRect(0, 0, width, height);
     ctx.fillStyle = rgb(cr, cg, cb, 235);
     const gap = compact ? 11 : 16;
-    const dotRadius = compact ? 2.5 : 4;
+    const dotRadius = (compact ? 2.5 : 4) * SHAPE_DOT_SIZE_SCALE;
     for (let x = gap / 2; x <= width; x += gap) {
       for (let y = gap / 2; y <= height; y += gap) {
         ctx.beginPath();
@@ -575,6 +674,7 @@ export function drawTextureLocal(
   gradientRadialCenterLocal?: { x: number; y: number },
   gradientRadialPronounced?: boolean,
   compact = false,
+  renderScale = 1,
 ) {
   const s = r * (compact ? 1.35 : 1.8);
   const cover = s * (compact ? 1.25 : 1.7);
@@ -670,8 +770,11 @@ export function drawTextureLocal(
     ctx.fillStyle = rgb(cr, cg, cb, 60);
     ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
     ctx.fillStyle = rgb(cr, cg, cb, 235);
-    const gap = compact ? 11 : 18;
-    const dotRadius = compact ? 2.5 : 4;
+    const gap = (compact ? 11 : 18) * renderScale;
+    const dotRadius =
+      (compact ? 2.5 : 4) *
+      SHAPE_DOT_SIZE_SCALE *
+      getShapeDetailRenderScale(renderScale);
     for (let x = -cover; x <= cover; x += gap) {
       for (let y = -cover; y <= cover; y += gap) {
         ctx.beginPath();
@@ -683,8 +786,9 @@ export function drawTextureLocal(
     ctx.fillStyle = rgb(cr, cg, cb, 60);
     ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
     ctx.strokeStyle = rgb(cr, cg, cb, 235);
-    ctx.lineWidth = compact ? 1.25 : 2;
-    const gap = compact ? 11 : 18;
+    ctx.lineWidth =
+      (compact ? 1.25 : 2) * getShapeDetailRenderScale(renderScale);
+    const gap = (compact ? 11 : 18) * renderScale;
     ctx.beginPath();
     for (let x = -cover; x <= cover; x += gap) {
       ctx.moveTo(x, -cover);
@@ -730,6 +834,8 @@ export type DrawTexturedFaceParams = {
   textureEmanationCorner?: TextureEmanationCorner;
   ringParticleIndex: number;
   opacity?: number;
+  /** Single per-shape scale so pattern density tracks the shape like everything else. */
+  renderScale?: number;
 };
 
 export function drawTexturedFace(
@@ -822,6 +928,8 @@ export function drawTexturedFace(
     gradientFadeLocal,
     gradientRadialCenterLocal,
     params.gradientRadialPronounced,
+    false,
+    params.renderScale ?? 1,
   );
   ctx.restore();
 
@@ -833,11 +941,14 @@ export function drawParticlesWithShadow(
   particles: ShapeTextureParticle[],
   dotRadius: number,
   color: ShapeTextureColor,
+  normalizedShapeSize = 1,
 ) {
+  const outlineWidth = getShapeHandleDotOutlineWidth(normalizedShapeSize);
+
   for (const particle of particles) {
     ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
     ctx.fillStyle = "#ffffff";
-    ctx.lineWidth = SHAPE_DOT_OUTLINE_WIDTH;
+    ctx.lineWidth = outlineWidth;
     ctx.beginPath();
     ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
     ctx.fill();

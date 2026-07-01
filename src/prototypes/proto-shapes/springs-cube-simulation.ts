@@ -1,6 +1,9 @@
 import {
   drawParticlesWithShadow,
   drawTexturedFace,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getShapeNormalizedRenderScale,
   SHAPE_DOT_OUTLINE_WIDTH,
   SHAPE_HANDLE_DOT_RADIUS,
   SHAPE_SPRING_LINE_WIDTH,
@@ -29,7 +32,7 @@ const SHAPE_OFFSETS = [
   { x: 100 * SHAPE_SCALE, y: 0 },
 ] as const;
 
-const COLOR1: [number, number, number] = [110, 16, 250];
+const COLOR1: [number, number, number] = [122, 48, 244];
 
 const SPRING_CONSTANT = 0.1;
 const BASE_REST_LENGTH = 100 * SHAPE_SCALE;
@@ -96,22 +99,22 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number) {
+  update(width: number, height: number, margin: number, physicsScale = 1) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
     this.vy *= this.damping;
-    this.limitVelocities();
+    this.limitVelocities(physicsScale);
     this.px += this.vx;
     this.py += this.vy;
     this.handleBoundaries(width, height, margin);
   }
 
-  limitVelocities() {
+  limitVelocities(physicsScale = 1) {
     if (!this.bLimitVelocities) return;
 
     const speed = Math.hypot(this.vx, this.vy);
-    const maxSpeed = 10;
+    const maxSpeed = 10 * physicsScale;
     if (speed > maxSpeed) {
       this.vx *= maxSpeed / speed;
       this.vy *= maxSpeed / speed;
@@ -152,6 +155,7 @@ export type SpringsCubeSimulation = {
   width: number;
   height: number;
   restLength: number;
+  physicsScale: number;
   margin: number;
   frameCount: number;
   clicked: boolean;
@@ -200,6 +204,7 @@ export function createSpringsCubeSimulation(
     width,
     height,
     restLength: BASE_REST_LENGTH,
+    physicsScale: 1,
     margin: BASE_MARGIN,
     frameCount: 0,
     clicked: false,
@@ -256,7 +261,7 @@ function applySpringForce(
   const dy = p.py - q.py;
   const dh = factor * Math.hypot(dx, dy) * WEB_SCALE;
 
-  if (dh <= 1) return;
+  if (dh <= sim.physicsScale) return;
 
   const distention = dh - sim.restLength;
   const restorativeForce = SPRING_CONSTANT * distention;
@@ -352,8 +357,8 @@ export function stepSpringsCubeSimulation(
   applySpringForces(sim);
 
   for (const particle of sim.particles) {
-    particle.addForce(0, GRAVITY_Y);
-    particle.update(sim.width, sim.height, sim.margin);
+    particle.addForce(0, GRAVITY_Y * sim.physicsScale);
+    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {
@@ -394,6 +399,7 @@ export function drawSpringsCubeSimulation(
     textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
+  const normalizedSize = getShapeNormalizedRenderScale(sim.physicsScale);
 
   if (clearBackground) {
     ctx.fillStyle = "#ffffff";
@@ -409,6 +415,7 @@ export function drawSpringsCubeSimulation(
       canvasWidth: width,
       canvasHeight: height,
       textureEmanationCorner,
+      renderScale,
       ...anchors,
     };
     for (const face of CUBE_TEXTURE_FACES) {
@@ -422,7 +429,7 @@ export function drawSpringsCubeSimulation(
     fillPolygon(ctx, particles, [7, 1, 2, 6], 50 / 255, color);
   }
 
-  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, renderScale);
+  ctx.lineWidth = withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedSize);
 
   for (let i = 0; i < BASE_POINTS; i++) {
     const a = particles[i];
@@ -451,12 +458,12 @@ export function drawSpringsCubeSimulation(
   drawSpring(ctx, particles[5], particles[3], 0, color);
   drawSpring(ctx, particles[7], particles[4], 1, color);
 
-  const dotRadius = withShapeRenderScale(DOT_RADIUS * dotScale, renderScale);
+  const dotRadius = getShapeHandleDotRadius(dotScale, normalizedSize);
   const visibleParticles = particles.filter(
     (_, i) => i !== HIDDEN_PARTICLE_INDEX,
   );
   if (texture) {
-    drawParticlesWithShadow(ctx, visibleParticles, dotRadius, color);
+    drawParticlesWithShadow(ctx, visibleParticles, dotRadius, color, normalizedSize);
   } else {
     for (let i = 0; i < particles.length; i++) {
       if (i === HIDDEN_PARTICLE_INDEX) continue;
@@ -464,7 +471,7 @@ export function drawSpringsCubeSimulation(
       const particle = particles[i];
       ctx.strokeStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       ctx.fillStyle = "#ffffff";
-      ctx.lineWidth = withShapeRenderScale(SHAPE_DOT_OUTLINE_WIDTH, renderScale);
+      ctx.lineWidth = getShapeHandleDotOutlineWidth(normalizedSize);
       ctx.beginPath();
       ctx.arc(particle.px, particle.py, dotRadius, 0, Math.PI * 2);
       ctx.fill();

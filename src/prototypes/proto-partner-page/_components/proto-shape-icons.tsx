@@ -56,7 +56,7 @@ export function ProtoShapeIcon({
             points="12,4 20,18 4,18"
             fill={fill}
             stroke={stroke}
-            strokeWidth="1.5"
+            strokeWidth="1"
             strokeLinejoin="round"
           />
         ) : null}
@@ -66,7 +66,7 @@ export function ProtoShapeIcon({
               d="M6 9 L12 5 L18 9 L18 15 L12 19 L6 15 Z"
               fill={fill}
               stroke={stroke}
-              strokeWidth="1.5"
+              strokeWidth="1"
               strokeLinejoin="round"
             />
             <path
@@ -82,7 +82,7 @@ export function ProtoShapeIcon({
             points="12,3 20,9 17,19 7,19 4,9"
             fill={fill}
             stroke={stroke}
-            strokeWidth="1.5"
+            strokeWidth="1"
             strokeLinejoin="round"
           />
         ) : null}
@@ -96,7 +96,7 @@ export function ProtoShapeIcon({
               rx="1"
               fill={fill}
               stroke={stroke}
-              strokeWidth="1.5"
+              strokeWidth="1"
             />
             <path
               d="M5 12 L19 12 M12 5 L12 19"
@@ -112,7 +112,7 @@ export function ProtoShapeIcon({
               points="6,8 12,4 18,8 18,16 12,20 6,16"
               fill={fill}
               stroke={stroke}
-              strokeWidth="1.5"
+              strokeWidth="1"
               strokeLinejoin="round"
             />
             <path

@@ -55,6 +55,21 @@ import {
   updateSpringsTriangleSimulationBounds,
   type SpringsTriangleSimulation,
 } from "./springs-triangle-simulation";
+import { getPrototypeShapeLayoutScales } from "./shape-textures";
+
+// The editor renders shapes at their authored (unscaled) geometry, i.e.
+// layoutShapeScale = 1. Deriving the decoration scales from the shared helper
+// keeps dots, lines, outlines, and patterns on the same normalized proportion
+// as the partner and home canvases.
+const { dotScale: SPRINGS_CANVAS_DOT_SCALE, renderScale: SPRINGS_CANVAS_RENDER_SCALE } =
+  getPrototypeShapeLayoutScales({ layoutShapeScale: 1 });
+
+const SPRINGS_CANVAS_DRAW_OPTIONS = {
+  clearBackground: false,
+  showHint: false,
+  dotScale: SPRINGS_CANVAS_DOT_SCALE,
+  renderScale: SPRINGS_CANVAS_RENDER_SCALE,
+} as const;
 
 type CanvasSize = {
   cssWidth: number;
@@ -187,8 +202,7 @@ function createShapeSlots(): ShapeSlot[] {
         ),
       draw: (ctx, sim) =>
         drawSpringsTriangleSimulation(ctx, sim as SpringsTriangleSimulation, {
-          clearBackground: false,
-          showHint: false,
+          ...SPRINGS_CANVAS_DRAW_OPTIONS,
         }),
       collisionEdges: TRIANGLE_COLLISION_EDGES,
     },
@@ -216,8 +230,7 @@ function createShapeSlots(): ShapeSlot[] {
         stepSpringsCubeSimulation(sim as SpringsCubeSimulation, input),
       draw: (ctx, sim) =>
         drawSpringsCubeSimulation(ctx, sim as SpringsCubeSimulation, {
-          clearBackground: false,
-          showHint: false,
+          ...SPRINGS_CANVAS_DRAW_OPTIONS,
         }),
       collisionEdges: CUBE_COLLISION_EDGES,
     },
@@ -248,8 +261,7 @@ function createShapeSlots(): ShapeSlot[] {
         ),
       draw: (ctx, sim) =>
         drawSpringsPentagonSimulation(ctx, sim as SpringsPentagonSimulation, {
-          clearBackground: false,
-          showHint: false,
+          ...SPRINGS_CANVAS_DRAW_OPTIONS,
         }),
       collisionEdges: PENTAGON_COLLISION_EDGES,
     },
@@ -280,8 +292,7 @@ function createShapeSlots(): ShapeSlot[] {
         ),
       draw: (ctx, sim) =>
         drawSpringsSquareSimulation(ctx, sim as SpringsSquareSimulation, {
-          clearBackground: false,
-          showHint: false,
+          ...SPRINGS_CANVAS_DRAW_OPTIONS,
         }),
       collisionEdges: SQUARE_COLLISION_EDGES,
     },
@@ -309,8 +320,7 @@ function createShapeSlots(): ShapeSlot[] {
         stepSpringsPrismSimulation(sim as SpringsPrismSimulation, input),
       draw: (ctx, sim) =>
         drawSpringsPrismSimulation(ctx, sim as SpringsPrismSimulation, {
-          clearBackground: false,
-          showHint: false,
+          ...SPRINGS_CANVAS_DRAW_OPTIONS,
         }),
       collisionEdges: PRISM_COLLISION_EDGES,
     },

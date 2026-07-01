@@ -67,7 +67,7 @@ const SHAPE_PICKER_ROW_CLASS =
 const TEXTURE_PICKER_ROW_CLASS =
   "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-3 [&>button]:cursor-pointer";
 
-const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_2px_rgb(0_0_0/0.85)]";
+const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_1px_rgb(0_0_0/0.85)]";
 
 const SHAPE_TILE_ICON_CLASS = "size-8 md:size-7";
 

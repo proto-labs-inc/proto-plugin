@@ -57,11 +57,13 @@ import {
 import { bindSpringsCanvasPointerHandlers } from "../proto-shapes/springs-canvas-pointer";
 import {
   DEFAULT_PROTO_TEXTURE_ID,
-  SHAPE_DOT_OUTLINE_WIDTH,
-  SHAPE_HANDLE_DOT_RADIUS,
+  getShapeHandleDotOutlineWidth,
+  getShapeHandleDotRadius,
+  getPrototypeShapeLayoutScales,
   SHAPE_SPRING_LINE_WIDTH,
   withShapeRenderScale,
 } from "../proto-shapes/shape-textures";
+import { scaleSpringsSimulationAroundCentroid } from "../proto-shapes/springs-physics-scale";
 
 type CanvasSize = {
   cssWidth: number;
@@ -260,13 +262,8 @@ function rgbNearEqual(a: ProtoRgb, b: ProtoRgb, epsilon = 0.5): boolean {
 
 const PARTNER_MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
 const MOBILE_SHAPE_SCALE = 1.35;
-const MOBILE_DOT_SCALE = 1;
 /** Give the protoshape more room on desktop invite/home layouts. */
 const DESKTOP_SHAPE_SCALE = 1.75;
-/** Handle dots stay smaller than the shape so they don't balloon with layout scale. */
-const DESKTOP_DOT_SCALE = 1.12;
-/** Three-pyramid chain reads smaller at the same base span; boost on partner page. */
-const THREE_PART_SHAPE_SCALE = 1.2;
 /** Match proto-shapes vertical placement (yFactor 0.33). */
 const SHAPE_SPAWN_Y_FACTOR = 0.33;
 const WARM_START_FRAMES = 120;
@@ -301,13 +298,17 @@ function getPartnerShapeLayout(
 ) {
   const mobile = isMobileViewport();
   const baseScale = mobile ? MOBILE_SHAPE_SCALE : DESKTOP_SHAPE_SCALE;
-  const dotScale = mobile ? MOBILE_DOT_SCALE : DESKTOP_DOT_SCALE;
-  const shapeScale =
-    (shapeId === "square" ? baseScale * THREE_PART_SHAPE_SCALE : baseScale) *
-    visualScale;
+  const { shapeScale, dotScale, renderScale, normalizedRenderScale } =
+    getPrototypeShapeLayoutScales({
+    layoutShapeScale: baseScale,
+    visualScale,
+    isThreePartShape: shapeId === "square",
+  });
   return {
     scale: shapeScale,
     dotScale,
+    renderScale,
+    normalizedRenderScale,
     spawnY: cssHeight * SHAPE_SPAWN_Y_FACTOR,
   };
 }
@@ -384,18 +385,8 @@ function applySimulationPose(
 
   if (scaleFactor !== 1) {
     sim.restLength *= scaleFactor;
+    sim.physicsScale *= scaleFactor;
   }
-}
-
-function scaleSimulationAroundCentroid(sim: SpringsSimulation, scale: number) {
-  if (scale === 1) return;
-
-  const centroid = getSimulationCentroid(sim);
-  for (const particle of sim.particles) {
-    particle.px = centroid.x + (particle.px - centroid.x) * scale;
-    particle.py = centroid.y + (particle.py - centroid.y) * scale;
-  }
-  sim.restLength *= scale;
 }
 
 function getShapeRestPoint(
@@ -456,14 +447,15 @@ function resolveEffectiveShapeMargin(
 ) {
   if (shapeMargin == null) return undefined;
 
-  const { dotScale } = getPartnerShapeLayout(cssHeight, shapeId, visualScale);
+  const { dotScale, normalizedRenderScale } = getPartnerShapeLayout(
+    cssHeight,
+    shapeId,
+    visualScale,
+  );
   const renderBleed =
-    withShapeRenderScale(
-      SHAPE_HANDLE_DOT_RADIUS * dotScale * dotBoost,
-      visualScale,
-    ) +
-    SHAPE_DOT_OUTLINE_WIDTH +
-    withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, visualScale) / 2;
+    getShapeHandleDotRadius(dotScale * dotBoost, normalizedRenderScale) +
+    getShapeHandleDotOutlineWidth(normalizedRenderScale) +
+    withShapeRenderScale(SHAPE_SPRING_LINE_WIDTH, normalizedRenderScale) / 2;
 
   return Math.ceil(shapeMargin + renderBleed);
 }
@@ -510,7 +502,7 @@ function createSimulationAtSpawn(
   const spawn = spawnPoint ?? getShapeRestPoint(cssWidth, cssHeight, shapeId);
   const sim = runtime.create(cssWidth, cssHeight, spawn.x, spawn.y);
   const { scale } = getPartnerShapeLayout(cssHeight, shapeId, visualScale);
-  scaleSimulationAroundCentroid(sim, scale);
+  scaleSpringsSimulationAroundCentroid(sim, scale);
 
   if (options.preservedPose) {
     warmStartSimulation(runtime, sim);
@@ -814,7 +806,7 @@ export function PartnerShapeCanvas({
       }
 
       const visualScale = shapeScaleRef.current;
-      const { dotScale } = getPartnerShapeLayout(
+      const { dotScale, renderScale } = getPartnerShapeLayout(
         cssHeight,
         activeShapeRef.current,
         visualScale,
@@ -827,7 +819,7 @@ export function PartnerShapeCanvas({
         displayColorRef.current,
         targetTextureRef.current,
         renderDotScale,
-        visualScale,
+        renderScale,
       );
 
       rafRef.current = requestAnimationFrame(frame);
