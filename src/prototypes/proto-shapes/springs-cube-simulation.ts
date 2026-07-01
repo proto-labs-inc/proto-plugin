@@ -7,6 +7,7 @@ import {
   SHAPE_TEXTURE_ANCHORS,
   withShapeRenderScale,
   type ProtoTextureId,
+  type TextureEmanationCorner,
 } from "./shape-textures";
 
 const BASE_POINTS = 4;
@@ -375,6 +376,7 @@ export type DrawSpringsSimulationOptions = {
   dotScale?: number;
   /** Uniform scale for spring strokes and dot outlines (matches sim downscaling). */
   renderScale?: number;
+  textureEmanationCorner?: TextureEmanationCorner;
 };
 
 export function drawSpringsCubeSimulation(
@@ -389,6 +391,7 @@ export function drawSpringsCubeSimulation(
     texture,
     dotScale = 1,
     renderScale = 1,
+    textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
 
@@ -405,6 +408,7 @@ export function drawSpringsCubeSimulation(
       color,
       canvasWidth: width,
       canvasHeight: height,
+      textureEmanationCorner,
       ...anchors,
     };
     for (const face of CUBE_TEXTURE_FACES) {

@@ -11,6 +11,13 @@ export type ProtoTextureId = (typeof PROTO_TEXTURES)[number];
 
 export const DEFAULT_PROTO_TEXTURE_ID: ProtoTextureId = "Solid";
 
+/** Canvas corner where card-preview textures are strongest and fade outward. */
+export type TextureEmanationCorner =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
+
 export type ShapeTextureColor = [number, number, number];
 
 /** Scale spring strokes and dot metrics for smaller preview renders. */
@@ -141,7 +148,7 @@ function fillWorldJointEmanationGradient(
 ) {
   const [cr, cg, cb] = color;
   const jointSpan = Math.hypot(j2.px - j1.px, j2.py - j1.py) || 1;
-  const radius = jointSpan * 1.45;
+  const radius = jointSpan * 1.22;
 
   for (const joint of [j1, j2]) {
     const g = ctx.createRadialGradient(
@@ -152,9 +159,9 @@ function fillWorldJointEmanationGradient(
       joint.py,
       radius,
     );
-    g.addColorStop(0, rgb(cr, cg, cb, 255));
-    g.addColorStop(0.2, rgb(cr, cg, cb, 190));
-    g.addColorStop(0.45, rgb(cr, cg, cb, 55));
+    g.addColorStop(0, rgb(cr, cg, cb, 210));
+    g.addColorStop(0.18, rgb(cr, cg, cb, 130));
+    g.addColorStop(0.38, rgb(cr, cg, cb, 32));
     g.addColorStop(1, rgb(cr, cg, cb, 0));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -212,6 +219,326 @@ function fillRadialAnchorGradient(
   ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
 }
 
+function getTextureEmanationCornerPoint(
+  canvasWidth: number,
+  canvasHeight: number,
+  corner: TextureEmanationCorner,
+) {
+  switch (corner) {
+    case "bottom-right":
+      return { x: canvasWidth, y: canvasHeight };
+    case "bottom-left":
+      return { x: 0, y: canvasHeight };
+    case "top-right":
+      return { x: canvasWidth, y: 0 };
+    case "top-left":
+      return { x: 0, y: 0 };
+  }
+}
+
+function parseCssColorChannels(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    const hex = color.slice(1);
+    if (hex.length === 3) {
+      return [
+        Number.parseInt(hex[0]! + hex[0], 16),
+        Number.parseInt(hex[1]! + hex[1], 16),
+        Number.parseInt(hex[2]! + hex[2], 16),
+      ];
+    }
+    return [
+      Number.parseInt(hex.slice(0, 2), 16),
+      Number.parseInt(hex.slice(2, 4), 16),
+      Number.parseInt(hex.slice(4, 6), 16),
+    ];
+  }
+
+  const match = color.match(/rgba?\(([^)]+)\)/);
+  if (match) {
+    const [r, g, b] = match[1]!
+      .split(",")
+      .map((part) => Number.parseFloat(part.trim()));
+    return [r ?? 255, g ?? 255, b ?? 255];
+  }
+
+  return [255, 255, 255];
+}
+
+/** Card inset — full-canvas texture wash anchored at a corner. */
+export type CanvasTextureEmanationRegion = "card" | "footer";
+
+export type CanvasTextureEmanationOptions = {
+  region?: CanvasTextureEmanationRegion;
+  /** Scales texture alpha; use below 1 for quieter washes (e.g. CTA buttons). */
+  intensity?: number;
+};
+
+/** Footer title band — keep pattern textures quieter than the shape above. */
+const FOOTER_NON_GRADIENT_TEXTURE_OPACITY = 0.38;
+
+function getEmanationMetrics(
+  width: number,
+  height: number,
+  region: CanvasTextureEmanationRegion,
+) {
+  const minDim = Math.min(width, height);
+  if (region === "footer") {
+    return {
+      textureRadius: minDim * 0.52,
+      fadeRadius: Math.hypot(width, height) * 1.05,
+      // Footer uses a horizontal mask; the radial value is unused.
+      maskRadius: Math.hypot(width, height),
+      textureCompact: false,
+    };
+  }
+  return {
+    textureRadius: minDim * 0.13,
+    fadeRadius: Math.hypot(width, height) * 0.5,
+    // Keep card texture a tight cluster in the corner — it must not bleed into
+    // the shape canvas layered on top.
+    maskRadius: minDim * 0.34,
+    textureCompact: true,
+  };
+}
+
+function applyFooterEmanationMask(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  backgroundRgb: [number, number, number],
+) {
+  const [br, bg, bb] = backgroundRgb;
+  const mask = ctx.createLinearGradient(0, 0, width, 0);
+  mask.addColorStop(0, rgb(br, bg, bb, 255));
+  mask.addColorStop(0.28, rgb(br, bg, bb, 255));
+  mask.addColorStop(0.48, rgb(br, bg, bb, 220));
+  mask.addColorStop(0.62, rgb(br, bg, bb, 155));
+  mask.addColorStop(0.74, rgb(br, bg, bb, 85));
+  mask.addColorStop(0.86, rgb(br, bg, bb, 30));
+  mask.addColorStop(1, rgb(br, bg, bb, 0));
+  ctx.fillStyle = mask;
+  ctx.fillRect(0, 0, width, height);
+}
+
+/**
+ * Paint a repeating texture across the ENTIRE layer so there is never a
+ * rectangular tile boundary. The caller then dissolves it with an alpha mask.
+ */
+function paintEmanationTextureLayer(
+  ctx: CanvasRenderingContext2D,
+  texture: ProtoTextureId,
+  width: number,
+  height: number,
+  color: ShapeTextureColor,
+  anchorX: number,
+  anchorY: number,
+  region: CanvasTextureEmanationRegion,
+) {
+  const [cr, cg, cb] = color;
+  const shades = textureShades(color);
+  const compact = region === "card";
+  const minDim = Math.min(width, height);
+
+  if (texture === "Solid") {
+    ctx.fillStyle = rgb(cr, cg, cb, SHAPE_PREVIEW_ALPHA);
+    ctx.fillRect(0, 0, width, height);
+    return;
+  }
+
+  if (texture === "Waves") {
+    // Card previews use a small, dense pattern concentrated in the corner;
+    // the footer uses larger bands that read across the band.
+    const bandH = region === "footer" ? height / 3.2 : minDim * 0.055;
+    const amp = bandH * 0.45;
+    const wavelength = region === "footer" ? 34 : 14;
+    const step = compact ? 5 : 6;
+    let i = 0;
+    for (let y = -bandH; y < height + bandH; y += bandH, i++) {
+      ctx.fillStyle = rgb(cr, cg, cb, i % 2 ? 150 : 235);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      for (let x = 0; x <= width; x += step) {
+        ctx.lineTo(x, y + Math.sin(x / wavelength + i) * amp);
+      }
+      for (let x = width; x >= 0; x -= step) {
+        ctx.lineTo(x, y + bandH + Math.sin(x / wavelength + i) * amp);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+    return;
+  }
+
+  if (texture === "Dots") {
+    ctx.fillStyle = rgb(cr, cg, cb, 55);
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = rgb(cr, cg, cb, 235);
+    const gap = compact ? 11 : 16;
+    const dotRadius = compact ? 2.5 : 4;
+    for (let x = gap / 2; x <= width; x += gap) {
+      for (let y = gap / 2; y <= height; y += gap) {
+        ctx.beginPath();
+        ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    return;
+  }
+
+  if (texture === "Grid") {
+    ctx.fillStyle = rgb(cr, cg, cb, 55);
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = rgb(cr, cg, cb, 235);
+    ctx.lineWidth = compact ? 1.25 : 2;
+    const gap = compact ? 11 : 16;
+    ctx.beginPath();
+    for (let x = gap / 2; x <= width; x += gap) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+    }
+    for (let y = gap / 2; y <= height; y += gap) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+    }
+    ctx.stroke();
+    return;
+  }
+
+  if (texture === "Rings") {
+    const [rr, rg, rb] = shades.ringAlt;
+    const step = compact ? 8 : 12;
+    const maxRad = Math.hypot(width, height);
+    const radii: number[] = [];
+    for (let rad = maxRad; rad > 0; rad -= step) {
+      radii.push(rad);
+    }
+    for (let i = 0; i < radii.length; i++) {
+      const outer = radii[i]!;
+      const inner = i + 1 < radii.length ? radii[i + 1]! : 0;
+      ctx.fillStyle = i % 2 ? rgb(cr, cg, cb, 165) : rgb(rr, rg, rb, 48);
+      ctx.beginPath();
+      ctx.arc(anchorX, anchorY, outer, 0, Math.PI * 2);
+      if (inner > 0) {
+        ctx.arc(anchorX, anchorY, inner, 0, Math.PI * 2, true);
+      }
+      ctx.fill("evenodd");
+    }
+    return;
+  }
+}
+
+/** White alpha mask concentrating the texture near the emanation corner. */
+function applyEmanationAlphaMask(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  anchorX: number,
+  anchorY: number,
+  maskRadius: number,
+  region: CanvasTextureEmanationRegion,
+) {
+  ctx.globalCompositeOperation = "destination-in";
+
+  if (region === "footer") {
+    // Full-height on the right, dissolving smoothly toward the title on the left.
+    const mask = ctx.createLinearGradient(0, 0, width, 0);
+    mask.addColorStop(0, "rgba(255,255,255,0)");
+    mask.addColorStop(0.34, "rgba(255,255,255,0)");
+    mask.addColorStop(0.52, "rgba(255,255,255,0.4)");
+    mask.addColorStop(0.72, "rgba(255,255,255,0.82)");
+    mask.addColorStop(0.9, "rgba(255,255,255,1)");
+    mask.addColorStop(1, "rgba(255,255,255,1)");
+    ctx.fillStyle = mask;
+    ctx.fillRect(0, 0, width, height);
+  } else {
+    // Tight cluster in the corner so it does not bleed into the shape canvas.
+    const mask = ctx.createRadialGradient(
+      anchorX,
+      anchorY,
+      0,
+      anchorX,
+      anchorY,
+      maskRadius,
+    );
+    mask.addColorStop(0, "rgba(255,255,255,1)");
+    mask.addColorStop(0.32, "rgba(255,255,255,1)");
+    mask.addColorStop(0.6, "rgba(255,255,255,0.5)");
+    mask.addColorStop(0.82, "rgba(255,255,255,0.15)");
+    mask.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = mask;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  ctx.globalCompositeOperation = "source-over";
+}
+
+export function drawCanvasTextureEmanation(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  texture: ProtoTextureId,
+  color: ShapeTextureColor,
+  corner: TextureEmanationCorner,
+  backgroundColor = "#ffffff",
+  options: CanvasTextureEmanationOptions = {},
+) {
+  const region = options.region ?? "card";
+  const intensity = options.intensity ?? 1;
+  const { fadeRadius, maskRadius } = getEmanationMetrics(width, height, region);
+  const [br, bg, bb] = parseCssColorChannels(backgroundColor);
+  const { x, y } = getTextureEmanationCornerPoint(width, height, corner);
+  const [cr, cg, cb] = color;
+
+  if (texture === "Gradient") {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, fadeRadius);
+    if (region === "footer") {
+      g.addColorStop(0, rgb(cr, cg, cb, Math.round(215 * intensity)));
+      g.addColorStop(0.38, rgb(cr, cg, cb, Math.round(145 * intensity)));
+      g.addColorStop(0.58, rgb(cr, cg, cb, Math.round(72 * intensity)));
+      g.addColorStop(0.76, rgb(cr, cg, cb, Math.round(22 * intensity)));
+      g.addColorStop(0.9, rgb(br, bg, bb, 0));
+      g.addColorStop(1, rgb(br, bg, bb, 0));
+    } else {
+      g.addColorStop(0, rgb(cr, cg, cb, 235));
+      g.addColorStop(0.16, rgb(cr, cg, cb, 170));
+      g.addColorStop(0.34, rgb(cr, cg, cb, 88));
+      g.addColorStop(0.5, rgb(cr, cg, cb, 28));
+      g.addColorStop(0.62, rgb(cr, cg, cb, 0));
+      g.addColorStop(1, rgb(br, bg, bb, 0));
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+    if (region === "footer") {
+      applyFooterEmanationMask(ctx, width, height, [br, bg, bb]);
+    }
+    return;
+  }
+
+  // Render the repeating texture into an offscreen layer that fills the whole
+  // canvas, then dissolve it with an alpha mask so it fades out with no hard
+  // rectangular edge. The transparent areas reveal the background already
+  // painted onto the destination canvas by the caller.
+  const transform = ctx.getTransform();
+  const dpr = transform.a || 1;
+  const layer = document.createElement("canvas");
+  layer.width = Math.max(1, Math.round(width * dpr));
+  layer.height = Math.max(1, Math.round(height * dpr));
+  const lctx = layer.getContext("2d");
+  if (!lctx) return;
+  lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  paintEmanationTextureLayer(lctx, texture, width, height, color, x, y, region);
+  applyEmanationAlphaMask(lctx, width, height, x, y, maskRadius, region);
+
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (region === "footer") {
+    ctx.globalAlpha = FOOTER_NON_GRADIENT_TEXTURE_OPACITY * intensity;
+  }
+  ctx.drawImage(layer, 0, 0);
+  ctx.restore();
+}
+
 function fillFadeToInnerGradient(
   ctx: CanvasRenderingContext2D,
   cover: number,
@@ -247,9 +574,10 @@ export function drawTextureLocal(
   gradientFadeLocal?: { x: number; y: number },
   gradientRadialCenterLocal?: { x: number; y: number },
   gradientRadialPronounced?: boolean,
+  compact = false,
 ) {
-  const s = r * 1.8;
-  const cover = s * 1.7;
+  const s = r * (compact ? 1.35 : 1.8);
+  const cover = s * (compact ? 1.25 : 1.7);
   const [cr, cg, cb] = color;
   const shades = textureShades(color);
 
@@ -286,27 +614,42 @@ export function drawTextureLocal(
     }
   } else if (texture === "Waves") {
     const [pr, pg, pb] = shades.pale;
-    ctx.fillStyle = rgb(pr, pg, pb, 255);
-    ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
-    const bands = 8;
-    const bandH = (s * 2) / bands;
+    ctx.fillStyle = rgb(pr, pg, pb, compact ? 0 : 255);
+    if (!compact) {
+      ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
+    }
+    const bands = compact ? 11 : 8;
+    const bandH = (compact ? r * 1.35 : s * 2) / bands;
     for (let i = 0; i < bands; i++) {
-      const y = -s + i * bandH;
+      const y = compact ? -i * bandH : -s + i * bandH;
       ctx.fillStyle = rgb(cr, cg, cb, i % 2 ? 150 : 235);
       ctx.beginPath();
       ctx.moveTo(-cover, y);
-      for (let x = -cover; x <= cover; x += 6) {
-        ctx.lineTo(x, y + Math.sin(x / 16 + i) * bandH * 0.45);
+      for (let x = -cover; x <= cover; x += compact ? 5 : 6) {
+        ctx.lineTo(
+          x,
+          y +
+            Math.sin(x / (compact ? 9 : 16) + i) *
+              bandH *
+              (compact ? 0.35 : 0.45),
+        );
       }
-      for (let x = cover; x >= -cover; x -= 6) {
-        ctx.lineTo(x, y + bandH + Math.sin(x / 16 + i) * bandH * 0.45);
+      for (let x = cover; x >= -cover; x -= compact ? 5 : 6) {
+        ctx.lineTo(
+          x,
+          y +
+            bandH +
+            Math.sin(x / (compact ? 9 : 16) + i) *
+              bandH *
+              (compact ? 0.35 : 0.45),
+        );
       }
       ctx.closePath();
       ctx.fill();
     }
   } else if (texture === "Rings") {
-    const maxRad = cover * 2.4;
-    const step = Math.max(6, s / 9);
+    const maxRad = compact ? r * 1.55 : cover * 2.4;
+    const step = compact ? Math.max(4, r / 5.5) : Math.max(6, s / 9);
     const radii: number[] = [];
     for (let rad = maxRad; rad > 0; rad -= step) {
       radii.push(rad);
@@ -327,11 +670,12 @@ export function drawTextureLocal(
     ctx.fillStyle = rgb(cr, cg, cb, 60);
     ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
     ctx.fillStyle = rgb(cr, cg, cb, 235);
-    const gap = 18;
+    const gap = compact ? 11 : 18;
+    const dotRadius = compact ? 2.5 : 4;
     for (let x = -cover; x <= cover; x += gap) {
       for (let y = -cover; y <= cover; y += gap) {
         ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -339,8 +683,8 @@ export function drawTextureLocal(
     ctx.fillStyle = rgb(cr, cg, cb, 60);
     ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
     ctx.strokeStyle = rgb(cr, cg, cb, 235);
-    ctx.lineWidth = 2;
-    const gap = 18;
+    ctx.lineWidth = compact ? 1.25 : 2;
+    const gap = compact ? 11 : 18;
     ctx.beginPath();
     for (let x = -cover; x <= cover; x += gap) {
       ctx.moveTo(x, -cover);
@@ -382,6 +726,8 @@ export type DrawTexturedFaceParams = {
   gradientRadialCenterParticleIndex?: number;
   /** Tighter, higher-contrast radial falloff (cube hub). */
   gradientRadialPronounced?: boolean;
+  /** Card previews — texture is strongest at this canvas corner and fades out. */
+  textureEmanationCorner?: TextureEmanationCorner;
   ringParticleIndex: number;
   opacity?: number;
 };
@@ -437,6 +783,7 @@ export function drawTexturedFace(
     x: rdx * Math.cos(-angle) - rdy * Math.sin(-angle),
     y: rdx * Math.sin(-angle) + rdy * Math.cos(-angle),
   };
+  ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(angle);
   const onFaceIndices = gradientIndices.filter((index) =>
@@ -476,6 +823,8 @@ export function drawTexturedFace(
     gradientRadialCenterLocal,
     params.gradientRadialPronounced,
   );
+  ctx.restore();
+
   ctx.restore();
 }
 

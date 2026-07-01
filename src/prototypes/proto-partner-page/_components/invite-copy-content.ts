@@ -41,5 +41,6 @@ export const INVITE_COPY = {
   invite:
     "You've been invited to be a design partner for Maayan's new prototyping tool, Proto. This is because you're excellent and talented and also someone she thinks is cool.",
   followUp:
-    "Maayan is currently in the process of onboarding everyone, so it may take some time to get you access. In the meantime, you can customize your Proto Shape (this will be relevant later I promise).",
+    "To accept your invite, please make your own protoshape, which will appear on the website home page. Maayan is currently in the process of onboarding everyone, so it may take some time to get you access. If you really really want access now, you can nudge her and she'll do her best to aquiesce.",
+  cta: "Make shape to accept invite",
 } as const;

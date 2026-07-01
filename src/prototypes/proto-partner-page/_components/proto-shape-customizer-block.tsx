@@ -660,7 +660,7 @@ function CompactMinimalDockControls({
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col px-4 pt-2 pb-3 sm:px-5 sm:pt-4 sm:pb-3 md:max-w-none md:px-8 md:pt-4 md:pb-4">
+    <div className="mx-auto flex w-full max-w-md flex-col px-4 pt-2 pb-3 sm:px-5 sm:pt-4 sm:pb-3 md:max-w-none md:px-8 md:pt-2 md:pb-2">
       <DualRowControls
         selection={selection}
         onSelectionChange={onSelectionChange}

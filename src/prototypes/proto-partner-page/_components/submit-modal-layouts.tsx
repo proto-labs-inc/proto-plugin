@@ -3,14 +3,21 @@
 import { cn } from "@prototype/lib/utils";
 import { ArrowRight } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 
-import { PartnerShapeCanvas } from "../partner-shape-canvas";
 import {
-  submitModalActionsClass,
-  submitModalSeeHomepageButtonClass,
-} from "./invite-layout-classes";
+  getIsMobileViewport,
+  PartnerShapeCanvas,
+  subscribeToMobileViewport,
+} from "../partner-shape-canvas";
+import { submitModalActionsClass } from "./invite-layout-classes";
+import { SubmitModalCardTextureBackground } from "./submit-modal-card-texture-background";
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
-import { getProtoColor, type ProtoColorId, type ProtoRgb } from "./proto-shape-content";
+import {
+  getProtoColor,
+  type ProtoColorId,
+  type ProtoRgb,
+} from "./proto-shape-content";
 import {
   SUBMIT_MODAL_TITLE_BOLD_PREFIX,
   SUBMIT_MODAL_TITLE_SECOND_LINE,
@@ -18,6 +25,7 @@ import {
 
 export type SubmitModalLayoutVariant =
   | "square-cap"
+  | "square-cap-full-bleed"
   | "grey-title-top"
   | "poster-scrim"
   | "split-pane"
@@ -29,8 +37,12 @@ const CANVAS_WHITE = "#ffffff";
 const GREY_CARD_MAX_WIDTH = "18.5rem";
 /** Portrait card — wider than golden ratio, less extreme profile. */
 const GREY_CARD_ASPECT = "3 / 4";
+/** Full-bleed card — matches reference image proportion (460 × 572 ≈ 4:5). */
+const FULL_BLEED_CARD_ASPECT = "460 / 572";
 /** Multiplies partner-page layout scale (~1.75 desktop); ~0.55 ≈ 55% of full fill. */
 const SUBMIT_MODAL_SHAPE_SCALE = 0.55;
+/** Mobile card shapes get extra room — keyed to viewport width, not prototype preview mode. */
+const SUBMIT_MODAL_SHAPE_SCALE_MOBILE = 0.72;
 const SUBMIT_MODAL_SHAPE_MARGIN = 4;
 const GREY_CARD_SHELL_CLASS =
   "mx-auto flex w-full max-w-[min(23rem,calc(100%-2rem))] flex-col gap-4";
@@ -68,25 +80,75 @@ function getSubmitModalMellowAccent(rgb: ProtoRgb): string {
   return rgbCss(mixRgb(rgb, WHITE_RGB, 0.86));
 }
 
-function getSubmitModalAccentButtonStyles(rgb: ProtoRgb) {
+function getSubmitModalAccentButtonStyles(
+  rgb: ProtoRgb,
+  colorId: ProtoColorId,
+) {
   return {
-    background: getSubmitModalMellowAccent(rgb),
-    hoverBackground: rgbCss(mixRgb(rgb, WHITE_RGB, 0.8)),
-    border: getSubmitModalDeepAccent(rgb),
-    text: getSubmitModalDeepAccent(rgb),
+    background: rgbCss(rgb),
+    hoverBackground: rgbCss(mixRgb(rgb, BLACK_RGB, 0.12)),
+    text: colorId === "gold" || colorId === "pink" ? "#1a1a1a" : "#ffffff",
   };
 }
 
+const SUBMIT_MODAL_ACTION_BUTTON_CLASS =
+  "group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-3 text-[1rem] font-medium tracking-[-0.01em] transition-opacity hover:opacity-90 md:text-[0.875rem]";
+
 export function SubmitModalActions({
   colorId,
+  selection,
   onSeeOnHomepage,
   className,
+  buttonClassName,
+  backgroundVariant = "solid",
 }: Pick<SubmitModalLayoutProps, "onSeeOnHomepage"> & {
   colorId: ProtoColorId;
+  selection?: ProtoShapeSelection;
+  backgroundVariant?: "solid" | "footer-texture";
   className?: string;
+  buttonClassName?: string;
 }) {
   const { rgb } = getProtoColor(colorId);
-  const accentStyles = getSubmitModalAccentButtonStyles(rgb);
+  const accentStyles = getSubmitModalAccentButtonStyles(rgb, colorId);
+  const footerBackground = getSubmitModalMellowAccent(rgb);
+  const footerTextColor = getSubmitModalDeepAccent(rgb);
+
+  const buttonLabel = (
+    <>
+      <span>See shape on homepage</span>
+      <ArrowRight
+        className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
+        aria-hidden
+      />
+    </>
+  );
+
+  if (backgroundVariant === "footer-texture" && selection) {
+    return (
+      <div className={cn(submitModalActionsClass, className)}>
+        {/* Shadow on a non-clipping wrapper — see full-bleed card note; the
+            inner texture layer keeps `overflow:hidden` for the rounded clip. */}
+        <div className={cn("rounded-xl shadow-lg", buttonClassName)}>
+          <SubmitModalCardTextureBackground
+            selection={selection}
+            backgroundColor={footerBackground}
+            emanationRegion="footer"
+            textureIntensity={0.45}
+            className="overflow-hidden rounded-xl transition-opacity hover:opacity-90"
+          >
+            <button
+              type="button"
+              onClick={onSeeOnHomepage}
+              className={SUBMIT_MODAL_ACTION_BUTTON_CLASS}
+              style={{ color: footerTextColor, backgroundColor: "transparent" }}
+            >
+              {buttonLabel}
+            </button>
+          </SubmitModalCardTextureBackground>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(submitModalActionsClass, className)}>
@@ -97,22 +159,56 @@ export function SubmitModalActions({
           {
             "--btn-bg": accentStyles.background,
             "--btn-bg-hover": accentStyles.hoverBackground,
-            "--btn-border": accentStyles.border,
             "--btn-text": accentStyles.text,
             backgroundColor: "var(--btn-bg)",
-            borderColor: "var(--btn-border)",
             color: "var(--btn-text)",
           } as CSSProperties
         }
-        className={submitModalSeeHomepageButtonClass}
+        className={cn(
+          SUBMIT_MODAL_ACTION_BUTTON_CLASS,
+          "transition-colors hover:[background-color:var(--btn-bg-hover)] hover:opacity-100",
+          buttonClassName,
+        )}
       >
-        <span>See shape on homepage</span>
-        <ArrowRight
-          className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
-          aria-hidden
-        />
+        {buttonLabel}
       </button>
     </div>
+  );
+}
+
+function SubmitModalInviteAcceptedLabel({
+  colorId,
+  placement = "overlay",
+}: {
+  colorId: ProtoColorId;
+  placement?: "overlay" | "above";
+}) {
+  const textColor =
+    placement === "above"
+      ? "#ffffff"
+      : getSubmitModalDeepAccent(getProtoColor(colorId).rgb);
+
+  return (
+    <p
+      className={cn(
+        "pointer-events-none text-center tracking-[-0.02em] leading-[1.35]",
+        placement === "overlay"
+          ? "absolute inset-x-0 top-3 z-10 text-[1rem] font-medium md:text-[0.875rem]"
+          : "text-[1rem] font-bold",
+      )}
+      style={{ color: textColor }}
+    >
+      Shape submitted &<br />
+      invite accepted!
+    </p>
+  );
+}
+
+function useMobileViewport() {
+  return useSyncExternalStore(
+    subscribeToMobileViewport,
+    getIsMobileViewport,
+    () => false,
   );
 }
 
@@ -120,15 +216,24 @@ function ShapePreview({
   selection,
   className,
   canvasBackground = CANVAS_WHITE,
-  shapeScale = SUBMIT_MODAL_SHAPE_SCALE,
+  shapeScale,
   shapeDotBoost = SUBMIT_MODAL_SHAPE_DOT_BOOST,
+  transparentBackground = false,
 }: {
   selection: ProtoShapeSelection;
   className?: string;
   canvasBackground?: string;
   shapeScale?: number;
   shapeDotBoost?: number;
+  transparentBackground?: boolean;
 }) {
+  const isMobileViewport = useMobileViewport();
+  const resolvedShapeScale =
+    shapeScale ??
+    (isMobileViewport
+      ? SUBMIT_MODAL_SHAPE_SCALE_MOBILE
+      : SUBMIT_MODAL_SHAPE_SCALE);
+
   return (
     <PartnerShapeCanvas
       prototypeId="submit-shape-modal.partner-shape-canvas"
@@ -136,7 +241,8 @@ function ShapePreview({
       colorId={selection.colorId}
       textureId={selection.textureId}
       backgroundColor={canvasBackground}
-      shapeScale={shapeScale}
+      transparentBackground={transparentBackground}
+      shapeScale={resolvedShapeScale}
       shapeDotBoost={shapeDotBoost}
       shapeMargin={SUBMIT_MODAL_SHAPE_MARGIN}
       embedded
@@ -191,12 +297,13 @@ function ShapeInsetFrame({
   return (
     <div
       className={cn(
-        "relative aspect-square w-full shrink-0 overflow-hidden rounded-[0.75rem] border",
+        "relative aspect-square w-full shrink-0 overflow-hidden rounded-[0.75rem] border bg-transparent",
         className,
       )}
-      style={{ backgroundColor: CANVAS_WHITE, borderColor: canvasBorder }}
+      style={{ borderColor: canvasBorder }}
     >
-      <ShapePreview selection={selection} />
+      <SubmitModalInviteAcceptedLabel colorId={selection.colorId} />
+      <ShapePreview selection={selection} transparentBackground />
     </div>
   );
 }
@@ -209,11 +316,11 @@ function SquareCapLayout({
 }: SubmitModalLayoutProps) {
   return (
     <div className={GREY_CARD_SHELL_CLASS}>
-      <div
-        className="border-border mx-auto flex w-full flex-col overflow-hidden rounded-[1rem] border p-3.5 shadow-lg"
+      <SubmitModalCardTextureBackground
+        selection={selection}
+        className="border-border mx-auto flex w-full flex-col rounded-[1rem] border p-3.5 shadow-lg"
         style={{
           aspectRatio: GREY_CARD_ASPECT,
-          backgroundColor: CANVAS_WHITE,
           maxWidth: GREY_CARD_MAX_WIDTH,
         }}
       >
@@ -225,9 +332,89 @@ function SquareCapLayout({
             className="font-serif text-[1.625rem] leading-[1.08] tracking-[-0.025em]"
           />
         </div>
+      </SubmitModalCardTextureBackground>
+      <SubmitModalActions
+        colorId={selection.colorId}
+        onSeeOnHomepage={onSeeOnHomepage}
+        className={GREY_CARD_ACTIONS_CLASS}
+      />
+    </div>
+  );
+}
+
+function ShapeFullBleedFrame({
+  selection,
+  className,
+}: {
+  selection: ProtoShapeSelection;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative w-full shrink-0 overflow-hidden bg-transparent",
+        className,
+      )}
+    >
+      <ShapePreview selection={selection} transparentBackground />
+    </div>
+  );
+}
+
+function SquareCapFullBleedLayout({
+  selection,
+  title,
+  onKeepEditing,
+  onSeeOnHomepage,
+}: SubmitModalLayoutProps) {
+  const { rgb } = getProtoColor(selection.colorId);
+  const dividerColor = getSubmitModalDeepAccent(rgb);
+  const footerBackground = getSubmitModalMellowAccent(rgb);
+
+  return (
+    <div className={GREY_CARD_SHELL_CLASS}>
+      <SubmitModalInviteAcceptedLabel
+        colorId={selection.colorId}
+        placement="above"
+      />
+      {/* Shadow lives on this non-clipping wrapper. iOS Safari drops box-shadow
+          on a rounded `overflow:hidden` element nested inside a transformed
+          ancestor (the modal entrance), so the clip and the shadow must sit on
+          separate elements. */}
+      <div
+        className="mx-auto w-full rounded-[1rem] shadow-lg"
+        style={{ maxWidth: GREY_CARD_MAX_WIDTH }}
+      >
+        <SubmitModalCardTextureBackground
+          selection={selection}
+          className="flex w-full flex-col overflow-hidden rounded-[1rem]"
+          style={{ aspectRatio: FULL_BLEED_CARD_ASPECT }}
+        >
+          <ShapeFullBleedFrame
+            selection={selection}
+            className="min-h-0 flex-1"
+          />
+          <SubmitModalCardTextureBackground
+            selection={selection}
+            backgroundColor={footerBackground}
+            emanationRegion="footer"
+            className="flex shrink-0 flex-col border-t"
+            style={{ borderColor: dividerColor }}
+          >
+            <div className="px-3.5 pt-3 pb-3.5">
+              <SubmitModalCardTitle
+                title={title}
+                colorId={selection.colorId}
+                className="font-serif text-[1.625rem] leading-[1.08] tracking-[-0.025em]"
+              />
+            </div>
+          </SubmitModalCardTextureBackground>
+        </SubmitModalCardTextureBackground>
       </div>
       <SubmitModalActions
         colorId={selection.colorId}
+        selection={selection}
+        backgroundVariant="footer-texture"
         onSeeOnHomepage={onSeeOnHomepage}
         className={GREY_CARD_ACTIONS_CLASS}
       />
@@ -243,11 +430,11 @@ function GreyTitleTopLayout({
 }: SubmitModalLayoutProps) {
   return (
     <div className={GREY_CARD_SHELL_CLASS}>
-      <div
-        className="border-border mx-auto flex w-full flex-col overflow-hidden rounded-[1rem] border p-3.5 shadow-lg"
+      <SubmitModalCardTextureBackground
+        selection={selection}
+        className="border-border mx-auto flex w-full flex-col rounded-[1rem] border p-3.5 shadow-lg"
         style={{
           aspectRatio: GREY_CARD_ASPECT,
-          backgroundColor: CANVAS_WHITE,
           maxWidth: GREY_CARD_MAX_WIDTH,
         }}
       >
@@ -260,7 +447,7 @@ function GreyTitleTopLayout({
         <div className="mt-3 flex min-h-0 flex-1 items-start">
           <ShapeInsetFrame selection={selection} />
         </div>
-      </div>
+      </SubmitModalCardTextureBackground>
       <SubmitModalActions
         colorId={selection.colorId}
         onSeeOnHomepage={onSeeOnHomepage}
@@ -557,6 +744,7 @@ const LAYOUT_RENDERERS: Record<
   (props: SubmitModalLayoutProps) => ReactNode
 > = {
   "square-cap": SquareCapLayout,
+  "square-cap-full-bleed": SquareCapFullBleedLayout,
   "grey-title-top": GreyTitleTopLayout,
   "poster-scrim": PosterScrimLayout,
   "split-pane": SplitPaneLayout,

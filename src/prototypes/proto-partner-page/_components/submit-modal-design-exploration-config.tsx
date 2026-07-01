@@ -81,6 +81,11 @@ export const SUBMIT_MODAL_VARIANT_OPTIONS: Array<{
     hint: "Grey card — shape in a white inset at top, large serif title anchored bottom-left",
   },
   {
+    value: "square-cap-full-bleed",
+    label: "Square cap full bleed",
+    hint: "Same grey card — shape canvas edge-to-edge at top, title anchored bottom-left",
+  },
+  {
     value: "grey-title-top",
     label: "Grey title top",
     hint: "Same grey card — centered title above the shape inset rectangle",

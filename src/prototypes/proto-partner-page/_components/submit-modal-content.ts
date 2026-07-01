@@ -8,6 +8,7 @@ import {
 
 export type SubmitModalVariant =
   | "square-cap"
+  | "square-cap-full-bleed"
   | "grey-title-top"
   | "poster-scrim"
   | "split-pane"
@@ -35,7 +36,8 @@ export const SUBMIT_MODAL_CONTEXT = {
   defaultTexture: DEFAULT_PROTO_TEXTURE_ID,
 } as const;
 
-export const DEFAULT_SUBMIT_MODAL_VARIANT: SubmitModalVariant = "square-cap";
+export const DEFAULT_SUBMIT_MODAL_VARIANT: SubmitModalVariant =
+  "square-cap-full-bleed";
 
 export type SubmitModalCardTheme = {
   background: string;

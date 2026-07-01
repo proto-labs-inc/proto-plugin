@@ -118,7 +118,7 @@ function ShapeColorPickerRows({
   const mk = entranceKey ?? "live";
   const motionOn = usePartnerEntranceMotion(animateEntrance);
 
-  const sectionGap = density === "compact" ? "gap-2.5" : "gap-2";
+  const sectionGap = density === "compact" ? "gap-1.5" : "gap-2";
   const outerGap = density === "compact" ? "gap-7" : "gap-8";
   const sectionClass = cn(
     `flex flex-col ${sectionGap}`,

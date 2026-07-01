@@ -125,7 +125,7 @@ function AnimatedPickerPanel({
       </div>
       <motion.div
         className="absolute inset-x-0 top-0 flex"
-        animate={{ x: `-${index * 100}%` }}
+        animate={{ transform: `translateX(-${index * 100}%)` }}
         transition={{ duration: 0.32, ease: partnerEaseOut }}
       >
         {PICKER_SECTIONS.map((pickerSection) => (

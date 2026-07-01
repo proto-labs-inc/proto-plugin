@@ -7,6 +7,7 @@ import {
   SHAPE_TEXTURE_ANCHORS,
   withShapeRenderScale,
   type ProtoTextureId,
+  type TextureEmanationCorner,
 } from "./shape-textures";
 
 const BASE_POINTS = 5;
@@ -329,6 +330,7 @@ export type DrawSpringsSimulationOptions = {
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
   renderScale?: number;
+  textureEmanationCorner?: TextureEmanationCorner;
 };
 
 export function drawSpringsPentagonSimulation(
@@ -343,6 +345,7 @@ export function drawSpringsPentagonSimulation(
     texture,
     dotScale = 1,
     renderScale = 1,
+    textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
   const apex = particles[BASE_POINTS];
@@ -360,6 +363,7 @@ export function drawSpringsPentagonSimulation(
       color,
       canvasWidth: width,
       canvasHeight: height,
+      textureEmanationCorner,
       ...anchors,
     };
     for (let i = 0; i < BASE_POINTS; i++) {

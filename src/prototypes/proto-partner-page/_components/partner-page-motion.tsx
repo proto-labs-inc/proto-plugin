@@ -8,8 +8,13 @@ import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
 
 export const partnerEaseOut = [0.22, 1, 0.36, 1] as const;
 
-export const partnerFadeUpHidden = { opacity: 0, y: 18 };
-export const partnerFadeUpVisible = { opacity: 1, y: 0 };
+// NOTE: Entrance transforms are written as full `transform` strings (not the
+// `x`/`y`/`scale` shorthands) so Motion runs them via the compositor (WAAPI)
+// instead of the main-thread JS frameloop. Mobile browsers throttle rAF (e.g.
+// iOS Low Power Mode) which desyncs shorthand-driven delays and scrambles the
+// staggered entrance order; WAAPI transforms stay correctly timed.
+export const partnerFadeUpHidden = { opacity: 0, transform: "translateY(18px)" };
+export const partnerFadeUpVisible = { opacity: 1, transform: "translateY(0px)" };
 
 export const partnerPopSpring = {
   type: "spring" as const,
@@ -75,8 +80,8 @@ export function PartnerMotionSpringPop({
   return (
     <PrototypeComponent id="partner-page-motion.partner-motion-spring-pop" className={className}>
       <motion.div
-        initial={{ opacity: 0, y: 14, scale: 0.92 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+        animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
         transition={{
           ...partnerPopSpring,
           delay,
@@ -109,8 +114,8 @@ export function PartnerMotionSpringButton({
       <motion.button
         {...props}
         className={className}
-        initial={{ opacity: 0, scale: 0.88, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        initial={{ opacity: 0, transform: "translateY(12px) scale(0.88)" }}
+        animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
         transition={{
           ...partnerCtaSpring,
           delay: delay + (withCtaBeat ? PARTNER_CTA_ENTRANCE_DELAY_EXTRA : 0),

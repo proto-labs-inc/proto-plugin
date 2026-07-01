@@ -7,6 +7,7 @@ import {
   SHAPE_TEXTURE_ANCHORS,
   withShapeRenderScale,
   type ProtoTextureId,
+  type TextureEmanationCorner,
 } from "./shape-textures";
 
 const BASE_POINTS = 4;
@@ -325,6 +326,7 @@ export type DrawSpringsSimulationOptions = {
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
   renderScale?: number;
+  textureEmanationCorner?: TextureEmanationCorner;
 };
 
 export function drawSpringsTriangleSimulation(
@@ -339,6 +341,7 @@ export function drawSpringsTriangleSimulation(
     texture,
     dotScale = 1,
     renderScale = 1,
+    textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
 
@@ -355,6 +358,7 @@ export function drawSpringsTriangleSimulation(
       color,
       canvasWidth: width,
       canvasHeight: height,
+      textureEmanationCorner,
       ...anchors,
     };
     drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 3, 2] });

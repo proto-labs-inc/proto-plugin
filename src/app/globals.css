@@ -46,6 +46,11 @@
   --foreground: var(--product-foreground);
 }
 
+[data-prototype-screenshot] ::selection {
+  background: #b4d5fe;
+  color: var(--product-foreground);
+}
+
 body {
   margin: 0;
 }

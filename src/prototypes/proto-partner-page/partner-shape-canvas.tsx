@@ -258,7 +258,7 @@ function rgbNearEqual(a: ProtoRgb, b: ProtoRgb, epsilon = 0.5): boolean {
   );
 }
 
-const MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
+const PARTNER_MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
 const MOBILE_SHAPE_SCALE = 1.35;
 const MOBILE_DOT_SCALE = 1;
 /** Give the protoshape more room on desktop invite/home layouts. */
@@ -279,9 +279,19 @@ const WARM_START_FRAMES = 120;
  */
 const MIN_VALID_CANVAS_HEIGHT = 120;
 
-function isMobileViewport() {
+export function getIsMobileViewport() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia(MOBILE_MAX_WIDTH_QUERY).matches;
+  return window.matchMedia(PARTNER_MOBILE_MAX_WIDTH_QUERY).matches;
+}
+
+export function subscribeToMobileViewport(onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia(PARTNER_MOBILE_MAX_WIDTH_QUERY);
+  mediaQuery.addEventListener("change", onStoreChange);
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
+}
+
+function isMobileViewport() {
+  return getIsMobileViewport();
 }
 
 function getPartnerShapeLayout(

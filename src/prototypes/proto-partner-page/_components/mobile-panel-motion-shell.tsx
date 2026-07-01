@@ -155,12 +155,16 @@ export function MobilePanelMotionShell({
     );
   }
 
+  // Transforms use full `transform` strings (not the `y` shorthand) so Motion
+  // runs them via the compositor (WAAPI). Mobile browsers throttle rAF (e.g.
+  // iOS Low Power Mode), which desyncs shorthand-driven, delayed entrances and
+  // scrambles their timing; WAAPI transforms stay correctly sequenced.
   const motionProps = {
     key: motionKey,
     className,
     layoutRoot: true as const,
-    initial: { y: "100%" },
-    animate: { y: 0 },
+    initial: { transform: "translateY(100%)" },
+    animate: { transform: "translateY(0px)" },
     onAnimationComplete: handleAnimationComplete,
   };
 
@@ -238,8 +242,8 @@ export function MobilePanelMotionShell({
         <PanelMotionEntranceContext.Provider value={entranceComplete}>
           <motion.div
             {...motionProps}
-            initial={{ opacity: 0, y: 28, filter: "blur(10px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={{ opacity: 0, transform: "translateY(28px)", filter: "blur(10px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }}
             transition={{
               duration: 0.6,
               ease: partnerEaseOut,
@@ -260,8 +264,8 @@ export function MobilePanelMotionShell({
           <motion.div
             {...motionProps}
             className={cn(className, "origin-bottom")}
-            initial={{ opacity: 0, y: 24, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, transform: "translateY(24px) scale(0.94)" }}
+            animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
             transition={{
               duration: 0.52,
               ease: partnerEaseOut,

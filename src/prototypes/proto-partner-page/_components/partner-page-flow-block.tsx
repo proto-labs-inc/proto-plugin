@@ -2,11 +2,16 @@
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { cn } from "@prototype/lib/utils";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 
-import { inviteCtaButtonClass, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
+import { INVITE_COPY } from "./invite-copy-content";
+import { inviteCtaButtonClass, inviteBlockClassName, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
 import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
+import {
+  PartnerPageBackButton,
+  PartnerPageHomeButton,
+} from "./partner-page-nav-button";
 import {
   PARTNER_CUSTOMIZE_ENTRANCE_INDEX,
   PartnerMotionSpringButton,
@@ -17,6 +22,8 @@ import {
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
 import type { SubmitModalVariant } from "./submit-modal-content";
 import { SubmitShapeModal } from "./submit-shape-modal";
+
+export { PartnerPageHomeButton } from "./partner-page-nav-button";
 
 const submitButtonClassName = cn(
   inviteCtaButtonClass,
@@ -67,6 +74,7 @@ type PartnerPageFlowBlockProps = {
   panelMotionVariant?: MobilePanelMotionVariant;
   shapeSelection?: ProtoShapeSelection;
   submitModalVariant?: SubmitModalVariant;
+  onSubmitModalOpenChange?: (open: boolean) => void;
 };
 
 export function PartnerPageFlowBlock({
@@ -78,14 +86,21 @@ export function PartnerPageFlowBlock({
   panelMotionVariant = "slide-up",
   shapeSelection,
   submitModalVariant = "plain-header",
+  onSubmitModalOpenChange,
 }: PartnerPageFlowBlockProps) {
   const motionOn = usePartnerEntranceMotion(animateEntrance);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
+
+  const handleSubmitModalOpenChange = (open: boolean) => {
+    setSubmitModalOpen(open);
+    onSubmitModalOpenChange?.(open);
+  };
   if (activePage === "invite") {
     return (
       <PrototypeComponent
         id="partner-page-flow-block"
         className={cn(
+          inviteBlockClassName,
           inviteCtaSectionClass,
           "font-[family-name:var(--font-dm-sans)]!",
           className,
@@ -97,7 +112,7 @@ export function PartnerPageFlowBlock({
             onClick={() => onPageChange("customize")}
             className={inviteCtaButtonClass}
           >
-            <span>Customize your Proto Shape</span>
+            <span>{INVITE_COPY.cta}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden
@@ -118,53 +133,41 @@ export function PartnerPageFlowBlock({
         )}
       >
         <div className="mx-auto flex w-full max-w-md items-center justify-between md:max-w-none">
-          {motionOn ? (
-            <PartnerMotionSpringButton
-              type="button"
-              withCtaBeat={false}
-              delay={partnerCustomizeEntranceDelay(
+          <div className="flex items-center gap-0.5">
+            <PartnerPageBackButton
+              onClick={() => onPageChange("invite")}
+              motionOn={motionOn}
+              motionDelay={partnerCustomizeEntranceDelay(
                 PARTNER_CUSTOMIZE_ENTRANCE_INDEX.back,
               )}
-              key={entranceKey}
+              motionEntranceKey={entranceKey}
+            />
+            <PartnerPageHomeButton
               onClick={() => onPageChange("invite")}
-              className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
-            >
-              <ArrowLeft
-                className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:-translate-x-1"
-                aria-hidden
-              />
-              <span>Back</span>
-            </PartnerMotionSpringButton>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onPageChange("invite")}
-              className="group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
-            >
-              <ArrowLeft
-                className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:-translate-x-1"
-                aria-hidden
-              />
-              <span>Back</span>
-            </button>
-          )}
+              motionOn={motionOn}
+              motionDelay={partnerCustomizeEntranceDelay(
+                PARTNER_CUSTOMIZE_ENTRANCE_INDEX.back,
+              )}
+              motionEntranceKey={entranceKey}
+            />
+          </div>
           <SubmitShapeButton
             motionOn={motionOn}
             delay={partnerCustomizeSaveDelay(panelMotionVariant)}
             entranceKey={entranceKey}
-            onClick={() => setSubmitModalOpen(true)}
+            onClick={() => handleSubmitModalOpenChange(true)}
           />
         </div>
       </PrototypeComponent>
       {shapeSelection ? (
         <SubmitShapeModal
           open={submitModalOpen}
-          onOpenChange={setSubmitModalOpen}
+          onOpenChange={handleSubmitModalOpenChange}
           selection={shapeSelection}
           variant={submitModalVariant}
-          onKeepEditing={() => setSubmitModalOpen(false)}
+          onKeepEditing={() => handleSubmitModalOpenChange(false)}
           onSeeOnHomepage={() => {
-            setSubmitModalOpen(false);
+            handleSubmitModalOpenChange(false);
             onPageChange("invite");
           }}
         />

@@ -5,6 +5,8 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "scroll-container",
   "partner-shape-canvas",
   "partner-page-flow-block",
+  "partner-page-flow-block.partner-page-back-button",
+  "partner-page-flow-block.partner-page-home-button",
   "submit-shape-modal",
   "submit-shape-modal-block",
   "submit-shape-modal.partner-shape-canvas",

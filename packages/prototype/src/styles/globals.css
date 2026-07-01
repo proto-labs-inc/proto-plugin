@@ -606,6 +606,12 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   background-color: var(--bg-bedrock);
 }
 
+[data-prototype-root] [data-prototype-screenshot] ::selection,
+[data-prototype-screenshot] ::selection {
+  background: #b4d5fe;
+  color: var(--text-primary);
+}
+
 [data-prototype-root] [data-prototype-screenshot] *,
 [data-prototype-screenshot] * {
   font-family: inherit;

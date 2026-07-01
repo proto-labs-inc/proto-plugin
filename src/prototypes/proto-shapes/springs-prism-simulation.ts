@@ -7,6 +7,7 @@ import {
   SHAPE_TEXTURE_ANCHORS,
   withShapeRenderScale,
   type ProtoTextureId,
+  type TextureEmanationCorner,
 } from "./shape-textures";
 
 const BASE_POINTS = 3;
@@ -293,6 +294,7 @@ export type DrawSpringsSimulationOptions = {
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
   renderScale?: number;
+  textureEmanationCorner?: TextureEmanationCorner;
 };
 
 export function drawSpringsPrismSimulation(
@@ -307,6 +309,7 @@ export function drawSpringsPrismSimulation(
     texture,
     dotScale = 1,
     renderScale = 1,
+    textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
 
@@ -326,6 +329,7 @@ export function drawSpringsPrismSimulation(
       backParticleIndex: anchors.backParticleIndex,
       gradientParticleIndices: [0, 3],
       ringParticleIndex: anchors.ringParticleIndex,
+      textureEmanationCorner,
     };
     drawTexturedFace(ctx, { ...faceBase, indices: [0, 1, 4, 3] });
     drawTexturedFace(ctx, { ...faceBase, indices: [1, 2, 5, 4] });

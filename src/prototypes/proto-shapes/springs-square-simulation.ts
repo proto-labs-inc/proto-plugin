@@ -7,6 +7,7 @@ import {
   SHAPE_TEXTURE_ANCHORS,
   withShapeRenderScale,
   type ProtoTextureId,
+  type TextureEmanationCorner,
 } from "./shape-textures";
 
 const J1_INDEX = 0;
@@ -339,6 +340,7 @@ function drawTexturedPyramidFaces(
   color: DrawColor,
   canvasWidth: number,
   canvasHeight: number,
+  textureEmanationCorner?: TextureEmanationCorner,
 ) {
   const anchors = SHAPE_TEXTURE_ANCHORS.square!;
   const faceBase = {
@@ -351,6 +353,7 @@ function drawTexturedPyramidFaces(
     gradientParticleIndices: [J1_INDEX, J2_INDEX],
     gradientWorldSpace: true,
     ringParticleIndex: anchors.ringParticleIndex,
+    textureEmanationCorner,
   };
   const [aIdx, bIdx, cIdx] = baseIndices;
   drawTexturedFace(ctx, { ...faceBase, indices: [apexIndex, aIdx!, bIdx!] });
@@ -424,6 +427,7 @@ export type DrawSpringsSimulationOptions = {
   /** Scale handle dots relative to the default radius (e.g. partner-page layout scale). */
   dotScale?: number;
   renderScale?: number;
+  textureEmanationCorner?: TextureEmanationCorner;
 };
 
 export function drawSpringsSquareSimulation(
@@ -438,6 +442,7 @@ export function drawSpringsSquareSimulation(
     texture,
     dotScale = 1,
     renderScale = 1,
+    textureEmanationCorner,
   } = options;
   const { width, height, particles, margin } = sim;
 
@@ -457,6 +462,7 @@ export function drawSpringsSquareSimulation(
         color,
         width,
         height,
+        textureEmanationCorner,
       );
     } else {
       drawPyramidFaces(ctx, pyramid.apex, pyramid.base, particles, color);

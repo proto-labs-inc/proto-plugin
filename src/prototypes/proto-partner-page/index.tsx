@@ -75,6 +75,7 @@ export default function ProtoPartnerPage() {
     useState<MobilePanelMotionVariant>(DEFAULT_MOBILE_PANEL_MOTION_VARIANT);
   const [submitModalVariant, setSubmitModalVariant] =
     useState<SubmitModalVariant>(DEFAULT_SUBMIT_MODAL_VARIANT);
+  const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [shapeSelection, setShapeSelection] = useState<ProtoShapeSelection>(
     defaultProtoShapeSelection(),
   );
@@ -120,10 +121,14 @@ export default function ProtoPartnerPage() {
     <InviteAnimationsBlock
       variant={inviteAnimationsVariant}
       onContinue={() => handlePageChange("customize")}
+      onHome={() => handlePageChange("invite")}
     />
   ) : (
     <>
-      <InviteCopyBlock variant={inviteCopyVariant} />
+      <InviteCopyBlock
+        variant={inviteCopyVariant}
+        onHome={() => handlePageChange("invite")}
+      />
       <PartnerPageFlowBlock
         activePage={activePage}
         onPageChange={handlePageChange}
@@ -227,10 +232,11 @@ export default function ProtoPartnerPage() {
               panelMotionVariant={mobilePanelMotionVariant}
               shapeSelection={shapeSelection}
               submitModalVariant={submitModalVariant}
+              onSubmitModalOpenChange={setSubmitModalOpen}
             />
             {dockInFlowLayout ? (
               <div className="relative z-10 min-h-0 flex-1">
-                {shapeRenderReady ? (
+                {shapeRenderReady && !submitModalOpen ? (
                   <PartnerShapeCanvas
                     shapeId={shapeSelection.shapeId}
                     colorId={shapeSelection.colorId}
@@ -244,7 +250,7 @@ export default function ProtoPartnerPage() {
                   />
                 )}
               </div>
-            ) : shapeRenderReady ? (
+            ) : shapeRenderReady && !submitModalOpen ? (
               <PartnerShapeCanvas
                 shapeId={shapeSelection.shapeId}
                 colorId={shapeSelection.colorId}

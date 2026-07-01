@@ -17,13 +17,17 @@ import {
   inviteCtaButtonClass,
   inviteCtaSectionClass,
   inviteCtaShellClass,
-  inviteEyebrowClass,
   inviteHeadlineClass,
 } from "./invite-layout-classes";
+import {
+  AnimatedInviteEyebrowHeader,
+  InviteEyebrowHeader,
+} from "./invite-eyebrow-header";
 
 type InviteAnimationsBlockProps = {
   variant: InviteAnimationsVariant;
   onContinue?: () => void;
+  onHome?: () => void;
   className?: string;
   /** Remount animations when the design brief switches variants. */
   replayKey?: string;
@@ -34,8 +38,13 @@ const easeOut = [0.22, 1, 0.36, 1] as const;
 /** Extra beat after copy lands before the CTA enters. */
 const CTA_ENTRANCE_DELAY_EXTRA = 0.15;
 
-const fadeUpHidden = { opacity: 0, y: 18 };
-const fadeUpVisible = { opacity: 1, y: 0 };
+// Transforms are written as full `transform` strings (not `x`/`y`/`scale`
+// shorthands) so Motion animates them via the compositor (WAAPI) rather than
+// the main-thread JS frameloop. Mobile browsers throttle rAF (e.g. iOS Low
+// Power Mode), which desyncs shorthand-driven `delay`s and scrambles the
+// staggered entrance order; WAAPI transforms stay correctly sequenced.
+const fadeUpHidden = { opacity: 0, transform: "translateY(18px)" };
+const fadeUpVisible = { opacity: 1, transform: "translateY(0px)" };
 
 const [inviteBeforeProto, inviteAfterProto] = INVITE_COPY.invite.split("Proto");
 
@@ -51,9 +60,11 @@ function InviteWithBoldProto() {
 
 function StaticInviteContent({
   onContinue,
+  onHome,
   className,
 }: {
   onContinue?: () => void;
+  onHome?: () => void;
   className?: string;
 }) {
   return (
@@ -62,7 +73,7 @@ function StaticInviteContent({
       className={cn(inviteBlockClassName, className)}
     >
       <div className={inviteContentShellClass}>
-        <p className={inviteEyebrowClass}>Design partner invite</p>
+        <InviteEyebrowHeader onHome={onHome} />
         <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
         <div className={inviteBodyStackClass}>
           <p className={inviteBodyClass}>
@@ -78,7 +89,7 @@ function StaticInviteContent({
             onClick={onContinue}
             className={inviteCtaButtonClass}
           >
-            <span>Customize your Proto Shape</span>
+            <span>{INVITE_COPY.cta}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden
@@ -137,9 +148,9 @@ function SpringCtaSection({
         <motion.button
           type="button"
           onClick={onContinue}
-          className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-lg px-4 py-3 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
-          initial={{ opacity: 0, scale: 0.88, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl px-4 py-3 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+          initial={{ opacity: 0, transform: "translateY(12px) scale(0.88)" }}
+          animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
           transition={{
             type: "spring",
             stiffness: 360,
@@ -147,7 +158,7 @@ function SpringCtaSection({
             delay: delay + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <span>Customize your Proto Shape</span>
+          <span>{INVITE_COPY.cta}</span>
           <ArrowRight
             className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
             aria-hidden
@@ -161,6 +172,7 @@ function SpringCtaSection({
 function AnimatedInviteContent({
   variant,
   onContinue,
+  onHome,
   className,
   replayKey,
 }: InviteAnimationsBlockProps) {
@@ -171,7 +183,11 @@ function AnimatedInviteContent({
 
   if (reduceMotion || variant === "none") {
     return (
-      <StaticInviteContent onContinue={onContinue} className={className} />
+      <StaticInviteContent
+        onContinue={onContinue}
+        onHome={onHome}
+        className={className}
+      />
     );
   }
 
@@ -186,7 +202,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <h1
             className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
@@ -194,8 +210,8 @@ function AnimatedInviteContent({
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
-                initial={{ opacity: 0, y: 14, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+                animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
                   type: "spring",
                   stiffness: 420,
@@ -240,7 +256,7 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -284,26 +300,24 @@ function AnimatedInviteContent({
         key={mountKey}
       >
         <div className={inviteContentShellClass}>
-          <motion.p
-            className={inviteEyebrowClass}
+          <AnimatedInviteEyebrowHeader
+            onHome={onHome}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-          >
-            Design partner invite
-          </motion.p>
+          />
           <motion.h1
             className={inviteHeadlineClass}
-            initial={{ opacity: 0, scale: 0.94, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(10px) scale(0.94)" }}
+            animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
             transition={{ duration: 0.6, ease: easeOut, delay: 0.08 }}
           >
             {INVITE_COPY.headline}
           </motion.h1>
           <motion.div
             className={cn(inviteBodyStackClass, inviteBodyStackTightClass)}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(12px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
             transition={{ duration: 0.5, ease: easeOut, delay: 0.26 }}
           >
             <p className={bodyClass}>
@@ -326,7 +340,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <MotionItem delay={0.12}>
             <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
@@ -356,7 +370,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <h1
             className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
@@ -364,8 +378,8 @@ function AnimatedInviteContent({
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
-                initial={{ opacity: 0, y: 14, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+                animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
                   type: "spring",
                   stiffness: 420,
@@ -390,8 +404,8 @@ function AnimatedInviteContent({
         </div>
         <motion.div
           className={inviteCtaSectionClass}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, transform: "translateY(20px)" }}
+          animate={{ opacity: 1, transform: "translateY(0px)" }}
           transition={{
             duration: 0.5,
             ease: easeOut,
@@ -404,7 +418,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -433,7 +447,7 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -477,7 +491,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -502,7 +516,7 @@ function AnimatedInviteContent({
             hidden={{ opacity: 0 }}
             visible={{ opacity: 1 }}
           >
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <MotionItem
             delay={0.1}
@@ -536,8 +550,8 @@ function AnimatedInviteContent({
               type="button"
               onClick={onContinue}
               className={inviteCtaButtonClass}
-              initial={{ opacity: 0, scale: 0.88, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
+              initial={{ opacity: 0, transform: "translateY(12px) scale(0.88)" }}
+              animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
               transition={{
                 type: "spring",
                 stiffness: 360,
@@ -545,7 +559,7 @@ function AnimatedInviteContent({
                 delay: 0.48 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -565,26 +579,24 @@ function AnimatedInviteContent({
         key={mountKey}
       >
         <div className={inviteContentShellClass}>
-          <motion.p
-            className={inviteEyebrowClass}
+          <AnimatedInviteEyebrowHeader
+            onHome={onHome}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-          >
-            Design partner invite
-          </motion.p>
+          />
           <motion.h1
             className={inviteHeadlineClass}
-            initial={{ opacity: 0, scale: 0.94, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(10px) scale(0.94)" }}
+            animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
             transition={{ duration: 0.6, ease: easeOut, delay: 0.08 }}
           >
             {INVITE_COPY.headline}
           </motion.h1>
           <motion.div
             className={cn(inviteBodyStackClass, inviteBodyStackTightClass)}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(12px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
             transition={{ duration: 0.5, ease: easeOut, delay: 0.26 }}
           >
             <p className={bodyClass}>
@@ -595,8 +607,8 @@ function AnimatedInviteContent({
         </div>
         <motion.div
           className={inviteCtaSectionClass}
-          initial={{ opacity: 0, x: 28 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, transform: "translateX(28px)" }}
+          animate={{ opacity: 1, transform: "translateX(0px)" }}
           transition={{
             duration: 0.55,
             ease: easeOut,
@@ -609,7 +621,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -630,7 +642,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <p className={inviteEyebrowClass}>Design partner invite</p>
+            <InviteEyebrowHeader onHome={onHome} />
           </MotionItem>
           <MotionItem delay={0.12}>
             <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
@@ -653,7 +665,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -673,7 +685,9 @@ function AnimatedInviteContent({
         key={mountKey}
       >
         <div className={inviteContentShellClass}>
-          <p className={inviteEyebrowClass}>Design partner invite</p>
+          <MotionItem delay={0.04}>
+            <InviteEyebrowHeader onHome={onHome} />
+          </MotionItem>
           <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           <div className={inviteBodyStackClass}>
             <p className={bodyClass}>
@@ -684,8 +698,8 @@ function AnimatedInviteContent({
         </div>
         <motion.div
           className={inviteCtaSectionClass}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, transform: "translateY(24px)" }}
+          animate={{ opacity: 1, transform: "translateY(0px)" }}
           transition={{
             duration: 0.55,
             ease: easeOut,
@@ -697,15 +711,15 @@ function AnimatedInviteContent({
               type="button"
               onClick={onContinue}
               className={inviteCtaButtonClass}
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, transform: "translateX(16px)" }}
+              animate={{ opacity: 1, transform: "translateX(0px)" }}
               transition={{
                 duration: 0.45,
                 ease: easeOut,
                 delay: 0.45 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>Customize your Proto Shape</span>
+              <span>{INVITE_COPY.cta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -734,16 +748,14 @@ function AnimatedInviteContent({
           },
         }}
       >
-        <motion.p
-          className={inviteEyebrowClass}
+        <AnimatedInviteEyebrowHeader
+          onHome={onHome}
           variants={{
             hidden: fadeUpHidden,
             visible: fadeUpVisible,
           }}
           transition={{ duration: 0.5, ease: easeOut }}
-        >
-          Design partner invite
-        </motion.p>
+        />
         <motion.h1
           className={inviteHeadlineClass}
           variants={{
@@ -779,8 +791,8 @@ function AnimatedInviteContent({
       </motion.div>
       <motion.div
         className={inviteCtaSectionClass}
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, transform: "translateY(18px)" }}
+        animate={{ opacity: 1, transform: "translateY(0px)" }}
         transition={{
           duration: 0.5,
           ease: easeOut,
@@ -793,7 +805,7 @@ function AnimatedInviteContent({
             onClick={onContinue}
             className={inviteCtaButtonClass}
           >
-            <span>Customize your Proto Shape</span>
+            <span>{INVITE_COPY.cta}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden

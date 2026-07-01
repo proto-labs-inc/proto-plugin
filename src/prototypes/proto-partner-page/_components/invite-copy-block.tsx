@@ -7,12 +7,13 @@ import {
   inviteBodyClass,
   inviteBodyStackClass,
   inviteContentShellClass,
-  inviteEyebrowClass,
   inviteHeadlineClass,
 } from "./invite-layout-classes";
+import { InviteEyebrowHeader } from "./invite-eyebrow-header";
 
 type InviteCopyBlockProps = {
   variant: InviteCopyVariant;
+  onHome?: () => void;
 };
 
 function ActionHint({ children }: { children: React.ReactNode }) {
@@ -37,7 +38,7 @@ function InviteWithBoldProto() {
   );
 }
 
-export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
+export function InviteCopyBlock({ variant, onHome }: InviteCopyBlockProps) {
   if (variant === "open-card") {
     return (
       <PrototypeComponent
@@ -45,9 +46,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
         className="shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5"
       >
         <div className={inviteContentShellClass}>
-          <p className={inviteEyebrowClass}>
-            Design partner invite
-          </p>
+          <InviteEyebrowHeader onHome={onHome} />
           <h1 className={inviteHeadlineClass}>
             {INVITE_COPY.headline}
           </h1>
@@ -378,7 +377,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
   }
 
   if (variant === "inline-actions") {
-    const followUpParts = INVITE_COPY.followUp.split("customize your Proto Shape");
+    const followUpParts = INVITE_COPY.followUp.split("make your own protoshape");
 
     return (
       <PrototypeComponent
@@ -393,7 +392,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             <p className="text-foreground">{INVITE_COPY.invite}</p>
             <p className="text-muted-foreground">
               {followUpParts[0]}
-              <ActionHint>customize your Proto Shape</ActionHint>
+              <ActionHint>make your own protoshape</ActionHint>
               {followUpParts[1]}
             </p>
           </div>
