@@ -45,8 +45,20 @@ export type SubmitModalCardTheme = {
   titleClass: string;
 };
 
+/**
+ * Variants rendered as a themed pattern card. The remaining variants are either
+ * bespoke layouts (see `SubmitModalLayoutVariant`) or handled ad hoc
+ * (`plain-header`, `proto-tint`), so they are intentionally excluded here.
+ */
+export type SubmitModalCardThemeVariant =
+  | "wireframe-grid"
+  | "block-texture"
+  | "fluid-waves"
+  | "mosaic-pixels"
+  | "vertical-ridges";
+
 export const SUBMIT_MODAL_CARD_THEMES: Record<
-  Exclude<SubmitModalVariant, "plain-header" | "proto-tint">,
+  SubmitModalCardThemeVariant,
   SubmitModalCardTheme
 > = {
   "vertical-ridges": {

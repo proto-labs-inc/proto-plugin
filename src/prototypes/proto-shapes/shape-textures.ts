@@ -21,28 +21,48 @@ export type TextureEmanationCorner =
 export type ShapeTextureColor = [number, number, number];
 
 /**
- * How much dot/line metrics outpace shape shrink (0 = locked ratio).
+ * How much spring strokes outpace shape shrink (0 = locked ratio).
  * Uses a continuous power curve — no cap as shapes get smaller.
  */
-export const SHAPE_DETAIL_INVERSE_EXPONENT = 0.15;
+export const SHAPE_STROKE_INVERSE_EXPONENT = 0.48;
 
 /** Shape size relative to the partner-page reference layout. */
 export function getShapeNormalizedRenderScale(physicsScale: number) {
   return physicsScale / REFERENCE_PROTOTYPE_SHAPE_SCALE;
 }
 
-/**
- * Stroke and dot scale — shrinks slower than the shape so smaller shapes keep
- * slightly chunkier dots and spring lines.
- */
-export function getShapeDetailRenderScale(normalizedShapeSize: number) {
+function getShapeMetricRenderScale(
+  normalizedShapeSize: number,
+  inverseExponent: number,
+) {
   const safe = Math.max(normalizedShapeSize, 1e-3);
-  return Math.pow(safe, 1 - SHAPE_DETAIL_INVERSE_EXPONENT);
+  return Math.pow(safe, 1 - inverseExponent);
 }
 
-/** Scale spring strokes and dot metrics from normalized shape size. */
+/**
+ * Spring stroke scale — shrinks slower than the shape so smaller shapes keep
+ * slightly chunkier spring lines.
+ */
+export function getShapeStrokeRenderScale(normalizedShapeSize: number) {
+  return getShapeMetricRenderScale(
+    normalizedShapeSize,
+    SHAPE_STROKE_INVERSE_EXPONENT,
+  );
+}
+
+/** Dot metrics scale linearly with shape size. */
+export function getShapeDotRenderScale(normalizedShapeSize: number) {
+  return getShapeMetricRenderScale(normalizedShapeSize, 0);
+}
+
+/** Scale spring strokes from normalized shape size. */
 export function withShapeRenderScale(value: number, normalizedShapeSize = 1) {
-  return value * getShapeDetailRenderScale(normalizedShapeSize);
+  return value * getShapeStrokeRenderScale(normalizedShapeSize);
+}
+
+/** Scale handle-dot metrics from normalized shape size. */
+export function withShapeDotRenderScale(value: number, normalizedShapeSize = 1) {
+  return value * getShapeDotRenderScale(normalizedShapeSize);
 }
 
 /** Spring edge strokes on canvas-drawn proto shapes. */
@@ -93,9 +113,9 @@ type PrototypeShapeLayoutOptions = {
  * prototype.
  *
  * `renderScale` is the linear shape size relative to the partner-page reference
- * and drives texture pattern density. Spring strokes, dot outlines, and dot
- * radii use {@link normalizedRenderScale} with {@link getShapeDetailRenderScale}
- * so they shrink slower than the shape and stay legible when small.
+ * and drives texture pattern density. Spring strokes use
+ * {@link getShapeStrokeRenderScale}; handle dots scale linearly via
+ * {@link getShapeDotRenderScale}.
  */
 export function getPrototypeShapeLayoutScales({
   layoutShapeScale,
@@ -118,14 +138,14 @@ export function getPrototypeShapeLayoutScales({
 }
 
 export function getShapeHandleDotRadius(dotScale = 1, normalizedShapeSize = 1) {
-  return withShapeRenderScale(
+  return withShapeDotRenderScale(
     SHAPE_HANDLE_DOT_RADIUS * dotScale,
     normalizedShapeSize,
   );
 }
 
 export function getShapeHandleDotOutlineWidth(normalizedShapeSize = 1) {
-  return withShapeRenderScale(
+  return withShapeDotRenderScale(
     SHAPE_DOT_OUTLINE_WIDTH * SHAPE_DOT_SIZE_SCALE,
     normalizedShapeSize,
   );
@@ -772,9 +792,7 @@ export function drawTextureLocal(
     ctx.fillStyle = rgb(cr, cg, cb, 235);
     const gap = (compact ? 11 : 18) * renderScale;
     const dotRadius =
-      (compact ? 2.5 : 4) *
-      SHAPE_DOT_SIZE_SCALE *
-      getShapeDetailRenderScale(renderScale);
+      (compact ? 2.5 : 4) * SHAPE_DOT_SIZE_SCALE * renderScale;
     for (let x = -cover; x <= cover; x += gap) {
       for (let y = -cover; y <= cover; y += gap) {
         ctx.beginPath();
@@ -787,7 +805,7 @@ export function drawTextureLocal(
     ctx.fillRect(-cover, -cover, cover * 2, cover * 2);
     ctx.strokeStyle = rgb(cr, cg, cb, 235);
     ctx.lineWidth =
-      (compact ? 1.25 : 2) * getShapeDetailRenderScale(renderScale);
+      (compact ? 1.25 : 2) * getShapeStrokeRenderScale(renderScale);
     const gap = (compact ? 11 : 18) * renderScale;
     ctx.beginPath();
     for (let x = -cover; x <= cover; x += gap) {

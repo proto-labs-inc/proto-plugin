@@ -13,6 +13,7 @@ import {
 import {
   SUBMIT_MODAL_CARD_THEMES,
   SUBMIT_MODAL_TITLE,
+  type SubmitModalCardThemeVariant,
   type SubmitModalVariant,
 } from "./submit-modal-content";
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
@@ -32,7 +33,7 @@ function SubmitModalCardHeader({
   selection,
   title,
 }: {
-  variant: SubmitModalVariant;
+  variant: SubmitModalCardThemeVariant | "plain-header" | "proto-tint";
   selection: ProtoShapeSelection;
   title: string;
 }) {
