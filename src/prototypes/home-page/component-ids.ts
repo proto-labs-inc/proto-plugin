@@ -10,7 +10,6 @@ export const HOME_PAGE_COMPONENT_IDS = [
   "shape-colors-variant-tabs",
   "shape-colors-mobbin-inspiration-gallery",
   "home-page-copy-block",
-  "partner-page-flow-block.partner-page-home-button",
 ] as const;
 
 export const HOME_PAGE_DYNAMIC_TARGET_PREFIXES = [

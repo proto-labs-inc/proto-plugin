@@ -20,11 +20,12 @@ export type TextureEmanationCorner =
 
 export type ShapeTextureColor = [number, number, number];
 
-/**
- * How much spring strokes outpace shape shrink (0 = locked ratio).
- * Uses a continuous power curve — no cap as shapes get smaller.
- */
-export const SHAPE_STROKE_INVERSE_EXPONENT = 0.48;
+/** How much spring strokes outpace shape shrink (0 = scale with shape). */
+export const SHAPE_STROKE_RATE = .8;
+/** How much handle dot radius outpaces shape shrink (0 = scale with shape). */
+export const SHAPE_DOT_RATE = 0.25;
+/** How much handle dot outline outpaces shape shrink (0 = scale with shape). */
+export const SHAPE_DOT_OUTLINE_RATE = 0.25;
 
 /** Shape size relative to the partner-page reference layout. */
 export function getShapeNormalizedRenderScale(physicsScale: number) {
@@ -33,26 +34,22 @@ export function getShapeNormalizedRenderScale(physicsScale: number) {
 
 function getShapeMetricRenderScale(
   normalizedShapeSize: number,
-  inverseExponent: number,
+  rate: number,
 ) {
   const safe = Math.max(normalizedShapeSize, 1e-3);
-  return Math.pow(safe, 1 - inverseExponent);
+  return Math.pow(safe, 1 - rate);
 }
 
-/**
- * Spring stroke scale — shrinks slower than the shape so smaller shapes keep
- * slightly chunkier spring lines.
- */
 export function getShapeStrokeRenderScale(normalizedShapeSize: number) {
-  return getShapeMetricRenderScale(
-    normalizedShapeSize,
-    SHAPE_STROKE_INVERSE_EXPONENT,
-  );
+  return getShapeMetricRenderScale(normalizedShapeSize, SHAPE_STROKE_RATE);
 }
 
-/** Dot metrics scale linearly with shape size. */
 export function getShapeDotRenderScale(normalizedShapeSize: number) {
-  return getShapeMetricRenderScale(normalizedShapeSize, 0);
+  return getShapeMetricRenderScale(normalizedShapeSize, SHAPE_DOT_RATE);
+}
+
+export function getShapeDotOutlineRenderScale(normalizedShapeSize: number) {
+  return getShapeMetricRenderScale(normalizedShapeSize, SHAPE_DOT_OUTLINE_RATE);
 }
 
 /** Scale spring strokes from normalized shape size. */
@@ -60,9 +57,17 @@ export function withShapeRenderScale(value: number, normalizedShapeSize = 1) {
   return value * getShapeStrokeRenderScale(normalizedShapeSize);
 }
 
-/** Scale handle-dot metrics from normalized shape size. */
+/** Scale handle-dot radius from normalized shape size. */
 export function withShapeDotRenderScale(value: number, normalizedShapeSize = 1) {
   return value * getShapeDotRenderScale(normalizedShapeSize);
+}
+
+/** Scale handle-dot outline from normalized shape size. */
+export function withShapeDotOutlineRenderScale(
+  value: number,
+  normalizedShapeSize = 1,
+) {
+  return value * getShapeDotOutlineRenderScale(normalizedShapeSize);
 }
 
 /** Spring edge strokes on canvas-drawn proto shapes. */
@@ -71,11 +76,8 @@ export const SHAPE_SPRING_LINE_WIDTH = 1.5;
 export const SHAPE_DOT_OUTLINE_WIDTH = 1.5;
 /** Global multiplier for draggable handle dots across all prototypes. */
 export const SHAPE_DOT_SIZE_SCALE = 1.056;
-/** Legacy handle-dot radius before {@link SHAPE_DOT_SIZE_SCALE}. */
-const SHAPE_HANDLE_DOT_BASE_RADIUS = (12 * (1 / 0.8)) / 2;
 /** Visible radius of draggable handle dots in canvas coordinates. */
-export const SHAPE_HANDLE_DOT_RADIUS =
-  SHAPE_HANDLE_DOT_BASE_RADIUS * SHAPE_DOT_SIZE_SCALE;
+export const SHAPE_HANDLE_DOT_RADIUS = (12 / 0.8 / 2) * SHAPE_DOT_SIZE_SCALE;
 
 /** Reference layout scales from proto-partner-page (desktop). */
 export const REFERENCE_PROTOTYPE_SHAPE_SCALE = 1.75;
@@ -145,7 +147,7 @@ export function getShapeHandleDotRadius(dotScale = 1, normalizedShapeSize = 1) {
 }
 
 export function getShapeHandleDotOutlineWidth(normalizedShapeSize = 1) {
-  return withShapeDotRenderScale(
+  return withShapeDotOutlineRenderScale(
     SHAPE_DOT_OUTLINE_WIDTH * SHAPE_DOT_SIZE_SCALE,
     normalizedShapeSize,
   );

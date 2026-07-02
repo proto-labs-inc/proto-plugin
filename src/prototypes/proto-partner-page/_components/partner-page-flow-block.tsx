@@ -3,15 +3,13 @@
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { cn } from "@prototype/lib/utils";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { INVITE_COPY } from "./invite-copy-content";
 import { inviteCtaButtonClass, inviteBlockClassName, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
 import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
-import {
-  PartnerPageBackButton,
-  PartnerPageHomeButton,
-} from "./partner-page-nav-button";
+import { PartnerPageBackButton } from "./partner-page-nav-button";
 import {
   PARTNER_CUSTOMIZE_ENTRANCE_INDEX,
   PartnerMotionSpringButton,
@@ -22,8 +20,6 @@ import {
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
 import type { SubmitModalVariant } from "./submit-modal-content";
 import { SubmitShapeModal } from "./submit-shape-modal";
-
-export { PartnerPageHomeButton } from "./partner-page-nav-button";
 
 const submitButtonClassName = cn(
   inviteCtaButtonClass,
@@ -88,6 +84,7 @@ export function PartnerPageFlowBlock({
   submitModalVariant = "plain-header",
   onSubmitModalOpenChange,
 }: PartnerPageFlowBlockProps) {
+  const router = useRouter();
   const motionOn = usePartnerEntranceMotion(animateEntrance);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
 
@@ -142,14 +139,6 @@ export function PartnerPageFlowBlock({
               )}
               motionEntranceKey={entranceKey}
             />
-            <PartnerPageHomeButton
-              onClick={() => onPageChange("invite")}
-              motionOn={motionOn}
-              motionDelay={partnerCustomizeEntranceDelay(
-                PARTNER_CUSTOMIZE_ENTRANCE_INDEX.back,
-              )}
-              motionEntranceKey={entranceKey}
-            />
           </div>
           <SubmitShapeButton
             motionOn={motionOn}
@@ -168,7 +157,7 @@ export function PartnerPageFlowBlock({
           onKeepEditing={() => handleSubmitModalOpenChange(false)}
           onSeeOnHomepage={() => {
             handleSubmitModalOpenChange(false);
-            onPageChange("invite");
+            router.push("/prototypes/home-page");
           }}
         />
       ) : null}

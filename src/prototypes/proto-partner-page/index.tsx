@@ -121,14 +121,10 @@ export default function ProtoPartnerPage() {
     <InviteAnimationsBlock
       variant={inviteAnimationsVariant}
       onContinue={() => handlePageChange("customize")}
-      onHome={() => handlePageChange("invite")}
     />
   ) : (
     <>
-      <InviteCopyBlock
-        variant={inviteCopyVariant}
-        onHome={() => handlePageChange("invite")}
-      />
+      <InviteCopyBlock variant={inviteCopyVariant} />
       <PartnerPageFlowBlock
         activePage={activePage}
         onPageChange={handlePageChange}

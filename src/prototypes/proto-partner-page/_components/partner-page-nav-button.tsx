@@ -2,7 +2,7 @@
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { cn } from "@prototype/lib/utils";
-import { ArrowLeft, House } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PartnerMotionSpringButton } from "./partner-page-motion";
@@ -13,7 +13,7 @@ export const partnerPageNavButtonClass =
   "group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center rounded-lg px-2.5 py-2 transition-colors";
 
 type PartnerPageNavButtonProps = {
-  id: "partner-page-flow-block.partner-page-back-button" | "partner-page-flow-block.partner-page-home-button";
+  id: "partner-page-flow-block.partner-page-back-button";
   onClick: () => void;
   ariaLabel: string;
   icon: ReactNode;
@@ -62,37 +62,6 @@ function PartnerPageNavButton({
         {icon}
       </button>
     </PrototypeComponent>
-  );
-}
-
-type PartnerPageHomeButtonProps = {
-  onClick: () => void;
-  motionOn?: boolean;
-  motionDelay?: number;
-  motionEntranceKey?: string | number;
-  className?: string;
-};
-
-export function PartnerPageHomeButton({
-  onClick,
-  motionOn = false,
-  motionDelay = 0,
-  motionEntranceKey = "home",
-  className,
-}: PartnerPageHomeButtonProps) {
-  return (
-    <PartnerPageNavButton
-      id="partner-page-flow-block.partner-page-home-button"
-      onClick={onClick}
-      ariaLabel="Home"
-      motionOn={motionOn}
-      motionDelay={motionDelay}
-      motionEntranceKey={motionEntranceKey}
-      className={className}
-      icon={
-        <House className={partnerPageNavIconClass} aria-hidden />
-      }
-    />
   );
 }
 

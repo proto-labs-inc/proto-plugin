@@ -27,7 +27,6 @@ import {
 type InviteAnimationsBlockProps = {
   variant: InviteAnimationsVariant;
   onContinue?: () => void;
-  onHome?: () => void;
   className?: string;
   /** Remount animations when the design brief switches variants. */
   replayKey?: string;
@@ -61,12 +60,10 @@ function InviteWithBoldProto() {
 
 function StaticInviteContent({
   onContinue,
-  onHome,
   className,
   hideEyebrow,
 }: {
   onContinue?: () => void;
-  onHome?: () => void;
   className?: string;
   hideEyebrow?: boolean;
 }) {
@@ -76,7 +73,7 @@ function StaticInviteContent({
       className={cn(inviteBlockClassName, className)}
     >
       <div className={inviteContentShellClass}>
-        <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+        <InviteEyebrowHeader hideLabel={hideEyebrow} />
         <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
         <div className={inviteBodyStackClass}>
           <p className={inviteBodyClass}>
@@ -175,7 +172,6 @@ function SpringCtaSection({
 function AnimatedInviteContent({
   variant,
   onContinue,
-  onHome,
   className,
   replayKey,
   hideEyebrow,
@@ -189,7 +185,6 @@ function AnimatedInviteContent({
     return (
       <StaticInviteContent
         onContinue={onContinue}
-        onHome={onHome}
         className={className}
         hideEyebrow={hideEyebrow}
       />
@@ -207,7 +202,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <h1
             className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
@@ -261,7 +256,7 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -307,7 +302,6 @@ function AnimatedInviteContent({
         <div className={inviteContentShellClass}>
           <AnimatedInviteEyebrowHeader
             hideLabel={hideEyebrow}
-            onHome={onHome}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
@@ -346,7 +340,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <MotionItem delay={0.12}>
             <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
@@ -376,7 +370,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.05}>
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <h1
             className={cn(inviteHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
@@ -453,7 +447,7 @@ function AnimatedInviteContent({
             visible={blurVisible}
             transition={{ duration: 0.65 }}
           >
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <MotionItem
             delay={0.16}
@@ -522,7 +516,7 @@ function AnimatedInviteContent({
             hidden={{ opacity: 0 }}
             visible={{ opacity: 1 }}
           >
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <MotionItem
             delay={0.1}
@@ -587,7 +581,6 @@ function AnimatedInviteContent({
         <div className={inviteContentShellClass}>
           <AnimatedInviteEyebrowHeader
             hideLabel={hideEyebrow}
-            onHome={onHome}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.05 }}
@@ -649,7 +642,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <MotionItem delay={0.12}>
             <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
@@ -693,7 +686,7 @@ function AnimatedInviteContent({
       >
         <div className={inviteContentShellClass}>
           <MotionItem delay={0.04}>
-            <InviteEyebrowHeader hideLabel={hideEyebrow} onHome={onHome} />
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
           </MotionItem>
           <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
           <div className={inviteBodyStackClass}>
@@ -757,7 +750,6 @@ function AnimatedInviteContent({
       >
         <AnimatedInviteEyebrowHeader
           hideLabel={hideEyebrow}
-          onHome={onHome}
           variants={{
             hidden: fadeUpHidden,
             visible: fadeUpVisible,

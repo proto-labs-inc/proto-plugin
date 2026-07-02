@@ -13,7 +13,6 @@ import { InviteEyebrowHeader } from "./invite-eyebrow-header";
 
 type InviteCopyBlockProps = {
   variant: InviteCopyVariant;
-  onHome?: () => void;
 };
 
 function ActionHint({ children }: { children: React.ReactNode }) {
@@ -38,7 +37,7 @@ function InviteWithBoldProto() {
   );
 }
 
-export function InviteCopyBlock({ variant, onHome }: InviteCopyBlockProps) {
+export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
   if (variant === "open-card") {
     return (
       <PrototypeComponent
@@ -46,7 +45,7 @@ export function InviteCopyBlock({ variant, onHome }: InviteCopyBlockProps) {
         className="shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5"
       >
         <div className={inviteContentShellClass}>
-          <InviteEyebrowHeader onHome={onHome} />
+          <InviteEyebrowHeader />
           <h1 className={inviteHeadlineClass}>
             {INVITE_COPY.headline}
           </h1>
