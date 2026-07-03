@@ -12,6 +12,10 @@ import {
   type ProtoTextureId,
   type TextureEmanationCorner,
 } from "./shape-textures";
+import {
+  clampParticleWithSimulationBoundaries,
+  type SpringsSimulationBoundaries,
+} from "./springs-simulation-boundaries";
 
 const J1_INDEX = 0;
 const J2_INDEX = 1;
@@ -85,7 +89,12 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number, physicsScale = 1) {
+  update(
+    width: number,
+    height: number,
+    boundaries: SpringsSimulationBoundaries,
+    physicsScale = 1,
+  ) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
@@ -100,25 +109,7 @@ class Particle {
 
     this.px += this.vx;
     this.py += this.vy;
-
-    const maxX = width - margin;
-    const maxY = height - margin;
-
-    if (this.px > maxX) {
-      this.px = maxX;
-      this.vx = 0;
-    } else if (this.px < margin) {
-      this.px = margin;
-      this.vx = 0;
-    }
-
-    if (this.py > maxY) {
-      this.py = maxY;
-      this.vy = 0;
-    } else if (this.py < margin) {
-      this.py = margin;
-      this.vy = 0;
-    }
+    clampParticleWithSimulationBoundaries(this, width, height, boundaries);
   }
 }
 
@@ -129,6 +120,7 @@ export type SpringsSquareSimulation = {
   restLength: number;
   physicsScale: number;
   margin: number;
+  floorInset?: number;
   frameCount: number;
   clicked: boolean;
   grabbedIndex: number;
@@ -414,7 +406,12 @@ export function stepSpringsSquareSimulation(
 
   for (const particle of sim.particles) {
     particle.addForce(0, GRAVITY_Y * sim.physicsScale);
-    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
+    particle.update(
+      sim.width,
+      sim.height,
+      { margin: sim.margin, floorInset: sim.floorInset },
+      sim.physicsScale,
+    );
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {

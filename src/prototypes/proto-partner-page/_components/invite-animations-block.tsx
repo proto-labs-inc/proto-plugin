@@ -7,7 +7,8 @@ import { motion, useReducedMotion } from "motion/react";
 import { useMemo, type ReactNode } from "react";
 
 import type { InviteAnimationsVariant } from "./invite-animations-content";
-import { INVITE_COPY } from "./invite-copy-content";
+import { INVITE_COPY, type InviteStep } from "./invite-copy-content";
+import { InviteFollowUpContent } from "./invite-copy-block";
 import {
   inviteBlockClassName,
   inviteBodyClass,
@@ -18,6 +19,7 @@ import {
   inviteCtaSectionClass,
   inviteCtaShellClass,
   inviteHeadlineClass,
+  inviteMotionPassThroughClass,
 } from "./invite-layout-classes";
 import {
   AnimatedInviteEyebrowHeader,
@@ -26,6 +28,7 @@ import {
 
 type InviteAnimationsBlockProps = {
   variant: InviteAnimationsVariant;
+  step?: InviteStep;
   onContinue?: () => void;
   className?: string;
   /** Remount animations when the design brief switches variants. */
@@ -36,7 +39,53 @@ type InviteAnimationsBlockProps = {
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
 /** Extra beat after copy lands before the CTA enters. */
-const CTA_ENTRANCE_DELAY_EXTRA = 0.15;
+export const INVITE_CTA_ENTRANCE_DELAY_EXTRA = 0.15;
+
+const CTA_ENTRANCE_DELAY_EXTRA = INVITE_CTA_ENTRANCE_DELAY_EXTRA;
+
+/** One choreographic beat between follow-up entrance hits. */
+export const INVITE_FOLLOW_UP_BEAT = 0.24;
+
+/** Beat 1 — follow-up copy. */
+export const INVITE_FOLLOW_UP_TEXT_DELAY = 0.08;
+
+const INVITE_FOLLOW_UP_FADE_DURATION = 0.55;
+const INVITE_FOLLOW_UP_CTA_SPRING_DURATION = 0.35;
+const INVITE_FOLLOW_UP_CTA_FADE_DURATION = 0.5;
+
+function inviteFollowUpUsesSpringCta(variant: InviteAnimationsVariant) {
+  return variant.endsWith("button-spring") || variant === "button-spring";
+}
+
+/** Beat 2 — CTA after copy (includes the standard post-copy beat). */
+export function inviteFollowUpCtaDelay(variant: InviteAnimationsVariant) {
+  return inviteFollowUpUsesSpringCta(variant)
+    ? 0.32 + CTA_ENTRANCE_DELAY_EXTRA
+    : 0.42 + CTA_ENTRANCE_DELAY_EXTRA;
+}
+
+/** Beat 3 — example shapes enter after copy and CTA land. */
+export function inviteFollowUpShapeEntranceDelayS(
+  variant: InviteAnimationsVariant,
+) {
+  const ctaDelay = inviteFollowUpCtaDelay(variant);
+  const ctaDuration = inviteFollowUpUsesSpringCta(variant)
+    ? INVITE_FOLLOW_UP_CTA_SPRING_DURATION
+    : INVITE_FOLLOW_UP_CTA_FADE_DURATION;
+  return ctaDelay + ctaDuration + INVITE_FOLLOW_UP_BEAT;
+}
+
+export function inviteFollowUpShapeEntranceCompleteMs(
+  variant: InviteAnimationsVariant,
+) {
+  return Math.round(inviteFollowUpShapeEntranceDelayS(variant) * 1000);
+}
+
+export {
+  INVITE_FOLLOW_UP_FADE_DURATION,
+  INVITE_FOLLOW_UP_CTA_SPRING_DURATION,
+  INVITE_FOLLOW_UP_CTA_FADE_DURATION,
+};
 
 // Transforms are written as full `transform` strings (not `x`/`y`/`scale`
 // shorthands) so Motion animates them via the compositor (WAAPI) rather than
@@ -62,25 +111,35 @@ function StaticInviteContent({
   onContinue,
   className,
   hideEyebrow,
+  step = "intro",
 }: {
   onContinue?: () => void;
   className?: string;
   hideEyebrow?: boolean;
+  step?: InviteStep;
 }) {
+  const ctaLabel =
+    step === "follow-up" ? INVITE_COPY.cta : INVITE_COPY.continueCta;
+
   return (
     <PrototypeComponent
       id="invite-animations-block"
       className={cn(inviteBlockClassName, className)}
     >
       <div className={inviteContentShellClass}>
-        <InviteEyebrowHeader hideLabel={hideEyebrow} />
-        <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
-        <div className={inviteBodyStackClass}>
-          <p className={inviteBodyClass}>
-            <InviteWithBoldProto />
-          </p>
-          <p className={inviteBodyClass}>{INVITE_COPY.followUp}</p>
-        </div>
+        {step === "intro" ? (
+          <>
+            <InviteEyebrowHeader hideLabel={hideEyebrow} />
+            <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
+            <div className={inviteBodyStackClass}>
+              <p className={inviteBodyClass}>
+                <InviteWithBoldProto />
+              </p>
+            </div>
+          </>
+        ) : (
+          <InviteFollowUpContent />
+        )}
       </div>
       <div className={inviteCtaSectionClass}>
         <div className={inviteCtaShellClass}>
@@ -89,7 +148,7 @@ function StaticInviteContent({
             onClick={onContinue}
             className={inviteCtaButtonClass}
           >
-            <span>{INVITE_COPY.cta}</span>
+            <span>{ctaLabel}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden
@@ -120,7 +179,7 @@ function MotionItem({
 }: MotionItemProps) {
   return (
     <motion.div
-      className={className}
+      className={cn(inviteMotionPassThroughClass, className)}
       initial={hidden}
       animate={visible}
       transition={{
@@ -138,9 +197,11 @@ function MotionItem({
 function SpringCtaSection({
   onContinue,
   delay = 0.48,
+  label = INVITE_COPY.cta,
 }: {
   onContinue?: () => void;
   delay?: number;
+  label?: string;
 }) {
   return (
     <div className={inviteCtaSectionClass}>
@@ -148,7 +209,7 @@ function SpringCtaSection({
         <motion.button
           type="button"
           onClick={onContinue}
-          className="group bg-foreground text-background hover:bg-foreground/90 inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl px-4 py-3 text-[0.875rem] font-medium tracking-[-0.01em] transition-colors"
+          className={inviteCtaButtonClass}
           initial={{ opacity: 0, transform: "translateY(12px) scale(0.88)" }}
           animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
           transition={{
@@ -158,7 +219,7 @@ function SpringCtaSection({
             delay: delay + CTA_ENTRANCE_DELAY_EXTRA,
           }}
         >
-          <span>{INVITE_COPY.cta}</span>
+          <span>{label}</span>
           <ArrowRight
             className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
             aria-hidden
@@ -169,8 +230,77 @@ function SpringCtaSection({
   );
 }
 
+function AnimatedInviteFollowUp({
+  variant,
+  onContinue,
+  className,
+  replayKey,
+}: InviteAnimationsBlockProps) {
+  const reduceMotion = useReducedMotion();
+  const mountKey = `${variant}-${replayKey ?? "live"}-follow-up`;
+
+  if (reduceMotion || variant === "none") {
+    return (
+      <StaticInviteContent
+        step="follow-up"
+        onContinue={onContinue}
+        className={className}
+      />
+    );
+  }
+
+  const usesSpringCta =
+    variant.endsWith("button-spring") || variant === "button-spring";
+
+  return (
+    <PrototypeComponent
+      id="invite-animations-block"
+      className={cn(inviteBlockClassName, className)}
+      key={mountKey}
+    >
+      <div className={inviteContentShellClass}>
+        <MotionItem delay={INVITE_FOLLOW_UP_TEXT_DELAY}>
+          <InviteFollowUpContent />
+        </MotionItem>
+      </div>
+      {usesSpringCta ? (
+        <SpringCtaSection
+          onContinue={onContinue}
+          delay={inviteFollowUpCtaDelay(variant) - CTA_ENTRANCE_DELAY_EXTRA}
+        />
+      ) : (
+        <motion.div
+          className={inviteCtaSectionClass}
+          initial={{ opacity: 0, transform: "translateY(18px)" }}
+          animate={{ opacity: 1, transform: "translateY(0px)" }}
+          transition={{
+            duration: 0.5,
+            ease: easeOut,
+            delay: inviteFollowUpCtaDelay(variant),
+          }}
+        >
+          <div className={inviteCtaShellClass}>
+            <button
+              type="button"
+              onClick={onContinue}
+              className={inviteCtaButtonClass}
+            >
+              <span>{INVITE_COPY.cta}</span>
+              <ArrowRight
+                className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
+                aria-hidden
+              />
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </PrototypeComponent>
+  );
+}
+
 function AnimatedInviteContent({
   variant,
+  step = "intro",
   onContinue,
   className,
   replayKey,
@@ -178,8 +308,18 @@ function AnimatedInviteContent({
 }: InviteAnimationsBlockProps) {
   const reduceMotion = useReducedMotion();
   const mountKey = `${variant}-${replayKey ?? "live"}`;
-
   const headlineWords = useMemo(() => INVITE_COPY.headline.split(/\s+/), []);
+
+  if (step === "follow-up") {
+    return (
+      <AnimatedInviteFollowUp
+        variant={variant}
+        onContinue={onContinue}
+        className={className}
+        replayKey={replayKey}
+      />
+    );
+  }
 
   if (reduceMotion || variant === "none") {
     return (
@@ -210,6 +350,7 @@ function AnimatedInviteContent({
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
+                className={inviteMotionPassThroughClass}
                 initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
                 animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
@@ -229,12 +370,13 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem delay={0.5}>
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
-        <SpringCtaSection onContinue={onContinue} delay={0.82} />
+        <SpringCtaSection
+          onContinue={onContinue}
+          delay={0.82}
+          label={INVITE_COPY.continueCta}
+        />
       </PrototypeComponent>
     );
   }
@@ -277,17 +419,13 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem
-              delay={0.34}
-              hidden={blurHidden}
-              visible={blurVisible}
-              transition={{ duration: 0.65 }}
-            >
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
-        <SpringCtaSection onContinue={onContinue} delay={0.56} />
+        <SpringCtaSection
+          onContinue={onContinue}
+          delay={0.56}
+          label={INVITE_COPY.continueCta}
+        />
       </PrototypeComponent>
     );
   }
@@ -323,10 +461,13 @@ function AnimatedInviteContent({
             <p className={bodyClass}>
               <InviteWithBoldProto />
             </p>
-            <p className={bodyClass}>{INVITE_COPY.followUp}</p>
           </motion.div>
         </div>
-        <SpringCtaSection onContinue={onContinue} delay={0.62} />
+        <SpringCtaSection
+          onContinue={onContinue}
+          delay={0.62}
+          label={INVITE_COPY.continueCta}
+        />
       </PrototypeComponent>
     );
   }
@@ -351,12 +492,13 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem delay={0.28}>
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
-        <SpringCtaSection onContinue={onContinue} delay={0.42} />
+        <SpringCtaSection
+          onContinue={onContinue}
+          delay={0.42}
+          label={INVITE_COPY.continueCta}
+        />
       </PrototypeComponent>
     );
   }
@@ -378,6 +520,7 @@ function AnimatedInviteContent({
             {headlineWords.map((word, index) => (
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
+                className={inviteMotionPassThroughClass}
                 initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
                 animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
@@ -397,9 +540,6 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem delay={0.5}>
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
         <motion.div
@@ -418,7 +558,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -468,14 +608,6 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem
-              delay={0.34}
-              hidden={blurHidden}
-              visible={blurVisible}
-              transition={{ duration: 0.65 }}
-            >
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
         <MotionItem
@@ -491,7 +623,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -535,13 +667,6 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem
-              delay={0.2}
-              hidden={{ opacity: 0 }}
-              visible={{ opacity: 1 }}
-            >
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
         <div className={inviteCtaSectionClass}>
@@ -559,7 +684,7 @@ function AnimatedInviteContent({
                 delay: 0.48 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -602,7 +727,6 @@ function AnimatedInviteContent({
             <p className={bodyClass}>
               <InviteWithBoldProto />
             </p>
-            <p className={bodyClass}>{INVITE_COPY.followUp}</p>
           </motion.div>
         </div>
         <motion.div
@@ -621,7 +745,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -653,9 +777,6 @@ function AnimatedInviteContent({
                 <InviteWithBoldProto />
               </p>
             </MotionItem>
-            <MotionItem delay={0.28}>
-              <p className={bodyClass}>{INVITE_COPY.followUp}</p>
-            </MotionItem>
           </div>
         </div>
         <div className={inviteCtaSectionClass}>
@@ -665,7 +786,7 @@ function AnimatedInviteContent({
               onClick={onContinue}
               className={inviteCtaButtonClass}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -693,7 +814,6 @@ function AnimatedInviteContent({
             <p className={bodyClass}>
               <InviteWithBoldProto />
             </p>
-            <p className={bodyClass}>{INVITE_COPY.followUp}</p>
           </div>
         </div>
         <motion.div
@@ -719,7 +839,7 @@ function AnimatedInviteContent({
                 delay: 0.45 + CTA_ENTRANCE_DELAY_EXTRA,
               }}
             >
-              <span>{INVITE_COPY.cta}</span>
+              <span>{INVITE_COPY.continueCta}</span>
               <ArrowRight
                 className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
                 aria-hidden
@@ -777,16 +897,6 @@ function AnimatedInviteContent({
           >
             <InviteWithBoldProto />
           </motion.p>
-          <motion.p
-            className={bodyClass}
-            variants={{
-              hidden: fadeUpHidden,
-              visible: fadeUpVisible,
-            }}
-            transition={{ duration: 0.5, ease: easeOut }}
-          >
-            {INVITE_COPY.followUp}
-          </motion.p>
         </div>
       </motion.div>
       <motion.div
@@ -805,7 +915,7 @@ function AnimatedInviteContent({
             onClick={onContinue}
             className={inviteCtaButtonClass}
           >
-            <span>{INVITE_COPY.cta}</span>
+            <span>{INVITE_COPY.continueCta}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden

@@ -56,13 +56,13 @@ const PICKER_TILE_BASE_CLASS =
 const PICKER_SHAPE_TEXTURE_HOVER_CLASS = "hover:scale-[1.12]";
 
 const PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 md:gap-2 [&>button]:cursor-pointer";
+  "flex min-h-11 flex-nowrap items-center justify-center gap-2.5 py-1 md:min-h-10 md:flex-wrap md:gap-2 [&>button]:cursor-pointer";
 
 const SHAPE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-5 py-1 md:gap-4 [&>button]:cursor-pointer";
+  "flex min-h-11 flex-nowrap items-center justify-center gap-2.5 py-1 md:min-h-10 md:flex-wrap md:gap-4 [&>button]:cursor-pointer";
 
 const TEXTURE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-2.5 [&>button]:cursor-pointer";
+  "flex min-h-11 flex-nowrap items-center justify-center gap-2.5 py-1 md:min-h-10 md:flex-wrap md:gap-2.5 [&>button]:cursor-pointer";
 
 const PICKER_TILE_SELECTED_CLASS = "shadow-[0_0_0_1px_rgb(0_0_0/0.85)]";
 
@@ -328,9 +328,11 @@ function ShapeColorPickerRows({
       )}
       key={mk}
     >
-      {shapeSection}
-      {colorSection}
-      {textureSection}
+      {sections.map((section) => {
+        if (section === "shape") return shapeSection;
+        if (section === "color") return colorSection;
+        return textureSection;
+      })}
     </div>
   );
 }
@@ -721,7 +723,7 @@ function ColorRow({
   }
 
   return (
-    <div className={cn(PICKER_ROW_CLASS, "gap-4 md:gap-4")}>
+    <div className={cn(PICKER_ROW_CLASS, "md:gap-4")}>
       {PROTO_COLORS.map((colorOption, colorIndex) => {
         const selected = colorOption.id === selection.colorId;
         const button = (

@@ -1,9 +1,10 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  getProtoColor,
   PROTO_COLORS,
   PROTO_SHAPES,
   type ProtoColorId,
@@ -16,7 +17,17 @@ import {
   SHAPE_COLORS_BASELINE_SCHEME,
   type ShapeColorsVariant,
 } from "./shape-colors-content";
+import {
+  contributorShapeToSlotConfig,
+  HOME_PAGE_CONTRIBUTOR_SHAPES,
+  type HomePageContributorShape,
+} from "./home-page-contributor-shapes";
+import { readSubmittedContributorShapes } from "../../proto-partner-page/_components/submitted-proto-shapes";
 import { bindSpringsCanvasPointerHandlers } from "../../proto-shapes/springs-canvas-pointer";
+import {
+  DRAG_ATTRIBUTION_TOOLTIP_CLASS,
+  updateDragAttributionTooltipElement,
+} from "../../proto-shapes/springs-drag-attribution-tooltip";
 import {
   createSpringsCubeSimulation,
   drawSpringsCubeSimulation,
@@ -318,16 +329,75 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
 
 const WARM_START_FRAMES = 90;
 const MIN_VALID_CANVAS_HEIGHT = 120;
-/** Downscale clutter shapes on the home background; dots stay at partner scale. */
-const HOME_BACKGROUND_SHAPE_SCALE = 0.72;
-const SHAPE_COUNT = 24;
-const SHAPE_SEED = 0x1a2b3c4d;
-const GRID_COLS = 8;
-const MIN_VISUAL_SCALE = 0.3;
-const MAX_VISUAL_SCALE = 1.4;
-/** 0 = top of canvas, 1 = bottom edge. */
-const MIN_REST_FLOOR_FACTOR = 0.12;
-const MAX_REST_FLOOR_FACTOR = 0.995;
+
+export type FixedShapeSlotConfig = {
+  id: string;
+  shapeId: ProtoShapeId;
+  colorId: ProtoColorId;
+  textureId: ProtoTextureId;
+  visualScale: number;
+  restFloorFactor: number;
+  xFactor: number;
+  yFactor: number;
+  /** Partner mode only — lifts this shape's floor without shifting other shelves. */
+  restFloorSpreadAdjust?: number;
+  /** Drop this slot instead of warm-start / center-pop. Overrides config entrance. */
+  entranceDrop?: boolean;
+  /** Launch from the bottom edge toward a high shelf — for slots above midline. */
+  entranceDropFromBottom?: boolean;
+  /** Shown in a tooltip above this shape while it is dragged. */
+  attributionLabel?: string;
+};
+
+export type MultiShapeSpringsPhysicsMode = "background" | "partner";
+
+export type MultiShapeSpringsCanvasConfig = {
+  shapeCount: number;
+  seed: number;
+  gridCols: number;
+  minRestFloorFactor: number;
+  maxRestFloorFactor: number;
+  minVisualScale: number;
+  maxVisualScale: number;
+  backgroundShapeScale: number;
+  colorMode: "home-palette" | "proto-colors";
+  /**
+   * `partner` matches PartnerShapeCanvas: plain spring step with per-shape shelf
+   * floors plus screen-edge walls — no per-particle floor clamp or square
+   * self-collision stack.
+   * `background` enables shelf stacking physics for dense multi-shape scenes.
+   */
+  physicsMode?: MultiShapeSpringsPhysicsMode;
+  /** When set, renders exactly these slots with no random generation. */
+  fixedSlots?: readonly FixedShapeSlotConfig[];
+  /** Drop shapes from above their slots instead of warm-starting in place. */
+  entranceDrop?: boolean;
+  /**
+   * Collapse warm-started shapes to the vertical center, then let springs pop
+   * them open — same reveal as PartnerShapeCanvas on the customize page.
+   */
+  entranceCenterPop?: boolean;
+  /** Stagger per-shape reveal on entrance (seconds). Requires entranceDrop or entranceCenterPop. */
+  shapeEntranceStagger?: number;
+  /**
+   * Fallback label for the drag-attribution tooltip. Per-slot `attributionLabel`
+   * takes precedence when set.
+   */
+  dragAttributionLabel?: string;
+};
+
+export const HOME_PAGE_SHAPES_CONFIG: MultiShapeSpringsCanvasConfig = {
+  shapeCount: 24,
+  seed: 0x1a2b3c4d,
+  gridCols: 8,
+  minRestFloorFactor: 0.12,
+  maxRestFloorFactor: 0.995,
+  minVisualScale: 0.3,
+  maxVisualScale: 1.4,
+  backgroundShapeScale: 0.72,
+  colorMode: "home-palette",
+  physicsMode: "background",
+};
 /** Particles within this distance of the floor count as resting on it. */
 const FLOOR_CONTACT_EPSILON = 1.5;
 /** Horizontal velocity multiplier per frame for particles resting on the floor. */
@@ -345,6 +415,10 @@ type ShapeSlotConfig = {
   restFloorFactor: number;
   xFactor: number;
   yFactor: number;
+  restFloorSpreadAdjust?: number;
+  entranceDrop?: boolean;
+  entranceDropFromBottom?: boolean;
+  attributionLabel?: string;
 };
 
 type ShapeSlot = ShapeSlotConfig & {
@@ -371,30 +445,68 @@ function shuffleWithRandom<T>(items: T[], random: () => number) {
   }
 }
 
-function generateUniqueRestFloorFactors(count: number, random: () => number) {
+function generateUniqueRestFloorFactors(
+  count: number,
+  random: () => number,
+  config: MultiShapeSpringsCanvasConfig,
+) {
   const factors = Array.from({ length: count }, (_, index) => {
     const t = count <= 1 ? 0.5 : index / (count - 1);
     return (
-      MIN_REST_FLOOR_FACTOR +
-      t * (MAX_REST_FLOOR_FACTOR - MIN_REST_FLOOR_FACTOR)
+      config.minRestFloorFactor +
+      t * (config.maxRestFloorFactor - config.minRestFloorFactor)
     );
   });
   shuffleWithRandom(factors, random);
   return factors;
 }
 
-function generateShapeSlotConfigs(
-  count: number,
-  seed: number,
+function fixedSlotToConfig(
+  slot: FixedShapeSlotConfig,
   colorScheme: ShapeColorsVariant,
+  colorMode: MultiShapeSpringsCanvasConfig["colorMode"],
+): ShapeSlotConfig {
+  return {
+    id: slot.id,
+    shapeId: slot.shapeId,
+    color:
+      colorMode === "proto-colors"
+        ? getProtoColor(slot.colorId).rgb
+        : getHomeShapePaletteColor(slot.colorId, colorScheme),
+    textureId: slot.textureId,
+    visualScale: slot.visualScale,
+    restFloorFactor: slot.restFloorFactor,
+    xFactor: slot.xFactor,
+    yFactor: slot.yFactor,
+    restFloorSpreadAdjust: slot.restFloorSpreadAdjust,
+    entranceDrop: slot.entranceDrop,
+    entranceDropFromBottom: slot.entranceDropFromBottom,
+    attributionLabel: slot.attributionLabel,
+  };
+}
+
+function generateShapeSlotConfigs(
+  config: MultiShapeSpringsCanvasConfig,
+  colorScheme: ShapeColorsVariant,
+  contributorShapes: HomePageContributorShape[] = [],
 ): ShapeSlotConfig[] {
-  const random = createSeededRandom(seed);
+  if (config.fixedSlots?.length) {
+    return config.fixedSlots.map((slot) =>
+      fixedSlotToConfig(slot, colorScheme, config.colorMode),
+    );
+  }
+
+  const random = createSeededRandom(config.seed);
   const slots: ShapeSlotConfig[] = [];
   const textures = [...PROTO_TEXTURES];
-  const restFloorFactors = generateUniqueRestFloorFactors(count, random);
+  const restFloorFactors = generateUniqueRestFloorFactors(
+    config.shapeCount,
+    random,
+    config,
+  );
 
-  for (let index = 0; index < count; index += 1) {
-    const col = index % GRID_COLS;
+  for (let index = 0; index < config.shapeCount; index += 1) {
+    const col = index % config.gridCols;
     const colorId = pickRandom(
       PROTO_COLORS.map((color) => color.id),
       random,
@@ -406,31 +518,45 @@ function generateShapeSlotConfigs(
         PROTO_SHAPES.map((shape) => shape.id),
         random,
       ),
-      color: getHomeShapePaletteColor(colorId, colorScheme),
-      textureId: textures[index % textures.length]!,
+      color:
+        config.colorMode === "proto-colors"
+          ? getProtoColor(colorId).rgb
+          : getHomeShapePaletteColor(colorId, colorScheme),
+      textureId: pickRandom(textures, random),
       visualScale:
-        MIN_VISUAL_SCALE + random() * (MAX_VISUAL_SCALE - MIN_VISUAL_SCALE),
+        config.minVisualScale +
+        random() * (config.maxVisualScale - config.minVisualScale),
       restFloorFactor: restFloorFactors[index]!,
-      xFactor: 0.04 + ((col + 0.5) / GRID_COLS) * 0.92,
+      xFactor: 0.04 + ((col + 0.5) / config.gridCols) * 0.92,
       yFactor: 0.02 + random() * 0.08,
     });
   }
 
-  return slots;
+  const contributorSlots = contributorShapes.map(contributorShapeToSlotConfig);
+  return [...contributorSlots, ...slots];
 }
 
-function getHomeSlotLayout(shapeId: ProtoShapeId, visualScale: number) {
+function getSlotLayout(
+  shapeId: ProtoShapeId,
+  visualScale: number,
+  backgroundShapeScale: number,
+) {
   return getPrototypeShapeLayoutScales({
-    layoutShapeScale: HOME_BACKGROUND_SHAPE_SCALE,
+    layoutShapeScale: backgroundShapeScale,
     visualScale,
     isThreePartShape: shapeId === "square",
   });
 }
 
-function resolveShapeMargin(shapeId: ProtoShapeId, visualScale: number) {
-  const { dotScale, normalizedRenderScale } = getHomeSlotLayout(
+function resolveShapeMargin(
+  shapeId: ProtoShapeId,
+  visualScale: number,
+  backgroundShapeScale: number,
+) {
+  const { dotScale, normalizedRenderScale } = getSlotLayout(
     shapeId,
     visualScale,
+    backgroundShapeScale,
   );
   const renderBleed =
     getShapeHandleDotRadius(dotScale, normalizedRenderScale) +
@@ -446,6 +572,78 @@ function getRestFloorY(
   margin: number,
 ) {
   return cssHeight * restFloorFactor - margin;
+}
+
+/** Bottom inset that raises each shape's floor to its shelf layer. */
+function getShelfSimulationMargin(
+  cssHeight: number,
+  restFloorFactor: number,
+  renderMargin: number,
+) {
+  return Math.ceil(cssHeight * (1 - restFloorFactor) + renderMargin);
+}
+
+function getSlotRestFloorFactorRange(
+  slots: readonly Pick<ShapeSlotConfig, "restFloorFactor">[],
+) {
+  if (slots.length === 0) {
+    return { min: 1, max: 1 };
+  }
+  return {
+    min: Math.min(...slots.map((slot) => slot.restFloorFactor)),
+    max: Math.max(...slots.map((slot) => slot.restFloorFactor)),
+  };
+}
+
+/**
+ * Stretch shelf spacing from the original top layer down to a flush bottom,
+ * keeping the highest shelf where the layout authored it.
+ */
+function spreadRestFloorFactor(
+  restFloorFactor: number,
+  minRestFloorFactor: number,
+  maxRestFloorFactor: number,
+) {
+  const span = maxRestFloorFactor - minRestFloorFactor;
+  if (span <= 0) return 1;
+  const t = (restFloorFactor - minRestFloorFactor) / span;
+  return minRestFloorFactor + t * (1 - minRestFloorFactor);
+}
+
+function applySlotSimulationMargin(
+  slot: ShapeSlotConfig,
+  sim: SpringsSimulation,
+  cssHeight: number,
+  backgroundShapeScale: number,
+  physicsMode: MultiShapeSpringsPhysicsMode,
+  restFloorFactorRange = { min: 1, max: 1 },
+) {
+  const renderMargin = resolveShapeMargin(
+    slot.shapeId,
+    slot.visualScale,
+    backgroundShapeScale,
+  );
+  if (physicsMode === "partner") {
+    const spreadFloorFactor = spreadRestFloorFactor(
+      slot.restFloorFactor,
+      restFloorFactorRange.min,
+      restFloorFactorRange.max,
+    );
+    const adjustedSpreadFloorFactor = Math.max(
+      restFloorFactorRange.min,
+      spreadFloorFactor - (slot.restFloorSpreadAdjust ?? 0),
+    );
+    sim.margin = renderMargin;
+    sim.floorInset = getShelfSimulationMargin(
+      cssHeight,
+      adjustedSpreadFloorFactor,
+      renderMargin,
+    );
+    return;
+  }
+
+  sim.margin = renderMargin;
+  sim.floorInset = undefined;
 }
 
 /**
@@ -481,7 +679,10 @@ function enforceShapeFloor(
   }
 }
 
-function resolveSquareSelfCollisions(sim: SpringsSquareSimulation) {
+function resolveSquareSelfCollisions(
+  sim: SpringsSquareSimulation,
+  pinned: readonly CollidableParticle[] = [],
+) {
   resolveSelfCollisions(
     sim.particles,
     {
@@ -489,7 +690,144 @@ function resolveSquareSelfCollisions(sim: SpringsSquareSimulation) {
       edges: SQUARE_COLLISION_EDGES,
     },
     SQUARE_SPRING_PAIRS,
+    pinned,
   );
+}
+
+/** Block horizontal shove from self-collisions while a square rests on its floor layer. */
+function lockSquareFloorHorizontalDrift(
+  sim: SpringsSquareSimulation,
+  floorY: number,
+  preCollisionPx: readonly number[],
+  pinned: readonly CollidableParticle[] = [],
+) {
+  const pinnedSet = new Set(pinned);
+
+  for (let index = 0; index < sim.particles.length; index += 1) {
+    const particle = sim.particles[index]!;
+    if (pinnedSet.has(particle)) continue;
+    if (particle.py >= floorY - FLOOR_CONTACT_EPSILON) {
+      particle.px = preCollisionPx[index]!;
+      particle.vx = 0;
+    }
+  }
+}
+
+function resolveSquareSelfCollisionsWithFloorLock(
+  sim: SpringsSquareSimulation,
+  floorY: number,
+  pinned: readonly CollidableParticle[] = [],
+) {
+  const preCollisionPx = sim.particles.map((particle) => particle.px);
+  resolveSquareSelfCollisions(sim, pinned);
+  lockSquareFloorHorizontalDrift(sim, floorY, preCollisionPx, pinned);
+}
+
+function getSimulationCentroid(sim: SpringsSimulation) {
+  let sumX = 0;
+  let sumY = 0;
+  for (const particle of sim.particles) {
+    sumX += particle.px;
+    sumY += particle.py;
+  }
+  const count = sim.particles.length;
+  return { x: sumX / count, y: sumY / count };
+}
+
+function updateDragAttributionTooltip(
+  tooltip: HTMLDivElement | null,
+  labelEl: HTMLSpanElement | null,
+  shapes: ShapeSlot[],
+  grabbedId: string | null,
+  pointerDown: boolean,
+  globalLabel: string | undefined,
+) {
+  if (!grabbedId || !pointerDown) {
+    if (tooltip) tooltip.style.display = "none";
+    return;
+  }
+
+  const slot = shapes.find((entry) => entry.id === grabbedId);
+  if (!slot?.sim) {
+    if (tooltip) tooltip.style.display = "none";
+    return;
+  }
+
+  const slotLabel = slot.attributionLabel;
+  const label = slotLabel ?? globalLabel;
+  updateDragAttributionTooltipElement(
+    tooltip,
+    labelEl,
+    getSimulationCentroid(slot.sim),
+    label,
+    Boolean(slotLabel),
+  );
+}
+
+/** Matches PartnerShapeCanvas — tiny cluster so springs distend on the first live frames. */
+const INITIAL_POP_COLLAPSE_FACTOR = 0.04;
+/** Shelves above this factor collapse at the bottom edge so springs distend upward. */
+const CENTER_POP_MIDLINE_FACTOR = 0.5;
+const BOTTOM_POP_COLLAPSE_Y_FACTOR = 0.97;
+
+function collapseShapeForPop(
+  sim: SpringsSimulation,
+  targetX: number,
+  targetY: number,
+) {
+  const centroid = getSimulationCentroid(sim);
+  for (const particle of sim.particles) {
+    particle.px =
+      targetX + (particle.px - centroid.x) * INITIAL_POP_COLLAPSE_FACTOR;
+    particle.py =
+      targetY + (particle.py - centroid.y) * INITIAL_POP_COLLAPSE_FACTOR;
+    particle.vx = 0;
+    particle.vy = 0;
+  }
+}
+
+type ShapeSimulationEntrance = {
+  drop?: boolean;
+  dropFromBottom?: boolean;
+  centerPop?: boolean;
+};
+
+function resolveSlotEntrance(
+  slot: Pick<ShapeSlotConfig, "entranceDrop" | "entranceDropFromBottom">,
+  config: MultiShapeSpringsCanvasConfig,
+) {
+  const dropFromBottom = slot.entranceDropFromBottom ?? false;
+  const drop =
+    dropFromBottom || (slot.entranceDrop ?? config.entranceDrop ?? false);
+  return {
+    drop,
+    dropFromBottom,
+    centerPop: drop ? false : (config.entranceCenterPop ?? false),
+  };
+}
+
+function slotUsesStaggeredEntrance(
+  slot: ShapeSlotConfig,
+  config: MultiShapeSpringsCanvasConfig,
+) {
+  const { drop, centerPop } = resolveSlotEntrance(slot, config);
+  return (
+    drop ||
+    centerPop ||
+    (config.entranceDrop ?? false) ||
+    (config.entranceCenterPop ?? false)
+  );
+}
+
+function launchShapeFromBottom(
+  sim: SpringsSimulation,
+  targetFloorY: number,
+) {
+  const centroid = getSimulationCentroid(sim);
+  const launchVy = -Math.max(14, Math.min(30, (centroid.y - targetFloorY) * 0.14));
+  for (const particle of sim.particles) {
+    particle.vy = launchVy;
+  }
 }
 
 function warmStartSimulation(
@@ -497,6 +835,7 @@ function warmStartSimulation(
   sim: SpringsSimulation,
   floorY: number,
   shapeId: ProtoShapeId,
+  physicsMode: MultiShapeSpringsPhysicsMode,
 ) {
   const idleInput: PointerInput = {
     pointerX: 0,
@@ -504,10 +843,20 @@ function warmStartSimulation(
     pointerDown: false,
   };
 
+  if (physicsMode === "partner") {
+    for (let i = 0; i < WARM_START_FRAMES; i += 1) {
+      runtime.step(sim, idleInput);
+    }
+    return;
+  }
+
   for (let i = 0; i < WARM_START_FRAMES; i += 1) {
     runtime.step(sim, idleInput);
     if (shapeId === "square") {
-      resolveSquareSelfCollisions(sim as SpringsSquareSimulation);
+      resolveSquareSelfCollisionsWithFloorLock(
+        sim as SpringsSquareSimulation,
+        floorY,
+      );
     }
     enforceShapeFloor(sim, floorY);
   }
@@ -517,18 +866,57 @@ function createShapeSimulation(
   slot: ShapeSlotConfig,
   cssWidth: number,
   cssHeight: number,
+  backgroundShapeScale: number,
+  physicsMode: MultiShapeSpringsPhysicsMode,
+  entrance: ShapeSimulationEntrance = {},
+  restFloorFactorRange = { min: 1, max: 1 },
 ) {
+  const { drop = false, dropFromBottom = false, centerPop = false } = entrance;
   const runtime = SHAPE_RUNTIMES[slot.shapeId];
   const spawnX = cssWidth * slot.xFactor;
-  const spawnY = cssHeight * slot.yFactor;
+  const spawnY = dropFromBottom
+    ? cssHeight * BOTTOM_POP_COLLAPSE_Y_FACTOR
+    : cssHeight * (drop ? Math.max(0.02, slot.yFactor - 0.22) : slot.yFactor);
   const sim = runtime.create(cssWidth, cssHeight, spawnX, spawnY);
   scaleSpringsSimulationAroundCentroid(
     sim,
-    getHomeSlotLayout(slot.shapeId, slot.visualScale).shapeScale,
+    getSlotLayout(slot.shapeId, slot.visualScale, backgroundShapeScale)
+      .shapeScale,
   );
-  sim.margin = resolveShapeMargin(slot.shapeId, slot.visualScale);
-  const floorY = getRestFloorY(cssHeight, slot.restFloorFactor, sim.margin);
-  warmStartSimulation(runtime, sim, floorY, slot.shapeId);
+  applySlotSimulationMargin(
+    slot,
+    sim,
+    cssHeight,
+    backgroundShapeScale,
+    physicsMode,
+    restFloorFactorRange,
+  );
+  if (!drop) {
+    const floorY = getRestFloorY(
+      cssHeight,
+      slot.restFloorFactor,
+      resolveShapeMargin(slot.shapeId, slot.visualScale, backgroundShapeScale),
+    );
+    warmStartSimulation(runtime, sim, floorY, slot.shapeId, physicsMode);
+    if (centerPop) {
+      const collapseYFactor =
+        slot.restFloorFactor <= CENTER_POP_MIDLINE_FACTOR
+          ? BOTTOM_POP_COLLAPSE_Y_FACTOR
+          : CENTER_POP_MIDLINE_FACTOR;
+      collapseShapeForPop(
+        sim,
+        cssWidth * slot.xFactor,
+        cssHeight * collapseYFactor,
+      );
+    }
+  } else if (dropFromBottom) {
+    const floorY = getRestFloorY(
+      cssHeight,
+      slot.restFloorFactor,
+      resolveShapeMargin(slot.shapeId, slot.visualScale, backgroundShapeScale),
+    );
+    launchShapeFromBottom(sim, floorY);
+  }
   return sim;
 }
 
@@ -537,7 +925,7 @@ function setupHiDpiCanvas(
   cssWidth: number,
   cssHeight: number,
 ) {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
   canvas.style.width = `${cssWidth}px`;
@@ -555,18 +943,52 @@ type HomePageShapesBackgroundProps = {
   colorScheme?: ShapeColorsVariant;
   /** Forces a remount when the exploration preview switches variants. */
   previewKey?: string;
+  config?: MultiShapeSpringsCanvasConfig;
+  className?: string;
+  componentId?: string;
+  ariaLabel?: string;
 };
 
 export function HomePageShapesBackground({
   colorScheme = SHAPE_COLORS_BASELINE_SCHEME,
   previewKey,
+  config = HOME_PAGE_SHAPES_CONFIG,
+  className = "absolute inset-0 z-10 overflow-hidden bg-transparent",
+  componentId = "home-page-shapes-background",
+  ariaLabel = "Interactive proto shapes background",
 }: HomePageShapesBackgroundProps = {}) {
+  const [contributorShapes, setContributorShapes] = useState(
+    HOME_PAGE_CONTRIBUTOR_SHAPES,
+  );
+
+  useEffect(() => {
+    if (config.colorMode !== "home-palette") return;
+
+    const submitted = readSubmittedContributorShapes();
+    const merged = [...HOME_PAGE_CONTRIBUTOR_SHAPES];
+
+    for (const shape of submitted) {
+      if (!merged.some((entry) => entry.id === shape.id)) {
+        merged.push(shape);
+      }
+    }
+
+    setContributorShapes(merged);
+  }, [config.colorMode, previewKey]);
+
   const slotConfigs = useMemo(
-    () => generateShapeSlotConfigs(SHAPE_COUNT, SHAPE_SEED, colorScheme),
-    [colorScheme],
+    () =>
+      generateShapeSlotConfigs(
+        config,
+        colorScheme,
+        config.colorMode === "home-palette" ? contributorShapes : [],
+      ),
+    [colorScheme, config, contributorShapes],
   );
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dragTooltipRef = useRef<HTMLDivElement>(null);
+  const dragTooltipLabelRef = useRef<HTMLSpanElement>(null);
   const shapesRef = useRef<ShapeSlot[]>(
     slotConfigs.map((config) => ({ ...config, sim: null })),
   );
@@ -588,6 +1010,8 @@ export function HomePageShapesBackground({
     pointerDown: false,
   });
   const rafRef = useRef<number | null>(null);
+  const configRef = useRef(config);
+  configRef.current = config;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -597,11 +1021,48 @@ export function HomePageShapesBackground({
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
+    const entranceStartedAtMs = performance.now();
+
+    const tryCreateSlotSimulation = (
+      slot: ShapeSlot,
+      slotIndex: number,
+      cssWidth: number,
+      cssHeight: number,
+    ) => {
+      if (slot.sim) return;
+
+      const currentConfig = configRef.current;
+      const physicsMode = currentConfig.physicsMode ?? "background";
+      const { drop, dropFromBottom, centerPop } = resolveSlotEntrance(
+        slot,
+        currentConfig,
+      );
+
+      if (slotUsesStaggeredEntrance(slot, currentConfig)) {
+        const revealAt =
+          entranceStartedAtMs +
+          slotIndex * (currentConfig.shapeEntranceStagger ?? 0) * 1000;
+        if (performance.now() < revealAt) return;
+      }
+
+      slot.sim = createShapeSimulation(
+        slot,
+        cssWidth,
+        cssHeight,
+        currentConfig.backgroundShapeScale,
+        physicsMode,
+        { drop, dropFromBottom, centerPop },
+        getSlotRestFloorFactorRange(shapesRef.current),
+      );
+    };
+
     const resize = () => {
       const cssWidth = Math.max(1, Math.floor(container.clientWidth));
       const cssHeight = Math.max(1, Math.floor(container.clientHeight));
       const dpr = setupHiDpiCanvas(canvas, cssWidth, cssHeight);
       sizeRef.current = { cssWidth, cssHeight, dpr };
+      const backgroundShapeScale = configRef.current.backgroundShapeScale;
+      const physicsMode = configRef.current.physicsMode ?? "background";
 
       if (cssHeight < MIN_VALID_CANVAS_HEIGHT) {
         for (const slot of shapesRef.current) {
@@ -610,6 +1071,10 @@ export function HomePageShapesBackground({
         return;
       }
 
+      const restFloorFactorRange = getSlotRestFloorFactorRange(
+        shapesRef.current,
+      );
+
       for (const slot of shapesRef.current) {
         if (slot.sim) {
           SHAPE_RUNTIMES[slot.shapeId].updateBounds(
@@ -617,9 +1082,24 @@ export function HomePageShapesBackground({
             cssWidth,
             cssHeight,
           );
-          slot.sim.margin = resolveShapeMargin(slot.shapeId, slot.visualScale);
-        } else {
-          slot.sim = createShapeSimulation(slot, cssWidth, cssHeight);
+          applySlotSimulationMargin(
+            slot,
+            slot.sim,
+            cssHeight,
+            backgroundShapeScale,
+            physicsMode,
+            restFloorFactorRange,
+          );
+        } else if (!slotUsesStaggeredEntrance(slot, configRef.current)) {
+          slot.sim = createShapeSimulation(
+            slot,
+            cssWidth,
+            cssHeight,
+            backgroundShapeScale,
+            physicsMode,
+            resolveSlotEntrance(slot, configRef.current),
+            restFloorFactorRange,
+          );
         }
       }
     };
@@ -701,6 +1181,19 @@ export function HomePageShapesBackground({
       const shapes = shapesRef.current;
       const { cssWidth, cssHeight, dpr } = sizeRef.current;
       const grabbedId = grabbedShapeIdRef.current;
+      const backgroundShapeScale = configRef.current.backgroundShapeScale;
+      const physicsMode = configRef.current.physicsMode ?? "background";
+
+      if (cssHeight >= MIN_VALID_CANVAS_HEIGHT) {
+        for (let index = 0; index < shapes.length; index += 1) {
+          tryCreateSlotSimulation(
+            shapes[index]!,
+            index,
+            cssWidth,
+            cssHeight,
+          );
+        }
+      }
 
       for (const slot of shapes) {
         if (!slot.sim) continue;
@@ -712,36 +1205,32 @@ export function HomePageShapesBackground({
         });
       }
 
-      for (const slot of shapes) {
-        if (slot.shapeId !== "square" || !slot.sim) continue;
-        const squarePinned =
-          grabbedId === slot.id &&
-          inputRef.current.pointerDown &&
-          slot.sim.grabbedIndex > -1
-            ? [slot.sim.particles[slot.sim.grabbedIndex]!]
-            : [];
-        resolveSelfCollisions(
-          slot.sim.particles,
-          {
-            particles: slot.sim.particles,
-            edges: SQUARE_COLLISION_EDGES,
-          },
-          SQUARE_SPRING_PAIRS,
-          squarePinned,
-        );
-      }
+      if (physicsMode === "background") {
+        for (const slot of shapes) {
+          if (!slot.sim) continue;
 
-      for (const slot of shapes) {
-        if (!slot.sim) continue;
+          const isGrabbed = grabbedId === slot.id && inputRef.current.pointerDown;
+          const margin = resolveShapeMargin(
+            slot.shapeId,
+            slot.visualScale,
+            backgroundShapeScale,
+          );
+          const floorY = getRestFloorY(cssHeight, slot.restFloorFactor, margin);
+          const pinned: CollidableParticle[] =
+            isGrabbed && slot.sim.grabbedIndex > -1
+              ? [slot.sim.particles[slot.sim.grabbedIndex]!]
+              : [];
 
-        const isGrabbed = grabbedId === slot.id && inputRef.current.pointerDown;
-        const margin = resolveShapeMargin(slot.shapeId, slot.visualScale);
-        const floorY = getRestFloorY(cssHeight, slot.restFloorFactor, margin);
-        const pinned: CollidableParticle[] =
-          isGrabbed && slot.sim.grabbedIndex > -1
-            ? [slot.sim.particles[slot.sim.grabbedIndex]!]
-            : [];
-        enforceShapeFloor(slot.sim, floorY, pinned);
+          if (slot.shapeId === "square") {
+            resolveSquareSelfCollisionsWithFloorLock(
+              slot.sim as SpringsSquareSimulation,
+              floorY,
+              pinned,
+            );
+          }
+
+          enforceShapeFloor(slot.sim, floorY, pinned);
+        }
       }
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -758,9 +1247,10 @@ export function HomePageShapesBackground({
       for (const slot of drawOrder) {
         if (!slot.sim) continue;
         const runtime = SHAPE_RUNTIMES[slot.shapeId];
-        const { dotScale, renderScale } = getHomeSlotLayout(
+        const { dotScale, renderScale } = getSlotLayout(
           slot.shapeId,
           slot.visualScale,
+          backgroundShapeScale,
         );
         runtime.draw(
           ctx,
@@ -771,6 +1261,15 @@ export function HomePageShapesBackground({
           renderScale,
         );
       }
+
+      updateDragAttributionTooltip(
+        dragTooltipRef.current,
+        dragTooltipLabelRef.current,
+        shapes,
+        grabbedId,
+        inputRef.current.pointerDown,
+        configRef.current.dragAttributionLabel,
+      );
 
       rafRef.current = requestAnimationFrame(frame);
     };
@@ -787,20 +1286,24 @@ export function HomePageShapesBackground({
   }, [slotConfigs]);
 
   return (
-    <PrototypeComponent
-      id="home-page-shapes-background"
-      className="absolute inset-0 z-10 overflow-hidden bg-transparent"
-    >
+    <PrototypeComponent id={componentId} className={className}>
       <div
         key={previewKey}
         ref={containerRef}
-        className="relative size-full touch-none"
-        aria-label="Interactive proto shapes background"
+        className="absolute inset-0 min-h-0 min-w-0 touch-none"
+        aria-label={ariaLabel}
       >
         <canvas
           ref={canvasRef}
           className="absolute inset-0 block touch-none select-none"
         />
+        <div
+          ref={dragTooltipRef}
+          className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
+          aria-hidden
+        >
+          <span ref={dragTooltipLabelRef} />
+        </div>
       </div>
     </PrototypeComponent>
   );

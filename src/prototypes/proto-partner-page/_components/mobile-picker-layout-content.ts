@@ -40,7 +40,9 @@ export const MOBILE_PICKER_DOCK_BORDER_CLASS = "border-border border-t-2";
 
 export type PickerSection = "shape" | "color" | "texture";
 
-export const PICKER_SECTIONS: PickerSection[] = ["shape", "color", "texture"];
+export const PICKER_SECTIONS: PickerSection[] = ["texture", "shape", "color"];
+
+export const DEFAULT_PICKER_SECTION: PickerSection = PICKER_SECTIONS[0]!;
 
 export const PICKER_SECTION_LABELS: Record<PickerSection, string> = {
   shape: "Shape",

@@ -332,7 +332,7 @@ function setupHiDpiCanvas(
   cssWidth: number,
   cssHeight: number,
 ) {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
   canvas.style.width = `${cssWidth}px`;

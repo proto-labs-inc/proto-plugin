@@ -2,9 +2,23 @@
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { cn } from "@prototype/lib/utils";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
-import { AnimatePresence, LayoutGroup, animate, motion, useMotionTemplate, useMotionValue, useReducedMotion } from "motion/react";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  type PanInfo,
+} from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { partnerEaseOut } from "./partner-page-motion";
 
@@ -35,6 +49,7 @@ import {
   type PickerSection,
   PICKER_SECTION_LABELS,
   PICKER_SECTIONS,
+  DEFAULT_PICKER_SECTION,
 } from "./mobile-picker-layout-content";
 
 type MobilePickerLayoutBlockProps = {
@@ -79,7 +94,9 @@ function PickerPanel({
   );
 }
 
-function usePickerSectionWithSlide(initial: PickerSection = "shape") {
+function usePickerSectionWithSlide(
+  initial: PickerSection = DEFAULT_PICKER_SECTION,
+) {
   const [active, setActive] = useState<PickerSection>(initial);
   const [direction, setDirection] = useState(1);
 
@@ -94,22 +111,98 @@ function usePickerSectionWithSlide(initial: PickerSection = "shape") {
   return { active, direction, setActive: setActiveWithDirection };
 }
 
+const PICKER_DRAG_SNAP_DURATION = 0.28;
+const PICKER_DRAG_TAB_DURATION = 0.32;
+
+function clampPickerIndex(index: number) {
+  return Math.max(0, Math.min(PICKER_SECTIONS.length - 1, index));
+}
+
 function AnimatedPickerPanel({
   section,
   direction: _direction,
   animateEntrance: _animateEntrance,
   entranceKey: _entranceKey,
+  onSectionChange,
   ...pickerProps
-}: PickerPanelProps & { direction: number }) {
+}: PickerPanelProps & {
+  direction: number;
+  onSectionChange?: (next: PickerSection) => void;
+}) {
   const reduceMotion = useReducedMotion();
   const index = PICKER_SECTIONS.indexOf(section);
+  const isDraggable = Boolean(onSectionChange && !reduceMotion);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [panelWidth, setPanelWidth] = useState(0);
+  const x = useMotionValue(0);
+  const isDragging = useRef(false);
+  const hasInitializedPosition = useRef(false);
 
-  if (reduceMotion) {
-    return <PickerPanel section={section} {...pickerProps} animateEntrance={false} />;
-  }
+  useEffect(() => {
+    if (!isDraggable) return;
 
-  return (
-    <div className="relative overflow-x-hidden py-1">
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateWidth = () => {
+      setPanelWidth(container.clientWidth);
+    };
+
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isDraggable]);
+
+  useEffect(() => {
+    if (!isDraggable || !panelWidth) return;
+
+    const targetX = -index * panelWidth;
+    if (!hasInitializedPosition.current) {
+      x.set(targetX);
+      hasInitializedPosition.current = true;
+      return;
+    }
+
+    if (isDragging.current) return;
+
+    animate(x, targetX, {
+      duration: PICKER_DRAG_TAB_DURATION,
+      ease: partnerEaseOut,
+    });
+  }, [index, isDraggable, panelWidth, x]);
+
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    isDragging.current = false;
+    if (!onSectionChange || !panelWidth) return;
+
+    const projectedIndex = clampPickerIndex(Math.round(-x.get() / panelWidth));
+    let targetIndex = projectedIndex;
+
+    const velocityThreshold = 450;
+    if (info.velocity.x <= -velocityThreshold) {
+      targetIndex = clampPickerIndex(index + 1);
+    } else if (info.velocity.x >= velocityThreshold) {
+      targetIndex = clampPickerIndex(index - 1);
+    }
+
+    const targetX = -targetIndex * panelWidth;
+    animate(x, targetX, {
+      duration: PICKER_DRAG_SNAP_DURATION,
+      ease: partnerEaseOut,
+    });
+
+    const nextSection = PICKER_SECTIONS[targetIndex];
+    if (nextSection && nextSection !== section) {
+      onSectionChange(nextSection);
+    }
+  };
+
+  const panelTrack = (
+    <>
       <div
         className="invisible pointer-events-none grid [&>*]:col-start-1 [&>*]:row-start-1"
         aria-hidden
@@ -124,9 +217,27 @@ function AnimatedPickerPanel({
         ))}
       </div>
       <motion.div
-        className="absolute inset-x-0 top-0 flex"
-        animate={{ transform: `translateX(-${index * 100}%)` }}
-        transition={{ duration: 0.32, ease: partnerEaseOut }}
+        className={cn(
+          "absolute inset-x-0 top-0 flex",
+          isDraggable && "cursor-grab active:cursor-grabbing",
+        )}
+        style={{ x }}
+        drag={isDraggable && panelWidth ? "x" : false}
+        dragDirectionLock
+        dragMomentum={false}
+        dragElastic={0.12}
+        dragConstraints={
+          panelWidth
+            ? {
+                left: -(PICKER_SECTIONS.length - 1) * panelWidth,
+                right: 0,
+              }
+            : undefined
+        }
+        onDragStart={() => {
+          isDragging.current = true;
+        }}
+        onDragEnd={handleDragEnd}
       >
         {PICKER_SECTIONS.map((pickerSection) => (
           <div key={pickerSection} className="w-full shrink-0">
@@ -138,6 +249,65 @@ function AnimatedPickerPanel({
           </div>
         ))}
       </motion.div>
+    </>
+  );
+
+  if (reduceMotion) {
+    return (
+      <div className="py-1">
+        <PickerPanel
+          section={section}
+          {...pickerProps}
+          animateEntrance={false}
+        />
+      </div>
+    );
+  }
+
+  if (!onSectionChange) {
+    return (
+      <div className="relative overflow-x-hidden py-1">
+        <div
+          className="invisible pointer-events-none grid [&>*]:col-start-1 [&>*]:row-start-1"
+          aria-hidden
+        >
+          {PICKER_SECTIONS.map((pickerSection) => (
+            <PickerPanel
+              key={pickerSection}
+              section={pickerSection}
+              {...pickerProps}
+              animateEntrance={false}
+            />
+          ))}
+        </div>
+        <motion.div
+          className="absolute inset-x-0 top-0 flex"
+          animate={{ transform: `translateX(-${index * 100}%)` }}
+          transition={{
+            duration: PICKER_DRAG_TAB_DURATION,
+            ease: partnerEaseOut,
+          }}
+        >
+          {PICKER_SECTIONS.map((pickerSection) => (
+            <div key={pickerSection} className="w-full shrink-0">
+              <PickerPanel
+                section={pickerSection}
+                {...pickerProps}
+                animateEntrance={false}
+              />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative touch-pan-y overflow-x-hidden py-1"
+    >
+      {panelTrack}
     </div>
   );
 }
@@ -171,7 +341,9 @@ function SectionSummary({
           selected={false}
           size="sm"
         />
-        <span className="text-[0.8125rem] font-medium">{colorOption.label}</span>
+        <span className="text-[0.8125rem] font-medium">
+          {colorOption.label}
+        </span>
       </span>
     );
   }
@@ -379,6 +551,7 @@ function StackedRowsLayout(props: MobilePickerLayoutBlockProps) {
       selection={props.selection}
       onSelectionChange={props.onSelectionChange}
       density="compact"
+      visibleSections={PICKER_SECTIONS}
       animateEntrance={props.animateEntrance}
       entranceKey={props.entranceKey}
     />
@@ -390,7 +563,12 @@ function ThreeWayTabsLayout(props: MobilePickerLayoutBlockProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={setActive}
+        {...props}
+      />
       <ThreeWayTabs active={active} onChange={setActive} />
     </div>
   );
@@ -400,8 +578,13 @@ function SlidingGreyTabsLayout(props: MobilePickerLayoutBlockProps) {
   const { active, direction, setActive } = usePickerSectionWithSlide();
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+    <div className="flex flex-col gap-0.5">
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={setActive}
+        {...props}
+      />
       <div className="flex justify-center">
         <SlidingGreyTabs
           active={active}
@@ -433,14 +616,21 @@ function IconRailLayout(props: MobilePickerLayoutBlockProps) {
         <p className="text-muted-foreground mb-2 text-[0.625rem] font-medium tracking-[0.14em] uppercase">
           {PICKER_SECTION_LABELS[active]}
         </p>
-        <AnimatedPickerPanel section={active} direction={direction} {...props} />
+        <AnimatedPickerPanel
+          section={active}
+          direction={direction}
+          onSectionChange={setActive}
+          {...props}
+        />
       </div>
     </div>
   );
 }
 
 function AccordionLayout(props: MobilePickerLayoutBlockProps) {
-  const [expanded, setExpanded] = useState<PickerSection | null>("shape");
+  const [expanded, setExpanded] = useState<PickerSection | null>(
+    DEFAULT_PICKER_SECTION,
+  );
 
   return (
     <div className="flex flex-col gap-1">
@@ -464,7 +654,10 @@ function AccordionLayout(props: MobilePickerLayoutBlockProps) {
               </span>
               <span className="flex min-w-0 flex-1 items-center justify-end gap-2">
                 {!open ? (
-                  <SectionSummary section={section} selection={props.selection} />
+                  <SectionSummary
+                    section={section}
+                    selection={props.selection}
+                  />
                 ) : null}
                 {open ? (
                   <ChevronUp className="text-muted-foreground size-4 shrink-0" />
@@ -501,6 +694,12 @@ function PeekBarLayout(props: MobilePickerLayoutBlockProps) {
           Customize
         </span>
         <span className="flex min-w-0 flex-1 items-center justify-center gap-2.5">
+          <ProtoTextureSwatch
+            textureId={props.selection.textureId}
+            color={color}
+            selected={false}
+            size="sm"
+          />
           <ProtoShapeIcon
             shapeId={props.selection.shapeId}
             color={color}
@@ -512,12 +711,6 @@ function PeekBarLayout(props: MobilePickerLayoutBlockProps) {
             selected={false}
             size="sm"
           />
-          <ProtoTextureSwatch
-            textureId={props.selection.textureId}
-            color={color}
-            selected={false}
-            size="sm"
-          />
         </span>
         <ChevronUp className="text-muted-foreground size-4 shrink-0 rotate-180" />
       </button>
@@ -526,7 +719,12 @@ function PeekBarLayout(props: MobilePickerLayoutBlockProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={setActive}
+        {...props}
+      />
       <div className="flex items-center justify-between gap-2">
         <ThreeWayTabs active={active} onChange={setActive} />
         <button
@@ -555,7 +753,12 @@ function SwipeDotsLayout(props: MobilePickerLayoutBlockProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={(next) => goToIndex(PICKER_SECTIONS.indexOf(next))}
+        {...props}
+      />
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -567,8 +770,14 @@ function SwipeDotsLayout(props: MobilePickerLayoutBlockProps) {
           <ChevronLeft className="size-4" />
         </button>
         <div className="flex flex-col items-center gap-1">
-          <p className="text-[0.8125rem] font-medium">{PICKER_SECTION_LABELS[active]}</p>
-          <div className="flex gap-1.5" role="tablist" aria-label="Picker panels">
+          <p className="text-[0.8125rem] font-medium">
+            {PICKER_SECTION_LABELS[active]}
+          </p>
+          <div
+            className="flex gap-1.5"
+            role="tablist"
+            aria-label="Picker panels"
+          >
             {PICKER_SECTIONS.map((section, dotIndex) => (
               <button
                 key={section}
@@ -586,7 +795,9 @@ function SwipeDotsLayout(props: MobilePickerLayoutBlockProps) {
         </div>
         <button
           type="button"
-          onClick={() => goToIndex(Math.min(PICKER_SECTIONS.length - 1, index + 1))}
+          onClick={() =>
+            goToIndex(Math.min(PICKER_SECTIONS.length - 1, index + 1))
+          }
           disabled={index === PICKER_SECTIONS.length - 1}
           aria-label="Next picker"
           className="text-muted-foreground hover:text-foreground flex size-8 cursor-pointer items-center justify-center rounded-lg disabled:opacity-30"
@@ -611,12 +822,19 @@ function StepWizardLayout(props: MobilePickerLayoutBlockProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={(next) => goToStep(PICKER_SECTIONS.indexOf(next))}
+        {...props}
+      />
       <div className="flex items-center justify-between gap-2">
         <p className="text-muted-foreground text-[0.6875rem] font-medium">
           Step {step + 1} of {PICKER_SECTIONS.length}
         </p>
-        <p className="text-[0.8125rem] font-medium">{PICKER_SECTION_LABELS[active]}</p>
+        <p className="text-[0.8125rem] font-medium">
+          {PICKER_SECTION_LABELS[active]}
+        </p>
       </div>
       <div className="bg-muted h-1 overflow-hidden rounded-full">
         <div
@@ -635,7 +853,9 @@ function StepWizardLayout(props: MobilePickerLayoutBlockProps) {
         </button>
         <button
           type="button"
-          onClick={() => goToStep(Math.min(PICKER_SECTIONS.length - 1, step + 1))}
+          onClick={() =>
+            goToStep(Math.min(PICKER_SECTIONS.length - 1, step + 1))
+          }
           disabled={step === PICKER_SECTIONS.length - 1}
           className="bg-foreground text-background flex-1 cursor-pointer rounded-lg py-2.5 text-[0.8125rem] font-medium disabled:opacity-40"
         >
@@ -651,7 +871,12 @@ function ScrubberPillsLayout(props: MobilePickerLayoutBlockProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <AnimatedPickerPanel section={active} direction={direction} {...props} />
+      <AnimatedPickerPanel
+        section={active}
+        direction={direction}
+        onSectionChange={setActive}
+        {...props}
+      />
       <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>button]:cursor-pointer">
         {PICKER_SECTIONS.map((section) => (
           <button
@@ -689,7 +914,9 @@ const LAYOUT_RENDERERS: Record<
   "scrubber-pills": ScrubberPillsLayout,
 };
 
-export function MobilePickerLayoutControls(props: MobilePickerLayoutBlockProps) {
+export function MobilePickerLayoutControls(
+  props: MobilePickerLayoutBlockProps,
+) {
   const Renderer = LAYOUT_RENDERERS[props.variant];
   return (
     <PrototypeComponent id="mobile-picker-layout-block.mobile-picker-layout-controls">

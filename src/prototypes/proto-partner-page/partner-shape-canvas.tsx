@@ -56,6 +56,11 @@ import {
 } from "./_components/proto-shape-content";
 import { bindSpringsCanvasPointerHandlers } from "../proto-shapes/springs-canvas-pointer";
 import {
+  DRAG_ATTRIBUTION_TOOLTIP_CLASS,
+  getParticlesCentroid,
+  updateDragAttributionTooltipElement,
+} from "../proto-shapes/springs-drag-attribution-tooltip";
+import {
   DEFAULT_PROTO_TEXTURE_ID,
   getShapeHandleDotOutlineWidth,
   getShapeHandleDotRadius,
@@ -300,10 +305,10 @@ function getPartnerShapeLayout(
   const baseScale = mobile ? MOBILE_SHAPE_SCALE : DESKTOP_SHAPE_SCALE;
   const { shapeScale, dotScale, renderScale, normalizedRenderScale } =
     getPrototypeShapeLayoutScales({
-    layoutShapeScale: baseScale,
-    visualScale,
-    isThreePartShape: shapeId === "square",
-  });
+      layoutShapeScale: baseScale,
+      visualScale,
+      isThreePartShape: shapeId === "square",
+    });
   return {
     scale: shapeScale,
     dotScale,
@@ -539,7 +544,7 @@ function setupHiDpiCanvas(
   cssWidth: number,
   cssHeight: number,
 ) {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
   canvas.style.width = `${cssWidth}px`;
@@ -566,6 +571,8 @@ type PartnerShapeCanvasProps = {
   /** Fill a positioned parent (e.g. submit-modal card inset). */
   embedded?: boolean;
   prototypeId?: string;
+  /** Shown in a tooltip above the shape while it is dragged. */
+  dragAttributionLabel?: string;
 };
 
 export function PartnerShapeCanvas({
@@ -581,11 +588,16 @@ export function PartnerShapeCanvas({
   shapeMargin,
   embedded = false,
   prototypeId = "partner-shape-canvas",
+  dragAttributionLabel,
 }: PartnerShapeCanvasProps) {
   const resolvedColor =
     color ?? getProtoColor(colorId ?? DEFAULT_PROTO_COLOR_ID).rgb;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dragTooltipRef = useRef<HTMLDivElement>(null);
+  const dragTooltipLabelRef = useRef<HTMLSpanElement>(null);
+  const dragAttributionLabelRef = useRef(dragAttributionLabel);
+  dragAttributionLabelRef.current = dragAttributionLabel;
   const simRef = useRef<SpringsSimulation | null>(null);
   const activeShapeRef = useRef<ProtoShapeId>(shapeId);
   const runtimeRef = useRef(SHAPE_RUNTIMES[shapeId]);
@@ -822,6 +834,16 @@ export function PartnerShapeCanvas({
         renderScale,
       );
 
+      const isDragging =
+        inputRef.current.pointerDown && sim.grabbedIndex > -1;
+      updateDragAttributionTooltipElement(
+        dragTooltipRef.current,
+        dragTooltipLabelRef.current,
+        isDragging ? getParticlesCentroid(sim.particles) : null,
+        dragAttributionLabelRef.current,
+        false,
+      );
+
       rafRef.current = requestAnimationFrame(frame);
     };
 
@@ -852,6 +874,13 @@ export function PartnerShapeCanvas({
           ref={canvasRef}
           className="absolute inset-0 block touch-none select-none"
         />
+        <div
+          ref={dragTooltipRef}
+          className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
+          aria-hidden
+        >
+          <span ref={dragTooltipLabelRef} />
+        </div>
       </div>
     </PrototypeComponent>
   );

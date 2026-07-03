@@ -10,7 +10,7 @@ import { PartnerMotionSpringButton } from "./partner-page-motion";
 const partnerPageNavIconClass = "size-4 shrink-0";
 
 export const partnerPageNavButtonClass =
-  "group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex w-fit cursor-pointer items-center rounded-lg px-2.5 py-2 transition-colors";
+  "pointer-events-auto group text-muted-foreground hover:text-foreground hover:bg-foreground/5 max-md:text-foreground max-md:bg-foreground/5 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors";
 
 type PartnerPageNavButtonProps = {
   id: "partner-page-flow-block.partner-page-back-button";

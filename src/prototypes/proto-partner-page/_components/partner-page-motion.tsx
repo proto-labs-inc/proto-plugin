@@ -4,6 +4,8 @@ import { PrototypeComponent } from "@prototype/components/prototypes/prototype-t
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 
+import type { InviteAnimationsVariant } from "./invite-animations-content";
+import { inviteFollowUpShapeEntranceCompleteMs } from "./invite-animations-block";
 import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
 
 export const partnerEaseOut = [0.22, 1, 0.36, 1] as const;
@@ -244,6 +246,31 @@ export function useCustomizeShapeEntranceReady(
     );
     return () => window.clearTimeout(timer);
   }, [defer, entranceKey, panelVariant, reduceMotion]);
+
+  return ready;
+}
+
+export function useInviteFollowUpShapeEntranceReady(
+  defer: boolean,
+  entranceKey: string | number,
+  animationsVariant: InviteAnimationsVariant = "word-pop-button-spring",
+) {
+  const reduceMotion = useReducedMotion();
+  const [ready, setReady] = useState(!defer || !!reduceMotion);
+
+  useEffect(() => {
+    if (!defer || reduceMotion) {
+      setReady(true);
+      return;
+    }
+
+    setReady(false);
+    const timer = window.setTimeout(
+      () => setReady(true),
+      inviteFollowUpShapeEntranceCompleteMs(animationsVariant),
+    );
+    return () => window.clearTimeout(timer);
+  }, [animationsVariant, defer, entranceKey, reduceMotion]);
 
   return ready;
 }

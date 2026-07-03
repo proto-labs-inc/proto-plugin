@@ -62,7 +62,7 @@ const PICKER_ROW_CLASS =
   "flex min-h-10 flex-wrap items-center justify-center gap-1.5 py-1 md:gap-2 [&>button]:cursor-pointer";
 
 const SHAPE_PICKER_ROW_CLASS =
-  "flex min-h-10 flex-wrap items-center justify-center gap-3 py-1 md:gap-4 [&>button]:cursor-pointer";
+  "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-4 [&>button]:cursor-pointer";
 
 const TEXTURE_PICKER_ROW_CLASS =
   "flex min-h-10 flex-wrap items-center justify-center gap-2.5 py-1 md:gap-3 [&>button]:cursor-pointer";

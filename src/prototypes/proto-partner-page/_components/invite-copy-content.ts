@@ -36,11 +36,17 @@ export function isInviteCopyOverlayVariant(
   ).includes(variant);
 }
 
+export const HOME_PAGE_PROTOTYPE_PATH = "/prototypes/home-page";
+
 export const INVITE_COPY = {
   headline: "Congrats Amelie!",
   invite:
     "You've been invited to be a design partner for Maayan's new prototyping tool, Proto. This is because you're excellent and talented and also someone she thinks is cool.",
+  followUpHeadline: "Invite accepted!",
   followUp:
-    "To accept your invite, please make your own protoshape, which will appear on the website home page. Maayan is currently in the process of onboarding everyone, so it may take some time to get you access. If you really really want access now, you can nudge her and she'll do her best to aquiesce.",
-  cta: "Make shape to accept invite",
+    "Maayan is currently in the process of onboarding everyone, so it may take some time to get you access. In the meantime, help her decorate this website's home page by making a custom proto shape (like the ones here) to put on it.",
+  continueCta: "Accept invite",
+  cta: "Make your proto shape",
 } as const;
+
+export type InviteStep = "intro" | "follow-up";

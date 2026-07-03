@@ -195,7 +195,7 @@ export function ProtoTextureSwatch({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(pixelSize * dpr);
     canvas.height = Math.round(pixelSize * dpr);
     const ctx = canvas.getContext("2d");

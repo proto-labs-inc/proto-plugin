@@ -12,6 +12,10 @@ import {
   type ProtoTextureId,
   type TextureEmanationCorner,
 } from "./shape-textures";
+import {
+  clampParticleWithSimulationBoundaries,
+  type SpringsSimulationBoundaries,
+} from "./springs-simulation-boundaries";
 
 const BASE_POINTS = 4;
 const SHAPE_SCALE = 0.7;
@@ -99,7 +103,12 @@ class Particle {
     this.vy += fy / this.mass;
   }
 
-  update(width: number, height: number, margin: number, physicsScale = 1) {
+  update(
+    width: number,
+    height: number,
+    boundaries: SpringsSimulationBoundaries,
+    physicsScale = 1,
+  ) {
     if (this.bFixed) return;
 
     this.vx *= this.damping;
@@ -107,7 +116,7 @@ class Particle {
     this.limitVelocities(physicsScale);
     this.px += this.vx;
     this.py += this.vy;
-    this.handleBoundaries(width, height, margin);
+    this.handleBoundaries(width, height, boundaries);
   }
 
   limitVelocities(physicsScale = 1) {
@@ -121,26 +130,13 @@ class Particle {
     }
   }
 
-  handleBoundaries(width: number, height: number, margin: number) {
+  handleBoundaries(
+    width: number,
+    height: number,
+    boundaries: SpringsSimulationBoundaries,
+  ) {
     if (this.bPeriodicBoundaries) {
-      const maxX = width - margin;
-      const maxY = height - margin;
-
-      if (this.px > maxX) {
-        this.px = maxX;
-        this.vx = 0;
-      } else if (this.px < margin) {
-        this.px = margin;
-        this.vx = 0;
-      }
-
-      if (this.py > maxY) {
-        this.py = maxY;
-        this.vy = 0;
-      } else if (this.py < margin) {
-        this.py = margin;
-        this.vy = 0;
-      }
+      clampParticleWithSimulationBoundaries(this, width, height, boundaries);
     } else if (this.bHardBoundaries) {
       if (this.px >= width) this.vx = Math.abs(this.vx) * -1;
       if (this.px <= 0) this.vx = Math.abs(this.vx);
@@ -157,6 +153,7 @@ export type SpringsCubeSimulation = {
   restLength: number;
   physicsScale: number;
   margin: number;
+  floorInset?: number;
   frameCount: number;
   clicked: boolean;
   grabbedIndex: number;
@@ -358,7 +355,12 @@ export function stepSpringsCubeSimulation(
 
   for (const particle of sim.particles) {
     particle.addForce(0, GRAVITY_Y * sim.physicsScale);
-    particle.update(sim.width, sim.height, sim.margin, sim.physicsScale);
+    particle.update(
+      sim.width,
+      sim.height,
+      { margin: sim.margin, floorInset: sim.floorInset },
+      sim.physicsScale,
+    );
   }
 
   if (input.pointerDown && sim.grabbedIndex > -1) {

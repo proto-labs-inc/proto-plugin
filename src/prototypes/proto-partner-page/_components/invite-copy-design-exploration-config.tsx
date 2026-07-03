@@ -137,6 +137,11 @@ export function buildInviteCopyDesignExplorationConfig(
               <span className="text-muted-foreground">{copy.invite}</span>
             </p>
             <p>
+              <span className="text-foreground font-medium">Follow-up headline</span>
+              <br />
+              <span className="text-muted-foreground">{copy.followUpHeadline}</span>
+            </p>
+            <p>
               <span className="text-foreground font-medium">Follow-up</span>
               <br />
               <span className="text-muted-foreground">{copy.followUp}</span>

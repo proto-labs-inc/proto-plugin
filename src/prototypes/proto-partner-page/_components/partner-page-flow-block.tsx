@@ -19,6 +19,7 @@ import {
 } from "./partner-page-motion";
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
 import type { SubmitModalVariant } from "./submit-modal-content";
+import { saveSubmittedProtoShape } from "./submitted-proto-shapes";
 import { SubmitShapeModal } from "./submit-shape-modal";
 
 const submitButtonClassName = cn(
@@ -47,19 +48,19 @@ function SubmitShapeButton({
         onClick={onClick}
         className={submitButtonClassName}
       >
-        Submit shape
+        Preview shape
       </PartnerMotionSpringButton>
     );
   }
 
   return (
     <button type="button" onClick={onClick} className={submitButtonClassName}>
-      Submit shape
+      Preview shape
     </button>
   );
 }
 
-export type PartnerPageId = "invite" | "customize";
+export type PartnerPageId = "invite" | "invite-follow-up" | "customize";
 
 type PartnerPageFlowBlockProps = {
   activePage: PartnerPageId;
@@ -92,7 +93,8 @@ export function PartnerPageFlowBlock({
     setSubmitModalOpen(open);
     onSubmitModalOpenChange?.(open);
   };
-  if (activePage === "invite") {
+  if (activePage === "invite" || activePage === "invite-follow-up") {
+    const isFollowUp = activePage === "invite-follow-up";
     return (
       <PrototypeComponent
         id="partner-page-flow-block"
@@ -106,10 +108,12 @@ export function PartnerPageFlowBlock({
         <div className={inviteCtaShellClass}>
           <button
             type="button"
-            onClick={() => onPageChange("customize")}
+            onClick={() =>
+              onPageChange(isFollowUp ? "customize" : "invite-follow-up")
+            }
             className={inviteCtaButtonClass}
           >
-            <span>{INVITE_COPY.cta}</span>
+            <span>{isFollowUp ? INVITE_COPY.cta : INVITE_COPY.continueCta}</span>
             <ArrowRight
               className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
               aria-hidden
@@ -132,7 +136,7 @@ export function PartnerPageFlowBlock({
         <div className="mx-auto flex w-full max-w-md items-center justify-between md:max-w-none">
           <div className="flex items-center gap-0.5">
             <PartnerPageBackButton
-              onClick={() => onPageChange("invite")}
+              onClick={() => onPageChange("invite-follow-up")}
               motionOn={motionOn}
               motionDelay={partnerCustomizeEntranceDelay(
                 PARTNER_CUSTOMIZE_ENTRANCE_INDEX.back,
@@ -156,6 +160,7 @@ export function PartnerPageFlowBlock({
           variant={submitModalVariant}
           onKeepEditing={() => handleSubmitModalOpenChange(false)}
           onSeeOnHomepage={() => {
+            saveSubmittedProtoShape(shapeSelection);
             handleSubmitModalOpenChange(false);
             router.push("/prototypes/home-page");
           }}

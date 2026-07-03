@@ -60,7 +60,7 @@ export function SubmitModalCardTextureBackground({
     const paint = () => {
       const cssWidth = Math.max(1, Math.floor(container.clientWidth));
       const cssHeight = Math.max(1, Math.floor(container.clientHeight));
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(cssWidth * dpr);
       canvas.height = Math.round(cssHeight * dpr);
       canvas.style.width = `${cssWidth}px`;

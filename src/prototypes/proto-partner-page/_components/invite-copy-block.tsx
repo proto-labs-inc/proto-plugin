@@ -1,29 +1,63 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { cn } from "@prototype/lib/utils";
+import Link from "next/link";
 
-import { INVITE_COPY, type InviteCopyVariant } from "./invite-copy-content";
 import {
+  HOME_PAGE_PROTOTYPE_PATH,
+  INVITE_COPY,
+  type InviteCopyVariant,
+  type InviteStep,
+} from "./invite-copy-content";
+import {
+  inviteBlockClassName,
   inviteBodyClass,
   inviteBodyStackClass,
   inviteContentShellClass,
+  inviteFollowUpHeadlineClass,
+  inviteFollowUpStackClass,
   inviteHeadlineClass,
+  inviteInteractiveClass,
 } from "./invite-layout-classes";
 import { InviteEyebrowHeader } from "./invite-eyebrow-header";
 
 type InviteCopyBlockProps = {
   variant: InviteCopyVariant;
+  step?: InviteStep;
 };
 
-function ActionHint({ children }: { children: React.ReactNode }) {
+const equalBodyClass =
+  "pointer-events-none text-foreground text-[0.875rem] leading-[1.6]";
+
+const [followUpBeforeHomePage, followUpAfterHomePage] =
+  INVITE_COPY.followUp.split("home page");
+
+const followUpHomePageLinkClassName =
+  `${inviteInteractiveClass} text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]`;
+
+export function InviteFollowUpCopy() {
   return (
-    <span className="text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]">
-      {children}
-    </span>
+    <>
+      {followUpBeforeHomePage}
+      <Link href={HOME_PAGE_PROTOTYPE_PATH} className={followUpHomePageLinkClassName}>
+        home page
+      </Link>
+      {followUpAfterHomePage}
+    </>
   );
 }
 
-const equalBodyClass = "text-foreground text-[0.875rem] leading-[1.6]";
+export function InviteFollowUpContent() {
+  return (
+    <div className={inviteFollowUpStackClass}>
+      <h2 className={inviteFollowUpHeadlineClass}>{INVITE_COPY.followUpHeadline}</h2>
+      <p className={inviteBodyClass}>
+        <InviteFollowUpCopy />
+      </p>
+    </div>
+  );
+}
 
 const [inviteBeforeProto, inviteAfterProto] = INVITE_COPY.invite.split("Proto");
 
@@ -37,24 +71,29 @@ function InviteWithBoldProto() {
   );
 }
 
-export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
+export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProps) {
   if (variant === "open-card") {
     return (
       <PrototypeComponent
         id="invite-copy-block"
-        className="shrink-0 px-4 pt-0 pb-0 font-[family-name:var(--font-dm-sans)]! sm:px-5"
+        className={cn(inviteBlockClassName, "sm:px-5")}
       >
         <div className={inviteContentShellClass}>
-          <InviteEyebrowHeader />
-          <h1 className={inviteHeadlineClass}>
-            {INVITE_COPY.headline}
-          </h1>
-          <div className={inviteBodyStackClass}>
-            <p className={inviteBodyClass}>
-              <InviteWithBoldProto />
-            </p>
-            <p className={inviteBodyClass}>{INVITE_COPY.followUp}</p>
-          </div>
+          {step === "intro" ? (
+            <>
+              <InviteEyebrowHeader />
+              <h1 className={inviteHeadlineClass}>
+                {INVITE_COPY.headline}
+              </h1>
+              <div className={inviteBodyStackClass}>
+                <p className={inviteBodyClass}>
+                  <InviteWithBoldProto />
+                </p>
+              </div>
+            </>
+          ) : (
+            <InviteFollowUpContent />
+          )}
         </div>
       </PrototypeComponent>
     );
@@ -75,7 +114,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
               {INVITE_COPY.invite}
             </p>
             <p className="text-muted-foreground text-[0.875rem] leading-[1.7]">
-              {INVITE_COPY.followUp}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -101,7 +140,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
               {INVITE_COPY.invite}
             </p>
             <p className="text-muted-foreground text-[0.9375rem] leading-[1.65]">
-              {INVITE_COPY.followUp}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -123,7 +162,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             {INVITE_COPY.invite}
           </p>
           <p className="text-foreground text-[1rem] leading-[1.8]">
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -151,7 +190,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
               {INVITE_COPY.invite}
             </p>
             <p className="text-muted-foreground text-[0.9375rem] leading-[1.65]">
-              {INVITE_COPY.followUp}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -176,7 +215,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             {INVITE_COPY.invite}
           </p>
           <p className="text-muted-foreground text-[0.9375rem] leading-[1.65]">
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -195,7 +234,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}>{INVITE_COPY.followUp}</p>
+            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
           </div>
         </div>
       </PrototypeComponent>
@@ -214,7 +253,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}>{INVITE_COPY.followUp}</p>
+            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
           </div>
         </div>
       </PrototypeComponent>
@@ -235,7 +274,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             {INVITE_COPY.invite}
           </p>
           <p className="text-muted-foreground text-center text-[0.9375rem] leading-[1.6]">
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -258,7 +297,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             </h1>
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
             <p className={`${equalBodyClass} text-muted-foreground`}>
-              {INVITE_COPY.followUp}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -278,7 +317,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}>{INVITE_COPY.followUp}</p>
+            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
           </div>
         </div>
       </PrototypeComponent>
@@ -297,7 +336,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
           </h1>
           <p className={`${equalBodyClass} mt-2`}>{INVITE_COPY.invite}</p>
           <p className={`${equalBodyClass} border-border/70 border-t pt-4`}>
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -318,7 +357,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             {INVITE_COPY.invite}
           </p>
           <p className="text-muted-foreground text-[0.9375rem] leading-[1.6]">
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -343,7 +382,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
               {INVITE_COPY.invite}
             </p>
             <p className="text-muted-foreground text-[0.9375rem] leading-[1.6]">
-              {INVITE_COPY.followUp}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -368,7 +407,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
             {INVITE_COPY.invite}
           </p>
           <p className="text-muted-foreground border-border/70 mt-1 border-t pt-4 text-[0.875rem] leading-[1.65]">
-            {INVITE_COPY.followUp}
+            <InviteFollowUpCopy />
           </p>
         </div>
       </PrototypeComponent>
@@ -376,8 +415,6 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
   }
 
   if (variant === "inline-actions") {
-    const followUpParts = INVITE_COPY.followUp.split("make your own protoshape");
-
     return (
       <PrototypeComponent
         id="invite-copy-block"
@@ -390,9 +427,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
           <div className="flex flex-col gap-4 text-[1rem] leading-[1.55]">
             <p className="text-foreground">{INVITE_COPY.invite}</p>
             <p className="text-muted-foreground">
-              {followUpParts[0]}
-              <ActionHint>make your own protoshape</ActionHint>
-              {followUpParts[1]}
+              <InviteFollowUpCopy />
             </p>
           </div>
         </div>
@@ -416,7 +451,7 @@ export function InviteCopyBlock({ variant }: InviteCopyBlockProps) {
         </div>
         <div aria-hidden className="bg-border/80 h-px w-full" />
         <p className="text-muted-foreground text-[0.9375rem] leading-[1.65]">
-          {INVITE_COPY.followUp}
+          <InviteFollowUpCopy />
         </p>
       </div>
     </PrototypeComponent>

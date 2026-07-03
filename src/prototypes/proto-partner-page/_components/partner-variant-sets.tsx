@@ -38,10 +38,22 @@ export const SUBMIT_MODAL_VARIANT_SET = {
   label: "Submit modal",
 } as const;
 
+export const INVITE_FOLLOW_UP_SHAPE_LAYOUT_VARIANT_SET = {
+  id: "invite-follow-up-shape-layout",
+  label: "Follow-up shape layout",
+} as const;
+
+export const CREATOR_ATTRIBUTION_VARIANT_SET = {
+  id: "creator-attribution",
+  label: "Creator attribution",
+} as const;
+
 export const PROTO_PARTNER_PAGE_VARIANT_SETS = [
+  CREATOR_ATTRIBUTION_VARIANT_SET,
   SUBMIT_MODAL_VARIANT_SET,
   MOBILE_PANEL_MOTION_VARIANT_SET,
   MOBILE_PICKER_LAYOUT_VARIANT_SET,
+  INVITE_FOLLOW_UP_SHAPE_LAYOUT_VARIANT_SET,
   INVITE_ANIMATIONS_VARIANT_SET,
   SHAPE_COLOR_PICKER_VARIANT_SET,
   PROTO_SHAPES_VARIANT_SET,
