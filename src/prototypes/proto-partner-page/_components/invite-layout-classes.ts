@@ -27,10 +27,10 @@ export const inviteBodyLineHighlightClass =
   "box-decoration-clone bg-white px-[0.12em] shadow-[0_0_0_0.38em_white]";
 
 export const inviteFollowUpHeadlineClass =
-  "pointer-events-none text-foreground text-[1.5rem] leading-[1.2] font-semibold tracking-[-0.03em] sm:text-[1.625rem] md:text-[1.875rem]";
+  "pointer-events-none text-foreground mb-6 text-[2.25rem] leading-[1.25] font-semibold tracking-[-0.03em] sm:mb-5 sm:text-[2rem] md:mb-7 md:text-[2.75rem] lg:text-[3.25rem]";
 
 export const inviteFollowUpStackClass =
-  "pointer-events-none flex flex-col gap-3 sm:gap-3 md:gap-3.5";
+  "pointer-events-none flex flex-col";
 
 export const inviteBodyClass =
   "pointer-events-none text-foreground text-[1rem] leading-[1.6] md:text-[1rem] md:leading-[1.65]";

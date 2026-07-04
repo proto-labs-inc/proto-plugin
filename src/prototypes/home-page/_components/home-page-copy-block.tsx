@@ -1,8 +1,8 @@
 "use client";
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { cn } from "@prototype/lib/utils";
 import { motion, useReducedMotion } from "motion/react";
-import { useMemo } from "react";
 
 import {
   inviteBlockClassName,
@@ -13,14 +13,26 @@ import {
   inviteHeadlineClass,
   inviteInteractiveClass,
   inviteLineHighlightClass,
+  inviteMotionPassThroughClass,
 } from "../../proto-partner-page/_components/invite-layout-classes";
+import {
+  PARTNER_FADE_UP_DURATION,
+  partnerEaseOut,
+  partnerFadeUpHidden,
+  partnerFadeUpVisible,
+  partnerPopSpring,
+} from "../../proto-partner-page/_components/partner-page-motion";
 import {
   HOME_PAGE_COPY,
   MAAYAN_SITE_URL,
   MAAYAN_X_URL,
 } from "./home-page-copy-content";
 
-const easeOut = [0.22, 1, 0.36, 1] as const;
+/** Matches invite word-pop intro — last copy beat before shapes. */
+export const HOME_PAGE_BODY_ENTRANCE_DELAY = 0.38;
+
+const INVITE_WORD_POP_HEADLINE_BASE_DELAY = 0.12;
+const INVITE_WORD_POP_HEADLINE_STAGGER = 0.07;
 
 const [, bodyAfterProto] = HOME_PAGE_COPY.body.split("Proto");
 const [beforeFirstMaayan, middleSection, afterSecondMaayan] =
@@ -29,6 +41,11 @@ const [beforeDM, afterDM] = middleSection.split("DM");
 
 const homePageBodyLinkClassName =
   `${inviteInteractiveClass} text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]`;
+
+const homePageHeadlineClass = cn(
+  inviteHeadlineClass,
+  "font-bold md:text-[3.5rem] lg:text-[4rem]",
+);
 
 function BodyWithBoldProto() {
   return (
@@ -61,10 +78,6 @@ function BodyWithBoldProto() {
 
 export function HomePageCopyBlock() {
   const reduceMotion = useReducedMotion();
-  const headlineWords = useMemo(
-    () => HOME_PAGE_COPY.headline.split(/\s+/),
-    [],
-  );
 
   if (reduceMotion) {
     return (
@@ -73,7 +86,7 @@ export function HomePageCopyBlock() {
         className={inviteBlockClassName}
       >
         <div className={inviteContentShellClass}>
-          <h1 className={inviteHeadlineClass}>
+          <h1 className={homePageHeadlineClass}>
             <span className={inviteLineHighlightClass}>
               {HOME_PAGE_COPY.headline}
             </span>
@@ -96,36 +109,46 @@ export function HomePageCopyBlock() {
       className={inviteBlockClassName}
     >
       <div className={inviteContentShellClass}>
-        <h1 className={inviteHeadlineClass}>
-          {headlineWords.map((word, index) => (
+        <h1
+          className={cn(homePageHeadlineClass, "flex flex-wrap gap-x-[0.28em]")}
+        >
+          {HOME_PAGE_COPY.headlineParts.map((part, index) => (
             <motion.span
-              key={`${word}-${index}`}
-              className={inviteLineHighlightClass}
-              initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+              key={part}
+              className={inviteMotionPassThroughClass}
+              initial={{
+                opacity: 0,
+                transform: "translateY(14px) scale(0.92)",
+              }}
               animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
               transition={{
-                type: "spring",
-                stiffness: 420,
-                damping: 26,
-                delay: 0.12 + index * 0.07,
+                ...partnerPopSpring,
+                delay:
+                  INVITE_WORD_POP_HEADLINE_BASE_DELAY +
+                  index * INVITE_WORD_POP_HEADLINE_STAGGER,
               }}
             >
-              {word}
-              {index < headlineWords.length - 1 ? " " : ""}
+              <span className={inviteLineHighlightClass}>{part}</span>
             </motion.span>
           ))}
         </h1>
         <div className={inviteBodyStackClass}>
-          <motion.p
-            className={inviteBodyClass}
-            initial={{ opacity: 0, transform: "translateY(18px)" }}
-            animate={{ opacity: 1, transform: "translateY(0px)" }}
-            transition={{ duration: 0.55, ease: easeOut, delay: 0.38 }}
+          <motion.div
+            className={inviteMotionPassThroughClass}
+            initial={partnerFadeUpHidden}
+            animate={partnerFadeUpVisible}
+            transition={{
+              duration: PARTNER_FADE_UP_DURATION,
+              ease: partnerEaseOut,
+              delay: HOME_PAGE_BODY_ENTRANCE_DELAY,
+            }}
           >
-            <span className={inviteBodyLineHighlightClass}>
-              <BodyWithBoldProto />
-            </span>
-          </motion.p>
+            <p className={inviteBodyClass}>
+              <span className={inviteBodyLineHighlightClass}>
+                <BodyWithBoldProto />
+              </span>
+            </p>
+          </motion.div>
         </div>
       </div>
     </PrototypeComponent>

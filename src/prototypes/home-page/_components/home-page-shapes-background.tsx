@@ -26,6 +26,7 @@ import {
   PARTNER_FADE_UP_DURATION,
   PARTNER_SHAPE_REVEAL_DELAY_EXTRA,
 } from "../../proto-partner-page/_components/partner-page-motion";
+import { HOME_PAGE_BODY_ENTRANCE_DELAY } from "./home-page-copy-block";
 import { pickUniqueCreatorNames } from "./home-page-shape-creator-names";
 import { readSubmittedContributorShapes } from "../../proto-partner-page/_components/submitted-proto-shapes";
 import { bindSpringsCanvasPointerHandlers } from "../../proto-shapes/springs-canvas-pointer";
@@ -44,10 +45,10 @@ import {
 } from "../../proto-shapes/springs-cube-simulation";
 import {
   getShapeStackDepth,
-  resolveInterShapeNonOverlap,
+  resolveInterShapeFaceCollisions,
   resolveSelfCollisions,
   type CollidableParticle,
-  type CollisionSurface,
+  type ShapeFaceSet,
 } from "../../proto-shapes/springs-inter-shape-collisions";
 import {
   createSpringsPentagonSimulation,
@@ -138,6 +139,7 @@ type ShapeRuntime = {
     renderScale: number,
   ) => void;
   collisionEdges: readonly (readonly [number, number])[];
+  collisionFaces: readonly (readonly number[])[];
 };
 
 const TRIANGLE_COLLISION_EDGES = [
@@ -198,6 +200,54 @@ const PRISM_COLLISION_EDGES = [
   [2, 5],
 ] as const;
 
+// Convex faces per shape (mirrors each shape's draw code, which already tiles it
+// with convex polygons). Used for per-face SAT so shapes rest tight and nest
+// into each other's concave gaps without interlocking.
+const TRIANGLE_COLLISION_FACES = [
+  [0, 1, 3, 2],
+  [0, 1, 4],
+  [2, 3, 4],
+] as const;
+
+const CUBE_COLLISION_FACES = [
+  [2, 3, 7, 1],
+  [7, 1, 4],
+  [6, 7, 4, 5],
+  [7, 3, 0, 4],
+  [7, 1, 2, 6],
+] as const;
+
+const PENTAGON_COLLISION_FACES = [
+  [0, 1, 5],
+  [1, 2, 5],
+  [2, 3, 5],
+  [3, 4, 5],
+  [4, 0, 5],
+] as const;
+
+const PRISM_COLLISION_FACES = [
+  [0, 1, 4, 3],
+  [1, 2, 5, 4],
+  [2, 0, 3, 5],
+  [0, 1, 2],
+  [3, 4, 5],
+] as const;
+
+const SQUARE_COLLISION_FACES = [
+  [0, 2, 3],
+  [0, 3, 4],
+  [0, 4, 2],
+  [2, 3, 4],
+  [5, 0, 1],
+  [5, 1, 6],
+  [5, 6, 0],
+  [0, 1, 6],
+  [1, 7, 8],
+  [1, 8, 9],
+  [1, 9, 7],
+  [7, 8, 9],
+] as const;
+
 const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
   triangle: {
     create: (width, height, x, y) =>
@@ -227,6 +277,7 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
         renderScale,
       }),
     collisionEdges: TRIANGLE_COLLISION_EDGES,
+    collisionFaces: TRIANGLE_COLLISION_FACES,
   },
   cube: {
     create: (width, height, x, y) =>
@@ -251,6 +302,7 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
         renderScale,
       }),
     collisionEdges: CUBE_COLLISION_EDGES,
+    collisionFaces: CUBE_COLLISION_FACES,
   },
   pentagon: {
     create: (width, height, x, y) =>
@@ -280,6 +332,7 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
         renderScale,
       }),
     collisionEdges: PENTAGON_COLLISION_EDGES,
+    collisionFaces: PENTAGON_COLLISION_FACES,
   },
   square: {
     create: (width, height, x, y) =>
@@ -309,6 +362,7 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
         renderScale,
       }),
     collisionEdges: SQUARE_COLLISION_EDGES,
+    collisionFaces: SQUARE_COLLISION_FACES,
   },
   prism: {
     create: (width, height, x, y) =>
@@ -333,11 +387,21 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
         renderScale,
       }),
     collisionEdges: PRISM_COLLISION_EDGES,
+    collisionFaces: PRISM_COLLISION_FACES,
   },
 };
 
 const WARM_START_FRAMES = 90;
 const MIN_VALID_CANVAS_HEIGHT = 120;
+/**
+ * Stack sleeping: a settled shape stops shivering once it's barely moved for a
+ * while. It's then frozen (velocities zeroed, step skipped) and treated as an
+ * immovable anchor so its neighbours also calm down, until a grab or a
+ * fast-moving neighbour wakes it.
+ */
+/** Per-frame centroid movement below which a shape counts as "barely moving". */
+const STACK_SLEEP_MOVE = 1.0;
+const STACK_SLEEP_FRAMES = 30;
 /** Stack-drop spawn band — spread shapes vertically so they don't tangle on spawn. */
 const STACK_DROP_SPAWN_Y_MIN = 0.02;
 const STACK_DROP_SPAWN_Y_MAX = 0.42;
@@ -418,9 +482,6 @@ export type MultiShapeSpringsCanvasConfig = {
   pileUp?: boolean;
 };
 
-/** Matches home-page-copy-block body delay — last copy beat before shapes. */
-const HOME_PAGE_BODY_ENTRANCE_DELAY = 0.38;
-
 export function homePageShapeEntranceDelayS() {
   return (
     HOME_PAGE_BODY_ENTRANCE_DELAY +
@@ -430,23 +491,41 @@ export function homePageShapeEntranceDelayS() {
 }
 
 export const HOME_PAGE_SHAPES_CONFIG: MultiShapeSpringsCanvasConfig = {
-  shapeCount: 10,
+  shapeCount: 30,
   seed: 0x1a2b3c4d,
   gridCols: 8,
   minRestFloorFactor: 0.08,
   maxRestFloorFactor: 0.995,
   minVisualScale: 1,
-  maxVisualScale: 2,
+  maxVisualScale: 1.5,
   backgroundShapeScale: 0.72,
   colorMode: "home-palette",
   physicsMode: "partner",
   entranceDrop: true,
   pileUp: true,
   shapeEntranceDelay: homePageShapeEntranceDelayS(),
-  /** Space drops so earlier shapes clear the top before the next falls in. */
-  shapeEntranceStagger: 0.15,
+  shapeEntranceStagger: 0,
   depthGradient: false,
 };
+
+/** Desktop home layout — current authored shape size. */
+const HOME_PAGE_LARGE_MIN_WIDTH = 1200;
+/** Matches partner-page mobile viewport (`sm` breakpoint minus one). */
+const HOME_PAGE_MOBILE_MAX_WIDTH = 639;
+/** Multipliers on `backgroundShapeScale` below the large breakpoint. */
+const HOME_PAGE_SHAPE_SCALE_MEDIUM = 0.78;
+const HOME_PAGE_SHAPE_SCALE_MOBILE = 0.6;
+
+export function resolveHomePageBackgroundShapeScale(
+  cssWidth: number,
+  baseScale: number,
+) {
+  if (cssWidth >= HOME_PAGE_LARGE_MIN_WIDTH) return baseScale;
+  if (cssWidth > HOME_PAGE_MOBILE_MAX_WIDTH) {
+    return baseScale * HOME_PAGE_SHAPE_SCALE_MEDIUM;
+  }
+  return baseScale * HOME_PAGE_SHAPE_SCALE_MOBILE;
+}
 /** Blend toward white at the top shelf when depthGradient is enabled. */
 const DEPTH_TOP_COLOR_LIGHTEN = 0.78;
 /** Canvas alpha at the top shelf — bottom shapes stay fully opaque. */
@@ -477,6 +556,13 @@ type ShapeSlotConfig = {
 
 type ShapeSlot = ShapeSlotConfig & {
   sim: SpringsSimulation | null;
+  /** Consecutive frames the centroid has stayed within the sleep radius. */
+  stillFrames?: number;
+  /** Frozen once settled so it stops shivering; wakes on grab or impact. */
+  asleep?: boolean;
+  /** Anchor centroid the shape is being measured against while settling. */
+  lastCx?: number;
+  lastCy?: number;
 };
 
 function createSeededRandom(seed: number) {
@@ -1261,6 +1347,7 @@ export function HomePageShapesBackground({
   });
   const rafRef = useRef<number | null>(null);
   const configRef = useRef(config);
+  const backgroundShapeScaleRef = useRef(config.backgroundShapeScale);
   configRef.current = config;
 
   useEffect(() => {
@@ -1313,7 +1400,7 @@ export function HomePageShapesBackground({
         slot,
         cssWidth,
         cssHeight,
-        currentConfig.backgroundShapeScale,
+        backgroundShapeScaleRef.current,
         physicsMode,
         resolveSlotEntrance(slot, currentConfig),
         getSlotRestFloorFactorRange(shapesRef.current),
@@ -1326,8 +1413,24 @@ export function HomePageShapesBackground({
       const cssHeight = Math.max(1, Math.floor(container.clientHeight));
       const dpr = setupHiDpiCanvas(canvas, cssWidth, cssHeight);
       sizeRef.current = { cssWidth, cssHeight, dpr };
-      const backgroundShapeScale = configRef.current.backgroundShapeScale;
+      const previousBackgroundShapeScale = backgroundShapeScaleRef.current;
+      const backgroundShapeScale = resolveHomePageBackgroundShapeScale(
+        cssWidth,
+        configRef.current.backgroundShapeScale,
+      );
+      backgroundShapeScaleRef.current = backgroundShapeScale;
       const physicsMode = configRef.current.physicsMode ?? "background";
+
+      if (
+        previousBackgroundShapeScale > 0 &&
+        previousBackgroundShapeScale !== backgroundShapeScale
+      ) {
+        const scaleRatio = backgroundShapeScale / previousBackgroundShapeScale;
+        for (const slot of shapesRef.current) {
+          if (!slot.sim) continue;
+          scaleSpringsSimulationAroundCentroid(slot.sim, scaleRatio);
+        }
+      }
 
       if (cssHeight < MIN_VALID_CANVAS_HEIGHT) {
         for (const slot of shapesRef.current) {
@@ -1447,7 +1550,7 @@ export function HomePageShapesBackground({
       const shapes = shapesRef.current;
       const { cssWidth, cssHeight, dpr } = sizeRef.current;
       const grabbedId = grabbedShapeIdRef.current;
-      const backgroundShapeScale = configRef.current.backgroundShapeScale;
+      const backgroundShapeScale = backgroundShapeScaleRef.current;
       const physicsMode = configRef.current.physicsMode ?? "background";
 
       if (cssHeight >= MIN_VALID_CANVAS_HEIGHT) {
@@ -1469,6 +1572,12 @@ export function HomePageShapesBackground({
         if (!slot.sim) continue;
 
         const isGrabbed = grabbedId === slot.id && inputRef.current.pointerDown;
+        if (isGrabbed && slot.asleep) {
+          slot.asleep = false;
+          slot.stillFrames = 0;
+        }
+        // Frozen settled shapes skip integration entirely so they can't shiver.
+        if (sharedStackPhysics && slot.asleep) continue;
         SHAPE_RUNTIMES[slot.shapeId].step(slot.sim, {
           ...inputRef.current,
           pointerDown: isGrabbed,
@@ -1477,17 +1586,17 @@ export function HomePageShapesBackground({
 
       if (sharedStackPhysics) {
         const particleGroups: CollidableParticle[][] = [];
-        const collisionSurfaces: (CollisionSurface | undefined)[] = [];
+        const faceSets: ShapeFaceSet[] = [];
         const pinnedParticles: CollidableParticle[] = [];
+        const sleeping: boolean[] = [];
+        const activeSlots: ShapeSlot[] = [];
 
         for (const slot of shapes) {
           if (!slot.sim) continue;
-          const runtime = SHAPE_RUNTIMES[slot.shapeId];
+          activeSlots.push(slot);
           particleGroups.push(slot.sim.particles);
-          collisionSurfaces.push({
-            particles: slot.sim.particles,
-            edges: runtime.collisionEdges,
-          });
+          faceSets.push(SHAPE_RUNTIMES[slot.shapeId].collisionFaces);
+          sleeping.push(slot.asleep ?? false);
           if (
             grabbedId === slot.id &&
             inputRef.current.pointerDown &&
@@ -1497,11 +1606,49 @@ export function HomePageShapesBackground({
           }
         }
 
-        resolveInterShapeNonOverlap(
+        resolveInterShapeFaceCollisions(
           particleGroups,
+          faceSets,
           pinnedParticles,
-          collisionSurfaces,
+          sleeping,
+          (groupIndex) => {
+            const woken = activeSlots[groupIndex];
+            if (woken) {
+              woken.asleep = false;
+              woken.stillFrames = 0;
+            }
+          },
         );
+
+        for (const slot of activeSlots) {
+          if (!slot.sim || slot.asleep) continue;
+
+          const centroid = getSimulationCentroid(slot.sim);
+          const isGrabbed =
+            grabbedId === slot.id && inputRef.current.pointerDown;
+          const moved =
+            slot.lastCx === undefined
+              ? Infinity
+              : Math.hypot(centroid.x - slot.lastCx, centroid.y - slot.lastCy!);
+          slot.lastCx = centroid.x;
+          slot.lastCy = centroid.y;
+
+          // Reset the timer whenever the shape moves meaningfully or is grabbed;
+          // slow creep and in-place bounce below the threshold settle to sleep.
+          if (isGrabbed || moved >= STACK_SLEEP_MOVE) {
+            slot.stillFrames = 0;
+            continue;
+          }
+
+          slot.stillFrames = (slot.stillFrames ?? 0) + 1;
+          if (slot.stillFrames >= STACK_SLEEP_FRAMES) {
+            slot.asleep = true;
+            for (const particle of slot.sim.particles) {
+              particle.vx = 0;
+              particle.vy = 0;
+            }
+          }
+        }
 
         for (const slot of shapes) {
           if (slot.shapeId !== "square" || !slot.sim) continue;

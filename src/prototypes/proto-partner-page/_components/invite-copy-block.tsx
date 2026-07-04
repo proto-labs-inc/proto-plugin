@@ -2,10 +2,8 @@
 
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 import { cn } from "@prototype/lib/utils";
-import Link from "next/link";
 
 import {
-  HOME_PAGE_PROTOTYPE_PATH,
   INVITE_COPY,
   type InviteCopyVariant,
   type InviteStep,
@@ -18,7 +16,6 @@ import {
   inviteFollowUpHeadlineClass,
   inviteFollowUpStackClass,
   inviteHeadlineClass,
-  inviteInteractiveClass,
   inviteBodyLineHighlightClass,
   inviteLineHighlightClass,
 } from "./invite-layout-classes";
@@ -32,24 +29,8 @@ type InviteCopyBlockProps = {
 const equalBodyClass =
   "pointer-events-none text-foreground text-[0.875rem] leading-[1.6]";
 
-const [followUpBeforeHomePage, followUpAfterHomePage] =
-  INVITE_COPY.followUp.split("home page");
-
-const followUpHomePageLinkClassName = `${inviteInteractiveClass} text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]`;
-
 export function InviteFollowUpCopy() {
-  return (
-    <>
-      {followUpBeforeHomePage}
-      <Link
-        href={HOME_PAGE_PROTOTYPE_PATH}
-        className={followUpHomePageLinkClassName}
-      >
-        home page
-      </Link>
-      {followUpAfterHomePage}
-    </>
-  );
+  return <>{INVITE_COPY.followUp}</>;
 }
 
 export function InviteFollowUpTitle() {

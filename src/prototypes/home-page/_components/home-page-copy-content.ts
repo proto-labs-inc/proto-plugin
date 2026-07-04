@@ -3,5 +3,7 @@ export const MAAYAN_X_URL = "https://x.com/maayanalbert";
 
 export const HOME_PAGE_COPY = {
   headline: "Welcome to Proto",
+  /** Two-part headline entrance — matches partner invite word-pop timing. */
+  headlineParts: ["Welcome to", "Proto"] as const,
   body: "Proto is a new prototyping tool that Maayan is building. It's currently limited to a pilot of early users. But if you're a designer, pm, or imaginatve engineer who really wants access, DM Maayan. In the meantime, please enjoy these shapes sketched out by our users.",
 } as const;

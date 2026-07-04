@@ -44,6 +44,8 @@ const INVITE_FOLLOW_UP_SHAPES_BASE_CONFIG: Omit<
   colorMode: "proto-colors",
   physicsMode: "partner",
   entrancePopInPlace: true,
+  /** Extra beat after the copy lands before the shapes start popping. */
+  shapeEntranceDelay: 0.2,
   shapeEntranceStagger: INVITE_FOLLOW_UP_BEAT / 5,
 };
 
