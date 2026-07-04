@@ -44,6 +44,7 @@ export function contributorShapeToSlotConfig(
   restFloorFactor: number;
   xFactor: number;
   yFactor: number;
+  attributionLabel: string;
 } {
   return {
     id: shape.id,

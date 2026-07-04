@@ -37,15 +37,13 @@ const CANVAS_WHITE = "#ffffff";
 const GREY_CARD_MAX_WIDTH = "18.5rem";
 /** Portrait card — wider than golden ratio, less extreme profile. */
 const GREY_CARD_ASPECT = "3 / 4";
-/** Full-bleed card — matches reference image proportion (460 × 572 ≈ 4:5). */
-const FULL_BLEED_CARD_ASPECT = "460 / 572";
 /** Multiplies partner-page layout scale (~1.75 desktop); ~0.55 ≈ 55% of full fill. */
 const SUBMIT_MODAL_SHAPE_SCALE = 0.55;
 /** Mobile card shapes get extra room — keyed to viewport width, not prototype preview mode. */
 const SUBMIT_MODAL_SHAPE_SCALE_MOBILE = 0.72;
 const SUBMIT_MODAL_SHAPE_MARGIN = 4;
 const GREY_CARD_SHELL_CLASS =
-  "mx-auto flex w-full max-w-[min(23rem,calc(100%-2rem))] flex-col gap-4";
+  "pointer-events-none mx-auto flex w-full max-w-[min(23rem,calc(100%-2rem))] flex-col gap-4";
 const GREY_CARD_ACTIONS_CLASS = "mx-auto w-full max-w-[18.5rem] justify-center";
 
 type SubmitModalLayoutProps = {
@@ -53,6 +51,7 @@ type SubmitModalLayoutProps = {
   title: string;
   onKeepEditing: () => void;
   onSeeOnHomepage: () => void;
+  dragAttributionLabel?: string;
 };
 
 function mixRgb(from: ProtoRgb, to: ProtoRgb, amount: number): ProtoRgb {
@@ -114,7 +113,7 @@ export function SubmitModalActions({
 
   const buttonLabel = (
     <>
-      <span>See shape on homepage</span>
+      <span>Publish your proto shape</span>
       <ArrowRight
         className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
         aria-hidden
@@ -124,7 +123,13 @@ export function SubmitModalActions({
 
   if (backgroundVariant === "footer-texture" && selection) {
     return (
-      <div className={cn(submitModalActionsClass, className)}>
+      <div
+        className={cn(
+          "pointer-events-auto",
+          submitModalActionsClass,
+          className,
+        )}
+      >
         {/* Shadow on a non-clipping wrapper — see full-bleed card note; the
             inner texture layer keeps `overflow:hidden` for the rounded clip. */}
         <div className={cn("rounded-xl shadow-lg", buttonClassName)}>
@@ -150,7 +155,9 @@ export function SubmitModalActions({
   }
 
   return (
-    <div className={cn(submitModalActionsClass, className)}>
+    <div
+      className={cn("pointer-events-auto", submitModalActionsClass, className)}
+    >
       <button
         type="button"
         onClick={onSeeOnHomepage}
@@ -192,13 +199,12 @@ function SubmitModalInviteAcceptedLabel({
       className={cn(
         "pointer-events-none text-center tracking-[-0.02em] leading-[1.35]",
         placement === "overlay"
-          ? "absolute inset-x-0 top-3 z-10 text-[1rem] font-medium md:text-[0.875rem]"
-          : "text-[1rem] font-bold",
+          ? "absolute inset-x-0 top-3 z-10 text-[1.25rem] font-medium md:text-[1.125rem]"
+          : "text-[1.25rem] font-bold md:text-[1.375rem]",
       )}
       style={{ color: textColor }}
     >
-      Shape submitted &<br />
-      invite accepted!
+      Shape Preview
     </p>
   );
 }
@@ -217,12 +223,14 @@ function ShapePreview({
   canvasBackground = CANVAS_WHITE,
   shapeScale,
   transparentBackground = false,
+  dragAttributionLabel,
 }: {
   selection: ProtoShapeSelection;
   className?: string;
   canvasBackground?: string;
   shapeScale?: number;
   transparentBackground?: boolean;
+  dragAttributionLabel?: string;
 }) {
   const isMobileViewport = useMobileViewport();
   const resolvedShapeScale =
@@ -241,6 +249,7 @@ function ShapePreview({
       transparentBackground={transparentBackground}
       shapeScale={resolvedShapeScale}
       shapeMargin={SUBMIT_MODAL_SHAPE_MARGIN}
+      dragAttributionLabel={dragAttributionLabel}
       embedded
     />
   );
@@ -293,7 +302,7 @@ function ShapeInsetFrame({
   return (
     <div
       className={cn(
-        "relative aspect-square w-full shrink-0 overflow-hidden rounded-[0.75rem] border bg-transparent",
+        "pointer-events-auto relative aspect-square w-full shrink-0 overflow-hidden rounded-[0.75rem] border bg-transparent",
         className,
       )}
       style={{ borderColor: canvasBorder }}
@@ -341,9 +350,11 @@ function SquareCapLayout({
 function ShapeFullBleedFrame({
   selection,
   className,
+  dragAttributionLabel,
 }: {
   selection: ProtoShapeSelection;
   className?: string;
+  dragAttributionLabel?: string;
 }) {
   return (
     <div
@@ -352,21 +363,20 @@ function ShapeFullBleedFrame({
         className,
       )}
     >
-      <ShapePreview selection={selection} transparentBackground />
+      <ShapePreview
+        selection={selection}
+        transparentBackground
+        dragAttributionLabel={dragAttributionLabel}
+      />
     </div>
   );
 }
 
 function SquareCapFullBleedLayout({
   selection,
-  title,
-  onKeepEditing,
   onSeeOnHomepage,
+  dragAttributionLabel,
 }: SubmitModalLayoutProps) {
-  const { rgb } = getProtoColor(selection.colorId);
-  const dividerColor = getSubmitModalDeepAccent(rgb);
-  const footerBackground = getSubmitModalMellowAccent(rgb);
-
   return (
     <div className={GREY_CARD_SHELL_CLASS}>
       <SubmitModalInviteAcceptedLabel
@@ -378,33 +388,18 @@ function SquareCapFullBleedLayout({
           ancestor (the modal entrance), so the clip and the shadow must sit on
           separate elements. */}
       <div
-        className="mx-auto w-full rounded-[1rem] shadow-lg"
+        className="pointer-events-auto mx-auto w-full rounded-xl shadow-lg"
         style={{ maxWidth: GREY_CARD_MAX_WIDTH }}
       >
         <SubmitModalCardTextureBackground
           selection={selection}
-          className="flex w-full flex-col overflow-hidden rounded-[1rem]"
-          style={{ aspectRatio: FULL_BLEED_CARD_ASPECT }}
+          className="relative aspect-square w-full overflow-hidden rounded-xl"
         >
           <ShapeFullBleedFrame
             selection={selection}
-            className="min-h-0 flex-1"
+            className="absolute inset-0"
+            dragAttributionLabel={dragAttributionLabel}
           />
-          <SubmitModalCardTextureBackground
-            selection={selection}
-            backgroundColor={footerBackground}
-            emanationRegion="footer"
-            className="flex shrink-0 flex-col border-t"
-            style={{ borderColor: dividerColor }}
-          >
-            <div className="px-3.5 pt-3 pb-3.5">
-              <SubmitModalCardTitle
-                title={title}
-                colorId={selection.colorId}
-                className="font-serif text-[1.625rem] leading-[1.08] tracking-[-0.025em]"
-              />
-            </div>
-          </SubmitModalCardTextureBackground>
         </SubmitModalCardTextureBackground>
       </div>
       <SubmitModalActions

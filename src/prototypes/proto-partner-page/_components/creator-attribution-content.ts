@@ -1,6 +1,7 @@
 /** Mock creator metadata for attribution placement explorations. */
 export const PROTOTYPE_CREATOR = {
   name: "Maayan Albert",
+  firstName: "Maayan",
   initials: "MA",
   role: "Product design",
 } as const;

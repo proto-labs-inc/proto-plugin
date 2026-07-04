@@ -8,7 +8,11 @@ import { useMemo, type ReactNode } from "react";
 
 import type { InviteAnimationsVariant } from "./invite-animations-content";
 import { INVITE_COPY, type InviteStep } from "./invite-copy-content";
-import { InviteFollowUpContent } from "./invite-copy-block";
+import {
+  InviteFollowUpBody,
+  InviteFollowUpContent,
+  InviteFollowUpTitle,
+} from "./invite-copy-block";
 import {
   inviteBlockClassName,
   inviteBodyClass,
@@ -18,6 +22,7 @@ import {
   inviteCtaButtonClass,
   inviteCtaSectionClass,
   inviteCtaShellClass,
+  inviteFollowUpStackClass,
   inviteHeadlineClass,
   inviteMotionPassThroughClass,
 } from "./invite-layout-classes";
@@ -25,6 +30,14 @@ import {
   AnimatedInviteEyebrowHeader,
   InviteEyebrowHeader,
 } from "./invite-eyebrow-header";
+import {
+  inviteFollowUpBodyDelay,
+  inviteFollowUpCtaDelay,
+  inviteFollowUpTitleDelay,
+  PARTNER_FADE_UP_DURATION,
+  partnerEaseOut,
+  PartnerMotionSpringButton,
+} from "./partner-page-motion";
 
 type InviteAnimationsBlockProps = {
   variant: InviteAnimationsVariant;
@@ -43,49 +56,26 @@ export const INVITE_CTA_ENTRANCE_DELAY_EXTRA = 0.15;
 
 const CTA_ENTRANCE_DELAY_EXTRA = INVITE_CTA_ENTRANCE_DELAY_EXTRA;
 
-/** One choreographic beat between follow-up entrance hits. */
+/** One choreographic beat between follow-up example shape pops. */
 export const INVITE_FOLLOW_UP_BEAT = 0.24;
 
-/** Beat 1 — follow-up copy. */
-export const INVITE_FOLLOW_UP_TEXT_DELAY = 0.08;
+/** @deprecated Use inviteFollowUpTitleDelay from partner-page-motion. */
+export const INVITE_FOLLOW_UP_TITLE_DELAY = 0;
 
-const INVITE_FOLLOW_UP_FADE_DURATION = 0.55;
-const INVITE_FOLLOW_UP_CTA_SPRING_DURATION = 0.35;
-const INVITE_FOLLOW_UP_CTA_FADE_DURATION = 0.5;
+/** @deprecated Use inviteFollowUpTitleDelay from partner-page-motion. */
+export const INVITE_FOLLOW_UP_TEXT_DELAY = INVITE_FOLLOW_UP_TITLE_DELAY;
 
 function inviteFollowUpUsesSpringCta(variant: InviteAnimationsVariant) {
   return variant.endsWith("button-spring") || variant === "button-spring";
 }
 
-/** Beat 2 — CTA after copy (includes the standard post-copy beat). */
-export function inviteFollowUpCtaDelay(variant: InviteAnimationsVariant) {
-  return inviteFollowUpUsesSpringCta(variant)
-    ? 0.32 + CTA_ENTRANCE_DELAY_EXTRA
-    : 0.42 + CTA_ENTRANCE_DELAY_EXTRA;
-}
-
-/** Beat 3 — example shapes enter after copy and CTA land. */
-export function inviteFollowUpShapeEntranceDelayS(
-  variant: InviteAnimationsVariant,
-) {
-  const ctaDelay = inviteFollowUpCtaDelay(variant);
-  const ctaDuration = inviteFollowUpUsesSpringCta(variant)
-    ? INVITE_FOLLOW_UP_CTA_SPRING_DURATION
-    : INVITE_FOLLOW_UP_CTA_FADE_DURATION;
-  return ctaDelay + ctaDuration + INVITE_FOLLOW_UP_BEAT;
-}
-
-export function inviteFollowUpShapeEntranceCompleteMs(
-  variant: InviteAnimationsVariant,
-) {
-  return Math.round(inviteFollowUpShapeEntranceDelayS(variant) * 1000);
-}
-
 export {
-  INVITE_FOLLOW_UP_FADE_DURATION,
-  INVITE_FOLLOW_UP_CTA_SPRING_DURATION,
-  INVITE_FOLLOW_UP_CTA_FADE_DURATION,
-};
+  inviteFollowUpBodyDelay,
+  inviteFollowUpCtaDelay,
+  inviteFollowUpShapeEntranceCompleteMs,
+  inviteFollowUpShapeEntranceDelayS,
+  inviteFollowUpTitleDelay,
+} from "./partner-page-motion";
 
 // Transforms are written as full `transform` strings (not `x`/`y`/`scale`
 // shorthands) so Motion animates them via the compositor (WAAPI) rather than
@@ -183,8 +173,8 @@ function MotionItem({
       initial={hidden}
       animate={visible}
       transition={{
-        duration: 0.55,
-        ease: easeOut,
+        duration: PARTNER_FADE_UP_DURATION,
+        ease: partnerEaseOut,
         delay,
         ...transition,
       }}
@@ -259,24 +249,42 @@ function AnimatedInviteFollowUp({
       key={mountKey}
     >
       <div className={inviteContentShellClass}>
-        <MotionItem delay={INVITE_FOLLOW_UP_TEXT_DELAY}>
-          <InviteFollowUpContent />
-        </MotionItem>
+        <div className={inviteFollowUpStackClass}>
+          <MotionItem delay={inviteFollowUpTitleDelay()}>
+            <InviteFollowUpTitle />
+          </MotionItem>
+          <MotionItem delay={inviteFollowUpBodyDelay()}>
+            <InviteFollowUpBody />
+          </MotionItem>
+        </div>
       </div>
       {usesSpringCta ? (
-        <SpringCtaSection
-          onContinue={onContinue}
-          delay={inviteFollowUpCtaDelay(variant) - CTA_ENTRANCE_DELAY_EXTRA}
-        />
+        <div className={inviteCtaSectionClass}>
+          <div className={inviteCtaShellClass}>
+            <PartnerMotionSpringButton
+              type="button"
+              withCtaBeat={false}
+              delay={inviteFollowUpCtaDelay()}
+              onClick={onContinue}
+              className={inviteCtaButtonClass}
+            >
+              <span>{INVITE_COPY.cta}</span>
+              <ArrowRight
+                className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover:translate-x-1"
+                aria-hidden
+              />
+            </PartnerMotionSpringButton>
+          </div>
+        </div>
       ) : (
         <motion.div
           className={inviteCtaSectionClass}
           initial={{ opacity: 0, transform: "translateY(18px)" }}
           animate={{ opacity: 1, transform: "translateY(0px)" }}
           transition={{
-            duration: 0.5,
-            ease: easeOut,
-            delay: inviteFollowUpCtaDelay(variant),
+            duration: PARTNER_FADE_UP_DURATION,
+            ease: partnerEaseOut,
+            delay: inviteFollowUpCtaDelay(),
           }}
         >
           <div className={inviteCtaShellClass}>
@@ -351,7 +359,10 @@ function AnimatedInviteContent({
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
                 className={inviteMotionPassThroughClass}
-                initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+                initial={{
+                  opacity: 0,
+                  transform: "translateY(14px) scale(0.92)",
+                }}
                 animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
                   type: "spring",
@@ -521,7 +532,10 @@ function AnimatedInviteContent({
               <motion.span
                 key={`${mountKey}-${word}-${index}`}
                 className={inviteMotionPassThroughClass}
-                initial={{ opacity: 0, transform: "translateY(14px) scale(0.92)" }}
+                initial={{
+                  opacity: 0,
+                  transform: "translateY(14px) scale(0.92)",
+                }}
                 animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
                 transition={{
                   type: "spring",
@@ -675,7 +689,10 @@ function AnimatedInviteContent({
               type="button"
               onClick={onContinue}
               className={inviteCtaButtonClass}
-              initial={{ opacity: 0, transform: "translateY(12px) scale(0.88)" }}
+              initial={{
+                opacity: 0,
+                transform: "translateY(12px) scale(0.88)",
+              }}
               animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
               transition={{
                 type: "spring",

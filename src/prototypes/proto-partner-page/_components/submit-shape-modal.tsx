@@ -20,6 +20,7 @@ type SubmitShapeModalProps = {
   variant?: SubmitModalVariant;
   onKeepEditing: () => void;
   onSeeOnHomepage: () => void;
+  dragAttributionLabel?: string;
 };
 
 export function SubmitShapeModal({
@@ -29,6 +30,7 @@ export function SubmitShapeModal({
   variant = "plain-header",
   onKeepEditing,
   onSeeOnHomepage,
+  dragAttributionLabel,
 }: SubmitShapeModalProps) {
   const reduceMotion = useReducedMotion();
 
@@ -44,7 +46,7 @@ export function SubmitShapeModal({
         // and drive a scale-free, compositor (WAAPI) entrance below instead.
         style={{ animation: "none" }}
         className={cn(
-          "w-[min(24rem,calc(100vw-2rem))] max-w-[min(24rem,calc(100vw-2rem))] gap-0 border-0 bg-transparent p-0 shadow-none sm:max-w-[min(24rem,calc(100vw-2rem))]",
+          "pointer-events-none w-[min(24rem,calc(100vw-2rem))] max-w-[min(24rem,calc(100vw-2rem))] gap-0 border-0 bg-transparent p-0 shadow-none sm:max-w-[min(24rem,calc(100vw-2rem))]",
           "font-[family-name:var(--font-dm-sans)]!",
         )}
       >
@@ -75,6 +77,7 @@ export function SubmitShapeModal({
               selection={selection}
               onKeepEditing={onKeepEditing}
               onSeeOnHomepage={onSeeOnHomepage}
+              dragAttributionLabel={dragAttributionLabel}
             />
           </motion.div>
         </PrototypeComponent>

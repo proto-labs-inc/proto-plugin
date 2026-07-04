@@ -42,7 +42,7 @@ export const INVITE_COPY = {
   headline: "Congrats Amelie!",
   invite:
     "You've been invited to be a design partner for Maayan's new prototyping tool, Proto. This is because you're excellent and talented and also someone she thinks is cool.",
-  followUpHeadline: "Invite accepted!",
+  followUpHeadline: "Invite accepted",
   followUp:
     "Maayan is currently in the process of onboarding everyone, so it may take some time to get you access. In the meantime, help her decorate this website's home page by making a custom proto shape (like the ones here) to put on it.",
   continueCta: "Accept invite",

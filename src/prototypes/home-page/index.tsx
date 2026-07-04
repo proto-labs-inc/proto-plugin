@@ -42,7 +42,7 @@ export default function HomePage() {
         className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white"
       >
         <HomePageShapesBackground colorScheme={shapeColorsVariant} />
-        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-center [&_*]:pointer-events-none">
+        <div className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-center [&_*]:pointer-events-none [&_a]:pointer-events-auto">
           <HomePageCopyBlock />
         </div>
         <div className="absolute inset-x-0 bottom-0 z-30 p-3">

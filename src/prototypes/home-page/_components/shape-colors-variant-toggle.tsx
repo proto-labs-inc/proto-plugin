@@ -31,6 +31,7 @@ export function ShapeColorsVariantToggle({
         mobbinGalleryId="shape-colors-mobbin-inspiration-gallery"
         wrapRoot={false}
         registerOnly={registerOnly}
+        hideInlinePreview={!registerOnly}
       />
     </PrototypeComponent>
   );

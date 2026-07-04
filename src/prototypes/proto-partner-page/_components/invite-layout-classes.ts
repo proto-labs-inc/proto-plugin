@@ -18,6 +18,14 @@ export const inviteEyebrowClass =
 export const inviteHeadlineClass =
   "pointer-events-none text-foreground mb-6 text-[2.25rem] leading-[1.25] font-semibold tracking-[-0.03em] sm:mb-5 sm:text-[2rem] md:mb-7 md:text-[2.75rem] lg:text-[3.25rem]";
 
+/** Per-line white mask so canvas shapes do not show through wrapped copy. */
+export const inviteLineHighlightClass =
+  "box-decoration-clone bg-white px-[0.1em] shadow-[0_0_0_0.06em_white]";
+
+/** Body blurbs — thicker per-line mask so gaps and vertex dots do not show between lines. */
+export const inviteBodyLineHighlightClass =
+  "box-decoration-clone bg-white px-[0.12em] shadow-[0_0_0_0.38em_white]";
+
 export const inviteFollowUpHeadlineClass =
   "pointer-events-none text-foreground text-[1.5rem] leading-[1.2] font-semibold tracking-[-0.03em] sm:text-[1.625rem] md:text-[1.875rem]";
 

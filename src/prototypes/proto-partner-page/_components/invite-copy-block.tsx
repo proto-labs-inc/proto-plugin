@@ -19,6 +19,8 @@ import {
   inviteFollowUpStackClass,
   inviteHeadlineClass,
   inviteInteractiveClass,
+  inviteBodyLineHighlightClass,
+  inviteLineHighlightClass,
 } from "./invite-layout-classes";
 import { InviteEyebrowHeader } from "./invite-eyebrow-header";
 
@@ -33,14 +35,16 @@ const equalBodyClass =
 const [followUpBeforeHomePage, followUpAfterHomePage] =
   INVITE_COPY.followUp.split("home page");
 
-const followUpHomePageLinkClassName =
-  `${inviteInteractiveClass} text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]`;
+const followUpHomePageLinkClassName = `${inviteInteractiveClass} text-foreground font-medium underline decoration-foreground/30 underline-offset-[3px]`;
 
 export function InviteFollowUpCopy() {
   return (
     <>
       {followUpBeforeHomePage}
-      <Link href={HOME_PAGE_PROTOTYPE_PATH} className={followUpHomePageLinkClassName}>
+      <Link
+        href={HOME_PAGE_PROTOTYPE_PATH}
+        className={followUpHomePageLinkClassName}
+      >
         home page
       </Link>
       {followUpAfterHomePage}
@@ -48,13 +52,31 @@ export function InviteFollowUpCopy() {
   );
 }
 
+export function InviteFollowUpTitle() {
+  return (
+    <h2 className={inviteFollowUpHeadlineClass}>
+      <span className={inviteLineHighlightClass}>
+        {INVITE_COPY.followUpHeadline}
+      </span>
+    </h2>
+  );
+}
+
+export function InviteFollowUpBody() {
+  return (
+    <p className={inviteBodyClass}>
+      <span className={inviteBodyLineHighlightClass}>
+        <InviteFollowUpCopy />
+      </span>
+    </p>
+  );
+}
+
 export function InviteFollowUpContent() {
   return (
     <div className={inviteFollowUpStackClass}>
-      <h2 className={inviteFollowUpHeadlineClass}>{INVITE_COPY.followUpHeadline}</h2>
-      <p className={inviteBodyClass}>
-        <InviteFollowUpCopy />
-      </p>
+      <InviteFollowUpTitle />
+      <InviteFollowUpBody />
     </div>
   );
 }
@@ -71,7 +93,10 @@ function InviteWithBoldProto() {
   );
 }
 
-export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProps) {
+export function InviteCopyBlock({
+  variant,
+  step = "intro",
+}: InviteCopyBlockProps) {
   if (variant === "open-card") {
     return (
       <PrototypeComponent
@@ -82,9 +107,7 @@ export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProp
           {step === "intro" ? (
             <>
               <InviteEyebrowHeader />
-              <h1 className={inviteHeadlineClass}>
-                {INVITE_COPY.headline}
-              </h1>
+              <h1 className={inviteHeadlineClass}>{INVITE_COPY.headline}</h1>
               <div className={inviteBodyStackClass}>
                 <p className={inviteBodyClass}>
                   <InviteWithBoldProto />
@@ -234,7 +257,9 @@ export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProp
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
+            <p className={equalBodyClass}>
+              <InviteFollowUpCopy />
+            </p>
           </div>
         </div>
       </PrototypeComponent>
@@ -253,7 +278,9 @@ export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProp
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
+            <p className={equalBodyClass}>
+              <InviteFollowUpCopy />
+            </p>
           </div>
         </div>
       </PrototypeComponent>
@@ -317,7 +344,9 @@ export function InviteCopyBlock({ variant, step = "intro" }: InviteCopyBlockProp
           </h1>
           <div className="mt-2 flex flex-col gap-4">
             <p className={equalBodyClass}>{INVITE_COPY.invite}</p>
-            <p className={equalBodyClass}><InviteFollowUpCopy /></p>
+            <p className={equalBodyClass}>
+              <InviteFollowUpCopy />
+            </p>
           </div>
         </div>
       </PrototypeComponent>

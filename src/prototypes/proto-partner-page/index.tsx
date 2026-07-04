@@ -135,7 +135,6 @@ export default function ProtoPartnerPage() {
       animatedInviteLayout &&
       inviteAnimationsVariant !== "none",
     `${inviteFollowUpMotionEpoch}-${inviteAnimationsVariant}`,
-    inviteAnimationsVariant,
   );
 
   const handlePageChange = useCallback(
@@ -167,7 +166,7 @@ export default function ProtoPartnerPage() {
 
   const dragAttributionLabel =
     creatorAttributionVariant === "shape-drag-tooltip"
-      ? PROTOTYPE_CREATOR.name
+      ? PROTOTYPE_CREATOR.firstName
       : undefined;
 
   const inviteFollowUpNav =
@@ -327,6 +326,7 @@ export default function ProtoPartnerPage() {
               shapeSelection={shapeSelection}
               submitModalVariant={submitModalVariant}
               onSubmitModalOpenChange={setSubmitModalOpen}
+              dragAttributionLabel={dragAttributionLabel}
             />
             {dockInFlowLayout ? (
               <div className="relative z-10 min-h-0 flex-1">
@@ -336,7 +336,6 @@ export default function ProtoPartnerPage() {
                     colorId={shapeSelection.colorId}
                     textureId={shapeSelection.textureId}
                     className="absolute inset-0 min-h-0"
-                    dragAttributionLabel={dragAttributionLabel}
                   />
                 ) : (
                   <div
@@ -354,7 +353,6 @@ export default function ProtoPartnerPage() {
                   "absolute inset-x-0 top-0 z-10 min-h-0",
                   canvasBottomInset ?? "bottom-0",
                 )}
-                dragAttributionLabel={dragAttributionLabel}
               />
             ) : (
               <div

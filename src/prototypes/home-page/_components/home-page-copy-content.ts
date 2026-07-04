@@ -1,4 +1,7 @@
+export const MAAYAN_SITE_URL = "https://www.maayan.space/";
+export const MAAYAN_X_URL = "https://x.com/maayanalbert";
+
 export const HOME_PAGE_COPY = {
-  headline: "Welcome to Proto!",
-  body: "Proto is a prototyping tool Maayan is developing. It's currently being piloted by a waitlist of early users. If you are a designer, pm, or imaginatve engineer who really realy wants access, DM Maayan and she'll see what she can do. In the meantime, please enjoy these lil proto shapes made by current users.",
+  headline: "Welcome to Proto",
+  body: "Proto is a new prototyping tool that Maayan is building. It's currently limited to a pilot of early users. But if you're a designer, pm, or imaginatve engineer who really wants access, DM Maayan. In the meantime, please enjoy these shapes sketched out by our users.",
 } as const;

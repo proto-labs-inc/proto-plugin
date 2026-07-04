@@ -32,6 +32,12 @@ type PrototypeVariantExplorerProps<TVariant extends string> =
      * design explorations available in the review sidebar.
      */
     registerOnly?: boolean;
+    /**
+     * When true, skips rendering the active variant inline on the page while
+     * still using `renderers` in the design-brief sidebar/modal. Use when the
+     * live page already reflects the selected variant (e.g. a full-page canvas).
+     */
+    hideInlinePreview?: boolean;
     /** When set, registers this exploration in the review sidebar. */
     variantSet?: {
       id: string;
@@ -57,6 +63,7 @@ export function PrototypeVariantExplorer<TVariant extends string>({
   mobbinGalleryId = "mobbin-inspiration-gallery",
   wrapRoot = true,
   registerOnly = false,
+  hideInlinePreview = false,
   briefConfigFilePath,
   variantSet,
 }: PrototypeVariantExplorerProps<TVariant>) {
@@ -286,7 +293,9 @@ export function PrototypeVariantExplorer<TVariant extends string>({
         />
       ) : null}
 
-      {!registerOnly && ActiveVariantRenderer ? ActiveVariantRenderer() : null}
+      {!registerOnly && !hideInlinePreview && ActiveVariantRenderer
+        ? ActiveVariantRenderer()
+        : null}
     </div>
   );
 }

@@ -4,8 +4,6 @@ import { PrototypeComponent } from "@prototype/components/prototypes/prototype-t
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import type { InviteAnimationsVariant } from "./invite-animations-content";
-import { inviteFollowUpShapeEntranceCompleteMs } from "./invite-animations-block";
 import type { MobilePanelMotionVariant } from "./mobile-panel-motion-content";
 
 export const partnerEaseOut = [0.22, 1, 0.36, 1] as const;
@@ -225,6 +223,31 @@ export function partnerCustomizeEntranceCompleteMs(
   );
 }
 
+/** Follow-up page: title → body → CTA → shapes — equal beat between each step. */
+export function inviteFollowUpTitleDelay() {
+  return PARTNER_CUSTOMIZE_ENTRANCE_BASE;
+}
+
+export function inviteFollowUpBodyDelay() {
+  return inviteFollowUpTitleDelay() + PARTNER_CUSTOMIZE_CTA_SPRING_DURATION;
+}
+
+export function inviteFollowUpCtaDelay() {
+  return inviteFollowUpBodyDelay() + PARTNER_CUSTOMIZE_CTA_SPRING_DURATION;
+}
+
+export function inviteFollowUpShapeEntranceDelayS() {
+  return (
+    inviteFollowUpCtaDelay() +
+    PARTNER_CUSTOMIZE_CTA_SPRING_DURATION +
+    PARTNER_SHAPE_REVEAL_DELAY_EXTRA
+  );
+}
+
+export function inviteFollowUpShapeEntranceCompleteMs() {
+  return Math.round(inviteFollowUpShapeEntranceDelayS() * 1000);
+}
+
 export function useCustomizeShapeEntranceReady(
   defer: boolean,
   entranceKey: string | number,
@@ -253,7 +276,6 @@ export function useCustomizeShapeEntranceReady(
 export function useInviteFollowUpShapeEntranceReady(
   defer: boolean,
   entranceKey: string | number,
-  animationsVariant: InviteAnimationsVariant = "word-pop-button-spring",
 ) {
   const reduceMotion = useReducedMotion();
   const [ready, setReady] = useState(!defer || !!reduceMotion);
@@ -267,10 +289,10 @@ export function useInviteFollowUpShapeEntranceReady(
     setReady(false);
     const timer = window.setTimeout(
       () => setReady(true),
-      inviteFollowUpShapeEntranceCompleteMs(animationsVariant),
+      inviteFollowUpShapeEntranceCompleteMs(),
     );
     return () => window.clearTimeout(timer);
-  }, [animationsVariant, defer, entranceKey, reduceMotion]);
+  }, [defer, entranceKey, reduceMotion]);
 
   return ready;
 }

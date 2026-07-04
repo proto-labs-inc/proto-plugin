@@ -22,12 +22,18 @@ import {
   HOME_PAGE_CONTRIBUTOR_SHAPES,
   type HomePageContributorShape,
 } from "./home-page-contributor-shapes";
+import {
+  PARTNER_FADE_UP_DURATION,
+  PARTNER_SHAPE_REVEAL_DELAY_EXTRA,
+} from "../../proto-partner-page/_components/partner-page-motion";
+import { pickUniqueCreatorNames } from "./home-page-shape-creator-names";
 import { readSubmittedContributorShapes } from "../../proto-partner-page/_components/submitted-proto-shapes";
 import { bindSpringsCanvasPointerHandlers } from "../../proto-shapes/springs-canvas-pointer";
 import {
-  DRAG_ATTRIBUTION_TOOLTIP_CLASS,
+  getDragAttributionTooltipOffsetY,
   updateDragAttributionTooltipElement,
 } from "../../proto-shapes/springs-drag-attribution-tooltip";
+import { DragAttributionTooltipLayer } from "../../proto-shapes/drag-attribution-tooltip-layer";
 import {
   createSpringsCubeSimulation,
   drawSpringsCubeSimulation,
@@ -37,8 +43,11 @@ import {
   type SpringsCubeSimulation,
 } from "../../proto-shapes/springs-cube-simulation";
 import {
+  getShapeStackDepth,
+  resolveInterShapeNonOverlap,
   resolveSelfCollisions,
   type CollidableParticle,
+  type CollisionSurface,
 } from "../../proto-shapes/springs-inter-shape-collisions";
 import {
   createSpringsPentagonSimulation,
@@ -329,6 +338,9 @@ const SHAPE_RUNTIMES: Record<ProtoShapeId, ShapeRuntime> = {
 
 const WARM_START_FRAMES = 90;
 const MIN_VALID_CANVAS_HEIGHT = 120;
+/** Stack-drop spawn band — spread shapes vertically so they don't tangle on spawn. */
+const STACK_DROP_SPAWN_Y_MIN = 0.02;
+const STACK_DROP_SPAWN_Y_MAX = 0.42;
 
 export type FixedShapeSlotConfig = {
   id: string;
@@ -345,6 +357,8 @@ export type FixedShapeSlotConfig = {
   entranceDrop?: boolean;
   /** Launch from the bottom edge toward a high shelf — for slots above midline. */
   entranceDropFromBottom?: boolean;
+  /** Collapse and pop open at the shape's own resting spot — no drop or travel. */
+  entrancePopInPlace?: boolean;
   /** Shown in a tooltip above this shape while it is dragged. */
   attributionLabel?: string;
 };
@@ -363,9 +377,9 @@ export type MultiShapeSpringsCanvasConfig = {
   colorMode: "home-palette" | "proto-colors";
   /**
    * `partner` matches PartnerShapeCanvas: plain spring step with per-shape shelf
-   * floors plus screen-edge walls — no per-particle floor clamp or square
-   * self-collision stack.
-   * `background` enables shelf stacking physics for dense multi-shape scenes.
+   * floors plus screen-edge walls.
+   * `background` uses the same shelf floors for squares; other shapes also get
+   * a per-particle floor clamp after each step.
    */
   physicsMode?: MultiShapeSpringsPhysicsMode;
   /** When set, renders exactly these slots with no random generation. */
@@ -377,6 +391,14 @@ export type MultiShapeSpringsCanvasConfig = {
    * them open — same reveal as PartnerShapeCanvas on the customize page.
    */
   entranceCenterPop?: boolean;
+  /**
+   * Collapse warm-started shapes at their own resting spot and pop open there —
+   * no vertical or horizontal travel. Applies to every slot unless a slot opts
+   * out with its own entrance.
+   */
+  entrancePopInPlace?: boolean;
+  /** Pause before the first shape entrance (seconds). */
+  shapeEntranceDelay?: number;
   /** Stagger per-shape reveal on entrance (seconds). Requires entranceDrop or entranceCenterPop. */
   shapeEntranceStagger?: number;
   /**
@@ -384,20 +406,51 @@ export type MultiShapeSpringsCanvasConfig = {
    * takes precedence when set.
    */
   dragAttributionLabel?: string;
+  /**
+   * Scale shapes up and keep colors saturated toward the bottom shelf; shrink
+   * and lighten them toward the top.
+   */
+  depthGradient?: boolean;
+  /**
+   * Shared bottom floor with inter-shape collisions so shapes fall and stack
+   * like the proto-shapes canvas.
+   */
+  pileUp?: boolean;
 };
 
+/** Matches home-page-copy-block body delay — last copy beat before shapes. */
+const HOME_PAGE_BODY_ENTRANCE_DELAY = 0.38;
+
+export function homePageShapeEntranceDelayS() {
+  return (
+    HOME_PAGE_BODY_ENTRANCE_DELAY +
+    PARTNER_FADE_UP_DURATION +
+    PARTNER_SHAPE_REVEAL_DELAY_EXTRA
+  );
+}
+
 export const HOME_PAGE_SHAPES_CONFIG: MultiShapeSpringsCanvasConfig = {
-  shapeCount: 24,
+  shapeCount: 10,
   seed: 0x1a2b3c4d,
   gridCols: 8,
-  minRestFloorFactor: 0.12,
+  minRestFloorFactor: 0.08,
   maxRestFloorFactor: 0.995,
-  minVisualScale: 0.3,
-  maxVisualScale: 1.4,
+  minVisualScale: 1,
+  maxVisualScale: 2,
   backgroundShapeScale: 0.72,
   colorMode: "home-palette",
-  physicsMode: "background",
+  physicsMode: "partner",
+  entranceDrop: true,
+  pileUp: true,
+  shapeEntranceDelay: homePageShapeEntranceDelayS(),
+  /** Space drops so earlier shapes clear the top before the next falls in. */
+  shapeEntranceStagger: 0.15,
+  depthGradient: false,
 };
+/** Blend toward white at the top shelf when depthGradient is enabled. */
+const DEPTH_TOP_COLOR_LIGHTEN = 0.78;
+/** Canvas alpha at the top shelf — bottom shapes stay fully opaque. */
+const DEPTH_TOP_DRAW_ALPHA = 0.38;
 /** Particles within this distance of the floor count as resting on it. */
 const FLOOR_CONTACT_EPSILON = 1.5;
 /** Horizontal velocity multiplier per frame for particles resting on the floor. */
@@ -418,6 +471,7 @@ type ShapeSlotConfig = {
   restFloorSpreadAdjust?: number;
   entranceDrop?: boolean;
   entranceDropFromBottom?: boolean;
+  entrancePopInPlace?: boolean;
   attributionLabel?: string;
 };
 
@@ -443,6 +497,65 @@ function shuffleWithRandom<T>(items: T[], random: () => number) {
     const swapIndex = Math.floor(random() * (index + 1));
     [items[index], items[swapIndex]] = [items[swapIndex]!, items[index]!];
   }
+}
+
+function getShapeShelfDepthT(
+  restFloorFactor: number,
+  minRestFloorFactor: number,
+  maxRestFloorFactor: number,
+) {
+  const span = maxRestFloorFactor - minRestFloorFactor;
+  if (span <= 0) return 1;
+  return Math.min(
+    1,
+    Math.max(0, (restFloorFactor - minRestFloorFactor) / span),
+  );
+}
+
+function getDepthVisualScale(
+  depthT: number,
+  config: MultiShapeSpringsCanvasConfig,
+  baseScale = 1,
+) {
+  const shelfScale =
+    config.minVisualScale +
+    depthT * (config.maxVisualScale - config.minVisualScale);
+  return shelfScale * baseScale;
+}
+
+function getDepthAdjustedColor(color: ProtoRgb, depthT: number): ProtoRgb {
+  const lighten = (1 - depthT) * DEPTH_TOP_COLOR_LIGHTEN;
+  return [
+    Math.round(color[0] + (255 - color[0]) * lighten),
+    Math.round(color[1] + (255 - color[1]) * lighten),
+    Math.round(color[2] + (255 - color[2]) * lighten),
+  ];
+}
+
+function getDepthDrawAlpha(depthT: number) {
+  return DEPTH_TOP_DRAW_ALPHA + depthT * (1 - DEPTH_TOP_DRAW_ALPHA);
+}
+
+function applyDepthGradientToSlot<
+  T extends Pick<ShapeSlotConfig, "color" | "restFloorFactor" | "visualScale">,
+>(
+  slot: T,
+  config: MultiShapeSpringsCanvasConfig,
+  baseVisualScale = 1,
+): T {
+  if (!config.depthGradient) return slot;
+
+  const depthT = getShapeShelfDepthT(
+    slot.restFloorFactor,
+    config.minRestFloorFactor,
+    config.maxRestFloorFactor,
+  );
+
+  return {
+    ...slot,
+    visualScale: getDepthVisualScale(depthT, config, baseVisualScale),
+    color: getDepthAdjustedColor(slot.color, depthT),
+  };
 }
 
 function generateUniqueRestFloorFactors(
@@ -481,8 +594,26 @@ function fixedSlotToConfig(
     restFloorSpreadAdjust: slot.restFloorSpreadAdjust,
     entranceDrop: slot.entranceDrop,
     entranceDropFromBottom: slot.entranceDropFromBottom,
+    entrancePopInPlace: slot.entrancePopInPlace,
     attributionLabel: slot.attributionLabel,
   };
+}
+
+function resolveSharedStackPhysics(config: MultiShapeSpringsCanvasConfig) {
+  return Boolean(
+    config.pileUp ||
+      (config.entranceDrop &&
+        !config.entrancePopInPlace &&
+        !config.entranceCenterPop),
+  );
+}
+
+function normalizeSlotForPileUp(
+  slot: ShapeSlotConfig,
+  config: MultiShapeSpringsCanvasConfig,
+): ShapeSlotConfig {
+  if (!resolveSharedStackPhysics(config)) return slot;
+  return { ...slot, restFloorFactor: config.maxRestFloorFactor };
 }
 
 function generateShapeSlotConfigs(
@@ -492,17 +623,29 @@ function generateShapeSlotConfigs(
 ): ShapeSlotConfig[] {
   if (config.fixedSlots?.length) {
     return config.fixedSlots.map((slot) =>
-      fixedSlotToConfig(slot, colorScheme, config.colorMode),
+      normalizeSlotForPileUp(
+        fixedSlotToConfig(slot, colorScheme, config.colorMode),
+        config,
+      ),
     );
   }
 
-  const random = createSeededRandom(config.seed);
+  // Fresh randomness on every generation so the layout differs each page load.
+  const runtimeSeed =
+    (config.seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
+  const random = createSeededRandom(runtimeSeed);
+  const nameRandom = createSeededRandom(runtimeSeed ^ 0x6e616d65);
   const slots: ShapeSlotConfig[] = [];
   const textures = [...PROTO_TEXTURES];
   const restFloorFactors = generateUniqueRestFloorFactors(
     config.shapeCount,
     random,
     config,
+  );
+  const creatorNames = pickUniqueCreatorNames(
+    config.shapeCount,
+    nameRandom,
+    contributorShapes.map((shape) => shape.contributorName),
   );
 
   for (let index = 0; index < config.shapeCount; index += 1) {
@@ -512,28 +655,57 @@ function generateShapeSlotConfigs(
       random,
     ) as ProtoColorId;
 
-    slots.push({
-      id: String(index),
-      shapeId: pickRandom(
-        PROTO_SHAPES.map((shape) => shape.id),
-        random,
+    const restFloorFactor = restFloorFactors[index]!;
+    const baseColor =
+      config.colorMode === "proto-colors"
+        ? getProtoColor(colorId).rgb
+        : getHomeShapePaletteColor(colorId, colorScheme);
+    const scaleJitter = config.depthGradient ? 0.9 + random() * 0.2 : 1;
+
+    slots.push(
+      applyDepthGradientToSlot(
+        {
+          id: String(index),
+          shapeId: pickRandom(
+            PROTO_SHAPES.map((shape) => shape.id),
+            random,
+          ),
+          color: baseColor,
+          textureId: pickRandom(textures, random),
+          visualScale:
+            config.minVisualScale +
+            random() * (config.maxVisualScale - config.minVisualScale),
+          restFloorFactor,
+          xFactor:
+            0.02 +
+            ((col + 0.5) / config.gridCols) * 0.96 +
+            (random() - 0.5) * 0.06,
+          yFactor: resolveSharedStackPhysics(config)
+            ? STACK_DROP_SPAWN_Y_MIN +
+              random() * (STACK_DROP_SPAWN_Y_MAX - STACK_DROP_SPAWN_Y_MIN)
+            : 0.02 + random() * 0.08,
+          attributionLabel: creatorNames[index]!,
+        },
+        config,
+        scaleJitter,
       ),
-      color:
-        config.colorMode === "proto-colors"
-          ? getProtoColor(colorId).rgb
-          : getHomeShapePaletteColor(colorId, colorScheme),
-      textureId: pickRandom(textures, random),
-      visualScale:
-        config.minVisualScale +
-        random() * (config.maxVisualScale - config.minVisualScale),
-      restFloorFactor: restFloorFactors[index]!,
-      xFactor: 0.04 + ((col + 0.5) / config.gridCols) * 0.92,
-      yFactor: 0.02 + random() * 0.08,
-    });
+    );
   }
 
-  const contributorSlots = contributorShapes.map(contributorShapeToSlotConfig);
-  return [...contributorSlots, ...slots];
+  const contributorSlots = contributorShapes.map((shape) =>
+    normalizeSlotForPileUp(
+      applyDepthGradientToSlot(
+        contributorShapeToSlotConfig(shape),
+        config,
+        shape.visualScale,
+      ),
+      config,
+    ),
+  );
+  return [
+    ...contributorSlots,
+    ...slots.map((slot) => normalizeSlotForPileUp(slot, config)),
+  ];
 }
 
 function getSlotLayout(
@@ -617,12 +789,18 @@ function applySlotSimulationMargin(
   backgroundShapeScale: number,
   physicsMode: MultiShapeSpringsPhysicsMode,
   restFloorFactorRange = { min: 1, max: 1 },
+  sharedStackPhysics = false,
 ) {
   const renderMargin = resolveShapeMargin(
     slot.shapeId,
     slot.visualScale,
     backgroundShapeScale,
   );
+  if (sharedStackPhysics) {
+    sim.margin = renderMargin;
+    sim.floorInset = undefined;
+    return;
+  }
   if (physicsMode === "partner") {
     const spreadFloorFactor = spreadRestFloorFactor(
       slot.restFloorFactor,
@@ -643,14 +821,20 @@ function applySlotSimulationMargin(
   }
 
   sim.margin = renderMargin;
-  sim.floorInset = undefined;
+  if (slot.shapeId === "square") {
+    sim.floorInset = getShelfSimulationMargin(
+      cssHeight,
+      slot.restFloorFactor,
+      renderMargin,
+    );
+  } else {
+    sim.floorInset = undefined;
+  }
 }
 
 /**
- * Rest the shape on its layer using a per-particle floor, mirroring the natural
- * canvas boundary. Particles at or below the floor are clamped, downward
- * velocity is removed, and horizontal velocity is damped so resting shapes
- * (especially multi-part squares) don't drift from self-collision impulses.
+ * Rest non-square shapes on their shelf layer using a per-particle floor.
+ * Squares use floorInset instead — same approach as invite follow-up.
  */
 function enforceShapeFloor(
   sim: SpringsSimulation,
@@ -679,50 +863,6 @@ function enforceShapeFloor(
   }
 }
 
-function resolveSquareSelfCollisions(
-  sim: SpringsSquareSimulation,
-  pinned: readonly CollidableParticle[] = [],
-) {
-  resolveSelfCollisions(
-    sim.particles,
-    {
-      particles: sim.particles,
-      edges: SQUARE_COLLISION_EDGES,
-    },
-    SQUARE_SPRING_PAIRS,
-    pinned,
-  );
-}
-
-/** Block horizontal shove from self-collisions while a square rests on its floor layer. */
-function lockSquareFloorHorizontalDrift(
-  sim: SpringsSquareSimulation,
-  floorY: number,
-  preCollisionPx: readonly number[],
-  pinned: readonly CollidableParticle[] = [],
-) {
-  const pinnedSet = new Set(pinned);
-
-  for (let index = 0; index < sim.particles.length; index += 1) {
-    const particle = sim.particles[index]!;
-    if (pinnedSet.has(particle)) continue;
-    if (particle.py >= floorY - FLOOR_CONTACT_EPSILON) {
-      particle.px = preCollisionPx[index]!;
-      particle.vx = 0;
-    }
-  }
-}
-
-function resolveSquareSelfCollisionsWithFloorLock(
-  sim: SpringsSquareSimulation,
-  floorY: number,
-  pinned: readonly CollidableParticle[] = [],
-) {
-  const preCollisionPx = sim.particles.map((particle) => particle.px);
-  resolveSquareSelfCollisions(sim, pinned);
-  lockSquareFloorHorizontalDrift(sim, floorY, preCollisionPx, pinned);
-}
-
 function getSimulationCentroid(sim: SpringsSimulation) {
   let sumX = 0;
   let sumY = 0;
@@ -734,38 +874,60 @@ function getSimulationCentroid(sim: SpringsSimulation) {
   return { x: sumX / count, y: sumY / count };
 }
 
-function updateDragAttributionTooltip(
+function updateShapeAttributionTooltip(
   tooltip: HTMLDivElement | null,
   labelEl: HTMLSpanElement | null,
   shapes: ShapeSlot[],
-  grabbedId: string | null,
-  pointerDown: boolean,
+  activeShapeId: string | null,
   globalLabel: string | undefined,
+  positionAnchor: HTMLElement | null,
+  backgroundShapeScale: number,
+  useFixedTooltipPosition = true,
 ) {
-  if (!grabbedId || !pointerDown) {
+  if (!activeShapeId) {
     if (tooltip) tooltip.style.display = "none";
     return;
   }
 
-  const slot = shapes.find((entry) => entry.id === grabbedId);
-  if (!slot?.sim) {
+  const slot = shapes.find((entry) => entry.id === activeShapeId);
+  const label = slot?.attributionLabel ?? globalLabel;
+  if (!slot?.sim || !label) {
     if (tooltip) tooltip.style.display = "none";
     return;
   }
 
-  const slotLabel = slot.attributionLabel;
-  const label = slotLabel ?? globalLabel;
+  const { dotScale, normalizedRenderScale } = getSlotLayout(
+    slot.shapeId,
+    slot.visualScale,
+    backgroundShapeScale,
+  );
+
   updateDragAttributionTooltipElement(
     tooltip,
     labelEl,
     getSimulationCentroid(slot.sim),
     label,
-    Boolean(slotLabel),
+    false,
+    positionAnchor,
+    getDragAttributionTooltipOffsetY(
+      slot.sim.particles,
+      dotScale,
+      normalizedRenderScale,
+    ),
+    useFixedTooltipPosition,
   );
 }
 
 /** Matches PartnerShapeCanvas — tiny cluster so springs distend on the first live frames. */
 const INITIAL_POP_COLLAPSE_FACTOR = 0.04;
+/**
+ * Minimum gap kept between an in-place pop's collapse point and the shape's
+ * floor. The smallest shapes settle with their centroid only a pixel or two
+ * above the floor, so collapsing to the centroid would still glue them to the
+ * boundary and flatten them. Lifting the collapse point ensures every shape
+ * reopens in free space before gravity settles it onto its shelf.
+ */
+const POP_IN_PLACE_MIN_FLOOR_GAP = 32;
 /** Shelves above this factor collapse at the bottom edge so springs distend upward. */
 const CENTER_POP_MIDLINE_FACTOR = 0.5;
 const BOTTOM_POP_COLLAPSE_Y_FACTOR = 0.97;
@@ -790,19 +952,27 @@ type ShapeSimulationEntrance = {
   drop?: boolean;
   dropFromBottom?: boolean;
   centerPop?: boolean;
+  popInPlace?: boolean;
 };
 
 function resolveSlotEntrance(
-  slot: Pick<ShapeSlotConfig, "entranceDrop" | "entranceDropFromBottom">,
+  slot: Pick<
+    ShapeSlotConfig,
+    "entranceDrop" | "entranceDropFromBottom" | "entrancePopInPlace"
+  >,
   config: MultiShapeSpringsCanvasConfig,
 ) {
   const dropFromBottom = slot.entranceDropFromBottom ?? false;
   const drop =
     dropFromBottom || (slot.entranceDrop ?? config.entranceDrop ?? false);
+  const popInPlace = drop
+    ? false
+    : (slot.entrancePopInPlace ?? config.entrancePopInPlace ?? false);
   return {
     drop,
     dropFromBottom,
-    centerPop: drop ? false : (config.entranceCenterPop ?? false),
+    popInPlace,
+    centerPop: drop ? false : popInPlace || (config.entranceCenterPop ?? false),
   };
 }
 
@@ -815,16 +985,18 @@ function slotUsesStaggeredEntrance(
     drop ||
     centerPop ||
     (config.entranceDrop ?? false) ||
-    (config.entranceCenterPop ?? false)
+    (config.entranceCenterPop ?? false) ||
+    (config.shapeEntranceDelay ?? 0) > 0 ||
+    (config.shapeEntranceStagger ?? 0) > 0
   );
 }
 
-function launchShapeFromBottom(
-  sim: SpringsSimulation,
-  targetFloorY: number,
-) {
+function launchShapeFromBottom(sim: SpringsSimulation, targetFloorY: number) {
   const centroid = getSimulationCentroid(sim);
-  const launchVy = -Math.max(14, Math.min(30, (centroid.y - targetFloorY) * 0.14));
+  const launchVy = -Math.max(
+    14,
+    Math.min(30, (centroid.y - targetFloorY) * 0.14),
+  );
   for (const particle of sim.particles) {
     particle.vy = launchVy;
   }
@@ -852,13 +1024,9 @@ function warmStartSimulation(
 
   for (let i = 0; i < WARM_START_FRAMES; i += 1) {
     runtime.step(sim, idleInput);
-    if (shapeId === "square") {
-      resolveSquareSelfCollisionsWithFloorLock(
-        sim as SpringsSquareSimulation,
-        floorY,
-      );
+    if (shapeId !== "square") {
+      enforceShapeFloor(sim, floorY);
     }
-    enforceShapeFloor(sim, floorY);
   }
 }
 
@@ -870,13 +1038,23 @@ function createShapeSimulation(
   physicsMode: MultiShapeSpringsPhysicsMode,
   entrance: ShapeSimulationEntrance = {},
   restFloorFactorRange = { min: 1, max: 1 },
+  sharedStackPhysics = false,
 ) {
-  const { drop = false, dropFromBottom = false, centerPop = false } = entrance;
+  const {
+    drop = false,
+    dropFromBottom = false,
+    centerPop = false,
+    popInPlace = false,
+  } = entrance;
   const runtime = SHAPE_RUNTIMES[slot.shapeId];
   const spawnX = cssWidth * slot.xFactor;
   const spawnY = dropFromBottom
     ? cssHeight * BOTTOM_POP_COLLAPSE_Y_FACTOR
-    : cssHeight * (drop ? Math.max(0.02, slot.yFactor - 0.22) : slot.yFactor);
+    : drop
+      ? sharedStackPhysics
+        ? cssHeight * slot.yFactor
+        : cssHeight * Math.max(0.02, slot.yFactor - 0.22)
+      : cssHeight * slot.restFloorFactor;
   const sim = runtime.create(cssWidth, cssHeight, spawnX, spawnY);
   scaleSpringsSimulationAroundCentroid(
     sim,
@@ -890,6 +1068,7 @@ function createShapeSimulation(
     backgroundShapeScale,
     physicsMode,
     restFloorFactorRange,
+    sharedStackPhysics,
   );
   if (!drop) {
     const floorY = getRestFloorY(
@@ -899,15 +1078,32 @@ function createShapeSimulation(
     );
     warmStartSimulation(runtime, sim, floorY, slot.shapeId, physicsMode);
     if (centerPop) {
-      const collapseYFactor =
-        slot.restFloorFactor <= CENTER_POP_MIDLINE_FACTOR
-          ? BOTTOM_POP_COLLAPSE_Y_FACTOR
-          : CENTER_POP_MIDLINE_FACTOR;
-      collapseShapeForPop(
-        sim,
-        cssWidth * slot.xFactor,
-        cssHeight * collapseYFactor,
-      );
+      if (popInPlace) {
+        // Collapse in free space above the shape's floor rather than onto the
+        // floor line. Popping open while pinned to the floor boundary lets the
+        // boundary clamp zero out downward velocity every frame, biasing the
+        // reopening horizontal until the shape locks into a flat, collinear
+        // line it can never recover from. Reopening in free space (like the
+        // center pop below) lets it distend into its full 3D form, then settle
+        // onto its shelf. Tiny shapes settle with their centroid barely above
+        // the floor, so clamp the collapse point up by a minimum gap.
+        const centroid = getSimulationCentroid(sim);
+        const collapseY = Math.min(
+          centroid.y,
+          floorY - POP_IN_PLACE_MIN_FLOOR_GAP,
+        );
+        collapseShapeForPop(sim, centroid.x, collapseY);
+      } else {
+        const collapseYFactor =
+          slot.restFloorFactor <= CENTER_POP_MIDLINE_FACTOR
+            ? BOTTOM_POP_COLLAPSE_Y_FACTOR
+            : CENTER_POP_MIDLINE_FACTOR;
+        collapseShapeForPop(
+          sim,
+          cssWidth * slot.xFactor,
+          cssHeight * collapseYFactor,
+        );
+      }
     }
   } else if (dropFromBottom) {
     const floorY = getRestFloorY(
@@ -937,6 +1133,41 @@ function distanceToGrabbed(sim: SpringsSimulation, x: number, y: number) {
   if (sim.grabbedIndex < 0) return Infinity;
   const particle = sim.particles[sim.grabbedIndex];
   return Math.hypot(x - particle.px, y - particle.py);
+}
+
+function findShapeAtPoint(
+  shapes: readonly ShapeSlot[],
+  x: number,
+  y: number,
+  pointerType: string,
+) {
+  const basePickRadius =
+    pointerType === "touch" ? PARTICLE_PICK_RADIUS_TOUCH : PARTICLE_PICK_RADIUS;
+
+  let closestId: string | null = null;
+  let closestDist = Infinity;
+
+  for (const slot of shapes) {
+    if (!slot.sim) continue;
+
+    const runtime = SHAPE_RUNTIMES[slot.shapeId];
+    const pickRadius = basePickRadius * Math.max(0.9, slot.visualScale);
+    const previousGrabbedIndex = slot.sim.grabbedIndex;
+    runtime.pick(slot.sim, x, y, pickRadius);
+    const dist = distanceToGrabbed(slot.sim, x, y);
+    slot.sim.grabbedIndex = previousGrabbedIndex;
+
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestId = slot.id;
+    }
+  }
+
+  if (!closestId || closestDist === Infinity) {
+    return null;
+  }
+
+  return closestId;
 }
 
 type HomePageShapesBackgroundProps = {
@@ -973,7 +1204,19 @@ export function HomePageShapesBackground({
       }
     }
 
-    setContributorShapes(merged);
+    setContributorShapes((current) => {
+      if (
+        current.length === merged.length &&
+        current.every(
+          (shape, index) =>
+            shape.id === merged[index]?.id &&
+            shape.contributorName === merged[index]?.contributorName,
+        )
+      ) {
+        return current;
+      }
+      return merged;
+    });
   }, [config.colorMode, previewKey]);
 
   const slotConfigs = useMemo(
@@ -990,15 +1233,22 @@ export function HomePageShapesBackground({
   const dragTooltipRef = useRef<HTMLDivElement>(null);
   const dragTooltipLabelRef = useRef<HTMLSpanElement>(null);
   const shapesRef = useRef<ShapeSlot[]>(
-    slotConfigs.map((config) => ({ ...config, sim: null })),
+    slotConfigs.map((config) => ({
+      ...config,
+      sim: null,
+    })),
   );
 
   useEffect(() => {
     shapesRef.current = slotConfigs.map((config) => {
       const existing = shapesRef.current.find((slot) => slot.id === config.id);
+      const sim =
+        existing?.sim && existing.shapeId === config.shapeId
+          ? existing.sim
+          : null;
       return {
         ...config,
-        sim: existing?.sim ?? null,
+        sim,
       };
     });
   }, [slotConfigs]);
@@ -1021,7 +1271,21 @@ export function HomePageShapesBackground({
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
+    if (resolveSharedStackPhysics(configRef.current)) {
+      for (const slot of shapesRef.current) {
+        slot.sim = null;
+      }
+    }
+
     const entranceStartedAtMs = performance.now();
+    const pileUpStaggerOrder = new Map<string, number>();
+    if (resolveSharedStackPhysics(configRef.current)) {
+      [...shapesRef.current]
+        .sort((a, b) => a.xFactor - b.xFactor)
+        .forEach((slot, orderIndex) => {
+          pileUpStaggerOrder.set(slot.id, orderIndex);
+        });
+    }
 
     const tryCreateSlotSimulation = (
       slot: ShapeSlot,
@@ -1033,15 +1297,15 @@ export function HomePageShapesBackground({
 
       const currentConfig = configRef.current;
       const physicsMode = currentConfig.physicsMode ?? "background";
-      const { drop, dropFromBottom, centerPop } = resolveSlotEntrance(
-        slot,
-        currentConfig,
-      );
+      const staggerIndex = resolveSharedStackPhysics(currentConfig)
+        ? (pileUpStaggerOrder.get(slot.id) ?? slotIndex)
+        : slotIndex;
 
       if (slotUsesStaggeredEntrance(slot, currentConfig)) {
         const revealAt =
           entranceStartedAtMs +
-          slotIndex * (currentConfig.shapeEntranceStagger ?? 0) * 1000;
+          (currentConfig.shapeEntranceDelay ?? 0) * 1000 +
+          staggerIndex * (currentConfig.shapeEntranceStagger ?? 0) * 1000;
         if (performance.now() < revealAt) return;
       }
 
@@ -1051,8 +1315,9 @@ export function HomePageShapesBackground({
         cssHeight,
         currentConfig.backgroundShapeScale,
         physicsMode,
-        { drop, dropFromBottom, centerPop },
+        resolveSlotEntrance(slot, currentConfig),
         getSlotRestFloorFactorRange(shapesRef.current),
+        resolveSharedStackPhysics(currentConfig),
       );
     };
 
@@ -1075,7 +1340,8 @@ export function HomePageShapesBackground({
         shapesRef.current,
       );
 
-      for (const slot of shapesRef.current) {
+      for (let index = 0; index < shapesRef.current.length; index += 1) {
+        const slot = shapesRef.current[index]!;
         if (slot.sim) {
           SHAPE_RUNTIMES[slot.shapeId].updateBounds(
             slot.sim,
@@ -1089,6 +1355,7 @@ export function HomePageShapesBackground({
             backgroundShapeScale,
             physicsMode,
             restFloorFactorRange,
+            resolveSharedStackPhysics(configRef.current),
           );
         } else if (!slotUsesStaggeredEntrance(slot, configRef.current)) {
           slot.sim = createShapeSimulation(
@@ -1099,6 +1366,7 @@ export function HomePageShapesBackground({
             physicsMode,
             resolveSlotEntrance(slot, configRef.current),
             restFloorFactorRange,
+            resolveSharedStackPhysics(configRef.current),
           );
         }
       }
@@ -1123,29 +1391,27 @@ export function HomePageShapesBackground({
       onPointerDown: (event) => {
         const shapes = shapesRef.current;
         const { x, y } = pointerToCanvas(event.clientX, event.clientY);
-        const basePickRadius =
-          event.pointerType === "touch"
-            ? PARTICLE_PICK_RADIUS_TOUCH
-            : PARTICLE_PICK_RADIUS;
+        const closestId = findShapeAtPoint(shapes, x, y, event.pointerType);
 
-        let closestId: string | null = null;
-        let closestDist = Infinity;
-
-        for (const slot of shapes) {
-          if (!slot.sim) continue;
-          const runtime = SHAPE_RUNTIMES[slot.shapeId];
-          const pickRadius = basePickRadius * Math.max(0.9, slot.visualScale);
-          runtime.pick(slot.sim, x, y, pickRadius);
-          const dist = distanceToGrabbed(slot.sim, x, y);
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestId = slot.id;
-          }
-        }
-
-        if (!closestId || closestDist === Infinity) {
+        if (!closestId) {
           grabbedShapeIdRef.current = null;
           return false;
+        }
+
+        const winningSlot = shapes.find((slot) => slot.id === closestId);
+        if (winningSlot?.sim) {
+          const pickRadius =
+            event.pointerType === "touch"
+              ? PARTICLE_PICK_RADIUS_TOUCH
+              : PARTICLE_PICK_RADIUS;
+          const scaledRadius =
+            pickRadius * Math.max(0.9, winningSlot.visualScale);
+          SHAPE_RUNTIMES[winningSlot.shapeId].pick(
+            winningSlot.sim,
+            x,
+            y,
+            scaledRadius,
+          );
         }
 
         for (const slot of shapes) {
@@ -1186,12 +1452,16 @@ export function HomePageShapesBackground({
 
       if (cssHeight >= MIN_VALID_CANVAS_HEIGHT) {
         for (let index = 0; index < shapes.length; index += 1) {
-          tryCreateSlotSimulation(
-            shapes[index]!,
-            index,
-            cssWidth,
-            cssHeight,
-          );
+          tryCreateSlotSimulation(shapes[index]!, index, cssWidth, cssHeight);
+        }
+      }
+
+      const sharedStackPhysics = resolveSharedStackPhysics(configRef.current);
+
+      if (sharedStackPhysics) {
+        for (const slot of shapes) {
+          if (!slot.sim) continue;
+          slot.sim.floorInset = undefined;
         }
       }
 
@@ -1205,11 +1475,58 @@ export function HomePageShapesBackground({
         });
       }
 
-      if (physicsMode === "background") {
+      if (sharedStackPhysics) {
+        const particleGroups: CollidableParticle[][] = [];
+        const collisionSurfaces: (CollisionSurface | undefined)[] = [];
+        const pinnedParticles: CollidableParticle[] = [];
+
+        for (const slot of shapes) {
+          if (!slot.sim) continue;
+          const runtime = SHAPE_RUNTIMES[slot.shapeId];
+          particleGroups.push(slot.sim.particles);
+          collisionSurfaces.push({
+            particles: slot.sim.particles,
+            edges: runtime.collisionEdges,
+          });
+          if (
+            grabbedId === slot.id &&
+            inputRef.current.pointerDown &&
+            slot.sim.grabbedIndex > -1
+          ) {
+            pinnedParticles.push(slot.sim.particles[slot.sim.grabbedIndex]!);
+          }
+        }
+
+        resolveInterShapeNonOverlap(
+          particleGroups,
+          pinnedParticles,
+          collisionSurfaces,
+        );
+
+        for (const slot of shapes) {
+          if (slot.shapeId !== "square" || !slot.sim) continue;
+          const squarePinned =
+            grabbedId === slot.id &&
+            inputRef.current.pointerDown &&
+            slot.sim.grabbedIndex > -1
+              ? [slot.sim.particles[slot.sim.grabbedIndex]!]
+              : [];
+          resolveSelfCollisions(
+            slot.sim.particles,
+            {
+              particles: slot.sim.particles,
+              edges: SQUARE_COLLISION_EDGES,
+            },
+            SQUARE_SPRING_PAIRS,
+            squarePinned,
+          );
+        }
+      } else if (physicsMode === "background") {
         for (const slot of shapes) {
           if (!slot.sim) continue;
 
-          const isGrabbed = grabbedId === slot.id && inputRef.current.pointerDown;
+          const isGrabbed =
+            grabbedId === slot.id && inputRef.current.pointerDown;
           const margin = resolveShapeMargin(
             slot.shapeId,
             slot.visualScale,
@@ -1221,15 +1538,9 @@ export function HomePageShapesBackground({
               ? [slot.sim.particles[slot.sim.grabbedIndex]!]
               : [];
 
-          if (slot.shapeId === "square") {
-            resolveSquareSelfCollisionsWithFloorLock(
-              slot.sim as SpringsSquareSimulation,
-              floorY,
-              pinned,
-            );
+          if (slot.shapeId !== "square") {
+            enforceShapeFloor(slot.sim, floorY, pinned);
           }
-
-          enforceShapeFloor(slot.sim, floorY, pinned);
         }
       }
 
@@ -1241,6 +1552,13 @@ export function HomePageShapesBackground({
         const aGrabbed = grabbedId === a.id;
         const bGrabbed = grabbedId === b.id;
         if (aGrabbed !== bGrabbed) return aGrabbed ? 1 : -1;
+        if (sharedStackPhysics) {
+          if (!a.sim || !b.sim) return 0;
+          return (
+            getShapeStackDepth(a.sim.particles) -
+            getShapeStackDepth(b.sim.particles)
+          );
+        }
         return a.restFloorFactor - b.restFloorFactor;
       });
 
@@ -1252,6 +1570,15 @@ export function HomePageShapesBackground({
           slot.visualScale,
           backgroundShapeScale,
         );
+        const currentConfig = configRef.current;
+        if (currentConfig.depthGradient) {
+          const depthT = getShapeShelfDepthT(
+            slot.restFloorFactor,
+            currentConfig.minRestFloorFactor,
+            currentConfig.maxRestFloorFactor,
+          );
+          ctx.globalAlpha = getDepthDrawAlpha(depthT);
+        }
         runtime.draw(
           ctx,
           slot.sim,
@@ -1260,15 +1587,21 @@ export function HomePageShapesBackground({
           dotScale,
           renderScale,
         );
+        ctx.globalAlpha = 1;
       }
 
-      updateDragAttributionTooltip(
+      const tooltipShapeId =
+        inputRef.current.pointerDown && grabbedId ? grabbedId : null;
+
+      updateShapeAttributionTooltip(
         dragTooltipRef.current,
         dragTooltipLabelRef.current,
         shapes,
-        grabbedId,
-        inputRef.current.pointerDown,
+        tooltipShapeId,
         configRef.current.dragAttributionLabel,
+        containerRef.current,
+        backgroundShapeScale,
+        false,
       );
 
       rafRef.current = requestAnimationFrame(frame);
@@ -1297,13 +1630,11 @@ export function HomePageShapesBackground({
           ref={canvasRef}
           className="absolute inset-0 block touch-none select-none"
         />
-        <div
-          ref={dragTooltipRef}
-          className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
-          aria-hidden
-        >
-          <span ref={dragTooltipLabelRef} />
-        </div>
+        <DragAttributionTooltipLayer
+          tooltipRef={dragTooltipRef}
+          labelRef={dragTooltipLabelRef}
+          portaled={false}
+        />
       </div>
     </PrototypeComponent>
   );

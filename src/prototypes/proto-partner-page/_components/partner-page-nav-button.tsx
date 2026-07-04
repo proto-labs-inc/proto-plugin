@@ -7,10 +7,10 @@ import type { ReactNode } from "react";
 
 import { PartnerMotionSpringButton } from "./partner-page-motion";
 
-const partnerPageNavIconClass = "size-4 shrink-0";
+const partnerPageNavIconClass = "size-5 shrink-0 md:size-4";
 
 export const partnerPageNavButtonClass =
-  "pointer-events-auto group text-muted-foreground hover:text-foreground hover:bg-foreground/5 max-md:text-foreground max-md:bg-foreground/5 inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors";
+  "pointer-events-auto group text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors md:size-8";
 
 type PartnerPageNavButtonProps = {
   id: "partner-page-flow-block.partner-page-back-button";
@@ -89,9 +89,7 @@ export function PartnerPageBackButton({
       motionDelay={motionDelay}
       motionEntranceKey={motionEntranceKey}
       className={className}
-      icon={
-        <ArrowLeft className={partnerPageNavIconClass} aria-hidden />
-      }
+      icon={<ArrowLeft className={partnerPageNavIconClass} aria-hidden />}
     />
   );
 }

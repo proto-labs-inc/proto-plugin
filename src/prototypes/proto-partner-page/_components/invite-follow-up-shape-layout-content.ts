@@ -48,6 +48,8 @@ type ShapePlacement = {
   restFloorSpreadAdjust?: number;
   /** Fall from above the slot instead of center-pop — keeps high-shelf shapes 3D. */
   entranceDrop?: boolean;
+  /** Collapse and pop open at the shape's own resting spot — no drop or travel. */
+  entrancePopInPlace?: boolean;
 };
 
 const INVITE_SHAPE_IDENTITIES = [
@@ -182,15 +184,21 @@ const MOBILE_INVITE_SHAPE_PLACEMENT_OVERRIDES: Partial<
   // Pink pentagon — smaller accent above the copy blurb.
   "invite-pentagon": {
     visualScale: 0.78,
-    restFloorFactor: 0.28,
-    yFactor: 0.28,
-    entranceDrop: true,
+    restFloorFactor: 0.22,
+    yFactor: 0.22,
   },
   // Gold cube — left shelf; inset x avoids wall bounce.
   "invite-cube": {
-    restFloorFactor: 0.94,
-    yFactor: 0.32,
+    restFloorFactor: 0.93,
+    yFactor: 0.38,
     xFactor: 0.11,
+    restFloorSpreadAdjust: 0.02,
+  },
+  // Green triangle — settle lower alongside the cube.
+  "invite-triangle": {
+    restFloorFactor: 0.99,
+    yFactor: 0.38,
+    restFloorSpreadAdjust: 0.03,
   },
 };
 
@@ -202,12 +210,10 @@ const DESKTOP_INVITE_SHAPE_PLACEMENT_OVERRIDES: Partial<
   "invite-prism": {
     restFloorFactor: 0.26,
     yFactor: 0.26,
-    entranceDrop: true,
   },
   "invite-pentagon": {
     restFloorFactor: 0.3,
     yFactor: 0.3,
-    entranceDrop: true,
   },
   // Gold cube and teal square — nudge upward from the bottom cluster.
   "invite-cube": {

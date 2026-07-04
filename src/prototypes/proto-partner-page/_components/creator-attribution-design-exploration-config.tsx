@@ -82,7 +82,7 @@ const renderers = buildDesignExplorationRenderers<CreatorAttributionVariant>(
           <div
             className={`${DRAG_ATTRIBUTION_TOOLTIP_CLASS.replace("hidden ", "")} left-1/2 top-[58%] -translate-x-1/2 -translate-y-full`}
           >
-            by {PROTOTYPE_CREATOR.name}
+            Created by {PROTOTYPE_CREATOR.firstName}
           </div>
         ) : (
           <CreatorAttributionBlock variant={variant} />

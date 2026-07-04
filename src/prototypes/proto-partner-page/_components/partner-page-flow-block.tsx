@@ -24,7 +24,7 @@ import { SubmitShapeModal } from "./submit-shape-modal";
 
 const submitButtonClassName = cn(
   inviteCtaButtonClass,
-  "shrink-0 px-3.5 py-2 text-[0.8125rem] md:text-[0.8125rem]",
+  "shrink-0 px-4 py-2.5 text-[0.875rem] md:px-3.5 md:py-2 md:text-[0.8125rem]",
 );
 
 function SubmitShapeButton({
@@ -72,6 +72,7 @@ type PartnerPageFlowBlockProps = {
   shapeSelection?: ProtoShapeSelection;
   submitModalVariant?: SubmitModalVariant;
   onSubmitModalOpenChange?: (open: boolean) => void;
+  dragAttributionLabel?: string;
 };
 
 export function PartnerPageFlowBlock({
@@ -84,6 +85,7 @@ export function PartnerPageFlowBlock({
   shapeSelection,
   submitModalVariant = "plain-header",
   onSubmitModalOpenChange,
+  dragAttributionLabel,
 }: PartnerPageFlowBlockProps) {
   const router = useRouter();
   const motionOn = usePartnerEntranceMotion(animateEntrance);
@@ -164,6 +166,7 @@ export function PartnerPageFlowBlock({
             handleSubmitModalOpenChange(false);
             router.push("/prototypes/home-page");
           }}
+          dragAttributionLabel={dragAttributionLabel}
         />
       ) : null}
     </>

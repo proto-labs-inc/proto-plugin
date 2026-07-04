@@ -56,10 +56,11 @@ import {
 } from "./_components/proto-shape-content";
 import { bindSpringsCanvasPointerHandlers } from "../proto-shapes/springs-canvas-pointer";
 import {
-  DRAG_ATTRIBUTION_TOOLTIP_CLASS,
+  getDragAttributionTooltipOffsetY,
   getParticlesCentroid,
   updateDragAttributionTooltipElement,
 } from "../proto-shapes/springs-drag-attribution-tooltip";
+import { DragAttributionTooltipLayer } from "../proto-shapes/drag-attribution-tooltip-layer";
 import {
   DEFAULT_PROTO_TEXTURE_ID,
   getShapeHandleDotOutlineWidth,
@@ -269,8 +270,10 @@ const PARTNER_MOBILE_MAX_WIDTH_QUERY = "(max-width: 639px)";
 const MOBILE_SHAPE_SCALE = 1.35;
 /** Give the protoshape more room on desktop invite/home layouts. */
 const DESKTOP_SHAPE_SCALE = 1.75;
-/** Match proto-shapes vertical placement (yFactor 0.33). */
-const SHAPE_SPAWN_Y_FACTOR = 0.33;
+/** Vertical spawn / rest placement as a fraction of canvas height. */
+const SHAPE_SPAWN_Y_FACTOR = 0.42;
+/** Raise the gravity floor so settled shapes sit above the canvas bottom. */
+const PARTNER_SHAPE_REST_FLOOR_FACTOR = 0.98;
 const WARM_START_FRAMES = 120;
 /**
  * If the sim is created while the canvas is shorter than this, the shape gets
@@ -465,6 +468,10 @@ function resolveEffectiveShapeMargin(
   return Math.ceil(shapeMargin + renderBleed);
 }
 
+function getPartnerShapeFloorInset(cssHeight: number, margin: number) {
+  return Math.ceil(cssHeight * (1 - PARTNER_SHAPE_REST_FLOOR_FACTOR) + margin);
+}
+
 function applyShapeMargin(
   sim: SpringsSimulation,
   cssHeight: number,
@@ -485,12 +492,35 @@ function applyShapeMargin(
   }
 }
 
+function applyPartnerShapePhysicsBounds(
+  sim: SpringsSimulation,
+  cssHeight: number,
+  shapeId: ProtoShapeId,
+  visualScale: number,
+  dotBoost: number,
+  shapeMargin: number | undefined,
+  embedded: boolean,
+) {
+  applyShapeMargin(
+    sim,
+    cssHeight,
+    shapeId,
+    visualScale,
+    dotBoost,
+    shapeMargin,
+  );
+  sim.floorInset = embedded
+    ? undefined
+    : getPartnerShapeFloorInset(cssHeight, sim.margin);
+}
+
 type CreateSimulationOptions = {
   preservedPose?: SimulationPose | null;
   /** When false, only position + rotation carry over; scale stays at the new shape's default. */
   preserveScale?: boolean;
   /** Override sim boundary inset — smaller values let the shape travel closer to canvas edges. */
   shapeMargin?: number;
+  embedded?: boolean;
 };
 
 function createSimulationAtSpawn(
@@ -528,13 +558,14 @@ function createSimulationAtSpawn(
     warmStartSimulation(runtime, sim);
   }
 
-  applyShapeMargin(
+  applyPartnerShapePhysicsBounds(
     sim,
     cssHeight,
     shapeId,
     visualScale,
     dotBoost,
     options.shapeMargin,
+    options.embedded ?? false,
   );
   return sim;
 }
@@ -616,15 +647,18 @@ export function PartnerShapeCanvas({
   const shapeScaleRef = useRef(shapeScale);
   const shapeDotBoostRef = useRef(shapeDotBoost);
   const shapeMarginRef = useRef(shapeMargin);
+  const embeddedRef = useRef(embedded);
   shapeScaleRef.current = shapeScale;
   shapeDotBoostRef.current = shapeDotBoost;
   shapeMarginRef.current = shapeMargin;
+  embeddedRef.current = embedded;
 
   const buildCreateOptions = (
     options: CreateSimulationOptions = {},
   ): CreateSimulationOptions => ({
     ...options,
     shapeMargin: shapeMarginRef.current,
+    embedded: embeddedRef.current,
   });
 
   const targetTextureRef = useRef<ProtoTextureId>(textureId);
@@ -722,13 +756,14 @@ export function PartnerShapeCanvas({
 
       if (simRef.current) {
         runtimeRef.current.updateBounds(simRef.current, cssWidth, cssHeight);
-        applyShapeMargin(
+        applyPartnerShapePhysicsBounds(
           simRef.current,
           cssHeight,
           activeShapeRef.current,
           shapeScaleRef.current,
           shapeDotBoostRef.current,
           shapeMarginRef.current,
+          embeddedRef.current,
         );
       } else {
         simRef.current = createSimulationAtSpawn(
@@ -818,7 +853,8 @@ export function PartnerShapeCanvas({
       }
 
       const visualScale = shapeScaleRef.current;
-      const { dotScale, renderScale } = getPartnerShapeLayout(
+      const { dotScale, renderScale, normalizedRenderScale } =
+        getPartnerShapeLayout(
         cssHeight,
         activeShapeRef.current,
         visualScale,
@@ -842,6 +878,14 @@ export function PartnerShapeCanvas({
         isDragging ? getParticlesCentroid(sim.particles) : null,
         dragAttributionLabelRef.current,
         false,
+        canvas,
+        isDragging
+          ? getDragAttributionTooltipOffsetY(
+              sim.particles,
+              renderDotScale,
+              normalizedRenderScale,
+            )
+          : undefined,
       );
 
       rafRef.current = requestAnimationFrame(frame);
@@ -874,14 +918,11 @@ export function PartnerShapeCanvas({
           ref={canvasRef}
           className="absolute inset-0 block touch-none select-none"
         />
-        <div
-          ref={dragTooltipRef}
-          className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
-          aria-hidden
-        >
-          <span ref={dragTooltipLabelRef} />
-        </div>
       </div>
+      <DragAttributionTooltipLayer
+        tooltipRef={dragTooltipRef}
+        labelRef={dragTooltipLabelRef}
+      />
     </PrototypeComponent>
   );
 }

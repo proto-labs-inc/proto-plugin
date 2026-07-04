@@ -43,7 +43,7 @@ const INVITE_FOLLOW_UP_SHAPES_BASE_CONFIG: Omit<
   backgroundShapeScale: INVITE_LAYOUT_SHAPE_SCALE,
   colorMode: "proto-colors",
   physicsMode: "partner",
-  entranceCenterPop: true,
+  entrancePopInPlace: true,
   shapeEntranceStagger: INVITE_FOLLOW_UP_BEAT / 5,
 };
 

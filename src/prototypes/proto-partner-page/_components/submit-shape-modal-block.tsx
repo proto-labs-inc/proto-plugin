@@ -26,6 +26,7 @@ type SubmitShapeModalBlockProps = {
   onSeeOnHomepage: () => void;
   title?: string;
   className?: string;
+  dragAttributionLabel?: string;
 };
 
 function SubmitModalCardHeader({
@@ -86,18 +87,20 @@ export function SubmitShapeModalBlock({
   onSeeOnHomepage,
   title = SUBMIT_MODAL_TITLE,
   className,
+  dragAttributionLabel,
 }: SubmitShapeModalBlockProps) {
   if (isSubmitModalLayoutVariant(variant)) {
     return (
       <PrototypeComponent
         id="submit-shape-modal-block"
-        className={cn("flex flex-col gap-4", className)}
+        className={cn("pointer-events-none flex flex-col gap-4", className)}
       >
         {renderSubmitModalLayout(variant, {
           selection,
           title,
           onKeepEditing,
           onSeeOnHomepage,
+          dragAttributionLabel,
         })}
       </PrototypeComponent>
     );
@@ -106,9 +109,9 @@ export function SubmitShapeModalBlock({
   return (
     <PrototypeComponent
       id="submit-shape-modal-block"
-      className={cn("flex flex-col gap-4", className)}
+      className={cn("pointer-events-none flex flex-col gap-4", className)}
     >
-      <div className="border-border bg-background overflow-hidden rounded-2xl border shadow-lg">
+      <div className="border-border bg-background pointer-events-auto overflow-hidden rounded-2xl border shadow-lg">
         <SubmitModalCardHeader
           variant={variant}
           selection={selection}
