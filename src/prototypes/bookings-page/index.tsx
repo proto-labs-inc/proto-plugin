@@ -80,7 +80,7 @@ export default function BookingsPage() {
       if (current.activeFilters.length === 0) {
         return { ...current, addFilterOpen: true, showFiltersBar: true };
       }
-      return { ...current, showFiltersBar: !current.showFiltersBar };
+      return { ...current, showFiltersBar: true };
     });
   }, []);
 
@@ -141,12 +141,10 @@ export default function BookingsPage() {
   useEffect(() => {
     if (!setStateCanvasConfig) return;
 
-    setStateCanvasConfig(
-      buildBookingsPageStateCanvasConfig(liveState.previewStateId, setPreviewState),
-    );
+    setStateCanvasConfig(buildBookingsPageStateCanvasConfig(setPreviewState));
 
     return () => setStateCanvasConfig(null);
-  }, [liveState.previewStateId, setPreviewState, setStateCanvasConfig]);
+  }, [setPreviewState, setStateCanvasConfig]);
 
   return (
     <PrototypeComponent
@@ -158,14 +156,6 @@ export default function BookingsPage() {
         id="page"
         className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <div className="sr-only" aria-hidden>
-          <BookingsPagePreviewStateSelect
-            previewStateId={liveState.previewStateId}
-            onPreviewStateChange={setPreviewState}
-            registerOnly
-          />
-        </div>
-
         <BookingsShellLayout>
           <BookingsMainContent
             liveState={liveState}

@@ -13,7 +13,7 @@ import {
   getStateCanvasNodeHeight,
 } from "@prototype/lib/prototypes/prototype-state-canvas-constants";
 import { cn } from "@prototype/lib/utils";
-import { Check, Maximize2, Minus, Plus, X } from "lucide-react";
+import { Maximize2, Minus, Plus, X } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -285,15 +285,6 @@ function deriveCanvasSize<T extends string>(
   };
 }
 
-function isNodeActive<T extends string>(
-  node: PrototypeStateCanvasNode<T>,
-  activeStateId: T | undefined,
-): boolean {
-  if (activeStateId == null) return false;
-  if (node.id === activeStateId) return true;
-  return node.callouts?.some((callout) => callout.id === activeStateId) ?? false;
-}
-
 type HoverAnnotationSource<T extends string> = {
   id: T;
   label: string;
@@ -354,7 +345,6 @@ export function PrototypeStateCanvasView<T extends string>({
   onClose,
 }: PrototypeStateCanvasViewProps<T>) {
   const {
-    activeStateId,
     onStateSelect,
     nodes,
     edges,
@@ -747,6 +737,7 @@ export function PrototypeStateCanvasView<T extends string>({
         layout === "page" ? styles.page : styles.overlay,
       )}
       data-prototype-state-canvas
+      data-prototype-comment-theme="light"
       role={layout === "page" ? undefined : "dialog"}
       aria-modal={layout === "page" ? undefined : "true"}
       aria-label="State map"
@@ -877,7 +868,6 @@ export function PrototypeStateCanvasView<T extends string>({
           ))}
 
           {nodes.map((node) => {
-            const selected = isNodeActive(node, activeStateId);
             const hoverSource = resolveHoverAnnotationSource(node, hoverTarget);
             const previewNodeId = resolveNodePreviewId(node, hoverTarget);
             const previewHighlights = getHighlightRegions?.(previewNodeId);
@@ -893,18 +883,12 @@ export function PrototypeStateCanvasView<T extends string>({
             return (
               <div
                 key={node.id}
-                className={cn(styles.nodeGroup, selected && styles.nodeGroupSelected)}
+                className={styles.nodeGroup}
                 style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
               >
                 <button
                   type="button"
-                  className={cn(
-                    styles.node,
-                    selected && node.id === activeStateId && styles.nodeSelected,
-                  )}
-                  aria-current={
-                    node.id === activeStateId ? "true" : undefined
-                  }
+                  className={styles.node}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => handleNodeSelect(node.id)}
                   onMouseEnter={() => {
@@ -934,30 +918,17 @@ export function PrototypeStateCanvasView<T extends string>({
                   </div>
                   <div className={styles.nodeLabel}>
                     <span className={styles.nodeLabelText}>{node.label}</span>
-                    {node.id === activeStateId ? (
-                      <Check
-                        size={14}
-                        strokeWidth={2}
-                        className={styles.nodeSelectedIcon}
-                        aria-hidden
-                      />
-                    ) : null}
                   </div>
                 </button>
 
                 {node.callouts?.length ? (
                   <div className={styles.calloutTray}>
                     {node.callouts.map((callout) => {
-                      const calloutSelected = callout.id === activeStateId;
                       return (
                         <button
                           key={callout.id}
                           type="button"
-                          className={cn(
-                            styles.callout,
-                            calloutSelected && styles.calloutSelected,
-                          )}
-                          aria-current={calloutSelected ? "true" : undefined}
+                          className={styles.callout}
                           onPointerDown={(event) => event.stopPropagation()}
                           onClick={() => handleNodeSelect(callout.id)}
                           onMouseEnter={() => {
@@ -980,14 +951,6 @@ export function PrototypeStateCanvasView<T extends string>({
                             <span className={styles.calloutHint}>
                               {callout.hint}
                             </span>
-                          ) : null}
-                          {calloutSelected ? (
-                            <Check
-                              size={12}
-                              strokeWidth={2}
-                              className={styles.calloutSelectedIcon}
-                              aria-hidden
-                            />
                           ) : null}
                         </button>
                       );

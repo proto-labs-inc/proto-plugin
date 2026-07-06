@@ -91,7 +91,6 @@ export function PrototypeGalleryClient({
       <PrototypeCreatePrototypeModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
-        existingPrototypes={prototypes}
       />
     </>
   );

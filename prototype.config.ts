@@ -4,7 +4,11 @@ import BookingFlow from "./src/prototypes/booking-flow";
 import { bookingFlowComponentRegistry } from "./src/prototypes/booking-flow/component-ids";
 import BookingsPage from "./src/prototypes/bookings-page";
 import { bookingsPageComponentRegistry } from "./src/prototypes/bookings-page/component-ids";
+import BookingsPageStateMapPage from "./src/prototypes/bookings-page/state-map-page";
 import BookingFlowStateMapPage from "./src/prototypes/booking-flow/state-map-page";
+import EventTypes from "./src/prototypes/event-types";
+import { eventTypesComponentRegistry } from "./src/prototypes/event-types/component-ids";
+import EventTypesStateMapPage from "./src/prototypes/event-types/state-map-page";
 import HomePage from "./src/prototypes/home-page";
 import { homePageComponentRegistry } from "./src/prototypes/home-page/component-ids";
 import ProtoPartnerPage from "./src/prototypes/proto-partner-page";
@@ -49,6 +53,15 @@ export default definePrototypeConfig({
       screenshot: "/prototypes/screenshots/bookings-page.png",
       component: BookingsPage,
       componentRegistry: bookingsPageComponentRegistry,
+      stateMapComponent: BookingsPageStateMapPage,
+    },
+    {
+      slug: "event-types",
+      title: "Event types",
+      screenshot: "/prototypes/screenshots/event-types.png",
+      component: EventTypes,
+      componentRegistry: eventTypesComponentRegistry,
+      stateMapComponent: EventTypesStateMapPage,
     },
   ],
 });

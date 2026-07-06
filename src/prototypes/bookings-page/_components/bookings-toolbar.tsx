@@ -7,7 +7,12 @@ import { CalendarIcon, MenuIcon } from "@coss/ui/icons";
 
 import { STATUS_TAB_OPTIONS } from "./bookings-page-mock-data";
 import { BookingsToggleGroup } from "./bookings-toggle-group";
-import type { BookingStatusTab, BookingsViewMode } from "./bookings-page-types";
+import type {
+  BookingsActiveFilter,
+  BookingsFilterId,
+  BookingStatusTab,
+  BookingsViewMode,
+} from "./bookings-page-types";
 
 type BookingsToolbarProps = {
   statusTab: BookingStatusTab;
@@ -16,6 +21,10 @@ type BookingsToolbarProps = {
   onFilterButtonClick: () => void;
   viewMode: BookingsViewMode;
   onViewModeChange: (mode: BookingsViewMode) => void;
+  addFilterOpen: boolean;
+  onAddFilterOpenChange: (open: boolean) => void;
+  onAddFilter: (filter: BookingsActiveFilter) => void;
+  activeFilters: BookingsActiveFilter[];
 };
 
 export function BookingsToolbar({
@@ -58,7 +67,7 @@ export function BookingsToolbar({
 
       <div className="hidden grow md:block" />
 
-      <Button color="secondary" EndIcon="chevron-down" size="sm">
+      <Button color="secondary" StartIcon="list-filter" EndIcon="chevron-down" size="sm">
         Saved filters
       </Button>
 

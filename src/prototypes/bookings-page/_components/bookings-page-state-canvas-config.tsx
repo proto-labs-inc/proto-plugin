@@ -62,13 +62,11 @@ function renderWireframe(stateId: BookingsPagePreviewStateId) {
 }
 
 export function buildBookingsPageStateCanvasConfig(
-  activeStateId: BookingsPagePreviewStateId,
   onStateSelect: (stateId: BookingsPagePreviewStateId) => void,
 ): PrototypeStateCanvasConfig<BookingsPagePreviewStateId> {
   const registry = BOOKINGS_PAGE_PREVIEW_STATE_REGISTRY;
 
   return {
-    activeStateId,
     onStateSelect,
     nodes: registry.canvasNodes,
     edges: registry.canvasEdges,

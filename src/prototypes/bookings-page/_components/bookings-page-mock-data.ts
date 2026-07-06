@@ -6,12 +6,15 @@ export const BOOKINGS_USER = {
   avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maayan",
 };
 
-const july6Base = new Date("2026-07-06T16:45:00.000Z");
+const july6Base = new Date(2026, 6, 6, 9, 45, 0, 0);
 
-function slot(minutesFromStart: number, durationMinutes: number): { start: Date; end: Date } {
-  const start = new Date(july6Base.getTime() + minutesFromStart * 60_000);
-  const end = new Date(start.getTime() + durationMinutes * 60_000);
-  return { start, end };
+function slot(minutesFromStart: number, durationMinutes: number): {
+  startTime: Date;
+  endTime: Date;
+} {
+  const startTime = new Date(july6Base.getTime() + minutesFromStart * 60_000);
+  const endTime = new Date(startTime.getTime() + durationMinutes * 60_000);
+  return { startTime, endTime };
 }
 
 export const UPCOMING_BOOKINGS: MockBooking[] = [
@@ -80,11 +83,10 @@ export const EVENT_TYPE_FILTER_OPTIONS = [
 ];
 
 export function formatBookingDateLabel(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  const day = date.getDate();
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  return `${weekday}, ${day} ${month}`;
 }
 
 export function formatBookingTimeRange(start: Date, end: Date): string {
@@ -95,7 +97,7 @@ export function formatBookingTimeRange(start: Date, end: Date): string {
         minute: "2-digit",
         hour12: true,
       })
-      .replace(":00", "")
+      .replace(" ", "")
       .toLowerCase();
 
   return `${format(start)} - ${format(end)}`;
@@ -119,16 +121,26 @@ export function emptyStateCopy(statusTab: BookingStatusTab): {
   headline: string;
   description: string;
 } {
-  const statusLabel = STATUS_TAB_OPTIONS.find((tab) => tab.value === statusTab)?.label.toLowerCase() ?? statusTab;
+  const headlines: Record<BookingStatusTab, string> = {
+    upcoming: "No upcoming bookings",
+    unconfirmed: "No unconfirmed bookings",
+    recurring: "No recurring bookings",
+    past: "No past bookings",
+    cancelled: "No canceled bookings",
+  };
+
+  const descriptions: Record<BookingStatusTab, string> = {
+    upcoming:
+      "You have no upcoming bookings. As soon as someone books a time with you it will show up here.",
+    unconfirmed:
+      "You have no unconfirmed bookings. Your unconfirmed bookings will show up here.",
+    recurring: "You have no recurring bookings. Your recurring bookings will show up here.",
+    past: "You have no past bookings. Your past bookings will show up here.",
+    cancelled: "You have no canceled bookings. Your canceled bookings will show up here.",
+  };
 
   return {
-    headline: `No ${statusLabel} bookings`,
-    description: `You have no ${statusLabel} bookings. ${
-      statusTab === "upcoming"
-        ? "As soon as someone books a time with you it will show up here."
-        : statusTab === "unconfirmed"
-          ? "Your unconfirmed bookings will show up here."
-          : `Your ${statusLabel} bookings will show up here.`
-    }`,
+    headline: headlines[statusTab],
+    description: descriptions[statusTab],
   };
 }

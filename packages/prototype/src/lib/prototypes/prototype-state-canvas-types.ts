@@ -75,8 +75,6 @@ export type StateMapHighlightRect = {
 };
 
 export type PrototypeStateCanvasConfig<T extends string = string> = {
-  /** When omitted, no node appears selected — the map is a stateless picker. */
-  activeStateId?: T;
   onStateSelect: (id: T) => void;
   nodes: PrototypeStateCanvasNode<T>[];
   edges: PrototypeStateCanvasEdge<T>[];

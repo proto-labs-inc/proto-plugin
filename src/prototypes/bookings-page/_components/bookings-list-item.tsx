@@ -2,7 +2,6 @@
 
 import { Button } from "@calcom/ui/components/button";
 import Icon from "@calcom/ui/components/icon/Icon";
-import classNames from "@calcom/ui/classNames";
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 
 import {
@@ -25,7 +24,6 @@ export function BookingsListItem({ booking, id }: BookingsListItemProps) {
       <div className="flex flex-col sm:flex-row">
         <div className="sm:min-w-48 hidden align-top ltr:pl-3 rtl:pr-6 sm:table-cell">
           <div className="flex h-full items-center">
-            <div className="bg-brand-default h-[70%] w-0.5" />
             <div className="ml-3 cursor-pointer py-4">
               <div className="text-emphasis text-sm leading-6">
                 {formatBookingDateLabel(booking.startTime)}
@@ -38,10 +36,12 @@ export function BookingsListItem({ booking, id }: BookingsListItemProps) {
                 onClick={(event) => event.stopPropagation()}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm leading-6 text-blue-600 hover:underline dark:text-blue-400"
+                className="text-default text-sm leading-6 hover:underline"
               >
                 <div className="flex items-center gap-2">
-                  <Icon name="video" className="h-4 w-4" />
+                  <span className="bg-inverted flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px]">
+                    <Icon name="video" className="text-inverted h-2.5 w-2.5" />
+                  </span>
                   Join Cal Video
                 </div>
               </a>
@@ -49,7 +49,7 @@ export function BookingsListItem({ booking, id }: BookingsListItemProps) {
           </div>
         </div>
 
-        <div className="flex-1 px-4">
+        <div className="flex-1 px-4" data-testid="title-and-attendees">
           <div className="cursor-pointer py-4">
             <div
               title={booking.title}
@@ -63,11 +63,11 @@ export function BookingsListItem({ booking, id }: BookingsListItemProps) {
           </div>
         </div>
 
-        <div className="flex items-start justify-end px-4 py-4 sm:items-center">
+        <div className="flex flex-col flex-wrap items-end justify-end gap-2 py-4 pl-4 text-right text-sm font-medium ltr:pr-4 rtl:pl-4 sm:flex-shrink-0 sm:flex-row sm:flex-nowrap sm:items-start sm:pl-0">
           <Button
-            color="minimal"
-            variant="icon"
-            StartIcon="ellipsis-vertical"
+            color="secondary"
+            StartIcon="ellipsis"
+            className="px-2"
             aria-label="Booking actions"
           />
         </div>

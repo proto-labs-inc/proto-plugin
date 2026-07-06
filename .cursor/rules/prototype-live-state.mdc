@@ -16,16 +16,21 @@ Read the prototype's `index.tsx`, any `*-preview-states.ts`, and design-explorat
 
 1. **One `liveState` object** on the page — typed, JSON-serializable, holds every field needed to reproduce the view.
 2. **`usePrototypeComments(liveState, onRestore)`** — `onRestore` must `setLiveState(restored)`. Powers comments and share links. No custom `?step=` / `?view=` params.
-3. **Navigable preview modes** → single `definePreviewStateRegistry` in `*-preview-states.ts`:
-   - Registry entry for each screen/step/modal branch reviewers should jump to
-   - `*-preview-state-select.tsx` (`PrototypeControl` + `ControlsPanelSelect`, `registerPreviewStates`)
+3. **Preview modes (mandatory for feature pages)** → single `definePreviewStateRegistry` in `*-preview-states.ts`:
+   - Registry entry for each tab, empty/loading/error branch, filter mode, modal, view toggle, or step reviewers should jump to
+   - `*-preview-state-select.tsx` (`ControlsPanelSelect` with `appearance="menuList"` via `setTweaksContent` — not a floating pill on the page)
    - `*-state-canvas-config.tsx` + `review.setStateCanvasConfig(...)` in an effect
-4. Run `pnpm verify:prototype-preview-states` when a registry file exists.
+   - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts` so `/prototypes/<slug>/states` is populated
+4. Run `pnpm verify:prototype-preview-states` whenever a registry file exists.
+
+**State map:** stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Always light mode. See `packages/prototype/AGENTS.md` → **State map behavior**.
 
 ## Do not
 
 - Scatter `useState` for step/modal/view without aggregating into `liveState`
 - Hand-roll preview pickers or duplicate state ids/labels outside the registry
-- Ship new UI branches without registry + picker + state map updates
+- Ship new UI branches without registry + picker + state map + `stateMapComponent` updates
+- Treat preview states as optional because the page is "just one screen" — tabs, filters, and empty states count
+- Pass `liveState` or `activeStateId` into the state map — no checkmarks or selected nodes on the map
 
 Reference: `src/prototypes/booking-flow/`.

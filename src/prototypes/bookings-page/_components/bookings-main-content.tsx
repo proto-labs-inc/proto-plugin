@@ -51,7 +51,7 @@ export function BookingsMainContent({
   return (
     <PrototypeComponent
       id="bookings-main-content"
-      className="bg-subtle flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl p-4"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
     >
       <BookingsToolbar
         statusTab={liveState.statusTab}
@@ -60,6 +60,10 @@ export function BookingsMainContent({
         onFilterButtonClick={onFilterButtonClick}
         viewMode={liveState.viewMode}
         onViewModeChange={onViewModeChange}
+        addFilterOpen={liveState.addFilterOpen}
+        onAddFilterOpenChange={onAddFilterOpenChange}
+        onAddFilter={onAddFilter}
+        activeFilters={liveState.activeFilters}
       />
 
       {showFiltersBar ? (
@@ -73,13 +77,13 @@ export function BookingsMainContent({
         />
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
         {liveState.viewMode === "list" ? (
           <BookingsList statusTab={liveState.statusTab} bookings={bookings} />
         ) : (
           <PrototypeComponent
             id="bookings-calendar-placeholder"
-            className="border-subtle bg-default mt-4 flex min-h-[320px] items-center justify-center rounded-lg border border-dashed"
+            className="border-subtle bg-default flex min-h-[320px] items-center justify-center rounded-lg border border-dashed"
           >
             <p className="text-subtle text-sm">Calendar view preview</p>
           </PrototypeComponent>

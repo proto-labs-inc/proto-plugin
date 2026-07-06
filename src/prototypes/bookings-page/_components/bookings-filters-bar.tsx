@@ -2,17 +2,15 @@
 
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@calcom/ui/components/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@calcom/ui/components/popover";
+import classNames from "@calcom/ui/classNames";
 import Icon from "@calcom/ui/components/icon/Icon";
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@prototype/components/ui/dropdown-menu";
 import { PlusIcon } from "@coss/ui/icons";
 
 import {
@@ -48,87 +46,79 @@ export function BookingsFiltersBar({
       className="mt-3 flex flex-wrap items-center gap-2"
     >
       {activeFilters.map((filter) => (
-        <div
-          key={filter.id}
-          className="border-subtle bg-default inline-flex h-[34px] items-center rounded-md border px-3 text-sm"
-        >
-          <Icon name="disc" className="text-muted mr-2 h-4 w-4" />
-          <span>{filter.label}</span>
-          <Badge variant="gray" className="ml-2">
-            {filter.valueLabel}
-          </Badge>
-          <button
-            type="button"
-            className="text-subtle hover:text-emphasis ml-2 inline-flex rounded-sm p-0.5"
-            aria-label={`Remove ${filter.label} filter`}
-            onClick={() => onRemoveFilter(filter.id)}
+        <DropdownMenu key={filter.id}>
+          <DropdownMenuTrigger
+            className={classNames(
+              "border-subtle bg-default text-emphasis hover:bg-subtle inline-flex h-[34px] items-center gap-1 rounded-md border px-3 text-sm font-medium transition",
+            )}
           >
-            <Icon name="x" className="h-3.5 w-3.5" />
-          </button>
-        </div>
+            <Icon name="disc" className="h-4 w-4 shrink-0 stroke-[1.5px]" />
+            <span>{filter.label}</span>
+            <Badge variant="gray" className="ml-2">
+              {filter.valueLabel}
+            </Badge>
+            <Icon name="chevron-down" className="h-4 w-4 shrink-0 stroke-[1.5px]" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[220px]">
+            {EVENT_TYPE_FILTER_OPTIONS.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onSelect={() => {
+                  onAddFilter({
+                    id: "eventType",
+                    label: "Event type",
+                    valueLabel: option.label,
+                  });
+                }}
+              >
+                {option.label}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuItem onSelect={() => onRemoveFilter(filter.id)}>
+              Remove filter
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ))}
 
-      <Popover open={addFilterOpen} onOpenChange={onAddFilterOpenChange}>
-        <PopoverTrigger asChild>
-          <Button color="secondary" className="h-full" aria-label="Add filter">
-            <span className="sr-only">Add filter</span>
-            <PlusIcon />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[220px] p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Add filter…" />
-            <CommandList>
-              <CommandEmpty>No filters available</CommandEmpty>
-              <CommandGroup>
-                {availableFilterTypes.map((option) => (
-                  <CommandItem
-                    key={option.id}
-                    onSelect={() => {
-                      if (option.id === "eventType") {
-                        onAddFilter({
-                          id: "eventType",
-                          label: "Event type",
-                          valueLabel: "30 min meeting",
-                        });
-                      }
-                      onAddFilterOpenChange(false);
-                    }}
-                  >
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              {availableFilterTypes.some((option) => option.id === "eventType") ? (
-                <CommandGroup heading="Event type">
-                  {EVENT_TYPE_FILTER_OPTIONS.map((option) => (
-                    <CommandItem
-                      key={option.value}
-                      onSelect={() => {
-                        onAddFilter({
-                          id: "eventType",
-                          label: "Event type",
-                          valueLabel: option.label,
-                        });
-                        onAddFilterOpenChange(false);
-                      }}
-                    >
-                      {option.label}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ) : null}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      {availableFilterTypes.length > 0 ? (
+        <DropdownMenu open={addFilterOpen} onOpenChange={onAddFilterOpenChange}>
+          <DropdownMenuTrigger
+            aria-label="Add filter"
+            className={classNames(
+              "border-subtle bg-default text-emphasis hover:bg-subtle inline-flex h-[34px] w-[34px] items-center justify-center rounded-md border transition",
+            )}
+          >
+            <PlusIcon className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-[220px]">
+            {availableFilterTypes.map((option) => (
+              <DropdownMenuItem
+                key={option.id}
+                onSelect={() => {
+                  if (option.id === "eventType") {
+                    onAddFilter({
+                      id: "eventType",
+                      label: "Event type",
+                      valueLabel: "30 min meeting",
+                    });
+                  }
+                  onAddFilterOpenChange(false);
+                }}
+              >
+                {option.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
 
       <div className="hidden flex-grow md:block" />
 
-      <Button color="secondary" size="sm" onClick={onClearFilters}>
+      <Button color="minimal" StartIcon="x" size="sm" onClick={onClearFilters}>
         Clear
       </Button>
-      <Button color="secondary" size="sm">
+      <Button color="secondary" StartIcon="bookmark" size="sm">
         Save
       </Button>
     </PrototypeComponent>

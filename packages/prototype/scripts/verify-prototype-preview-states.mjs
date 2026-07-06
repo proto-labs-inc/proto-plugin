@@ -16,6 +16,40 @@ import {
 const toolRoot = resolveToolRoot(import.meta.url);
 const repoRoot = resolveHostRoot(toolRoot);
 const prototypesDir = path.join(repoRoot, "src/prototypes");
+const prototypeConfigPath = path.join(repoRoot, "prototype.config.ts");
+
+function readPrototypeConfigSource() {
+  if (!fs.existsSync(prototypeConfigPath)) {
+    return null;
+  }
+  return fs.readFileSync(prototypeConfigPath, "utf8");
+}
+
+function prototypeConfigBlockHasStateMapComponent(slug, configSource) {
+  const slugMarker = `slug: "${slug}"`;
+  const slugIndex = configSource.indexOf(slugMarker);
+  if (slugIndex === -1) return false;
+
+  const nextSlugIndex = configSource.indexOf('slug: "', slugIndex + slugMarker.length);
+  const block =
+    nextSlugIndex === -1
+      ? configSource.slice(slugIndex)
+      : configSource.slice(slugIndex, nextSlugIndex);
+
+  return block.includes("stateMapComponent");
+}
+
+function findStateMapPageFiles(slug) {
+  const stateMapPagePath = path.join(prototypesDir, slug, "state-map-page.tsx");
+  return fs.existsSync(stateMapPagePath) ? [stateMapPagePath] : [];
+}
+
+function indexUsesStateCanvasConfig(slug) {
+  const indexPath = path.join(prototypesDir, slug, "index.tsx");
+  if (!fs.existsSync(indexPath)) return false;
+  const source = fs.readFileSync(indexPath, "utf8");
+  return source.includes("setStateCanvasConfig");
+}
 
 function listPrototypeSlugs() {
   return fs
@@ -125,6 +159,29 @@ for (const slug of listPrototypeSlugs()) {
       );
       failed = true;
     }
+  }
+
+  const stateMapPageFiles = findStateMapPageFiles(slug);
+  if (stateMapPageFiles.length === 0) {
+    console.error(
+      `[${slug}] Has *-preview-states.ts but no state-map-page.tsx. Add src/prototypes/${slug}/state-map-page.tsx and register stateMapComponent in prototype.config.ts.`,
+    );
+    failed = true;
+  }
+
+  const configSource = readPrototypeConfigSource();
+  if (configSource && !prototypeConfigBlockHasStateMapComponent(slug, configSource)) {
+    console.error(
+      `[${slug}] Has *-preview-states.ts but prototype.config.ts is missing stateMapComponent for this slug.`,
+    );
+    failed = true;
+  }
+
+  if (!indexUsesStateCanvasConfig(slug)) {
+    console.error(
+      `[${slug}] Has *-preview-states.ts but index.tsx does not wire review.setStateCanvasConfig(...).`,
+    );
+    failed = true;
   }
 }
 

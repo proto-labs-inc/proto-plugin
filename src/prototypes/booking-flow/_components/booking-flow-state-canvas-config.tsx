@@ -87,13 +87,11 @@ function renderWireframe(step: BookingFlowStepId) {
 }
 
 export function buildBookingFlowStateCanvasConfig(
-  activeStep: BookingFlowStepId,
   onStepSelect: (step: BookingFlowStepId) => void,
 ): PrototypeStateCanvasConfig<BookingFlowStepId> {
   const registry = BOOKING_FLOW_PREVIEW_STATE_REGISTRY;
 
   return {
-    activeStateId: activeStep,
     onStateSelect: onStepSelect,
     nodes: registry.canvasNodes,
     edges: registry.canvasEdges,

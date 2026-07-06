@@ -116,21 +116,22 @@ export function ControlsPanelSelect<T extends string>({
   const isMiniPill = appearance === "miniPill";
   const isMenuList = appearance === "menuList";
   const review = usePrototypeReviewOptional();
+  const registerPreviewStates = review?.registerPreviewStates;
   const { commentTheme } = usePrototypeToolTheme();
   const triggerLabel = isMiniPill ? (miniPillLabel ?? activeLabel) : activeLabel;
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!isMenuList || !review) return;
+    if (!isMenuList || !registerPreviewStates) return;
 
-    review.registerPreviewStates(
+    registerPreviewStates(
       getSelectableOptions(options).map((option) => ({
         id: option.value,
         label: option.label,
       })),
     );
-  }, [isMenuList, options, review]);
+  }, [isMenuList, options, registerPreviewStates]);
 
   const selectSubmenuEntry = useCallback(
     (

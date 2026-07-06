@@ -1,7 +1,7 @@
 "use client";
 
-import classNames from "@calcom/ui/classNames";
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import classNames from "@calcom/ui/classNames";
 import type { ReactNode } from "react";
 
 type ToggleOption = {
@@ -26,9 +26,7 @@ export function BookingsToggleGroup({
   return (
     <PrototypeComponent id="bookings-toggle-group" className={className}>
       <div
-        className={classNames(
-          "bg-muted inline-flex gap-0.5 rounded-[10px] p-0.5 rtl:flex-row-reverse",
-        )}
+        className="bg-muted inline-flex gap-0.5 rounded-[10px] p-0.5 rtl:flex-row-reverse"
         role="group"
       >
       {options.map((option) => {

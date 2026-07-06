@@ -99,12 +99,10 @@ export default function BookingFlowPage() {
   useEffect(() => {
     if (!setStateCanvasConfig) return;
 
-    setStateCanvasConfig(
-      buildBookingFlowStateCanvasConfig(liveState.step, setStep),
-    );
+    setStateCanvasConfig(buildBookingFlowStateCanvasConfig(setStep));
 
     return () => setStateCanvasConfig(null);
-  }, [liveState.step, setStateCanvasConfig, setStep]);
+  }, [setStateCanvasConfig, setStep]);
 
   const handleSelectDate = useCallback((date: Date) => {
     setLiveState((current) => ({
@@ -172,14 +170,6 @@ export default function BookingFlowPage() {
         id="page"
         className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <div className="sr-only" aria-hidden>
-          <BookingFlowPreviewStateSelect
-            step={liveState.step}
-            onStepChange={setStep}
-            registerOnly
-          />
-        </div>
-
         <AnimatePresence mode="wait">
           {liveState.step === "month-picker" ? (
             <BookingViewTransition key="month-picker">

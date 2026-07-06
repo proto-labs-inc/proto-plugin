@@ -15,13 +15,10 @@ import {
   parseStateMapReturnTo,
 } from "@prototype/lib/prototypes/prototype-state-canvas-types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { buildBookingFlowStateCanvasConfig } from "./_components/booking-flow-state-canvas-config";
-import {
-  DEFAULT_BOOKING_FLOW_STEP,
-  type BookingFlowStepId,
-} from "./_components/booking-flow-preview-states";
+import type { BookingFlowStepId } from "./_components/booking-flow-preview-states";
 import type { BookingLiveState, BookingViewMode } from "./_components/booking-flow-types";
 import { BOOKING_DEFAULT_DATE } from "./_components/booking-mock-data";
 
@@ -49,10 +46,6 @@ export default function BookingFlowStateMapPage() {
   const searchParams = useSearchParams();
   const pagePath = getDefaultPrototypeStateMapPath(BOOKING_FLOW_SLUG);
   const prototypePath = `/prototypes/${BOOKING_FLOW_SLUG}`;
-  const [activeStep, setActiveStep] = useState<BookingFlowStepId>(
-    DEFAULT_BOOKING_FLOW_STEP,
-  );
-
   const backHref = useMemo(() => {
     const returnTo = parseStateMapReturnTo(searchParams);
     if (returnTo) return returnTo;
@@ -61,8 +54,6 @@ export default function BookingFlowStateMapPage() {
 
   const handleStepSelect = useCallback(
     (step: BookingFlowStepId) => {
-      setActiveStep(step);
-
       const url = new URL(backHref, window.location.origin);
       url.searchParams.set(
         SHARE_TARGET_PARAM,
@@ -78,8 +69,8 @@ export default function BookingFlowStateMapPage() {
   );
 
   const config = useMemo(
-    () => buildBookingFlowStateCanvasConfig(activeStep, handleStepSelect),
-    [activeStep, handleStepSelect],
+    () => buildBookingFlowStateCanvasConfig(handleStepSelect),
+    [handleStepSelect],
   );
 
   return (

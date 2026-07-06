@@ -1,11 +1,11 @@
 $canvas-chrome-bg: var(--tool-chrome-bg);
-$canvas-chrome-muted: var(--tool-chrome-surface-muted, #252525);
+$canvas-chrome-muted: var(--tool-chrome-surface-muted, #fafafa);
 $canvas-border: var(--tool-chrome-border);
 $canvas-border-strong: var(--tool-chrome-border-strong);
 $canvas-text: var(--tool-chrome-text);
 $canvas-text-muted: var(--tool-chrome-text-muted);
-$canvas-text-tertiary: var(--tool-chrome-icon-hover, #a3a3a3);
-$canvas-edge-base: var(--prototype-state-canvas-edge, var(--tool-chrome-icon-hover, #a3a3a3));
+$canvas-text-tertiary: var(--tool-chrome-icon-hover, rgba(0, 0, 0, 0.45));
+$canvas-edge-base: var(--prototype-state-canvas-edge, rgba(0, 0, 0, 0.22));
 // Pre-blend to canvas bg so edges stay subtle without semi-transparent layering at corners/arrowheads.
 $canvas-edge-color: color-mix(in srgb, $canvas-edge-base 50%, $canvas-chrome-bg);
 
@@ -15,7 +15,29 @@ $wireframe-border: #edebeb;
 $wireframe-border-medium: var(--color-gray-300);
 $wireframe-text: var(--color-gray-900);
 
+// Always light mode — independent of the gallery/review tool theme toggle.
+@mixin state-map-light-chrome {
+  --tool-chrome-gray-highlight: rgba(0, 0, 0, 0.05);
+  --tool-chrome-button-bg: rgba(0, 0, 0, 0.06);
+  --tool-chrome-button-text: rgba(0, 0, 0, 0.72);
+  --tool-chrome-button-bg-hover: rgba(0, 0, 0, 0.1);
+  --tool-chrome-button-text-hover: rgba(0, 0, 0, 0.92);
+  --tool-chrome-ground: #f5f5f5;
+  --tool-chrome-bg: #ffffff;
+  --tool-chrome-surface: #ffffff;
+  --tool-chrome-surface-muted: #fafafa;
+  --tool-chrome-text: rgba(0, 0, 0, 0.85);
+  --tool-chrome-text-heading: rgba(0, 0, 0, 0.92);
+  --tool-chrome-text-muted: rgba(0, 0, 0, 0.55);
+  --tool-chrome-icon: rgba(0, 0, 0, 0.45);
+  --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
+  --tool-chrome-border: rgba(0, 0, 0, 0.1);
+  --tool-chrome-border-strong: rgba(0, 0, 0, 0.16);
+  --prototype-state-canvas-edge: rgba(0, 0, 0, 0.22);
+}
+
 .page {
+  @include state-map-light-chrome;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -25,6 +47,7 @@ $wireframe-text: var(--color-gray-900);
 }
 
 .overlay {
+  @include state-map-light-chrome;
   position: absolute;
   inset: 0;
   z-index: 20;
@@ -193,10 +216,6 @@ $wireframe-text: var(--color-gray-900);
   }
 }
 
-.nodeGroupSelected {
-  border-color: color-mix(in srgb, var(--tool-chrome-blue) 55%, transparent);
-}
-
 .node {
   display: flex;
   flex-direction: column;
@@ -221,16 +240,6 @@ $wireframe-text: var(--color-gray-900);
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--tool-chrome-blue) 55%, transparent);
     outline-offset: -2px;
-  }
-}
-
-.nodeSelected {
-  background: color-mix(in srgb, var(--tool-chrome-blue) 6%, $wireframe-bg);
-
-  @media (hover: hover) and (pointer: fine) {
-    .nodeGroup:hover & {
-      background: color-mix(in srgb, var(--tool-chrome-blue) 8%, $wireframe-bg);
-    }
   }
 }
 
@@ -262,11 +271,6 @@ $wireframe-text: var(--color-gray-900);
   font-size: 0.75rem;
   font-weight: 500;
   color: $wireframe-text;
-}
-
-.nodeSelectedIcon {
-  flex-shrink: 0;
-  color: var(--tool-chrome-blue);
 }
 
 .calloutTray {
@@ -311,11 +315,6 @@ $wireframe-text: var(--color-gray-900);
   }
 }
 
-.calloutSelected {
-  border-color: color-mix(in srgb, var(--tool-chrome-blue) 45%, transparent);
-  background: color-mix(in srgb, var(--tool-chrome-blue) 6%, $wireframe-bg);
-}
-
 .calloutLabel {
   flex: 1 1 auto;
   min-width: 0;
@@ -328,9 +327,4 @@ $wireframe-text: var(--color-gray-900);
   flex-shrink: 0;
   font-size: 0.625rem;
   color: var(--color-gray-500);
-}
-
-.calloutSelectedIcon {
-  flex-shrink: 0;
-  color: var(--tool-chrome-blue);
 }

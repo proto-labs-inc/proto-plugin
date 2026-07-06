@@ -9,20 +9,17 @@ import {
   PrototypeBriefTextarea,
 } from "@prototype/components/prototypes/prototype-brief-field";
 import { buildCreatePrototypeCopyText } from "@prototype/lib/prototypes/create-prototype-prompt";
-import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { useEffect, useId, useState } from "react";
 
 export type PrototypeCreatePrototypeModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  existingPrototypes: PrototypeMetadata[];
 };
 
 export function PrototypeCreatePrototypeModal({
   open,
   onOpenChange,
-  existingPrototypes,
 }: PrototypeCreatePrototypeModalProps) {
   const titleFieldId = useId();
   const descriptionFieldId = useId();
@@ -48,7 +45,6 @@ export function PrototypeCreatePrototypeModal({
       buildCreatePrototypeCopyText({
         title,
         description,
-        existingPrototypes,
         origin,
       }),
     );
