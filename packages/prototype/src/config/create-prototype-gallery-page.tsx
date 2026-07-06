@@ -1,11 +1,15 @@
 import "server-only";
 
 import { PrototypeGalleryClient } from "@prototype/components/prototype-gallery-client";
-import { PrototypeGalleryHeader } from "@prototype/components/shell/prototype-gallery-shell";
+import {
+  PrototypeGalleryHeader,
+  PrototypeGalleryPageLayout,
+} from "@prototype/components/shell/prototype-gallery-shell";
 import { createPrototypeRegistry } from "@prototype/lib/prototypes/create-prototype-registry";
 import type { PrototypeConfig } from "@prototype/lib/prototypes/prototype-config-types";
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
+import { sortPrototypesByRecency } from "../lib/prototypes/sort-prototypes-by-recency";
 
 type PrototypeGalleryPageOptions = {
   title?: string;
@@ -25,15 +29,20 @@ export function createPrototypeGalleryPage(
   } = options;
 
   async function PrototypeGallery() {
-    const prototypes = registry.getAllPrototypes();
+    const [prototypes, screenshotManifest] = await Promise.all([
+      Promise.resolve(registry.getAllPrototypes()),
+      readScreenshotManifest(),
+    ]);
+    const sortedPrototypes = await sortPrototypesByRecency(
+      prototypes,
+      screenshotManifest,
+    );
     const screenshotVersions =
-      process.env.NODE_ENV === "development"
-        ? await readScreenshotManifest()
-        : {};
+      process.env.NODE_ENV === "development" ? screenshotManifest : {};
 
     return (
       <PrototypeGalleryClient
-        prototypes={prototypes}
+        prototypes={sortedPrototypes}
         screenshotVersions={screenshotVersions}
       />
     );
@@ -41,14 +50,20 @@ export function createPrototypeGalleryPage(
 
   function HomePage() {
     return (
-      <div className="px-10 lg:px-16">
-        <PrototypeGalleryHeader
-          eyebrow={eyebrow}
-          title={title}
-          description={description}
-        />
-        <PrototypeGallery />
-      </div>
+      <PrototypeGalleryPageLayout
+        header={
+          <PrototypeGalleryHeader
+            eyebrow={eyebrow}
+            title={title}
+            description={description}
+            className="mb-0"
+          />
+        }
+      >
+        <div className="px-10 pt-8 pb-16 lg:px-16">
+          <PrototypeGallery />
+        </div>
+      </PrototypeGalleryPageLayout>
     );
   }
 

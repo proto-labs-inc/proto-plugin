@@ -20,6 +20,9 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@calcom/lib/*": ["./packages/lib/*"],
+      "@calcom/ui/*": ["./packages/ui/*"],
+      "@coss/ui/*": ["./packages/coss-ui/src/*"],
       "@prototype/*": ["./packages/prototype/src/*"],
       "proto-plugin": ["./packages/prototype/src/index.ts"],
       "proto-plugin/server": ["./packages/prototype/src/server.ts"],

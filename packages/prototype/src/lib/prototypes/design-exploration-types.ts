@@ -206,6 +206,7 @@ export function buildCreateDesignExplorationPrompt({
     "1. Add `{ id, label, previewMode? }` to the variant sets registrar (e.g. `" +
       variantSetsRegistrar +
       "`).",
+    "   - Give this exploration a **distinct Lucide icon** in the review sidebar: add a `{ test, icon }` rule to `packages/prototype/src/lib/prototypes/variant-set-lucide-icon.tsx` that matches its id or label. Place the rule **before** broad matchers (e.g. `/mobile/i`) so it wins. Pick an icon that fits the topic and avoid reusing icons already assigned to other explorations on this prototype — do not leave new explorations on the default `LayoutGrid` fallback or the generic `Smartphone` icon shared by unrelated mobile explorations.",
     `2. Create \`*-design-exploration-config.tsx\` with options, renderers, brief defaults, baseline,${includeMobbin ? " and the Mobbin references above" : ""}.`,
     "   - `baseline`: the UI before this exploration existed — `{ value, label?, hint? }`, pinned at the bottom of the variant list.",
     "   - `options`: layout directions to compare — exclude the baseline value when possible.",

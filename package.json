@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "next dev -p 1985",
+    "postinstall": "mkdir -p public/icons && cp -f apps/web/public/icons/sprite.svg public/icons/sprite.svg 2>/dev/null || true",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -12,19 +13,28 @@
     "sync-from-source": "pnpm --dir node_modules/proto-plugin sync-from-source",
     "link-source-db": "pnpm --dir node_modules/proto-plugin link-source-db",
     "verify:prototype-ids": "pnpm --dir node_modules/proto-plugin verify:prototype-ids",
+    "verify:prototype-preview-states": "pnpm --dir node_modules/proto-plugin verify:prototype-preview-states",
     "share-prototype": "pnpm --dir node_modules/proto-plugin share-prototype"
   },
   "dependencies": {
+    "@calcom/lib": "workspace:*",
+    "@calcom/ui": "workspace:*",
+    "@coss/ui": "workspace:*",
+    "@radix-ui/react-tooltip": "1.0.6",
     "dialkit": "^1.3.0",
     "lucide-react": "^0.543.0",
     "motion": "^12.42.0",
     "next": "16.2.9",
     "proto-plugin": "workspace:*",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "tw-animate-css": "^1.3.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.16",
+    "tailwind-scrollbar": "^4.0.2",
+    "tailwindcss-radix": "^4.0.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

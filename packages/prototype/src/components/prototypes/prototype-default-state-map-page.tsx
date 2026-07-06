@@ -42,7 +42,7 @@ export function PrototypeDefaultStateMapPage({
         <div>
           <p className={styles.headerTitle}>State map</p>
           <p className={styles.headerHint}>
-            Map prototype preview states once this prototype defines them.
+            Preview states appear here once this prototype defines a state map.
           </p>
         </div>
         <Link
@@ -56,9 +56,9 @@ export function PrototypeDefaultStateMapPage({
 
       <div className="flex flex-1 items-center justify-center px-6">
         <EmptyState className="max-w-md text-center">
-          No states mapped yet. Add a state canvas config and register this route
-          in `prototype.config.ts`, or follow the example-feature reference in
-          AGENTS.md.
+          No preview states yet. When this prototype adds a `*-preview-states.ts`
+          registry, wire a state map page per AGENTS.md — until then this map stays
+          empty.
         </EmptyState>
       </div>
     </div>

@@ -1,14 +1,23 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
   ArrowDownUp,
+  BadgeCheck,
   CalendarDays,
   Clock,
   FilterX,
+  Hexagon,
   Inbox,
   LayoutGrid,
+  LayoutList,
+  LayoutTemplate,
+  MessageSquareText,
+  Palette,
   PanelBottom,
+  PanelBottomOpen,
+  Send,
   Shapes,
   Smartphone,
+  Sparkles,
   Table,
 } from "lucide-react";
 
@@ -19,6 +28,19 @@ type VariantSetIconRule = {
 
 /** First match wins — order rules from most specific to broadest. */
 const VARIANT_SET_ICON_RULES: VariantSetIconRule[] = [
+  // proto-partner-page explorations
+  { test: /creator-attribution|creator attribution/i, icon: BadgeCheck },
+  { test: /submit-modal|submit modal/i, icon: Send },
+  { test: /mobile-panel-motion|mobile panel motion/i, icon: PanelBottomOpen },
+  { test: /mobile-picker-layout|mobile picker layout/i, icon: LayoutList },
+  {
+    test: /invite-follow-up-shape-layout|follow-up shape layout/i,
+    icon: LayoutTemplate,
+  },
+  { test: /invite-animations|invite animations/i, icon: Sparkles },
+  { test: /shape-color-picker|shape & color picker/i, icon: Palette },
+  { test: /proto-shapes|proto shapes/i, icon: Hexagon },
+  { test: /invite-copy|invite copy/i, icon: MessageSquareText },
   { test: /retention|expir|before/i, icon: Clock },
   { test: /calendar|date.?picker|date-range/i, icon: CalendarDays },
   { test: /mobile/i, icon: Smartphone },

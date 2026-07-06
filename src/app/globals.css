@@ -1,56 +1,128 @@
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
+@source "../prototypes/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/coss-ui/src/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/ui/**/*.{js,ts,jsx,tsx}";
+@source "../../apps/web/components/**/*.{js,ts,jsx,tsx}";
+
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+@plugin "tailwindcss-radix";
+
+@plugin 'tailwind-scrollbar' {
+  nocompatible: true;
+}
+
+@import "./cal-tokens.css";
+@import "../../packages/coss-ui/src/styles/globals.css";
 
 /*
- * Product design tokens (synced from source via pnpm sync-from-source).
- * Scoped names — do not map to --color-* (those come from [data-prototype-root]).
- */
-:root {
-  --product-background: #ffffff;
-  --product-foreground: #171717;
+  Synced source previews (component library) — Cal/coss tokens only, never tool chrome.
+  Pairs with [data-prototype-source-surface] in the prototype package for full isolation.
+*/
+[data-prototype-root] :is([data-cal-design-system], [data-prototype-source-surface]) {
+  color-scheme: light;
+
+  font-family: var(--font-product-sans);
+  --font-sans: var(--font-product-sans);
+  --font-heading: var(--font-product-cal);
+
+  /* Pin synced Cal.com light tokens — immune to tool dark mode on [data-prototype-root]. */
+  --cal-bg-emphasis: hsla(220, 13%, 91%, 1);
+  --cal-bg: hsla(0, 0%, 100%, 1);
+  --cal-bg-subtle: hsla(220, 14%, 94%, 1);
+  --cal-bg-muted: hsla(210, 20%, 97%, 1);
+  --cal-bg-inverted: hsla(210, 30%, 4%, 1);
+  --cal-bg-brand: hsla(214, 30%, 16%, 1);
+  --cal-bg-info: hsla(221, 91%, 93%, 1);
+  --cal-bg-success: hsla(142, 76%, 94%, 1);
+  --cal-bg-attention: hsla(33, 100%, 92%, 1);
+  --cal-bg-error: hsla(3, 66%, 93%, 1);
+  --cal-border-subtle: hsla(220, 13%, 91%, 1);
+  --cal-border: hsla(216, 12%, 84%, 1);
+  --cal-text-emphasis: hsla(210, 30%, 4%, 1);
+  --cal-text: hsla(220, 6%, 25%, 1);
+  --cal-text-subtle: hsla(220, 9%, 46%, 1);
+  --cal-text-muted: hsla(218, 11%, 65%, 1);
+  --cal-text-info: hsla(225, 57%, 33%, 1);
+  --cal-text-success: hsla(144, 34%, 24%, 1);
+  --cal-text-attention: hsla(16, 62%, 28%, 1);
+  --cal-text-error: hsla(0, 63%, 31%, 1);
+  --cal-brand: hsla(221, 39%, 11%, 1);
+  --cal-brand-text: hsla(0, 0%, 100%, 1);
+
+  --radius: 0.625rem;
+  --background: var(--color-white);
+  --foreground: var(--color-neutral-800);
+  --card: var(--color-white);
+  --card-foreground: var(--color-neutral-800);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-neutral-800);
+  --primary: var(--color-neutral-800);
+  --primary-foreground: var(--color-neutral-50);
+  --secondary: --alpha(var(--color-black) / 4%);
+  --secondary-foreground: var(--color-neutral-800);
+  --muted: --alpha(var(--color-black) / 4%);
+  --muted-foreground: color-mix(
+    in srgb,
+    var(--color-neutral-500) 90%,
+    var(--color-black)
+  );
+  --accent: --alpha(var(--color-black) / 4%);
+  --accent-foreground: var(--color-neutral-800);
+  --destructive: var(--color-red-500);
+  --destructive-foreground: var(--color-red-700);
+  --border: --alpha(var(--color-black) / 8%);
+  --input: --alpha(var(--color-black) / 10%);
+  --ring: var(--color-neutral-400);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
-@theme inline {
-  /*
-   * Register semantic colors for Tailwind utilities used by proto-plugin.
-   * Values resolve at runtime from [data-prototype-root] in
-   * proto-plugin/styles/globals.css (dark/light themes).
-   */
-  --color-background: var(--color-background);
-  --color-foreground: var(--color-foreground);
-  --color-card: var(--color-card);
-  --color-card-foreground: var(--color-card-foreground);
-  --color-popover: var(--color-popover);
-  --color-popover-foreground: var(--color-popover-foreground);
-  --color-primary: var(--color-primary);
-  --color-primary-foreground: var(--color-primary-foreground);
-  --color-secondary: var(--color-secondary);
-  --color-secondary-foreground: var(--color-secondary-foreground);
-  --color-muted: var(--color-muted);
-  --color-muted-foreground: var(--color-muted-foreground);
-  --color-accent: var(--color-accent);
-  --color-accent-foreground: var(--color-accent-foreground);
-  --color-destructive: var(--color-destructive);
-  --color-destructive-foreground: var(--color-destructive-foreground);
-  --color-border: var(--color-border);
-  --color-input: var(--color-input);
-  --color-ring: var(--color-ring);
-  --color-focus-ring: var(--color-focus-ring);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[data-prototype-root] :is([data-cal-design-system], [data-prototype-source-surface]) * {
+  font-family: inherit;
 }
 
-/* Product tokens for synced prototype preview content (inside screenshot root). */
+/*
+  Prototype preview surface: use the same synced product fonts as the source app
+  (Inter body + Cal Sans headings), overriding the plugin's generic system-font
+  default for [data-prototype-screenshot]. DM Sans stays on the tool chrome.
+*/
+[data-prototype-root] [data-prototype-screenshot],
 [data-prototype-screenshot] {
-  --background: var(--product-background);
-  --foreground: var(--product-foreground);
-}
-
-[data-prototype-screenshot] ::selection {
-  background: #b4d5fe;
-  color: var(--product-foreground);
+  --font-sans: var(--font-product-sans);
+  --font-display: var(--font-product-cal);
+  --font-heading: var(--font-product-cal);
+  --font-cal: var(--font-product-cal);
 }
 
 body {
   margin: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background: var(--cal-bg, var(--background));
+  color: var(--cal-text, var(--foreground));
+}
+
+::selection {
+  color: var(--cal-brand-text, var(--foreground));
+  background: var(--cal-brand, var(--primary));
 }

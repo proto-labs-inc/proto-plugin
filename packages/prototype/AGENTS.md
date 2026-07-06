@@ -45,6 +45,28 @@ The mobile preview frame is 390×844px; the desktop frame fills the preview stag
 
 ---
 
+## Tool theme vs prototype preview content
+
+The gallery/review **light/dark mode toggle** only changes **tool chrome** (sidebar, header, gallery nav, modals). It must **never** change colors, typography, or tokens inside prototype preview content (`#prototype-viewport` / `[data-prototype-screenshot]`).
+
+**Tool theme** is scoped to `[data-prototype-root]` via `--tool-chrome-*` and `data-prototype-comment-theme`. Tool UI uses those tokens (or Tailwind utilities whose `--color-*` values resolve from `[data-prototype-root]`).
+
+**Prototype preview content** uses fixed **product** tokens from the synced source app. Host `globals.css` defines `--product-*` names and maps them to shadcn tokens inside `[data-prototype-screenshot]` only. Package CSS resets all semantic and `--color-*` tokens on `[data-prototype-screenshot]` so tool theme cannot cascade in.
+
+**Do not use** for styling inside `src/prototypes/`:
+
+- `usePrototypeToolTheme()` / `useLightTheme` / `commentTheme`
+- `data-prototype-comment-theme` on prototype components
+- `--tool-chrome-*` tokens in prototype JSX or CSS
+
+**Do not** in package or host CSS:
+
+- Bridge shadcn tokens (`--background`, `--foreground`, `--card`, …) to `--tool-chrome-*` on `[data-prototype-root]`
+- Map host `@theme inline` `--color-*` to `var(--background)` — use self-referential `var(--color-*)` for tool chrome; product tokens belong in `[data-prototype-screenshot]` only
+- Put product token values on `:root` without the `--product-*` prefix (tool theme would override them)
+
+---
+
 ## Relationship to source app (host apps)
 
 Host apps replicate product UI from the **source application** (linked read-only via `SOURCE_PATH` and `pnpm link-source`) **exactly** — standalone code, no runtime imports from the source monorepo.
@@ -85,7 +107,7 @@ The sync/link scripts are host-agnostic — package code names nothing host-spec
 
 Default to **mock data only**.
 
-Reference prototype: `example-feature` — `src/prototypes/example-feature/` (or any registered slug in your host app).
+Reference prototype: `booking-flow` — `src/prototypes/booking-flow/` (or any registered slug in your host app).
 
 ---
 
@@ -98,8 +120,8 @@ Shareable UI at `/prototypes/[slug]`. Registered in `prototype.config.ts`.
 ### Rules (mandatory)
 
 1. **Register** the slug in `prototype.config.ts` and add a screenshot under `public/prototypes/screenshots/`.
-2. **Create** `src/prototypes/<slug>/component-ids.ts` — every component target id (see `example-feature/component-ids.ts`).
-3. **Wire comments** with `usePrototypeComments` on the page (see `example-feature/index.tsx`).
+2. **Create** `src/prototypes/<slug>/component-ids.ts` — every component target id (see `booking-flow/component-ids.ts`).
+3. **Wire comments** with `usePrototypeComments(liveState, onRestore)` on the page (see `booking-flow/index.tsx`).
 4. **Wrap the root JSX of every React component** in `PrototypeComponent` from `prototype`.
 5. **On-page prototype controls** (state pickers, variant tabs, preview toggles) must use `PrototypeControl` or `PrototypeControlGroup`, not plain `PrototypeComponent`.
 6. **Use ids from the registry only** — dev mode logs an error for unregistered ids.
@@ -107,8 +129,57 @@ Shareable UI at `/prototypes/[slug]`. Registered in `prototype.config.ts`.
   - File's main export: kebab-case filename (`settings-section.tsx` → `settings-section`; `index.tsx` → `page`).
   - Other functions in the same file: `{filename}.{function-kebab}`.
   - Dynamic list items: add a prefix to `dynamicPrefixes` in `component-ids.ts`.
-8. **Scroll container:** `PrototypeComponent` with `id="scroll-container"` on the main `overflow-y-auto` wrapper.
+8. **Scroll container:** `PrototypeComponent` with `id="scroll-container"` — see **Prototype viewport fill** below.
 9. **Do not** use `data-testid` for comment anchoring.
+
+### Prototype viewport fill (avoid offset / clipping)
+
+There are **two** common offset bugs — do not confuse them:
+
+| Symptom | Cause | Fix |
+|--------|--------|-----|
+| Prototype preview pinned to top-left; empty space + clipping on right/bottom | Missing `h-full` fill chain inside `#prototype-viewport` | Use layout constants below on every nested wrapper |
+| Gallery / sidebar with black gaps + white bar at bottom of window | Site shell height mismatch (`h-full` parent + `h-svh` child, or body bg showing through) | Do **not** change gallery shell height classes ad hoc — parent route wrapper owns `h-svh`; `[data-prototype-root]` fills with `h-full flex-1` |
+
+The preview shell (`#prototype-viewport`) only auto-sizes **direct** children of `.viewportPage` (`width/height: 100%`, column flex). Every nested layer must repeat the fill chain or content shrinks to the top-left and clips on the opposite edge.
+
+**Use the exported constants** (do not hand-roll variants):
+
+```tsx
+import {
+  PROTOTYPE_PAGE_CLASS,
+  PROTOTYPE_SCROLL_CONTAINER_CLASS,
+  PROTOTYPE_VIEW_SHELL_CLASS,
+} from "prototype";
+```
+
+**Required page shell** (match `home-page` / `proto-partner-page`):
+
+```tsx
+<PrototypeComponent
+  id="scroll-container"
+  className={cn(PROTOTYPE_SCROLL_CONTAINER_CLASS, "…")}
+>
+  <PrototypeComponent id="page" className={cn(PROTOTYPE_PAGE_CLASS, "…")}>
+```
+
+**Every step/view root** (including `AnimatePresence` / motion wrappers):
+
+```tsx
+className={cn(PROTOTYPE_VIEW_SHELL_CLASS, "…")}
+```
+
+Put `overflow-y-auto` on the **view** that scrolls, not on `scroll-container`, unless the entire page is one scroll surface.
+
+**Centered embed/card layouts** (public booking pages): outer view = `w-full flex-1`; inner content = `mx-auto w-full max-w-*`. Use top padding (`py-10`) for embed pages — avoid `justify-center` on a `flex-1` wrapper when content can exceed viewport height (mobile stack); it vertically centers overflow and hides content off-screen.
+
+**Motion:** Prefer opacity-only cross-fades on page-level wrappers. Avoid horizontal `translateX` on wrappers that lack explicit `w-full` — `#prototype-viewport` uses `transform: translateZ(0)`, and transform + shrink-wrapped children produces the common top-left / clipped-right offset bug.
+
+**Post-build layout check (mandatory before finishing):**
+
+1. Open `/` — sidebar flush to content, no black gutter, no white strip at bottom of window.
+2. Open the prototype at desktop width — main surface fills the preview frame, not hugging a corner.
+3. Toggle mobile preview — tall stacked pages still scroll; nothing hidden off-screen from `justify-center`.
 
 ### Examples
 
@@ -143,15 +214,97 @@ export function PrototypePreviewStateSelect(...) {
 3. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.
 4. Register in `prototype.config.ts` with `componentRegistry`.
 5. Wrap every UI component in `PrototypeComponent` / `PrototypeControl`.
-6. Call `usePrototypeComments(liveState, onRestore)` on the page.
-7. Run `pnpm verify:prototype-ids`.
-8. Capture screenshot; share via `pnpm share-prototype <slug>`.
+6. Define **`liveState`** and wire `usePrototypeComments(liveState, onRestore)` — see **Live state & preview states**.
+7. If the prototype has navigable screens/steps/modes, add `*-preview-states.ts`, state picker, and state map wiring (same section).
+8. Run `pnpm verify:prototype-ids` and `pnpm verify:prototype-preview-states` (when a preview-state registry exists).
+9. Capture screenshot; share via `pnpm share-prototype <slug>`.
+
+---
+
+## Live state & preview states (mandatory)
+
+Prototype state is a first-class tool feature — comments, share links, the review **State** map, and PR split cards all read from the same snapshot. **Do not invent parallel state systems.** Use the plugin's live-state + preview-state registry pattern on every prototype that has reviewable UI modes.
+
+### Do this proactively
+
+When **building or modifying** a prototype, treat preview states as part of the feature — not a follow-up:
+
+1. **Read existing state first** — `index.tsx`, any `*-preview-states.ts`, design-exploration configs, and `pr-split-config.ts` before changing UI.
+2. **Define a typed `TLiveState`** — one JSON-serializable object holding every field a reviewer needs to reproduce the view (step/screen, modal open, form values, toggles, selected tab, etc.).
+3. **One `liveState` on the page** — `useState<TLiveState>(createDefaultLiveState)` (or hydrate from `readPersistedPrototypeLiveState`). Derive rendered UI from `liveState`; route interactions through setters that update it.
+4. **Wire comments** — `usePrototypeComments(liveState, onRestore)` where `onRestore` calls `setLiveState(restored)`. This powers annotation restore and `shareState` links. Do **not** roll custom `?step=` / `?view=` query params.
+5. **When there are navigable preview modes** — add or update a single `definePreviewStateRegistry` in `*-preview-states.ts` (see below). Every distinct screen/step/modal branch reviewers should jump to gets a registry entry **in the same change** as the UI.
+6. **Wire the state picker** — `*-preview-state-select.tsx` using `PrototypeControl` + `ControlsPanelSelect`, importing `pickerOptions` from the registry. Call `review.registerPreviewStates(registry.previewStates)` (see `booking-flow-preview-state-select.tsx`).
+7. **Wire the state map** — `*-state-canvas-config.tsx` builds `PrototypeStateCanvasConfig` from the same registry. In `index.tsx`, call `review.setStateCanvasConfig(...)` in an effect; depend on stable review callbacks, not the whole `review` object. Add a `stateMapComponent` on the prototype in `prototype.config.ts` (see `booking-flow/state-map-page.tsx`) so `/prototypes/<slug>/states` renders the map instead of the default empty page.
+8. **Verify** — run `pnpm verify:prototype-preview-states` whenever a `*-preview-states.ts` file exists.
+
+Optional: `usePersistPrototypeLiveState(slug, liveState)` keeps reviewer position across reloads.
+
+### Architecture
+
+
+| Piece | Location | Purpose |
+| ----- | -------- | ------- |
+| `TLiveState` + `liveState` | page `index.tsx` | Single snapshot of all preview-relevant UI |
+| `usePrototypeComments` | page | Freeze/restore `liveState` for comments & share links |
+| `*-preview-states.ts` | `_components/` | `definePreviewStateRegistry` — picker, map nodes, `edges`, sections |
+| `*-preview-state-select.tsx` | `_components/` | On-page / sidebar step picker (`PrototypeControl`) |
+| `*-state-canvas-config.tsx` | `_components/` | Wireframes + registry data for the review **State** panel |
+
+
+Reference: `src/prototypes/booking-flow/` (`index.tsx`, `booking-flow-preview-states.ts`, `booking-flow-preview-state-select.tsx`, `booking-flow-state-canvas-config.tsx`).
+
+### Page wiring (minimal)
+
+```tsx
+const [liveState, setLiveState] = useState<TLiveState>(createDefaultLiveState);
+
+const onRestore = useCallback((restored: TLiveState) => {
+  setLiveState(restored);
+}, []);
+
+usePrototypeComments(liveState, onRestore);
+
+const setStateCanvasConfig = review?.setStateCanvasConfig;
+useEffect(() => {
+  if (!setStateCanvasConfig) return;
+  setStateCanvasConfig(
+    buildMyStateCanvasConfig(liveState.step, setStep),
+  );
+  return () => setStateCanvasConfig(null);
+}, [liveState.step, setStateCanvasConfig, setStep]);
+```
+
+### When to add a preview-state registry entry
+
+Add (or update) a registry state when you introduce:
+
+- A new screen, step, wizard stage, or primary tab reviewers should open directly
+- A modal, drawer, or overlay branch worth reviewing on its own
+- Empty, loading, or error branches that are distinct preview modes
+
+Skip registry entries for hover, focus, or other non-shareable micro-interactions.
+
+### Simple prototypes without steps
+
+If there are no navigable preview modes, `liveState` may be `{}` or hold only a few toggles — still call `usePrototypeComments`. Design explorations register separately via variant sets; do not fold exploration variants into ad-hoc `useState` without also exposing them through the exploration config.
+
+Multi-route prototypes (e.g. `proto-partner-page`) may use Next routes for real page boundaries; in-prototype step/modal switching within a page still belongs in `liveState`.
+
+### Anti-patterns
+
+- Multiple independent `useState` hooks for step/modal/view **without** aggregating into `liveState`
+- Custom URL query params for preview mode — share links use `usePrototypeComments` + encoded `shareState`
+- Hand-rolled `<select>` / tabs for preview modes outside `ControlsPanelSelect` + the registry
+- Duplicating picker labels or state ids outside `definePreviewStateRegistry`
+- Adding UI steps or modal branches **without** updating the registry, picker, and state map in the same change
+- Separate state maps or pickers that are not imported from the single `*-preview-states.ts` file
 
 ---
 
 ## Preview states & state map
 
-Prototypes with preview modes use `definePreviewStateRegistry` in `*-preview-states.ts`. One registry drives the state picker, map nodes, `edges`, and sections.
+Prototypes with preview modes use `definePreviewStateRegistry` in `*-preview-states.ts`. One registry drives the state picker, map nodes, `edges`, and sections. The picker, canvas config, and verification script must all import from this file — never maintain parallel state lists.
 
 ### State map layout
 
@@ -161,7 +314,7 @@ When two states are connected by an `edges` entry, arrange `canvasLayout.rows` s
 
 Prefer adjacent columns on the same row, or use `{ id, column }` / `startColumn` to offset nodes so vertical edges do not cut through unrelated cards in the same column.
 
-Reference: `src/prototypes/example-feature/_components/list-preview-states.ts`.
+Reference: `src/prototypes/booking-flow/_components/booking-flow-preview-states.ts`.
 
 ---
 
@@ -223,6 +376,17 @@ Every exploration **must** define `baseline` — the UI as it existed before the
 
 Build renderers with `buildDesignExplorationRenderers(options, renderVariant, baseline)` so the baseline preview is included.
 
+### Exploration icons
+
+The review sidebar explorations menu shows a Lucide icon per variant set via `VariantSetLucideIcon` (`packages/prototype/src/lib/prototypes/variant-set-lucide-icon.tsx`). Rules match on `id` + `label` (first fit wins); unmatched sets fall back to `LayoutGrid`.
+
+When adding a new exploration, **assign it a distinct icon**:
+
+1. Pick a Lucide icon that reflects the exploration topic (not `LayoutGrid` unless nothing else fits).
+2. Add a `{ test: /…/, icon: … }` entry to `VARIANT_SET_ICON_RULES`, placed **above** broad rules such as `/mobile/i`, so this exploration wins over generic matchers.
+3. Do not reuse icons already assigned to other explorations on the same prototype.
+4. Import the chosen icon from `lucide-react`.
+
 The default variant lives in the codebase config (`defaultVariant`, typically `DEFAULT_*_VARIANT`) — not KV. In the brief, each non-default option shows a **Make default** button that copies a prompt (`buildSetDefaultVariantPrompt`) asking an agent to update that constant; the current default is marked **Default**.
 
 ### Iterating on variants
@@ -253,7 +417,7 @@ Use when a prototype ships as a **sequence of small source PRs** rather than one
 | **Prototype** | `src/prototypes/<slug>/_components/` | `PR_SPLIT_ENTRIES` data, `PR_SPLIT_CONFIG`, wireframe renderers, live-state URL wiring                                                           |
 
 
-Reference: `example-feature/_components/pr-split-config.ts` + `pr-split-wireframes.tsx`.
+Reference: `booking-flow/_components/pr-split-config.ts` + `pr-split-wireframes.tsx` (when present) or any prototype with a spec panel.
 
 ### Host setup
 
@@ -425,5 +589,9 @@ Before finishing, confirm side-by-side with source or a screenshot:
 - Importing from `source/` at runtime
 - Reimplementing synced `@/components/ui` primitives
 - Approximating layout dimensions or colors
+- **Inventing custom prototype state** instead of `liveState` + `definePreviewStateRegistry` (see **Live state & preview states**)
+- **Adding screens/modals without registering preview states** in the same change
 - Depending on the whole `review` context object in an effect's deps (see "Consuming the review context in effects") — use the specific stable callbacks instead
+- **`scroll-container` with `overflow-y-auto` and no `h-full` fill chain** — causes top-left offset and clipped content in the preview frame (see **Prototype viewport fill**)
+- **Page-level motion with `translateX` on wrappers missing `w-full flex-1`** — same offset bug; use opacity-only or fill classes first
 

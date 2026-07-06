@@ -1,0 +1,47 @@
+---
+description: Reliable Cursor Glass browser MCP — avoid hanging browser_navigate
+alwaysApply: true
+---
+
+# Cursor browser MCP (Glass)
+
+## Root cause of hanging `browser_navigate`
+
+`browser_navigate` **hangs for 1–3 minutes** when the MCP tab registry has drifted
+out of sync with the real browser — specifically **orphaned tab handles**.
+
+Symptoms of a corrupted registry (verified in this repo):
+
+- `browser_tabs list` shows **more tabs than the user actually sees**.
+- Some tabs have **short numeric viewIds** (e.g. `208135`, `4e864c`) instead of
+  normal `glass-browser-<uuid>` ids. These come from repeated `newTab: true` calls
+  and are usually **phantom/orphaned** — CDP commands targeting them silently
+  redirect to the focused tab instead of their own webview.
+- Bare `browser_navigate({ url })` resolves to the "last interacted" handle, which
+  may be one of these dead phantoms → it waits forever → hang.
+
+Fresh Cursor sessions work because the registry starts clean; corruption
+accumulates within a session from `newTab`/navigate/close churn.
+
+## Required workflow
+
+1. **Always** call `browser_tabs` with `action: "list"` first.
+2. If the list shows **numeric-viewId tabs** or **more tabs than expected**, close
+   the numeric/phantom ones (`browser_tabs` `action: "close"`, by index) until only
+   real `glass-browser-*` tabs remain. This alone usually unblocks navigate.
+3. Prefer **reusing an existing `glass-browser-*` viewId** over `newTab: true`.
+   Avoid spamming `newTab` — it's what creates orphaned handles.
+4. If the target tab already shows the correct URL, skip navigate — use
+   `browser_snapshot` or `browser_lock` + interact.
+5. To just show the user a page, `open_resource` with the `http://localhost:1985/...`
+   URI is fast and never hangs.
+
+## This project's dev server
+
+- Prototypes app: `http://localhost:1985` (`pnpm dev`)
+- Ignore `localhost:3000` tabs — those belong to a different project.
+
+## If navigation still stalls after cleaning the registry
+
+- Reopen the Glass browser (Browser panel) to rebuild the tab registry from scratch.
+- Verify the server is up: `curl -s -o /dev/null -w '%{http_code}' http://localhost:1985/`

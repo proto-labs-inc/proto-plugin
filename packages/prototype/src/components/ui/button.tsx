@@ -19,7 +19,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         chrome:
-          "border-0 bg-white/[0.12] text-white/90 shadow-none hover:bg-white/20 hover:text-white",
+          "border-0 bg-[var(--tool-chrome-button-bg)] text-[var(--tool-chrome-button-text)] shadow-none hover:bg-[var(--tool-chrome-button-bg-hover)] hover:text-[var(--tool-chrome-button-text-hover)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

@@ -5,7 +5,10 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { isCommentCaptureBlockedTarget } from "@prototype/lib/prototype-comments/core/comment-capture-blocked";
-import { getPrototypeDialogPortalContainer } from "@prototype/lib/tool-portal";
+import {
+  getPrototypeDialogPortalContainer,
+  getPrototypeToolDialogPortalContainer,
+} from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
 
 import styles from "./dialog.module.scss";
@@ -44,14 +47,23 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+export type DialogPortalScope = "viewport" | "tool";
+
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean;
     overlayClassName?: string;
+    portalScope?: DialogPortalScope;
   }
->(({ className, children, showCloseButton = true, overlayClassName, onPointerDownOutside, onInteractOutside, onFocusOutside, ...props }, ref) => (
-  <DialogPortal container={getPrototypeDialogPortalContainer()}>
+>(({ className, children, showCloseButton = true, overlayClassName, portalScope = "viewport", onPointerDownOutside, onInteractOutside, onFocusOutside, ...props }, ref) => (
+  <DialogPortal
+    container={
+      portalScope === "tool"
+        ? getPrototypeToolDialogPortalContainer()
+        : getPrototypeDialogPortalContainer()
+    }
+  >
     <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}

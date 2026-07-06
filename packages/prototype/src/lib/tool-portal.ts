@@ -8,6 +8,9 @@ export const PROTOTYPE_VIEWPORT_ID = "prototype-viewport";
 
 export const PROTOTYPE_SCREENSHOT_ATTR = "data-prototype-screenshot";
 
+/** Synced source-app previews (component library, etc.) — fixed product tokens, not tool theme. */
+export const PROTOTYPE_SOURCE_SURFACE_ATTR = "data-prototype-source-surface";
+
 export const PROTOTYPE_COMMENTS_SIDEBAR_ROOT_ID =
   "prototype-comments-sidebar-root";
 
@@ -23,6 +26,16 @@ export function getPrototypeDialogPortalContainer(): HTMLElement | undefined {
     document.getElementById(PROTOTYPE_VIEWPORT_ID) ??
     document.getElementById(PROTOTYPE_PREVIEW_STAGE_ID) ??
     document.getElementById(PROTOTYPE_ROOT_ID) ??
+    undefined
+  );
+}
+
+/** Tool chrome modals (prompt copy, link source, etc.) — outside the screenshot surface so dark/light tool theme applies. */
+export function getPrototypeToolDialogPortalContainer(): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined;
+  return (
+    document.getElementById(PROTOTYPE_ROOT_ID) ??
+    document.getElementById(PROTOTYPE_PREVIEW_STAGE_ID) ??
     undefined
   );
 }

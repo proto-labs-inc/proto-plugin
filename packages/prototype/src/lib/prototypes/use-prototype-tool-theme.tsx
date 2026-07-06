@@ -28,7 +28,7 @@ type PrototypeToolThemeContextValue = {
 const PrototypeToolThemeContext =
   createContext<PrototypeToolThemeContextValue | null>(null);
 
-const DEFAULT_THEME: PrototypeToolTheme = "dark";
+const DEFAULT_THEME: PrototypeToolTheme = "light";
 
 function normalizeTheme(value: string): PrototypeToolTheme {
   return value === "light" ? "light" : "dark";

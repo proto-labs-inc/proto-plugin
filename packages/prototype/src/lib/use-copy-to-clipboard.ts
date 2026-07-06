@@ -1,9 +1,9 @@
 "use client";
 
+import { copyTextWithAttachments } from "@prototype/lib/copy-text-with-attachments";
 import { cn } from "@prototype/lib/utils";
 import { CheckIcon, CopyIcon, SaveIcon } from "lucide-react";
 import { createElement, useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
 
 type CopyState = "idle" | "scaling-out" | "copied" | "reverting-out" | null;
 
@@ -25,7 +25,7 @@ export default function useCopyToClipboard({
   const isCopied = state === "copied" || state === "reverting-out";
 
   const copy = useCallback(
-    (text: string) => {
+    async (text: string) => {
       clearTimeout(timerRef.current);
       setState("idle");
 
@@ -43,17 +43,11 @@ export default function useCopyToClipboard({
         timerRef.current = setTimeout(revert, cooldownTime);
       };
 
-      navigator.clipboard
-        .writeText(text)
-        .catch(() => {
-          toast.error("Copy error", {
-            description: "Failed to copy value to clipboard",
-          });
-        })
-        .finally(() => {
-          setState("scaling-out");
-          timerRef.current = setTimeout(copied, SCALE_OUT_MS);
-        });
+      const didCopy = await copyTextWithAttachments(text);
+      if (!didCopy) return;
+
+      setState("scaling-out");
+      timerRef.current = setTimeout(copied, SCALE_OUT_MS);
     },
     [cooldownTime],
   );

@@ -31,19 +31,25 @@
   --tool-chrome-yellow-highlight: rgba(217, 174, 0, 0.15);
   --tool-chrome-blue-highlight: rgba(0, 151, 254, 0.13);
   --tool-chrome-gray-highlight: rgba(255, 255, 255, 0.05);
+  --tool-chrome-button-bg: rgba(255, 255, 255, 0.12);
+  --tool-chrome-button-text: rgba(255, 255, 255, 0.9);
+  --tool-chrome-button-bg-hover: rgba(255, 255, 255, 0.2);
+  --tool-chrome-button-text-hover: #ffffff;
 
-  /* Tool chrome surfaces — Cursor-style grey palette */
-  --tool-chrome-ground: #121212;
-  --tool-chrome-bg: #1e1e1e;
-  --tool-chrome-surface: #1e1e1e;
-  --tool-chrome-surface-muted: #181818;
+  /* Tool chrome surfaces — deep dark palette.
+     Content (bg) is darkest to match prototypes; chrome (ground) is a distinct
+     elevated panel for sidebar + header. */
+  --tool-chrome-ground: #181818;
+  --tool-chrome-bg: #0d0d0d;
+  --tool-chrome-surface: #1c1c1c;
+  --tool-chrome-surface-muted: #151515;
   --tool-chrome-text: #e0e0e0;
   --tool-chrome-text-heading: #e0e0e0;
   --tool-chrome-text-muted: #888888;
   --tool-chrome-icon: #888888;
   --tool-chrome-icon-hover: #a3a3a3;
-  --tool-chrome-border: #333333;
-  --tool-chrome-border-strong: #404040;
+  --tool-chrome-border: #2a2a2a;
+  --tool-chrome-border-strong: #383838;
   --prototype-state-canvas-edge: var(--tool-chrome-icon-hover);
 
   --prototype-ground: var(--tool-chrome-ground);
@@ -51,10 +57,10 @@
   --tool-review-card-radius: 6px;
   --tool-review-card-shadow:
     0 1px 2px rgb(0 0 0 / 0.18),
-    0 0 0 1px #333333;
+    0 0 0 1px #2a2a2a;
   --tool-review-card-shadow-hover:
     0 1px 3px rgb(0 0 0 / 0.22),
-    0 0 0 1px #404040;
+    0 0 0 1px #383838;
   --radius: 0.625rem;
 
   font-family: var(--tool-font-body);
@@ -68,14 +74,14 @@
   --bg-main: var(--tool-chrome-bg);
   --bg-top: var(--tool-chrome-surface);
   --bg-subtle: var(--tool-chrome-surface-muted);
-  --bg-layered: #252525;
+  --bg-layered: #202020;
   --bg-invert: var(--tool-chrome-text-heading);
   --bg-white: var(--tool-chrome-bg);
 
   --text-primary: var(--tool-chrome-text);
   --text-secondary: var(--tool-chrome-text-muted);
   --text-tertiary: #666666;
-  --text-invert: #121212;
+  --text-invert: #0d0d0d;
 
   --border-faint: var(--tool-chrome-border);
   --border-solid: var(--tool-chrome-border);
@@ -94,6 +100,29 @@
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.2);
   --shadow-md: 0 4px 12px 0 rgb(0 0 0 / 0.24);
   --shadow-lg: 0 8px 24px 0 rgb(0 0 0 / 0.28);
+
+  /*
+   * Host coss-ui @theme inline resolves utilities via shadcn tokens (--background,
+   * --foreground, …). Bridge them to tool chrome here; source previews reset
+   * these inside [data-prototype-screenshot] / [data-prototype-source-surface].
+   */
+  --background: var(--tool-chrome-bg);
+  --foreground: var(--tool-chrome-text-heading);
+  --card: var(--tool-chrome-surface);
+  --card-foreground: var(--tool-chrome-text-heading);
+  --popover: var(--tool-chrome-surface);
+  --popover-foreground: var(--tool-chrome-text-heading);
+  --secondary: var(--tool-chrome-surface-muted);
+  --secondary-foreground: var(--tool-chrome-text-heading);
+  --muted: var(--tool-chrome-surface-muted);
+  --muted-foreground: var(--tool-chrome-text-muted);
+  --accent: var(--tool-chrome-gray-highlight);
+  --accent-foreground: var(--tool-chrome-text-heading);
+  --destructive: var(--tool-chrome-pink);
+  --destructive-foreground: #ffffff;
+  --border: var(--tool-chrome-border);
+  --input: var(--tool-chrome-border-strong);
+  --ring: var(--tool-chrome-text-heading);
 
   /* Tailwind @theme inline */
   --color-background: var(--tool-chrome-bg);
@@ -127,7 +156,7 @@
   --color-bg-main: var(--tool-chrome-bg);
   --color-bg-top: var(--tool-chrome-surface);
   --color-bg-subtle: var(--tool-chrome-surface-muted);
-  --color-bg-layered: #252525;
+  --color-bg-layered: #202020;
   --color-bg-invert: var(--tool-chrome-text-heading);
   --color-bg-white: var(--tool-chrome-bg);
   --color-text-primary: var(--tool-chrome-text);
@@ -136,7 +165,7 @@
   --color-text-invert: #121212;
 
   color: var(--tool-chrome-text);
-  background-color: var(--tool-chrome-ground);
+  background-color: var(--tool-chrome-bg);
 }
 
 [data-prototype-root] * {
@@ -162,7 +191,7 @@
   --bg-main: var(--tool-chrome-bg);
   --bg-top: var(--tool-chrome-bg);
   --bg-subtle: var(--tool-chrome-surface-muted);
-  --bg-layered: #252525;
+  --bg-layered: #202020;
   --border-faint: var(--tool-chrome-border);
   --border-solid: var(--tool-chrome-border);
   --border-medium: var(--tool-chrome-border-strong);
@@ -185,7 +214,7 @@
   --color-bg-main: var(--tool-chrome-bg);
   --color-bg-top: var(--tool-chrome-bg);
   --color-bg-subtle: var(--tool-chrome-surface-muted);
-  --color-bg-layered: #252525;
+  --color-bg-layered: #202020;
   --color-text-primary: var(--tool-chrome-icon-hover);
   --color-text-secondary: var(--tool-chrome-icon);
   --color-text-tertiary: #909090;
@@ -198,6 +227,10 @@
 
 [data-prototype-root][data-prototype-comment-theme="light"] {
   --tool-chrome-gray-highlight: rgba(0, 0, 0, 0.05);
+  --tool-chrome-button-bg: rgba(0, 0, 0, 0.06);
+  --tool-chrome-button-text: rgba(0, 0, 0, 0.72);
+  --tool-chrome-button-bg-hover: rgba(0, 0, 0, 0.1);
+  --tool-chrome-button-text-hover: rgba(0, 0, 0, 0.92);
   --tool-chrome-ground: #f5f5f5;
   --tool-chrome-bg: #ffffff;
   --tool-chrome-surface: #ffffff;
@@ -231,6 +264,24 @@
   --tool-review-card-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
   --tool-review-card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.06);
 
+  --background: var(--tool-chrome-bg);
+  --foreground: var(--tool-chrome-text-heading);
+  --card: var(--tool-chrome-surface);
+  --card-foreground: var(--tool-chrome-text-heading);
+  --popover: var(--tool-chrome-surface);
+  --popover-foreground: var(--tool-chrome-text-heading);
+  --secondary: var(--tool-chrome-surface-muted);
+  --secondary-foreground: var(--tool-chrome-text-heading);
+  --muted: var(--tool-chrome-surface-muted);
+  --muted-foreground: var(--tool-chrome-text-muted);
+  --accent: var(--tool-chrome-gray-highlight);
+  --accent-foreground: var(--tool-chrome-text-heading);
+  --destructive: var(--tool-chrome-pink);
+  --destructive-foreground: #ffffff;
+  --border: var(--tool-chrome-border);
+  --input: var(--tool-chrome-border-strong);
+  --ring: var(--tool-chrome-text-heading);
+
   --color-background: var(--tool-chrome-bg);
   --color-foreground: var(--tool-chrome-text-heading);
   --color-card: var(--tool-chrome-surface);
@@ -258,7 +309,7 @@
   --color-text-tertiary: rgba(0, 0, 0, 0.45);
 
   color: var(--tool-chrome-text);
-  background-color: var(--tool-chrome-ground);
+  background-color: var(--tool-chrome-bg);
 }
 
 [data-prototype-root][data-prototype-comment-theme="light"] ::selection {
@@ -368,7 +419,7 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 @media (hover: hover) and (pointer: fine) {
   [data-prototype-root] .tool-toolbar-button:hover {
-    background: #252525;
+    background: #202020;
     color: var(--tool-chrome-icon-hover);
   }
 }
@@ -496,37 +547,85 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   border: 1px solid var(--tool-chrome-border);
   background: var(--tool-chrome-bg);
   color: var(--tool-chrome-text);
+  color-scheme: dark;
   box-shadow:
     var(--shadow-lg),
-    0 0 0 1px #333333;
+    0 0 0 1px #2a2a2a;
 
-  /* Dialogs portal into #prototype-viewport ([data-prototype-screenshot]), which
-     resets semantic tokens to light preview values — re-bridge tool chrome here. */
+  /*
+   * Product preview surfaces reset shadcn tokens to light values. Re-bridge the
+   * full tool chrome token set so modal chrome matches the gallery/home screen.
+   */
+  --bg-main: var(--tool-chrome-bg);
+  --bg-top: var(--tool-chrome-surface);
+  --bg-subtle: var(--tool-chrome-surface-muted);
   --text-primary: var(--tool-chrome-text);
   --text-secondary: var(--tool-chrome-text-muted);
+  --border-faint: var(--tool-chrome-border);
+  --border-solid: var(--tool-chrome-border);
+  --border-medium: var(--tool-chrome-border-strong);
+  --primary: var(--tool-chrome-blue);
+  --primary-foreground: #ffffff;
+  --primary-dark: var(--tool-chrome-blue-deep);
+  --focus-ring: var(--tool-chrome-text-heading);
+  --active: var(--tool-chrome-text-heading);
+  --input-border: var(--tool-chrome-border-strong);
+
+  --background: var(--tool-chrome-bg);
+  --foreground: var(--tool-chrome-text-heading);
+  --card: var(--tool-chrome-surface);
+  --card-foreground: var(--tool-chrome-text-heading);
+  --popover: var(--tool-chrome-surface);
+  --popover-foreground: var(--tool-chrome-text-heading);
+  --secondary: var(--tool-chrome-surface-muted);
+  --secondary-foreground: var(--tool-chrome-text-heading);
+  --muted: var(--tool-chrome-surface-muted);
+  --muted-foreground: var(--tool-chrome-text-muted);
+  --accent: var(--tool-chrome-gray-highlight);
+  --accent-foreground: var(--tool-chrome-text-heading);
+  --destructive: var(--tool-chrome-pink);
+  --destructive-foreground: #ffffff;
+  --border: var(--tool-chrome-border);
+  --input: var(--tool-chrome-border-strong);
+  --ring: var(--tool-chrome-text-heading);
+
   --color-background: var(--tool-chrome-bg);
   --color-foreground: var(--tool-chrome-text-heading);
+  --color-card: var(--tool-chrome-surface);
+  --color-card-foreground: var(--tool-chrome-text-heading);
+  --color-popover: var(--tool-chrome-surface);
+  --color-popover-foreground: var(--tool-chrome-text-heading);
+  --color-primary: var(--tool-chrome-blue);
+  --color-primary-foreground: #ffffff;
+  --color-primary-dark: var(--tool-chrome-blue-deep);
+  --color-secondary: var(--tool-chrome-surface-muted);
+  --color-secondary-foreground: var(--tool-chrome-text-heading);
+  --color-muted: var(--tool-chrome-surface-muted);
   --color-muted-foreground: var(--tool-chrome-text-muted);
+  --color-accent: var(--tool-chrome-gray-highlight);
+  --color-accent-foreground: var(--tool-chrome-text-heading);
+  --color-destructive: var(--tool-chrome-pink);
+  --color-destructive-foreground: #ffffff;
   --color-border: var(--tool-chrome-border);
-  --color-focus-ring: var(--tool-chrome-text-heading);
+  --color-border-faint: var(--tool-chrome-border);
+  --color-border-solid: var(--tool-chrome-border);
+  --color-border-medium: var(--tool-chrome-border-strong);
+  --color-input: var(--tool-chrome-border-strong);
   --color-ring: var(--tool-chrome-text-heading);
+  --color-focus-ring: var(--tool-chrome-text-heading);
+  --color-active: var(--tool-chrome-text-heading);
+  --color-bg-main: var(--tool-chrome-bg);
+  --color-bg-top: var(--tool-chrome-surface);
+  --color-bg-subtle: var(--tool-chrome-surface-muted);
+  --color-text-primary: var(--tool-chrome-text);
+  --color-text-secondary: var(--tool-chrome-text-muted);
 }
 
 [data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {
+  color-scheme: light;
   box-shadow:
     var(--shadow-lg),
     0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-[data-prototype-root] .tool-dialog-accent {
-  height: 3px;
-  flex-shrink: 0;
-  background: linear-gradient(
-    90deg,
-    var(--tool-chrome-pink) 0%,
-    var(--tool-chrome-yellow) 50%,
-    var(--tool-chrome-pink) 100%
-  );
 }
 
 [data-prototype-root] [role="tablist"] {
@@ -558,10 +657,15 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   color: var(--tool-chrome-text);
 }
 
-/* Restore host prototype preview theme inside screenshot capture.
-   Uses neutral gray-scale tokens only — host apps can extend in their globals.css. */
+/* Restore host prototype preview theme inside screenshot capture and source
+   surfaces (component library). Fixed product values — must not inherit tool
+   theme from [data-prototype-root]. Host apps extend with --product-* tokens. */
 [data-prototype-root] [data-prototype-screenshot],
-[data-prototype-screenshot] {
+[data-prototype-screenshot],
+[data-prototype-root] [data-prototype-source-surface],
+[data-prototype-source-surface] {
+  color-scheme: light;
+
   --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
   --font-display: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -588,44 +692,95 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --focus-ring: var(--text-primary);
   --active: var(--color-gray-900);
   --radius: 4px;
-  --color-background: #ffffff;
-  --color-foreground: var(--color-gray-900);
+
+  /* shadcn base tokens — host [data-prototype-screenshot] rules override with --product-* */
+  --background: var(--bg-main);
+  --foreground: var(--text-primary);
+  --card: var(--bg-top);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-top);
+  --popover-foreground: var(--text-primary);
+  --secondary: var(--bg-subtle);
+  --secondary-foreground: var(--text-primary);
+  --muted: color-mix(in srgb, var(--color-gray-900) 6%, transparent);
+  --muted-foreground: var(--text-secondary);
+  --accent: color-mix(in srgb, var(--color-gray-900) 6%, transparent);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--error);
+  --destructive-foreground: #ffffff;
+  --border: var(--border-solid);
+  --input: var(--border-medium);
+  --ring: var(--border-faint);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
-  --color-primary-foreground: #ffffff;
-  --color-muted: color-mix(in srgb, var(--color-gray-900) 6%, transparent);
-  --color-muted-foreground: var(--color-gray-500);
-  --color-border: var(--border-solid);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
   --color-border-faint: var(--border-faint);
   --color-border-solid: var(--border-solid);
   --color-border-medium: var(--border-medium);
   --color-border-hover: var(--border-medium);
-  --color-ring: var(--border-faint);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-focus-ring: var(--focus-ring);
   --color-active: var(--active);
+  --color-error: var(--error);
+  --color-success: var(--success);
   --color-bg-bedrock: var(--bg-bedrock);
   --color-bg-main: var(--bg-main);
   --color-bg-top: var(--bg-top);
   --color-bg-subtle: var(--bg-subtle);
   --color-bg-layered: var(--bg-layered);
   --color-bg-invert: var(--bg-invert);
-  --color-bg-white: #ffffff;
+  --color-bg-white: var(--bg-white);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
 
   font-family: var(--font-sans);
   font-size: initial;
-  background-color: var(--bg-bedrock);
+}
+
+[data-prototype-root] [data-prototype-screenshot],
+[data-prototype-screenshot] {
+  color: var(--text-primary);
+  background-color: var(--bg-main);
+}
+
+/* Source surfaces (component-library preview cards) pin light product tokens but
+   do NOT force a background — each card supplies its own via bg utilities
+   (bg-default → white, bg-brand, etc.) so they read as light components on the
+   dark page. */
+[data-prototype-root] [data-prototype-source-surface],
+[data-prototype-source-surface] {
+  color: var(--text-primary);
 }
 
 [data-prototype-root] [data-prototype-screenshot] ::selection,
-[data-prototype-screenshot] ::selection {
+[data-prototype-screenshot] ::selection,
+[data-prototype-root] [data-prototype-source-surface] ::selection,
+[data-prototype-source-surface] ::selection {
   background: #b4d5fe;
   color: var(--text-primary);
 }
 
 [data-prototype-root] [data-prototype-screenshot] *,
-[data-prototype-screenshot] * {
+[data-prototype-screenshot] *,
+[data-prototype-root] [data-prototype-source-surface] *,
+[data-prototype-source-surface] * {
   font-family: inherit;
 }
 

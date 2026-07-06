@@ -1,5 +1,10 @@
 import { definePrototypeConfig } from "proto-plugin";
 
+import BookingFlow from "./src/prototypes/booking-flow";
+import { bookingFlowComponentRegistry } from "./src/prototypes/booking-flow/component-ids";
+import BookingsPage from "./src/prototypes/bookings-page";
+import { bookingsPageComponentRegistry } from "./src/prototypes/bookings-page/component-ids";
+import BookingFlowStateMapPage from "./src/prototypes/booking-flow/state-map-page";
 import HomePage from "./src/prototypes/home-page";
 import { homePageComponentRegistry } from "./src/prototypes/home-page/component-ids";
 import ProtoPartnerPage from "./src/prototypes/proto-partner-page";
@@ -29,6 +34,21 @@ export default definePrototypeConfig({
       screenshot: "/prototypes/screenshots/home-page.png",
       component: HomePage,
       componentRegistry: homePageComponentRegistry,
+    },
+    {
+      slug: "booking-flow",
+      title: "Booking flow",
+      screenshot: "/prototypes/screenshots/booking-flow.png",
+      component: BookingFlow,
+      componentRegistry: bookingFlowComponentRegistry,
+      stateMapComponent: BookingFlowStateMapPage,
+    },
+    {
+      slug: "bookings-page",
+      title: "Bookings page",
+      screenshot: "/prototypes/screenshots/bookings-page.png",
+      component: BookingsPage,
+      componentRegistry: bookingsPageComponentRegistry,
     },
   ],
 });

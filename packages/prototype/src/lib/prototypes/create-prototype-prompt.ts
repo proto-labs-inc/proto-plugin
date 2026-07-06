@@ -44,18 +44,18 @@ export function buildCreatePrototypePrompt({
   lines.push(
     "",
     "## Instructions",
-    "Follow AGENTS.md → New prototype checklist.",
+    "Follow AGENTS.md → New prototype checklist and **Live state & preview states (mandatory)**.",
     "",
     "1. Identify the source page/feature and confirm visual parity.",
     "2. Create `src/prototypes/<slug>/` with a default export page component.",
     "3. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.",
     "4. Register in `prototype.config.ts` with `componentRegistry`.",
     "5. Wrap every UI component in `PrototypeComponent` / `PrototypeControl`.",
-    "6. Call `usePrototypeComments(liveState, onRestore)` on the page.",
-    "7. Run `pnpm verify:prototype-ids`.",
+    "6. Define `liveState`, wire `usePrototypeComments(liveState, onRestore)`, and — if the prototype has navigable steps/screens/modals — add `*-preview-states.ts`, a state picker, and state map wiring in the same pass.",
+    "7. Run `pnpm verify:prototype-ids` and `pnpm verify:prototype-preview-states` when a preview-state registry exists.",
     "8. Capture a screenshot under `public/prototypes/screenshots/`; share via `pnpm share-prototype <slug>`.",
     "",
-    "Reference: `src/prototypes/example-feature/`.",
+    "Reference: `src/prototypes/booking-flow/`.",
   );
 
   return lines.join("\n");

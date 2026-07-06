@@ -1,0 +1,31 @@
+---
+description: Use plugin liveState and preview-state registry — never invent parallel state
+globs: src/prototypes/**/*
+alwaysApply: false
+---
+
+# Prototype live state (mandatory)
+
+Full spec: `packages/prototype/AGENTS.md` → **Live state & preview states (mandatory)**.
+
+## Before changing UI
+
+Read the prototype's `index.tsx`, any `*-preview-states.ts`, and design-exploration configs. Do not add screens/modals/steps without updating state in the same change.
+
+## Required pattern
+
+1. **One `liveState` object** on the page — typed, JSON-serializable, holds every field needed to reproduce the view.
+2. **`usePrototypeComments(liveState, onRestore)`** — `onRestore` must `setLiveState(restored)`. Powers comments and share links. No custom `?step=` / `?view=` params.
+3. **Navigable preview modes** → single `definePreviewStateRegistry` in `*-preview-states.ts`:
+   - Registry entry for each screen/step/modal branch reviewers should jump to
+   - `*-preview-state-select.tsx` (`PrototypeControl` + `ControlsPanelSelect`, `registerPreviewStates`)
+   - `*-state-canvas-config.tsx` + `review.setStateCanvasConfig(...)` in an effect
+4. Run `pnpm verify:prototype-preview-states` when a registry file exists.
+
+## Do not
+
+- Scatter `useState` for step/modal/view without aggregating into `liveState`
+- Hand-roll preview pickers or duplicate state ids/labels outside the registry
+- Ship new UI branches without registry + picker + state map updates
+
+Reference: `src/prototypes/booking-flow/`.

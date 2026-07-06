@@ -1,0 +1,48 @@
+---
+description: Prevent prototype/gallery layout offset and clipping bugs
+globs:
+  - src/prototypes/**/*
+  - packages/prototype/src/components/shell/**/*
+  - packages/prototype/src/config/prototype-site-layout-client.tsx
+---
+
+# Prototype layout fill (avoid offset / clipping)
+
+## Two failure modes
+
+1. **Inside a prototype preview** — content pinned top-left with empty space opposite: missing `h-full min-h-0 w-full flex-1` on nested wrappers under `#prototype-viewport`. The shell only auto-sizes the direct `.viewportPage` child.
+2. **Gallery / site shell** — black gaps beside sidebar + white bar at bottom: mixed `h-full` / `h-svh` on parent vs `[data-prototype-root]`, or body background showing through unfilled height.
+
+## Prototype pages (`src/prototypes/`)
+
+Import and use the canonical constants from `prototype`:
+
+```tsx
+import {
+  PROTOTYPE_PAGE_CLASS,
+  PROTOTYPE_SCROLL_CONTAINER_CLASS,
+  PROTOTYPE_VIEW_SHELL_CLASS,
+} from "prototype";
+```
+
+- `scroll-container` → `PROTOTYPE_SCROLL_CONTAINER_CLASS`
+- `page` → `PROTOTYPE_PAGE_CLASS`
+- Every step/view/motion wrapper → `PROTOTYPE_VIEW_SHELL_CLASS`
+
+Do **not** use `min-h-full` alone on view roots. Put `overflow-y-auto` on the scrolling view, not `scroll-container`.
+
+Page-level motion: **opacity only** — no horizontal `translateX` on wrappers missing `w-full flex-1`.
+
+## Site shell (package maintainers only)
+
+- Gallery route wrapper (`prototype-site-layout-client.tsx`) owns **`h-svh min-h-svh`** + tool bg.
+- `[data-prototype-root]` in gallery shell fills with **`h-full min-h-0 flex-1`** — never `h-svh` nested inside another `h-svh`.
+- Do not change these without checking `/` and a prototype page side by side.
+
+## Before finishing
+
+1. `/` — no sidebar gutter, no white bottom strip.
+2. Prototype at desktop width — fills preview frame.
+3. Mobile preview — tall pages scroll; no `justify-center` hiding overflow.
+
+Full detail: `packages/prototype/AGENTS.md` → **Prototype viewport fill**.

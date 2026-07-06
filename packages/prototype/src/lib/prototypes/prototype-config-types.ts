@@ -9,6 +9,8 @@ export type PrototypeDefinition = {
   screenshot: string;
   component: ComponentType;
   componentRegistry: PrototypeComponentRegistry;
+  /** Full-page state map at `/prototypes/<slug>/states`. Omit to show the default empty map. */
+  stateMapComponent?: ComponentType;
 };
 
 export type PrototypeExtraRoute = {

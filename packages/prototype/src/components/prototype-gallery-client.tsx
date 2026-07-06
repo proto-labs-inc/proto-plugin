@@ -15,7 +15,7 @@ type PrototypeGalleryClientProps = {
 };
 
 const prototypeGalleryTitleClassName =
-  "text-muted-foreground group-hover:text-foreground mt-2 text-sm transition-colors duration-300 ease-out";
+  "mt-2 text-sm text-[var(--tool-chrome-text-muted)] transition-colors duration-300 ease-out group-hover:text-[var(--tool-chrome-text-heading)]";
 
 function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
   return (
@@ -28,12 +28,12 @@ function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
       <div
         className={cn(
           "rounded-xl",
-          "shadow-[0_1px_3px_0_rgb(0_0_0/0.06)]",
+          "shadow-[var(--tool-review-card-shadow)]",
           "translate-y-0 transition-[translate,box-shadow] duration-300 ease-out will-change-[translate]",
-          "group-hover:-translate-y-1 group-hover:shadow-[0_4px_12px_-4px_rgb(0_0_0/0.10)]",
+          "group-hover:-translate-y-1 group-hover:shadow-[var(--tool-review-card-shadow-hover)]",
         )}
       >
-        <div className="bg-background text-muted-foreground group-hover:text-foreground relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-dashed border-current transition-colors duration-300 ease-out">
+        <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)] text-[var(--tool-chrome-text-muted)] transition-colors duration-300 ease-out group-hover:text-[var(--tool-chrome-text-heading)]">
           <Plus size={20} strokeWidth={2} aria-hidden />
         </div>
       </div>
@@ -53,6 +53,7 @@ export function PrototypeGalleryClient({
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
         {prototypes.map((prototype) => (
           <Link
             key={prototype.slug}
@@ -62,12 +63,12 @@ export function PrototypeGalleryClient({
             <div
               className={cn(
                 "rounded-xl",
-                "shadow-[0_1px_3px_0_rgb(0_0_0/0.06)]",
+                "shadow-[var(--tool-review-card-shadow)]",
                 "translate-y-0 transition-[translate,box-shadow] duration-300 ease-out will-change-[translate]",
-                "group-hover:-translate-y-1 group-hover:shadow-[0_4px_12px_-4px_rgb(0_0_0/0.10)]",
+                "group-hover:-translate-y-1 group-hover:shadow-[var(--tool-review-card-shadow-hover)]",
               )}
             >
-              <div className="border-border bg-background relative aspect-video overflow-hidden rounded-xl border">
+              <div className="relative aspect-video overflow-hidden rounded-xl border border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)]">
                 <Image
                   src={screenshotSrc(
                     prototype.screenshot,
@@ -85,7 +86,6 @@ export function PrototypeGalleryClient({
             <p className={prototypeGalleryTitleClassName}>{prototype.title}</p>
           </Link>
         ))}
-        <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
       </div>
 
       <PrototypeCreatePrototypeModal

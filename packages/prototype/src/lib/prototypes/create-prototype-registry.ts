@@ -40,6 +40,11 @@ export function createPrototypeRegistry(config: PrototypeConfig) {
         ?.component;
     },
 
+    getPrototypeStateMapComponent(slug: string) {
+      return requireConfig().prototypes.find((prototype) => prototype.slug === slug)
+        ?.stateMapComponent;
+    },
+
     getPrototypeComponentRegistryForSlug(
       slug: string,
     ): PrototypeComponentRegistry | undefined {

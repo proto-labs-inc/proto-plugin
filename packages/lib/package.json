@@ -1,0 +1,20 @@
+{
+  "name": "@calcom/lib",
+  "private": true,
+  "version": "0.0.0",
+  "exports": {
+    "./hooks/useLocale": "./hooks/useLocale.ts",
+    "./hooks/useCompatSearchParams": "./hooks/useCompatSearchParams.ts",
+    "./hooks/useIsomorphicLayoutEffect": "./hooks/useIsomorphicLayoutEffect.ts",
+    "./hooks/useMediaQuery": "./hooks/useMediaQuery.ts",
+    "./hooks/useUrlMatchesCurrentUrl": "./hooks/useUrlMatchesCurrentUrl.ts",
+    "./constants": "./constants.ts",
+    "./dayjs": "./dayjs.ts",
+    "./errors": "./errors.ts",
+    "./getAvatarUrl": "./getAvatarUrl.ts",
+    "./defaultAvatarImage": "./defaultAvatarImage.ts",
+    "./getBrandColours": "./getBrandColours.ts",
+    "./checkIfItFallbackImage": "./checkIfItFallbackImage.ts",
+    "./OgImages": "./OgImages.ts"
+  }
+}

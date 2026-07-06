@@ -1,6 +1,8 @@
 export { definePrototypeConfig } from "./config/define-prototype-config";
 export { createPrototypeGalleryPage } from "./config/create-prototype-gallery-page";
+export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
 export { createPrototypePage } from "./config/create-prototype-page";
+export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
 export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
 export { withPrototype } from "./config/with-prototype";
 
@@ -45,6 +47,12 @@ export type { PrototypeVercelPreviewModalProps } from "./components/prototypes/p
 export { PrototypeTweaks } from "./components/prototypes/prototype-tweaks";
 export type { PrototypeTweakConfig } from "./components/prototypes/prototype-tweaks";
 
+export {
+  PROTOTYPE_PAGE_CLASS,
+  PROTOTYPE_SCROLL_CONTAINER_CLASS,
+  PROTOTYPE_VIEW_SHELL_CLASS,
+} from "./lib/prototypes/prototype-layout-classes";
+
 export { usePrototypeComments } from "./lib/prototypes/use-prototype-comments";
 
 export {
@@ -88,6 +96,15 @@ export {
   buildCreatePrototypePrompt,
   suggestPrototypeSlug,
 } from "./lib/prototypes/create-prototype-prompt";
+
+export {
+  buildPopulateComponentLibraryCopyText,
+  buildPopulateComponentLibraryPrompt,
+} from "./lib/prototypes/populate-component-library-prompt";
+export {
+  buildLinkSourceCopyText,
+  buildLinkSourcePrompt,
+} from "./lib/prototypes/link-source-prompt";
 export type { PrototypePreviewState } from "./lib/prototypes/prototype-preview-state-types";
 
 export {
@@ -137,6 +154,7 @@ export {
   PrototypeGalleryShell,
   PrototypeGalleryHeader,
   PrototypeGalleryPage,
+  PrototypeGalleryPageLayout,
 } from "./components/shell/prototype-gallery-shell";
 
 export { screenshotSrc } from "./lib/prototypes/screenshot-src";
@@ -249,9 +267,11 @@ export {
   PROTOTYPE_PREVIEW_STAGE_ID,
   PROTOTYPE_ROOT_ID,
   PROTOTYPE_SCREENSHOT_ATTR,
+  PROTOTYPE_SOURCE_SURFACE_ATTR,
   PROTOTYPE_VIEWPORT_ID,
   getPrototypeChromeRoot,
   getPrototypeDialogPortalContainer,
+  getPrototypeToolDialogPortalContainer,
   getPrototypePreviewStage,
   getPrototypeScreenshotRoot,
 } from "./lib/tool-portal";

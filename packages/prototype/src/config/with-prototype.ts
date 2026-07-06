@@ -12,9 +12,12 @@ export function withPrototype(
 
   return {
     ...nextConfig,
-    // Allow mobile testing via ngrok (Next.js blocks cross-origin dev assets by default).
+    // Next.js 16 blocks cross-origin dev asset/HMR requests by default.
+    // Include ngrok (mobile testing) and common local host aliases (Glass browser, 127.0.0.1).
     allowedDevOrigins: [
       ...(nextConfig.allowedDevOrigins ?? []),
+      "127.0.0.1",
+      "[::1]",
       "*.ngrok-free.app",
       "*.ngrok-free.dev",
       "*.ngrok.app",

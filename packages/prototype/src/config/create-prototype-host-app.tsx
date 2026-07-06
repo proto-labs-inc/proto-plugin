@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PrototypeShell } from "@prototype/components/shell/prototype-shell";
-import { PrototypeDefaultStateMapPage } from "@prototype/components/prototypes/prototype-default-state-map-page";
 import { createPrototypeRegistry } from "@prototype/lib/prototypes/create-prototype-registry";
 import type {
   PrototypeConfig,
@@ -12,6 +11,7 @@ import type {
 } from "@prototype/lib/prototypes/prototype-config-types";
 
 import { createPrototypePage } from "./create-prototype-page";
+import { createPrototypeStateMapPage } from "./create-prototype-state-map-page";
 
 function matchExtraRoute(
   path: string[],
@@ -51,6 +51,7 @@ function findExtraRoute(
 export function createPrototypeCatchAllPage(config: PrototypeConfig) {
   const registry = createPrototypeRegistry(config);
   const prototypePage = createPrototypePage(config);
+  const stateMapPage = createPrototypeStateMapPage(config);
 
   function generateStaticParams() {
     const prototypePaths = prototypePage.generateStaticParams().map(({ slug }) => ({
@@ -98,20 +99,7 @@ export function createPrototypeCatchAllPage(config: PrototypeConfig) {
 
     if (path.length === 3 && path[0] === "prototypes" && path[2] === "states") {
       const slug = path[1]!;
-      const prototype = registry.getPrototype(slug);
-      const componentRegistry = registry.getPrototypeComponentRegistryForSlug(slug);
-
-      if (!prototype) {
-        notFound();
-      }
-
-      return (
-        <Suspense fallback={null}>
-          <PrototypeShell slug={slug} componentRegistry={componentRegistry}>
-            <PrototypeDefaultStateMapPage slug={slug} />
-          </PrototypeShell>
-        </Suspense>
-      );
+      return stateMapPage.default({ params: Promise.resolve({ slug }) });
     }
 
     notFound();
