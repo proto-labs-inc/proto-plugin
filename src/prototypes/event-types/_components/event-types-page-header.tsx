@@ -1,9 +1,11 @@
 "use client";
 
-import { Button } from "@calcom/ui/components/button";
-import { TextField } from "@calcom/ui/components/form";
+import classNames from "@calcom/ui/classNames";
+import { Input } from "@calcom/ui/components/form/inputs/TextField";
 import { SearchIcon } from "@coss/ui/icons";
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+
+import { Button } from "@calcom/ui/components/button";
 
 type EventTypesPageHeaderProps = {
   searchTerm: string;
@@ -29,16 +31,26 @@ export function EventTypesPageHeader({
         </div>
         <div className="shrink-0 md:relative md:bottom-auto md:right-auto">
           <div className="flex items-center gap-4">
-            <TextField
-              className="max-w-64"
-              addOnLeading={<SearchIcon className="text-subtle h-4 w-4" />}
-              containerClassName="max-w-64 focus:ring-offset-0! *:mb-0"
-              type="search"
-              value={searchTerm}
-              autoComplete="false"
-              onChange={(event) => onSearchTermChange(event.target.value)}
-              placeholder="Search"
-            />
+            <div className="max-w-64">
+              <div
+                className={classNames(
+                  "border-default bg-default flex w-full max-w-64 items-stretch overflow-hidden rounded-[10px] border shadow-outline-gray-rested",
+                  "focus-within:border-emphasis focus-within:shadow-outline-gray-focused",
+                )}
+              >
+                <div className="border-default bg-subtle text-subtle flex items-center px-3">
+                  <SearchIcon className="h-4 w-4" />
+                </div>
+                <Input
+                  type="search"
+                  value={searchTerm}
+                  placeholder="Search"
+                  autoComplete="false"
+                  onChange={(event) => onSearchTermChange(event.target.value)}
+                  className="rounded-none border-0 shadow-none focus:shadow-none"
+                />
+              </div>
+            </div>
             <Button data-testid="new-event-type" onClick={onNewClick}>
               New
             </Button>

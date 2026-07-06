@@ -1,4 +1,5 @@
 import { closestCrossingShadow } from "./element-identification";
+import { buildSidebarInteractivePointerCss } from "@prototype/lib/platform-ui/sidebar-interactive-cursor";
 
 /** DOM regions where comment capture must not attach (plugin chrome, not prototype UI). */
 export const COMMENT_CAPTURE_BLOCKED_SELECTORS = [
@@ -43,5 +44,6 @@ export function buildCommentCaptureCursorStyles(): string {
     ${blockedCursorReset} {
       cursor: auto !important;
     }
+    ${buildSidebarInteractivePointerCss({ important: true })}
   `;
 }

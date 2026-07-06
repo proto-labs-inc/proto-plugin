@@ -24,7 +24,7 @@ const SIDEBAR_TITLE_CLASS =
   "font-display truncate text-sm font-semibold text-[var(--tool-chrome-icon-hover)]";
 
 export const SIDEBAR_ICON_BUTTON_CLASS =
-  "text-[var(--tool-chrome-icon)] hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-icon-hover)] focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
+  "cursor-pointer text-[var(--tool-chrome-icon)] hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-icon-hover)] focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
 
 type SidebarProps = {
   open: boolean;

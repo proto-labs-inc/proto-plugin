@@ -1,6 +1,7 @@
 "use client";
 
-import { PrototypeToolDialog, PROTOTYPE_TOOL_MODAL_TEXTAREA_CLASS } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { PrototypeToolDialog } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { PrototypeBriefTextarea } from "@prototype/components/prototypes/prototype-brief-field";
 import { Button } from "@prototype/components/ui/button";
 import { Switch } from "@prototype/components/ui/switch";
 import { buildCreateDesignExplorationCopyText } from "@prototype/lib/prototypes/design-exploration-types";
@@ -61,6 +62,7 @@ export function PrototypeCreateExplorationModal({
               checked={includeMobbin}
               onCheckedChange={setIncludeMobbin}
               aria-label="Gather references from Mobbin"
+              className="data-[state=checked]:bg-foreground"
             />
             <span className="text-sm text-muted-foreground">
               Gather references from Mobbin
@@ -81,12 +83,11 @@ export function PrototypeCreateExplorationModal({
         </>
       }
     >
-      <textarea
+      <PrototypeBriefTextarea
         value={brief}
         onChange={(event) => setBrief(event.target.value)}
         placeholder="e.g. Give me a settings page with a profile picture, name, plan, and bio"
         aria-label="Exploration brief"
-        className={PROTOTYPE_TOOL_MODAL_TEXTAREA_CLASS}
       />
     </PrototypeToolDialog>
   );

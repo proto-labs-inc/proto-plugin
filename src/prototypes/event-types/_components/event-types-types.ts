@@ -1,7 +1,8 @@
 export type EventTypesPreviewStateId =
   | "event-types-list"
   | "new-event-type-modal"
-  | "empty-search";
+  | "empty-search"
+  | "secret-events-filter";
 
 export type MockEventType = {
   id: number;
@@ -9,6 +10,7 @@ export type MockEventType = {
   slug: string;
   length: number;
   hidden: boolean;
+  isSecret: boolean;
 };
 
 export type EventTypesCreateFormState = {
@@ -21,6 +23,7 @@ export type EventTypesCreateFormState = {
 export type EventTypesLiveState = {
   previewStateId: EventTypesPreviewStateId;
   searchTerm: string;
+  secretFilterActive: boolean;
   createModalOpen: boolean;
   eventTypes: MockEventType[];
   createForm: EventTypesCreateFormState;

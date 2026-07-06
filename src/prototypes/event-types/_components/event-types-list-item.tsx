@@ -118,6 +118,13 @@ export function EventTypeListItem({
                       {type.length}m
                     </Badge>
                   </li>
+                  {type.isSecret ? (
+                    <li>
+                      <Badge variant="orange" startIcon="lock">
+                        Secret
+                      </Badge>
+                    </li>
+                  ) : null}
                 </ul>
               </div>
             </div>

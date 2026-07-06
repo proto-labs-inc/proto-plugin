@@ -20,6 +20,7 @@ import {
 } from "react";
 
 import { PrototypeReferenceDocs } from "./prototype-reference-docs";
+import { PrototypeCommentStorageEmptyState } from "./prototype-comment-storage-empty-state";
 
 const CHANGELOG_SECTION_TITLE_CLASS = "tool-section-label";
 
@@ -105,6 +106,7 @@ export function PrototypeChangeLogPanel({
     updateAnnotation,
     storageError,
     storageReady,
+    storageConfigured,
   } = useCommentStore();
   const { overview, ready: metaReady, error: metaError, setOverview } =
     useChangelogMeta();
@@ -182,6 +184,8 @@ export function PrototypeChangeLogPanel({
         </div>
         {!storageReady ? (
           <p className="text-muted-foreground text-xs">Loading changes…</p>
+        ) : storageConfigured === false ? (
+          <PrototypeCommentStorageEmptyState message={storageError ?? undefined} />
         ) : storageError ? (
           <p className="text-destructive text-xs">{storageError}</p>
         ) : (

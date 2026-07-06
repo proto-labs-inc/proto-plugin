@@ -17,6 +17,7 @@ export const DEFAULT_EVENT_TYPES: MockEventType[] = [
     slug: "secret",
     length: 15,
     hidden: false,
+    isSecret: true,
   },
   {
     id: 2,
@@ -24,6 +25,7 @@ export const DEFAULT_EVENT_TYPES: MockEventType[] = [
     slug: "30min",
     length: 30,
     hidden: false,
+    isSecret: false,
   },
   {
     id: 3,
@@ -31,20 +33,38 @@ export const DEFAULT_EVENT_TYPES: MockEventType[] = [
     slug: "15min",
     length: 15,
     hidden: false,
+    isSecret: false,
+  },
+  {
+    id: 4,
+    title: "Executive sync",
+    slug: "exec-sync",
+    length: 45,
+    hidden: false,
+    isSecret: true,
   },
 ];
 
 export const EMPTY_SEARCH_QUERY = "kkkk";
 
+export const SECRET_EVENTS_FILTER_LABEL = "Secret events";
+
 export function filterEventTypes(
   eventTypes: MockEventType[],
   searchTerm: string,
   profileSlug: string,
+  secretFilterActive = false,
 ): MockEventType[] {
-  const query = searchTerm.trim().toLowerCase();
-  if (!query) return eventTypes;
+  let filtered = eventTypes;
 
-  return eventTypes.filter(
+  if (secretFilterActive) {
+    filtered = filtered.filter((type) => type.isSecret);
+  }
+
+  const query = searchTerm.trim().toLowerCase();
+  if (!query) return filtered;
+
+  return filtered.filter(
     (type) =>
       type.title.toLowerCase().includes(query) ||
       type.slug.toLowerCase().includes(query) ||

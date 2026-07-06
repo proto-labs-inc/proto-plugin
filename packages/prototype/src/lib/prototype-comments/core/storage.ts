@@ -1,3 +1,4 @@
+import { COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE } from "@prototype/lib/prototypes/comment-storage-setup-prompt";
 import { isValidAnnotation } from "./validation";
 
 export interface CommentStorageAdapter<T extends { id: string }> {
@@ -30,9 +31,7 @@ export function createRemoteStorageAdapter<T extends { id: string }>(
     );
 
     if (response.status === 503) {
-      throw new CommentStorageError(
-        "Comment storage is not configured. Set Upstash Redis env vars.",
-      );
+      throw new CommentStorageError(COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE);
     }
 
     if (!response.ok) {
@@ -48,9 +47,7 @@ export function createRemoteStorageAdapter<T extends { id: string }>(
       const response = await fetch(listUrl);
 
       if (response.status === 503) {
-        throw new CommentStorageError(
-          "Comment storage is not configured. Set Upstash Redis env vars.",
-        );
+        throw new CommentStorageError(COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE);
       }
 
       if (!response.ok) {

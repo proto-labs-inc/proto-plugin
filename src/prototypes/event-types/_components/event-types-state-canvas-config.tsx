@@ -55,6 +55,14 @@ function renderWireframe(stateId: EventTypesPreviewStateId) {
           <WireBlock className="flex-1 rounded-sm border border-dashed" highlight />
         </div>
       );
+    case "secret-events-filter":
+      return (
+        <div className="flex h-full flex-col gap-1 p-2">
+          <WireBlock className="h-4 w-full rounded-sm" />
+          <WireBlock className="h-5 w-24 rounded-sm" highlight />
+          <WireBlock className="flex-1 rounded-sm" highlight />
+        </div>
+      );
     default:
       return null;
   }

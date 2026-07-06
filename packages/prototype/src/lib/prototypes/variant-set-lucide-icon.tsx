@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   LayoutList,
   LayoutTemplate,
+  PanelsTopLeft,
   MessageSquareText,
   Palette,
   PanelBottom,
@@ -28,6 +29,7 @@ type VariantSetIconRule = {
 
 /** First match wins — order rules from most specific to broadest. */
 const VARIANT_SET_ICON_RULES: VariantSetIconRule[] = [
+  { test: /event-types-page-layout|event types page layout/i, icon: PanelsTopLeft },
   // proto-partner-page explorations
   { test: /creator-attribution|creator attribution/i, icon: BadgeCheck },
   { test: /submit-modal|submit modal/i, icon: Send },

@@ -15,6 +15,7 @@ import { IconButton } from "@prototype/components/platform-ui/icon-button";
 import { cn } from "@prototype/lib/utils";
 import { EmptyState } from "@prototype/components/platform-ui/empty-state";
 import { PrototypeChangeLogPanel } from "@prototype/components/prototypes/prototype-change-log-panel";
+import { PrototypeCommentStorageEmptyState } from "@prototype/components/prototypes/prototype-comment-storage-empty-state";
 import { miniPillTextFromLabel } from "@prototype/components/prototypes/mini-pill-label";
 import { MessageSquarePlus } from "lucide-react";
 import { useMemo } from "react";
@@ -35,7 +36,7 @@ export function PrototypeReviewSidebar({
   onToggleCommentMode,
 }: PrototypeReviewSidebarProps) {
   const review = usePrototypeReview();
-  const { annotations, deleteAnnotation, updateAnnotation, resolveAnnotation, storageError, storageReady } = useCommentStore();
+  const { annotations, deleteAnnotation, updateAnnotation, resolveAnnotation, storageError, storageReady, storageConfigured } = useCommentStore();
   const isVariantsPanel = review.sidebarPanel === "variants";
   const isChangeLogPanel = review.sidebarPanel === "change-log";
   const isSpecPanel = review.sidebarPanel === "spec";
@@ -149,6 +150,8 @@ export function PrototypeReviewSidebar({
         <PrototypeChangeLogPanel onSelect={onSelect} selectedId={selectedId} />
       ) : !storageReady ? (
         <EmptyState>Loading comments…</EmptyState>
+      ) : storageConfigured === false ? (
+        <PrototypeCommentStorageEmptyState message={storageError ?? undefined} />
       ) : storageError ? (
         <EmptyState>{storageError}</EmptyState>
       ) : (

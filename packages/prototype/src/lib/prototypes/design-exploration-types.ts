@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 
+export type DesignExplorationRationale = {
+  good: string;
+  bad: string;
+};
+
 export type DesignExplorationVariantOption<TVariant extends string> = {
   value: TVariant;
   label: string;
   hint?: string;
-};
-
-export type DesignExplorationRationale = {
-  good: string;
-  bad: string;
+  /** One-line pros/cons shown under the variant title in the design brief. */
+  rationale?: DesignExplorationRationale;
 };
 
 export type DesignExplorationBrief = {
@@ -53,6 +55,7 @@ export type DesignExplorationBaselineOption<TVariant extends string> = {
   /** Shown in the brief and tabs. Default: "Original". */
   label?: string;
   hint?: string;
+  rationale?: DesignExplorationRationale;
 };
 
 export type DesignExplorationConfig<TVariant extends string> = {
@@ -95,6 +98,7 @@ export function resolveDesignExplorationBaselineOption<
     value: baseline.value,
     label: baseline.label ?? DESIGN_EXPLORATION_BASELINE_LABEL,
     hint: baseline.hint,
+    rationale: baseline.rationale,
   };
 }
 

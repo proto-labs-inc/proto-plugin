@@ -86,7 +86,7 @@ export type PrototypeDesignBriefPanelProps<TVariant extends string> = {
 };
 
 const SIDEBAR_OVERVIEW_COPY_BUTTON_CLASS =
-  "text-[var(--tool-chrome-icon)] hover:text-[var(--tool-chrome-icon-hover)] inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors duration-200 ease outline-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0";
+  "cursor-pointer text-[var(--tool-chrome-icon)] hover:text-[var(--tool-chrome-icon-hover)] inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors duration-200 ease outline-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0";
 
 function MakeDefaultButton({
   componentId,
@@ -386,6 +386,9 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
                   </span>
                 </PrototypeComponent>
               ) : null}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
               {isDefaultOption ? (
                 <PrototypeComponent
                   id={`${componentIdPrefix}.overview-option.${optionIdSuffix}.default`}
@@ -394,9 +397,6 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
                   <span aria-label="Current default variant">DEFAULT</span>
                 </PrototypeComponent>
               ) : null}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-3">
               {!isBaseline && !isDefaultOption ? (
                 <MakeDefaultButton
                   componentId={`${componentIdPrefix}.overview-option.${optionIdSuffix}.set-default`}
@@ -407,6 +407,12 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
               ) : null}
             </div>
           </div>
+
+          {option.rationale ? (
+            <p className="text-muted-foreground px-0.5 text-xs leading-relaxed">
+              {option.rationale.good} {option.rationale.bad}
+            </p>
+          ) : null}
 
           <div
             role="button"

@@ -24,7 +24,7 @@ const MODAL_SIZE_CLASS = {
 function PrototypeToolDialogSeparator() {
   return (
     <div
-      className="h-px w-full shrink-0 bg-border"
+      className="tool-dialog-separator h-px w-full shrink-0"
       role="separator"
       aria-hidden
     />

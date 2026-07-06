@@ -1,6 +1,7 @@
 "use client";
 
-import { PrototypeToolDialog, PROTOTYPE_TOOL_MODAL_TEXTAREA_CLASS } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { PrototypeToolDialog } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { PrototypeBriefTextarea } from "@prototype/components/prototypes/prototype-brief-field";
 import { Button } from "@prototype/components/ui/button";
 import { buildCreatePreviewStateCopyText } from "@prototype/lib/prototypes/prototype-preview-state-types";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
@@ -66,12 +67,11 @@ export function PrototypeCreateStateModal({
         </Button>
       }
     >
-      <textarea
+      <PrototypeBriefTextarea
         value={brief}
         onChange={(event) => setBrief(event.target.value)}
         placeholder="e.g. Add an empty state when the user has no API keys yet"
         aria-label="State brief"
-        className={PROTOTYPE_TOOL_MODAL_TEXTAREA_CLASS}
       />
     </PrototypeToolDialog>
   );

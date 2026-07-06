@@ -3,13 +3,17 @@
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 
 import { EventTypesCreateModal } from "./event-types-create-modal";
-import { EventTypesList } from "./event-types-list";
+import { EventTypesFiltersBar } from "./event-types-filters-bar";
 import { EventTypesPageHeader } from "./event-types-page-header";
+import { EventTypesPageLayoutBlock } from "./event-types-page-layout-block";
+import type { EventTypesPageLayoutVariant } from "./event-types-page-layout-content";
 import type { EventTypesLiveState } from "./event-types-types";
 
 type EventTypesMainContentProps = {
   liveState: EventTypesLiveState;
+  layoutVariant: EventTypesPageLayoutVariant;
   onSearchTermChange: (searchTerm: string) => void;
+  onSecretFilterChange: (active: boolean) => void;
   onCreateModalOpenChange: (open: boolean) => void;
   onCreateFormChange: (form: EventTypesLiveState["createForm"]) => void;
   onToggleHidden: (id: number) => void;
@@ -17,7 +21,9 @@ type EventTypesMainContentProps = {
 
 export function EventTypesMainContent({
   liveState,
+  layoutVariant,
   onSearchTermChange,
+  onSecretFilterChange,
   onCreateModalOpenChange,
   onCreateFormChange,
   onToggleHidden,
@@ -33,10 +39,25 @@ export function EventTypesMainContent({
         onNewClick={() => onCreateModalOpenChange(true)}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <EventTypesList
+      {liveState.secretFilterActive ? (
+        <EventTypesFiltersBar
+          secretFilterActive={liveState.secretFilterActive}
+          onSecretFilterChange={onSecretFilterChange}
+        />
+      ) : null}
+
+      <div
+        className={
+          layoutVariant === "split-preview"
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+            : "min-h-0 flex-1 overflow-y-auto"
+        }
+      >
+        <EventTypesPageLayoutBlock
+          variant={layoutVariant}
           eventTypes={liveState.eventTypes}
           searchTerm={liveState.searchTerm}
+          secretFilterActive={liveState.secretFilterActive}
           onToggleHidden={onToggleHidden}
           onCreateClick={() => onCreateModalOpenChange(true)}
         />

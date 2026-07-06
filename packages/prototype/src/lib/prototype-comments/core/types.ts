@@ -66,6 +66,8 @@ export type CommentStore<TState> = {
   slug: string;
   annotations: CommentAnnotation<TState>[];
   storageReady: boolean;
+  /** False when server env vars are missing; null while checking. */
+  storageConfigured: boolean | null;
   storageError: string | null;
   addAnnotation: (
     fields: Omit<CommentAnnotation<TState>, "interactionState">,

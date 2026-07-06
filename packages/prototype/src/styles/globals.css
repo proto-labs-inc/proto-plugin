@@ -50,6 +50,7 @@
   --tool-chrome-icon-hover: #a3a3a3;
   --tool-chrome-border: #2a2a2a;
   --tool-chrome-border-strong: #383838;
+  --tool-dialog-separator: #404040;
   --prototype-state-canvas-edge: var(--tool-chrome-icon-hover);
 
   --prototype-ground: var(--tool-chrome-ground);
@@ -220,6 +221,41 @@
   --color-text-tertiary: #909090;
 }
 
+[data-prototype-review-sidebar] :is(
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    a[href],
+    summary,
+    label:has([role="switch"]),
+    label:has(input[type="checkbox"])
+  ),
+[data-comments-sidebar] :is(
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    a[href],
+    summary,
+    label:has([role="switch"]),
+    label:has(input[type="checkbox"])
+  ),
+[data-platform-sidebar] :is(
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    a[href],
+    summary,
+    label:has([role="switch"]),
+    label:has(input[type="checkbox"])
+  ),
+#prototype-comments-sidebar-root :is(
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]),
+    a[href],
+    summary,
+    label:has([role="switch"]),
+    label:has(input[type="checkbox"])
+  ) {
+  cursor: pointer;
+}
+
 [data-prototype-root] ::selection {
   background: rgba(255, 255, 255, 0.12);
   color: var(--tool-chrome-text-heading);
@@ -242,6 +278,7 @@
   --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
   --tool-chrome-border: rgba(0, 0, 0, 0.1);
   --tool-chrome-border-strong: rgba(0, 0, 0, 0.16);
+  --tool-dialog-separator: rgba(0, 0, 0, 0.12);
   --prototype-state-canvas-edge: rgba(0, 0, 0, 0.22);
 
   --bg-ground: var(--tool-chrome-ground);
@@ -626,6 +663,10 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   box-shadow:
     var(--shadow-lg),
     0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+[data-prototype-root] .tool-dialog-separator {
+  background: var(--tool-dialog-separator);
 }
 
 [data-prototype-root] [role="tablist"] {

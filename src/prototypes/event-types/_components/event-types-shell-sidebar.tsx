@@ -34,7 +34,7 @@ function NavLink({ item }: { item: NavItem }) {
       type="button"
       aria-current={item.active ? "page" : undefined}
       className={classNames(
-        "group relative mt-0.5 flex w-full items-center justify-start rounded-md px-2 py-1.5 text-sm font-medium transition",
+        "group relative mt-0.5 flex w-full items-center justify-start rounded-md px-2 py-1.5 text-left text-sm font-medium transition",
         "[&[aria-current='page']]:text-emphasis",
         "hover:bg-subtle hover:text-emphasis",
         item.active && "[&[aria-current='page']]:bg-emphasis",
@@ -45,7 +45,7 @@ function NavLink({ item }: { item: NavItem }) {
         className="h-4 w-4 shrink-0 ltr:mr-2 rtl:ml-2"
         aria-hidden
       />
-      <span className="w-full truncate">{item.label}</span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
       {item.hasChevron ? (
         <Icon name="chevron-down" className="ml-auto h-4 w-4" aria-hidden />
       ) : null}
@@ -114,17 +114,17 @@ export function EventTypesShellSidebar() {
               key={item.id}
               type="button"
               className={classNames(
-                "group relative mt-0.5 flex w-full items-center justify-start rounded-md px-2 py-1.5 text-sm font-medium transition",
+                "group relative mt-0.5 flex w-full items-center justify-start rounded-md px-2 py-1.5 text-left text-sm font-medium transition",
                 "text-default hover:bg-subtle hover:text-emphasis",
                 index === 0 && "mt-3",
               )}
             >
               <Icon
                 name={item.icon}
-                className="h-4 w-4 shrink-0 ltr:mr-2 rtl:ml-2 md:mx-auto lg:ltr:mr-2 lg:rtl:ml-2"
+                className="h-4 w-4 shrink-0 ltr:mr-2 rtl:ml-2"
                 aria-hidden
               />
-              <span className="hidden w-full lg:flex">{item.label}</span>
+              <span className="hidden min-w-0 flex-1 lg:flex">{item.label}</span>
             </button>
           ))}
           <p className="text-subtle hidden px-2 pt-3 text-[10px] leading-4 lg:block">

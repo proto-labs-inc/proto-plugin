@@ -10,6 +10,7 @@ import type { MockEventType } from "./event-types-types";
 type EventTypesListProps = {
   eventTypes: MockEventType[];
   searchTerm: string;
+  secretFilterActive: boolean;
   onToggleHidden: (id: number) => void;
   onCreateClick: () => void;
 };
@@ -17,6 +18,7 @@ type EventTypesListProps = {
 export function EventTypesList({
   eventTypes,
   searchTerm,
+  secretFilterActive,
   onToggleHidden,
   onCreateClick,
 }: EventTypesListProps) {
@@ -24,6 +26,7 @@ export function EventTypesList({
     eventTypes,
     searchTerm,
     EVENT_TYPES_PROFILE_SLUG,
+    secretFilterActive,
   );
 
   if (filteredEventTypes.length === 0) {

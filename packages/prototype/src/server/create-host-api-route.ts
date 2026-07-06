@@ -9,6 +9,7 @@ import {
   createPrototypeScreenshotRoute,
 } from "./create-prototype-api-routes";
 import { createGalleryApi } from "./gallery/create-gallery-api";
+import { GET as getPrototypeStorageStatus } from "./prototype-storage-status-route";
 import { GET as getPrVercelPreview } from "./pr-vercel-preview-route";
 
 type ApiRouteContext = {
@@ -38,6 +39,12 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
       const galleryResponse = await galleryApi.dispatch(request, path);
       if (galleryResponse) {
         return galleryResponse;
+      }
+    }
+
+    if (path[0] === "prototypes" && path.length === 2 && path[1] === "storage-status") {
+      if (method === "GET") {
+        return getPrototypeStorageStatus();
       }
     }
 

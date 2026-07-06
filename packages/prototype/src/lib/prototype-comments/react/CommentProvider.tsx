@@ -15,6 +15,8 @@ import { captureInteractionState } from "../core/capture";
 import { getRepliesForParent } from "../core/comment-threads";
 import { commentToLiveState } from "../core/restore";
 import { normalizeAnnotationViewport } from "../core/normalize-viewport";
+import { COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE } from "@prototype/lib/prototypes/comment-storage-setup-prompt";
+import { fetchPrototypeStorageStatus, isPrototypeStorageFullyConfigured } from "@prototype/lib/prototypes/prototype-storage-status";
 import { createRemoteStorageAdapter } from "../core/storage";
 import type { CommentAnnotation, CommentStore } from "../core/types";
 
@@ -36,6 +38,7 @@ export function CommentProvider<TState>({
 }: CommentProviderProps<TState>) {
   const [annotations, setAnnotations] = useState<CommentAnnotation<TState>[]>([]);
   const [storageReady, setStorageReady] = useState(false);
+  const [storageConfigured, setStorageConfigured] = useState<boolean | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
 
   const getLiveStateRef = useRef(getLiveState);
@@ -70,8 +73,21 @@ export function CommentProvider<TState>({
     async function loadAnnotations() {
       setStorageReady(false);
       setStorageError(null);
+      setStorageConfigured(null);
 
       try {
+        const status = await fetchPrototypeStorageStatus();
+        if (cancelled) return;
+
+        const fullyConfigured = isPrototypeStorageFullyConfigured(status);
+        setStorageConfigured(fullyConfigured);
+
+        if (!fullyConfigured) {
+          setStorageError(COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE);
+          setAnnotations([]);
+          return;
+        }
+
         const stored = await storage.load();
         if (cancelled) return;
         setAnnotations(stored);
@@ -83,6 +99,7 @@ export function CommentProvider<TState>({
             : "Failed to load comments.";
         setStorageError(message);
         setAnnotations([]);
+        setStorageConfigured((current) => current ?? true);
       } finally {
         if (!cancelled) setStorageReady(true);
       }
@@ -254,6 +271,7 @@ export function CommentProvider<TState>({
       slug,
       annotations,
       storageReady,
+      storageConfigured,
       storageError,
       addAnnotation,
       addReply,
@@ -267,6 +285,7 @@ export function CommentProvider<TState>({
       slug,
       annotations,
       storageReady,
+      storageConfigured,
       storageError,
       addAnnotation,
       addReply,

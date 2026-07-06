@@ -1,13 +1,6 @@
 "use client";
 
 import { Button } from "@calcom/ui/components/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-} from "@calcom/ui/components/dialog";
-import { TextField } from "@calcom/ui/components/form";
 import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
 
 import {
@@ -15,6 +8,7 @@ import {
   EVENT_TYPES_URL_PREFIX,
 } from "./event-types-mock-data";
 import { EventTypesDescriptionField } from "./event-types-description-field";
+import { EventTypesFormField } from "./event-types-form-field";
 import type { EventTypesCreateFormState } from "./event-types-types";
 
 type EventTypesCreateModalProps = {
@@ -30,72 +24,97 @@ export function EventTypesCreateModal({
   onOpenChange,
   onFormChange,
 }: EventTypesCreateModalProps) {
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        type="creation"
-        enableOverflow
-        title="Add a new event type"
-        description="Set up event types to offer different types of meetings."
+    <PrototypeComponent id="event-types-create-modal" className="contents">
+      <button
+        type="button"
+        aria-label="Close dialog backdrop"
+        className="fadeIn fixed inset-0 z-50 bg-neutral-800/70 transition-opacity dark:bg-neutral-800/80"
+        onClick={() => onOpenChange(false)}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        className="fadeIn bg-default scroll-bar fixed left-1/2 top-1/2 z-50 m-auto max-h-[95vh] w-[95vw] max-w-140 -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl px-8 pt-8 text-left shadow-xl focus-visible:outline-none sm:align-middle"
       >
-        <PrototypeComponent id="event-types-create-modal" className="mt-3 stack-y-6 pb-11">
-          <TextField
-            label="Title"
-            placeholder="Quick chat"
-            data-testid="event-type-quick-chat"
-            value={form.title}
-            onChange={(event) =>
-              onFormChange({ ...form, title: event.target.value })
-            }
-          />
+        <div className="mb-4">
+          <h2
+            data-testid="dialog-title"
+            className="text-semibold text-emphasis font-cal mb-1 text-xl"
+            id="modal-title"
+          >
+            Add a new event type
+          </h2>
+          <p className="text-subtle text-sm" data-testid="dialog-subtitle">
+            Set up event types to offer different types of meetings.
+          </p>
+        </div>
 
-          <TextField
-            label={`URL: ${EVENT_TYPES_URL_PREFIX}`}
-            required
-            addOnLeading={
-              <span className="max-w-24 md:max-w-56 inline-block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                {`/${EVENT_TYPES_PROFILE_SLUG}/`}
-              </span>
-            }
-            containerClassName="[&>div]:gap-0"
-            className="pl-0"
-            value={form.slug}
-            onChange={(event) =>
-              onFormChange({ ...form, slug: event.target.value })
-            }
-          />
+        <div data-testid="dialog-creation" className="flex flex-col">
+          <div className="mt-3 stack-y-6 pb-11">
+            <EventTypesFormField
+              label="Title"
+              placeholder="Quick chat"
+              data-testid="event-type-quick-chat"
+              value={form.title}
+              onChange={(title) => onFormChange({ ...form, title })}
+            />
 
-          <EventTypesDescriptionField
-            value={form.description}
-            onChange={(description) => onFormChange({ ...form, description })}
-          />
-
-          <div className="relative">
-            <TextField
-              type="number"
+            <EventTypesFormField
+              label={`URL: ${EVENT_TYPES_URL_PREFIX}`}
               required
-              min={1}
-              max={1440}
-              placeholder="15"
+              addOnLeading={
+                <span className="max-w-24 md:max-w-56 inline-block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {`/${EVENT_TYPES_PROFILE_SLUG}/`}
+                </span>
+              }
+              containerClassName="[&>div]:gap-0"
+              className="pl-0"
+              value={form.slug}
+              onChange={(slug) => onFormChange({ ...form, slug })}
+            />
+
+            <EventTypesDescriptionField
+              value={form.description}
+              onChange={(description) => onFormChange({ ...form, description })}
+            />
+
+            <EventTypesFormField
+              type="number"
               label="Duration"
-              className="pr-4"
+              placeholder="15"
+              required
               value={String(form.length)}
-              onChange={(event) =>
+              onChange={(value) =>
                 onFormChange({
                   ...form,
-                  length: Number(event.target.value) || 15,
+                  length: Number(value) || 15,
                 })
               }
               addOnSuffix="minutes"
+              className="pr-4"
             />
           </div>
-        </PrototypeComponent>
 
-        <DialogFooter showDivider>
-          <DialogClose />
-          <Button type="button">Continue</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div className="bg-cal-muted border-muted sticky bottom-0 -mx-8 mt-10 rounded-b-2xl border">
+            <div data-testid="divider" className="border-subtle border-t" />
+            <div className="flex justify-end space-x-2 px-8 py-4 font-sans rtl:space-x-reverse">
+              <Button
+                type="button"
+                color="minimal"
+                data-testid="dialog-rejection"
+                onClick={() => onOpenChange(false)}
+              >
+                Close
+              </Button>
+              <Button type="button">Continue</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </PrototypeComponent>
   );
 }

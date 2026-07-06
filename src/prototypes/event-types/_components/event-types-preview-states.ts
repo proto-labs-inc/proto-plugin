@@ -5,6 +5,7 @@ import {
   EMPTY_SEARCH_QUERY,
   EVENT_TYPES_PROFILE_SLUG,
   filterEventTypes,
+  SECRET_EVENTS_FILTER_LABEL,
 } from "./event-types-mock-data";
 import type { EventTypesLiveState, EventTypesPreviewStateId } from "./event-types-types";
 
@@ -28,10 +29,11 @@ export function createLiveStateForPreview(
       return {
         previewStateId,
         searchTerm: "",
+        secretFilterActive: false,
         createModalOpen: true,
         eventTypes: DEFAULT_EVENT_TYPES,
         createForm: {
-          title: "Quick chat",
+          title: "",
           slug: "",
           description: "",
           length: 15,
@@ -41,6 +43,16 @@ export function createLiveStateForPreview(
       return {
         previewStateId,
         searchTerm: EMPTY_SEARCH_QUERY,
+        secretFilterActive: false,
+        createModalOpen: false,
+        eventTypes: DEFAULT_EVENT_TYPES,
+        createForm: DEFAULT_CREATE_FORM,
+      };
+    case "secret-events-filter":
+      return {
+        previewStateId,
+        searchTerm: "",
+        secretFilterActive: true,
         createModalOpen: false,
         eventTypes: DEFAULT_EVENT_TYPES,
         createForm: DEFAULT_CREATE_FORM,
@@ -50,6 +62,7 @@ export function createLiveStateForPreview(
       return {
         previewStateId: "event-types-list",
         searchTerm: "",
+        secretFilterActive: false,
         createModalOpen: false,
         eventTypes: DEFAULT_EVENT_TYPES,
         createForm: DEFAULT_CREATE_FORM,
@@ -69,6 +82,11 @@ export const EVENT_TYPES_PREVIEW_STATE_REGISTRY = definePreviewStateRegistry({
         startColumn: 0,
         states: ["empty-search"],
       },
+      {
+        section: { label: "Filters" },
+        startColumn: 1,
+        states: ["secret-events-filter"],
+      },
     ],
   },
   states: [
@@ -87,10 +105,16 @@ export const EVENT_TYPES_PREVIEW_STATE_REGISTRY = definePreviewStateRegistry({
       label: "Empty search",
       annotation: `Search query "${EMPTY_SEARCH_QUERY}" with dashed empty state and Create CTA.`,
     },
+    {
+      id: "secret-events-filter",
+      label: "Secret events filter",
+      annotation: `Active "${SECRET_EVENTS_FILTER_LABEL}" filter showing only secret event types.`,
+    },
   ],
   edges: [
     { from: "event-types-list", to: "new-event-type-modal" },
     { from: "event-types-list", to: "empty-search", dashed: true },
+    { from: "event-types-list", to: "secret-events-filter", dashed: true },
   ],
 });
 

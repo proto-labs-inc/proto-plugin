@@ -63,7 +63,7 @@ function CopyPrPrompt<TWireframeId extends string, TLiveState>({
       type="button"
       aria-label="Copy PR prompt"
       onClick={handleCopy}
-      className="inline-flex size-[13px] shrink-0 items-center justify-center text-muted-foreground/60 transition-colors duration-200 ease hover:text-muted-foreground"
+      className="inline-flex size-[13px] shrink-0 cursor-pointer items-center justify-center text-muted-foreground/60 transition-colors duration-200 ease hover:text-muted-foreground"
     >
       {copied ? (
         <Check className="size-3 text-[var(--text-primary)]" />
@@ -227,7 +227,7 @@ function CopyPreviewLink<TWireframeId extends string, TLiveState>({
             : "Preview unavailable"
       }
       onClick={handleCopy}
-      className="group inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="group inline-flex h-6 shrink-0 cursor-pointer items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <Monitor
         className="size-3 shrink-0 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)] group-disabled:opacity-60"
@@ -275,7 +275,7 @@ function PrStatusLink({
       rel="noopener noreferrer"
       aria-label={`Open pull request (${config.label})`}
       onClick={(e) => e.stopPropagation()}
-      className={`inline-flex shrink-0 items-center gap-1.5 transition-opacity duration-200 ease hover:opacity-80 ${config.className}`}
+      className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 transition-opacity duration-200 ease hover:opacity-80 ${config.className}`}
     >
       {config.icon}
       <span className="text-[12px] font-medium">{config.label}</span>
@@ -337,7 +337,7 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="tool-review-card flex w-full flex-col overflow-hidden text-left"
+      className="tool-review-card flex w-full cursor-pointer flex-col overflow-hidden text-left"
       style={{
         borderRadius: 6,
         border: `1px solid ${reviewSidebarCardBorder(selected, hovered)}`,
@@ -392,7 +392,7 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
                     setExpanded((v) => !v);
                   }
                 }}
-                className="inline-flex size-5 items-center justify-center rounded text-[var(--text-tertiary)] transition-colors duration-200 ease hover:text-[var(--text-secondary)]"
+                className="inline-flex size-5 cursor-pointer items-center justify-center rounded text-[var(--text-tertiary)] transition-colors duration-200 ease hover:text-[var(--text-secondary)]"
               >
                 <ChevronDown
                   className="size-4 transition-transform duration-200 ease"
