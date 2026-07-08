@@ -1,5 +1,6 @@
 "use client";
 
+import { PrototypeProvider } from "@prototype/components/prototype-provider";
 import { PrototypePluginUpdatePopup } from "@prototype/components/shell/prototype-plugin-update-popup";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode } from "react";
@@ -29,7 +30,7 @@ export function PrototypeSiteLayoutClient({
 
   if (isGalleryRoute) {
     return (
-      <div className="bg-[var(--bg-main)] flex h-svh min-h-svh w-full flex-col overflow-hidden">
+      <PrototypeProvider className="bg-[var(--bg-main)] flex h-svh min-h-svh w-full flex-col overflow-hidden">
         <GalleryShell
           sourceDirectoryName={sourceDirectoryName}
           sourcePath={sourcePath}
@@ -38,15 +39,15 @@ export function PrototypeSiteLayoutClient({
         </GalleryShell>
         <PrototypePluginUpdatePopup />
         {toaster}
-      </div>
+      </PrototypeProvider>
     );
   }
 
   return (
-    <div className="bg-[var(--bg-ground)] flex h-svh overflow-hidden">
+    <PrototypeProvider className="bg-[var(--bg-ground)] flex h-svh overflow-hidden">
       {children}
       <PrototypePluginUpdatePopup />
       {toaster}
-    </div>
+    </PrototypeProvider>
   );
 }

@@ -8,20 +8,22 @@ export type WithPrototypeOptions = {
   nextConfig?: NextConfig;
 };
 
-/** Package root — works from the monorepo workspace and from node_modules. */
-const packageRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../..",
-);
+/** Package root — resolved lazily so this module is safe if ever pulled into a bundle. */
+function getPackageRoot(): string {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+}
 
-const prototypeInternalAlias = {
-  "@prototype": path.join(packageRoot, "src"),
-} as const;
+function getPrototypeInternalAlias() {
+  return {
+    "@prototype": path.join(getPackageRoot(), "src"),
+  } as const;
+}
 
 export function withPrototype(
   options: WithPrototypeOptions = {},
 ): NextConfig {
   const { nextConfig = {} } = options;
+  const prototypeInternalAlias = getPrototypeInternalAlias();
 
   const existingTurbopack = nextConfig.turbopack ?? {};
   const existingResolveAlias = existingTurbopack.resolveAlias ?? {};

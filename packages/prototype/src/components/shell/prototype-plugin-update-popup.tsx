@@ -3,72 +3,84 @@
 import { Button } from "@prototype/components/ui/button";
 import { buildUpgradeProtoPluginCopyText } from "@prototype/lib/prototypes/upgrade-proto-plugin-prompt";
 import { useProtoPluginVersionCheck } from "@prototype/lib/prototypes/use-proto-plugin-version-check";
+import { useActivePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { cn } from "@prototype/lib/utils";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 export function PrototypePluginUpdatePopup() {
   const { status, shouldShowPopup, dismiss } = useProtoPluginVersionCheck();
   const { copy, icon, isCopied } = useCopyToClipboard();
+  const theme = useActivePrototypeToolTheme();
+  const [mounted, setMounted] = useState(false);
 
-  if (!shouldShowPopup || !status?.installed || !status.latest) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!shouldShowPopup || !status?.installed || !status.latest || !mounted) {
     return null;
   }
 
-  const handleCopy = async () => {
+  const handleCopyPrompt = async () => {
     try {
       await copy(
         buildUpgradeProtoPluginCopyText({
-          installed: status.installed!,
-          latest: status.latest!,
+          installed: status.installed,
+          latest: status.latest,
         }),
       );
     } catch {
       toast.error("Copy error", {
-        description: "Failed to copy upgrade prompt",
+        description: "Failed to copy update prompt",
       });
     }
   };
 
-  return (
+  return createPortal(
     <div
-      role="status"
-      aria-live="polite"
-      className={cn(
-        "border-border bg-card ring-border pointer-events-auto fixed bottom-4 left-4 z-[1050] flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-3 rounded-xl border p-4 shadow-lg ring-[0.5px]",
-      )}
+      data-prototype-root
+      data-prototype-comment-theme={theme}
+      className="pointer-events-none fixed bottom-4 right-4 z-[1050] !bg-transparent"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">Update proto-plugin</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            v{status.latest} is available. You&apos;re on v{status.installed}.
-          </p>
-        </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className={cn(
+          "pointer-events-auto relative flex w-[15rem] flex-col gap-3 rounded-lg bg-[var(--tool-chrome-surface)] p-4 shadow-md ring-[0.5px] ring-[var(--tool-chrome-border)]",
+        )}
+      >
         <button
           type="button"
           aria-label="Dismiss update notification"
-          className="text-muted-foreground hover:text-foreground shrink-0 rounded p-1 transition-colors duration-200 ease"
+          className="absolute right-2 top-2 rounded p-1 text-[var(--tool-chrome-text-muted)] transition-colors duration-200 ease hover:text-[var(--tool-chrome-text-heading)]"
           onClick={dismiss}
         >
-          <X size={14} />
+          <X size={12} />
         </button>
-      </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-8 w-fit cursor-pointer gap-1.5"
-        onClick={() => {
-          void handleCopy();
-        }}
-        aria-label="Copy upgrade prompt"
-      >
-        {isCopied ? "Copied prompt" : "Copy prompt"}
-        {icon}
-      </Button>
-    </div>
+        <p className="pr-4 text-xs leading-relaxed text-[var(--tool-chrome-text-muted)]">
+          A new version of Proto is available, copy the prompt below into your agent to update
+        </p>
+
+        <Button
+          type="button"
+          variant="chrome"
+          size="sm"
+          className="h-7 w-fit cursor-pointer gap-1 px-2 text-[11px]"
+          onClick={() => {
+            void handleCopyPrompt();
+          }}
+          aria-label="Copy update prompt"
+        >
+          {isCopied ? "Copied update prompt" : "Copy update prompt"}
+          {icon}
+        </Button>
+      </div>
+    </div>,
+    document.body,
   );
 }

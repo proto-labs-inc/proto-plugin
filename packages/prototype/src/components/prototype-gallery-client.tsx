@@ -52,7 +52,8 @@ export function PrototypeGalleryClient({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="@container/gallery w-full">
+        <div className="grid grid-cols-1 gap-4 @xl/gallery:grid-cols-2 @4xl/gallery:grid-cols-3">
         <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
         {prototypes.map((prototype) => (
           <Link
@@ -78,7 +79,7 @@ export function PrototypeGalleryClient({
                   width={1600}
                   height={900}
                   quality={90}
-                  sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  sizes="(min-width: 80rem) calc((100vw - 14rem) / 3), (min-width: 55rem) calc((100vw - 14rem) / 2), 100vw"
                   className="h-full w-full object-cover object-top"
                 />
               </div>
@@ -86,6 +87,7 @@ export function PrototypeGalleryClient({
             <p className={prototypeGalleryTitleClassName}>{prototype.title}</p>
           </Link>
         ))}
+        </div>
       </div>
 
       <PrototypeCreatePrototypeModal

@@ -104,7 +104,7 @@ export function PrototypeGalleryNav({
           ) : (
             <Button
               type="button"
-              variant="outline"
+              variant="chrome"
               onClick={() => setLinkSourceOpen(true)}
               className="h-9 min-w-0 flex-1 justify-center rounded-lg text-sm font-medium"
             >

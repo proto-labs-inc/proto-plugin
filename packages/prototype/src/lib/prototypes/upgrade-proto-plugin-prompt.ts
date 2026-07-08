@@ -38,3 +38,9 @@ export function buildUpgradeProtoPluginCopyText(
 ): string {
   return buildUpgradeProtoPluginPrompt(options);
 }
+
+export function buildUpgradeProtoPluginCommand({
+  latest,
+}: Pick<UpgradeProtoPluginPromptOptions, "latest">): string {
+  return `pnpm add proto-plugin@${latest}`;
+}

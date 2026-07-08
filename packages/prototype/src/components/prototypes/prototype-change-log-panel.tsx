@@ -4,20 +4,20 @@ import { filterAnnotationsByChannel } from "@prototype/lib/prototype-comments/co
 import { useCommentStore } from "@prototype/lib/prototype-comments/react/CommentProvider";
 import { useCommentCaptureBridgeOptional } from "@prototype/lib/prototype-comments/react/CommentCaptureToolbar";
 import { CommentsGrid } from "@prototype/lib/prototype-comments/ui/CommentsGrid";
-import { useChangelogMeta } from "@prototype/lib/prototypes/changelog-meta-context";
+import { buildChangelogDescriptionCopyText } from "@prototype/lib/prototypes/changelog-description-prompt";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
+import {
+  prototypeReviewPreferenceKey,
+  usePersistedLocalString,
+} from "@prototype/lib/prototypes/use-persisted-local-state";
 import { ToolbarIconButton } from "@prototype/components/platform-ui/toolbar-icon-button";
+import { Button } from "@prototype/components/ui/button";
 import { Label } from "@prototype/components/ui/label";
 import { Switch } from "@prototype/components/ui/switch";
-import { Plus, Save } from "lucide-react";
+import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
+import { Plus } from "lucide-react";
 import { cn } from "@prototype/lib/utils";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useMemo } from "react";
 
 import { PrototypeReferenceDocs } from "./prototype-reference-docs";
 import { PrototypeCommentStorageEmptyState } from "./prototype-comment-storage-empty-state";
@@ -108,63 +108,63 @@ export function PrototypeChangeLogPanel({
     storageReady,
     storageConfigured,
   } = useCommentStore();
-  const { overview, ready: metaReady, error: metaError, setOverview } =
-    useChangelogMeta();
-  const [draftOverview, setDraftOverview] = useState(overview);
+  const review = usePrototypeReview();
+  const { value: description, updateValue: updateDescription } =
+    usePersistedLocalString(
+      prototypeReviewPreferenceKey(review.slug, "changelog-description-brief"),
+      "",
+    );
+  const {
+    copy: copyDescriptionPrompt,
+    icon: copyDescriptionIcon,
+    isCopied: isDescriptionCopied,
+  } = useCopyToClipboard();
   const changelogAnnotations = useMemo(
     () => filterAnnotationsByChannel(annotations, "changelog"),
     [annotations],
   );
+  const canCopyDescription = description.trim().length > 0;
 
-  useEffect(() => {
-    if (metaReady) {
-      setDraftOverview(overview);
-    }
-  }, [metaReady, overview]);
+  const handleCopyDescriptionPrompt = () => {
+    if (!canCopyDescription) return;
 
-  const isOverviewDirty = draftOverview !== overview;
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : undefined;
 
-  const handleOverviewChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => {
-      setDraftOverview(event.target.value);
-    },
-    [],
-  );
-
-  const handleSaveOverview = useCallback(() => {
-    setOverview(draftOverview);
-  }, [draftOverview, setOverview]);
+    copyDescriptionPrompt(
+      buildChangelogDescriptionCopyText({
+        slug: review.slug,
+        description,
+        origin,
+      }),
+    );
+  };
 
   return (
     <div className="flex flex-col">
       <section className={CHANGELOG_SECTION_CLASS}>
-        <div className="flex items-center justify-between gap-2">
-          <span className={CHANGELOG_SECTION_TITLE_CLASS}>Description</span>
-          {metaReady && !metaError ? (
-            <ToolbarIconButton
-              onClick={handleSaveOverview}
-              disabled={!isOverviewDirty}
-              aria-label="Save description"
-            >
-              <Save size={16} strokeWidth={2} aria-hidden />
-            </ToolbarIconButton>
-          ) : null}
-        </div>
-        {!metaReady ? (
-          <p className="text-muted-foreground text-xs">Loading description…</p>
-        ) : metaError ? (
-          <p className="text-destructive text-xs">{metaError}</p>
-        ) : (
-          <textarea
-            id="prototype-changelog-overview"
-            value={draftOverview}
-            onChange={handleOverviewChange}
-            rows={1}
-            placeholder="Summarize what changed and why…"
-            aria-label="Description"
-            className={CHANGELOG_OVERVIEW_FIELD_CLASS}
-          />
-        )}
+        <span className={CHANGELOG_SECTION_TITLE_CLASS}>Description</span>
+        <textarea
+          id="prototype-changelog-overview"
+          value={description}
+          onChange={(event) => updateDescription(event.target.value)}
+          rows={3}
+          placeholder="Summarize what changed and why…"
+          aria-label="Description"
+          className={CHANGELOG_OVERVIEW_FIELD_CLASS}
+        />
+        <Button
+          type="button"
+          variant="chrome"
+          size="sm"
+          className="h-8 gap-1.5 self-start"
+          disabled={!canCopyDescription}
+          onClick={handleCopyDescriptionPrompt}
+          aria-label="Copy description prompt"
+        >
+          {isDescriptionCopied ? "Copied prompt" : "Copy prompt"}
+          {copyDescriptionIcon}
+        </Button>
       </section>
 
       <PrototypeReferenceDocs

@@ -56,7 +56,17 @@ export default page.default;
 export const generateStaticParams = page.generateStaticParams;
 ```
 
-4. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
+4. **Component library** — `src/app/component-library/page.tsx` (created automatically on `pnpm install` if missing; or run `pnpm --dir node_modules/proto-plugin setup-host`):
+
+```tsx
+import { createPrototypeComponentLibraryPage } from "proto-plugin";
+
+export default createPrototypeComponentLibraryPage();
+```
+
+Pass `children` once you've synced UI from source. Until then, the page shows an empty state with a copyable agent prompt.
+
+5. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
 
 ```ts
 import { withPrototype } from "./packages/prototype/src/config/with-prototype";
@@ -64,7 +74,7 @@ import { withPrototype } from "./packages/prototype/src/config/with-prototype";
 export default withPrototype({ nextConfig: { /* … */ } });
 ```
 
-5. **Tailwind** — scan prototype package components from the host `globals.css`. Register semantic `--color-*` tokens as self-referential vars so utilities like `text-muted-foreground` resolve from `[data-prototype-root]` at runtime — **do not** map `--color-foreground` / `--color-background` to product `:root` tokens (that breaks gallery contrast):
+6. **Tailwind** — scan prototype package components from the host `globals.css`. Register semantic `--color-*` tokens as self-referential vars so utilities like `text-muted-foreground` resolve from `[data-prototype-root]` at runtime — **do not** map `--color-foreground` / `--color-background` to product `:root` tokens (that breaks gallery contrast):
 
 ```css
 @import "tailwindcss";
@@ -79,7 +89,7 @@ export default withPrototype({ nextConfig: { /* … */ } });
 
 Product tokens use separate names (e.g. `--product-background`) scoped to `[data-prototype-screenshot]`.
 
-6. **Root layout + tool themes** — wrap routes with `createPrototypeSiteLayout()` and import package chrome CSS (dark/light themes live here, not in host `globals.css`):
+7. **Root layout + tool themes** — wrap routes with `createPrototypeSiteLayout()` and import package chrome CSS (dark/light themes live here, not in host `globals.css`):
 
 ```tsx
 import { createPrototypeSiteLayout } from "proto-plugin";
@@ -89,7 +99,7 @@ import "./globals.css";
 const PrototypeSiteLayout = createPrototypeSiteLayout();
 ```
 
-7. **tsconfig paths** (optional, for tool internal `@prototype/*` alias when developing the package):
+8. **tsconfig paths** (optional, for tool internal `@prototype/*` alias when developing the package):
 
 ```json
 {
@@ -102,7 +112,7 @@ const PrototypeSiteLayout = createPrototypeSiteLayout();
 }
 ```
 
-8. **Dev server port** — run the host on port **1985** so it stays separate from a typical source app on 3000. In the host `package.json`:
+9. **Dev server port** — run the host on port **1985** so it stays separate from a typical source app on 3000. In the host `package.json`:
 
 ```json
 {
@@ -120,6 +130,7 @@ Open [http://localhost:1985](http://localhost:1985) when developing.
 | --- | --- |
 | `definePrototypeConfig` | Register prototypes (sets global config as a side effect) |
 | `createPrototypePage` | Factory for `/prototypes/[slug]` page + `generateStaticParams` |
+| `createPrototypeComponentLibraryPage` | Factory for `/component-library` (empty state until host passes `children`) |
 | `createPrototypeRegistry` | Server helpers: `getAllPrototypes`, `getPrototype`, … |
 | `PrototypeComponent`, `PrototypeControl` | Comment-anchorable UI wrappers |
 | `PrototypeShell` | Review chrome (comments sidebar, screenshot capture) |
@@ -261,16 +272,17 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 1. **`prototype.config.ts`** at the repo root — start with an empty `prototypes: []` array using `definePrototypeConfig` from `proto-plugin`.
 2. **Gallery home** — `src/app/page.tsx` via `createPrototypeGalleryPage(prototypeConfig)`.
 3. **Prototype route** — `src/app/prototypes/[slug]/page.tsx` via `createPrototypePage(prototypeConfig)` (export `default` + `generateStaticParams`).
-4. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`, and import the tool chrome theme:
+4. **Component library** — `src/app/component-library/page.tsx` via `createPrototypeComponentLibraryPage()` (auto-scaffolded on `pnpm install` if missing; shows empty state + copyable populate prompt until synced UI is wired as `children`).
+5. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`, and import the tool chrome theme:
 
    ```tsx
    import { createPrototypeSiteLayout } from "proto-plugin";
    import "proto-plugin/styles/globals.css";
    import "./globals.css";
    ```
-5. **API catch-all** — `src/app/api/[...path]/route.ts` using `createPrototypeApiRoute(prototypeConfig)` from `proto-plugin/server`; export `GET`, `POST`, and `PUT` handlers that call `dispatch`.
-6. **`next.config.ts`** — wrap with `withPrototype` from `proto-plugin/with-prototype` and ensure `proto-plugin` is transpiled.
-7. **`src/app/globals.css`** — Tailwind v4 + product tokens synced from source. **Do not** put tool chrome dark/light mode here (no `prefers-color-scheme`, no hardcoded gallery colors). Scan package components:
+6. **API catch-all** — `src/app/api/[...path]/route.ts` using `createPrototypeApiRoute(prototypeConfig)` from `proto-plugin/server`; export `GET`, `POST`, and `PUT` handlers that call `dispatch`.
+7. **`next.config.ts`** — wrap with `withPrototype` from `proto-plugin/with-prototype` and ensure `proto-plugin` is transpiled.
+8. **`src/app/globals.css`** — Tailwind v4 + product tokens synced from source. **Do not** put tool chrome dark/light mode here (no `prefers-color-scheme`, no hardcoded gallery colors). Scan package components:
 
    ```css
    @import "tailwindcss";
@@ -279,7 +291,7 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 
    Tool themes live in `proto-plugin/styles/globals.css` (import in layout). The package toggles dark/light on `[data-prototype-root]` via `data-prototype-comment-theme`.
 
-8. **`package.json` scripts** — set dev to port 1985 and forward CLI commands to the installed package:
+9. **`package.json` scripts** — set dev to port 1985 and forward CLI commands to the installed package:
 
    ```json
    {
@@ -292,9 +304,9 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
    }
    ```
 
-9. **`.env.example` and `.env.local`** — document and set `SOURCE_PATH` to the source app path I provided. Add comment/screenshot storage vars only if I asked for them in step 5 — the app should run without them, but comments won't persist.
+10. **`.env.example` and `.env.local`** — document and set `SOURCE_PATH` to the source app path I provided. Add comment/screenshot storage vars only if I asked for them in step 5 — the app should run without them, but comments won't persist.
 
-Run `pnpm dev` and confirm [http://localhost:1985](http://localhost:1985) shows the empty gallery and the app builds cleanly before continuing.
+Run `pnpm dev` and confirm [http://localhost:1985](http://localhost:1985) shows the empty gallery, `/component-library` renders (empty state is fine), and the app builds cleanly before continuing.
 
 ## 3. Link the source app
 

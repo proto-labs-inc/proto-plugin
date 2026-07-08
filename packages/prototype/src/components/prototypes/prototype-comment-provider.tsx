@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { PrototypeTargetIdProvider } from "@prototype/components/prototypes/prototype-target";
 import { CommentProvider } from "@prototype/lib/prototype-comments/react/CommentProvider";
-import { ChangelogMetaProvider } from "@prototype/lib/prototypes/changelog-meta-context";
 import type { PrototypeComponentRegistry } from "@prototype/lib/prototypes/prototype-component-registry";
 import { getPrototypeComponentRegistryForSlug } from "@prototype/lib/prototypes/create-prototype-registry";
 import {
@@ -22,15 +21,13 @@ function PrototypeCommentProviderInner({
   const { readHandlers } = usePrototypeCommentRegistry();
 
   return (
-    <ChangelogMetaProvider slug={slug}>
-      <CommentProvider
-        slug={slug}
-        getLiveState={() => readHandlers()?.getLiveState() ?? {}}
-        onRestore={(live) => readHandlers()?.onRestore(live)}
-      >
-        {children}
-      </CommentProvider>
-    </ChangelogMetaProvider>
+    <CommentProvider
+      slug={slug}
+      getLiveState={() => readHandlers()?.getLiveState() ?? {}}
+      onRestore={(live) => readHandlers()?.onRestore(live)}
+    >
+      {children}
+    </CommentProvider>
   );
 }
 

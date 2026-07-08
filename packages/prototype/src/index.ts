@@ -6,7 +6,9 @@ export { createPrototypeComponentLibraryPage } from "./config/create-prototype-c
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
 export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
-export { withPrototype } from "./config/with-prototype";
+// NOTE: `withPrototype` uses Node path APIs and belongs in `proto-plugin/with-prototype`
+// (next.config.ts only). Do not re-export it here — the barrel is imported by client
+// prototype components and must stay browser-safe.
 
 export {
   createPrototypeRegistry,
@@ -121,6 +123,10 @@ export {
 } from "./lib/prototypes/link-source-prompt";
 export type { PrototypePreviewState } from "./lib/prototypes/prototype-preview-state-types";
 
+export {
+  buildChangelogDescriptionCopyText,
+  buildChangelogDescriptionPrompt,
+} from "./lib/prototypes/changelog-description-prompt";
 export {
   buildAddReferenceDocCopyText,
   buildAddReferenceDocPrompt,

@@ -1,6 +1,6 @@
 {
   "name": "proto-plugin",
-  "version": "0.1.3",
+  "version": "0.1.10",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -31,6 +31,8 @@
     "./styles/globals.css": "./src/styles/globals.css"
   },
   "scripts": {
+    "postinstall": "node scripts/ensure-component-library-page.mjs",
+    "setup-host": "node scripts/ensure-component-library-page.mjs",
     "verify:prototype-ids": "node scripts/verify-prototype-component-ids.mjs",
     "verify:prototype-preview-states": "node scripts/verify-prototype-preview-states.mjs",
     "link-source": "./scripts/link-source.sh",

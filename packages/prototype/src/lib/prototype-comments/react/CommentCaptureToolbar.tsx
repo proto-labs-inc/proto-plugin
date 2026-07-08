@@ -327,15 +327,11 @@ export function CommentCaptureToolbar<TState = unknown>({
   const openCommentsPanel = useCallback(() => {
     if (integratedReview) {
       review.setCaptureChannel("comment");
-    }
-    setActiveRestoreId(null);
-    setIsGiveAMomentMode(true);
-    setIsActive(true);
-    if (integratedReview) {
       review.openSidebar("comments");
-    } else {
-      setShowCommentsSidebar(true);
+      return;
     }
+    setIsActive(true);
+    setShowCommentsSidebar(true);
   }, [integratedReview, review]);
 
   const enterChangelogMode = useCallback(() => {

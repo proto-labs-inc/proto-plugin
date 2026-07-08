@@ -7,7 +7,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 
@@ -112,4 +114,38 @@ export function usePrototypeToolTheme(): PrototypeToolThemeContextValue {
   }
 
   return context;
+}
+
+function readActivePrototypeToolTheme(): PrototypeToolTheme {
+  if (typeof document === "undefined") return DEFAULT_THEME;
+
+  const roots = document.querySelectorAll<HTMLElement>("[data-prototype-root]");
+  const activeRoot = roots[roots.length - 1] ?? roots[0];
+  return normalizeTheme(activeRoot?.getAttribute("data-prototype-comment-theme") ?? DEFAULT_THEME);
+}
+
+/** Syncs with the innermost tool theme root (e.g. portaled UI outside nested providers). */
+export function useActivePrototypeToolTheme(): PrototypeToolTheme {
+  const { theme: contextTheme } = usePrototypeToolTheme();
+  const [theme, setTheme] = useState<PrototypeToolTheme>(contextTheme);
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setTheme(readActivePrototypeToolTheme());
+    };
+
+    syncTheme();
+
+    const observer = new MutationObserver(syncTheme);
+    for (const root of document.querySelectorAll("[data-prototype-root]")) {
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ["data-prototype-comment-theme"],
+      });
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return theme;
 }
