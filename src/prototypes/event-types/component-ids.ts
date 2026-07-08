@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "@prototype/lib/prototypes/prototype-component-registry";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const EVENT_TYPES_COMPONENT_IDS = [
   "page",
@@ -29,6 +29,8 @@ export const EVENT_TYPES_COMPONENT_IDS = [
   "event-types-secret-events-transition-variant-tabs",
   "event-types-secret-events-transition-mobbin-inspiration-gallery",
   "mobbin-inspiration-gallery",
+  "spec-panel-content",
+  "pr-split-wireframes.pr-split-wireframe",
 ] as const;
 
 export const EVENT_TYPES_DYNAMIC_TARGET_PREFIXES = [

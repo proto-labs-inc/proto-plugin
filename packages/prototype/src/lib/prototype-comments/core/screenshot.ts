@@ -11,6 +11,7 @@
 // Cache the import result so we only try once
 let _domCaptureModule: {
   domToCanvas: (node: Node, options?: Record<string, unknown>) => Promise<HTMLCanvasElement>;
+  domToJpeg: (node: Node, options?: Record<string, unknown>) => Promise<string>;
 } | null | undefined; // null = tried and failed, undefined = not tried yet
 
 async function getDomCapture() {
@@ -36,6 +37,10 @@ import {
   getCommentsSidebarInset,
   getPrototypeScrollContainer,
 } from "./annotation-target";
+import {
+  getPrototypeScreenshotRoot,
+  PROTOTYPE_COMMENTS_SIDEBAR_ROOT_ID,
+} from "@prototype/lib/tool-portal";
 import type { CaptureViewport } from "./types";
 
 type CaptureUiRestore = {
@@ -43,7 +48,7 @@ type CaptureUiRestore = {
 };
 
 /**
- * Hide feedback overlays during capture while leaving the comments sidebar untouched.
+ * Hide feedback overlays and the comments sidebar during capture.
  */
 async function prepareDomForCapture(): Promise<CaptureUiRestore> {
   // Map ensures each element is hidden/restored once. The review toolbar matches
@@ -52,7 +57,6 @@ async function prepareDomForCapture(): Promise<CaptureUiRestore> {
 
   const hideElement = (el: Element) => {
     const html = el as HTMLElement;
-    if (html.closest("[data-comments-sidebar]")) return;
     if (hidden.has(html)) return;
     hidden.set(html, html.style.visibility);
     html.style.visibility = "hidden";
@@ -66,18 +70,16 @@ async function prepareDomForCapture(): Promise<CaptureUiRestore> {
     "[data-annotation-marker]",
     "[data-annotation-popup]",
     "[data-comment-capture-overlay]",
+    `#${PROTOTYPE_COMMENTS_SIDEBAR_ROOT_ID}`,
+    "[data-comments-sidebar]",
+    "[data-prototype-review-sidebar]",
   ];
 
   for (const selector of captureUiSelectors) {
     document.querySelectorAll(selector).forEach(hideElement);
   }
 
-  // Hide standalone overlay roots (e.g. restore overlay), but keep the comments sidebar visible
-  // so cropSidebarFromCanvas can still trim it from the captured image.
-  document.querySelectorAll("[data-prototype-comment-root]").forEach((root) => {
-    if (root.querySelector("[data-comments-sidebar]")) return;
-    hideElement(root);
-  });
+  document.querySelectorAll("[data-prototype-comment-root]").forEach(hideElement);
 
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -111,6 +113,31 @@ function cropSidebarFromCanvas(
   return cropped;
 }
 
+function drawCanvasPreservingAspect(
+  ctx: CanvasRenderingContext2D,
+  source: HTMLCanvasElement,
+  destWidth: number,
+  destHeight: number,
+) {
+  const targetAspect = destWidth / destHeight;
+  const sourceAspect = source.width / source.height;
+
+  let sx = 0;
+  let sy = 0;
+  let sw = source.width;
+  let sh = source.height;
+
+  if (sourceAspect > targetAspect) {
+    sw = source.height * targetAspect;
+    sx = (source.width - sw) / 2;
+  } else if (sourceAspect < targetAspect) {
+    sh = source.width / targetAspect;
+    sy = 0;
+  }
+
+  ctx.drawImage(source, sx, sy, sw, sh, 0, 0, destWidth, destHeight);
+}
+
 export type ViewportScreenshotResult = {
   dataUrl: string;
   captureViewport: CaptureViewport;
@@ -129,33 +156,49 @@ export async function captureViewportScreenshot(
     return null;
   }
 
-  const sidebarInset = getCommentsSidebarInset();
-  const inlineContent = document.querySelector("[data-prototype-screenshot]");
-  const isInlineSidebar = document.documentElement.hasAttribute("data-comments-sidebar-inline");
+  const screenshotRoot = getPrototypeScreenshotRoot();
+  const sidebarInset = screenshotRoot ? 0 : getCommentsSidebarInset();
   const { restore } = await prepareDomForCapture();
 
   try {
-    const captureTarget = isInlineSidebar && inlineContent instanceof HTMLElement
-      ? inlineContent
-      : document.documentElement;
-
-    const targetRect = captureTarget.getBoundingClientRect();
-    const viewportWidth = isInlineSidebar && inlineContent instanceof HTMLElement
-      ? targetRect.width
+    const captureTarget = screenshotRoot ?? document.documentElement;
+    const viewportWidth = screenshotRoot
+      ? screenshotRoot.clientWidth
       : window.innerWidth;
-    const viewportHeight = isInlineSidebar && inlineContent instanceof HTMLElement
-      ? targetRect.height
+    const viewportHeight = screenshotRoot
+      ? screenshotRoot.clientHeight
       : window.innerHeight;
     const contentWidth = Math.max(1, viewportWidth - sidebarInset);
     const maxWidth = 1200;
-    const scale = Math.min(1, maxWidth / viewportWidth);
-    const outW = Math.round(viewportWidth * scale);
+    const scale = Math.min(1, maxWidth / contentWidth);
+    const scrollContainer = getPrototypeScrollContainer();
+    const captureViewport: CaptureViewport = {
+      width: screenshotRoot ? viewportWidth : contentWidth,
+      height: viewportHeight,
+      scrollY: window.scrollY,
+      scrollTop: scrollContainer?.scrollTop ?? 0,
+    };
+
+    if (screenshotRoot) {
+      const dataUrl = await mod.domToJpeg(captureTarget, {
+        backgroundColor: "#ffffff",
+        timeout: 5000,
+        width: viewportWidth,
+        height: viewportHeight,
+        quality,
+        scale,
+      });
+
+      return { dataUrl, captureViewport };
+    }
+
+    const outW = Math.round(contentWidth * scale);
     const outH = Math.round(viewportHeight * scale);
 
     const domCanvas = await mod.domToCanvas(captureTarget, {
       backgroundColor: "#ffffff",
       timeout: 5000,
-      width: viewportWidth,
+      width: window.innerWidth,
       height: viewportHeight,
     });
 
@@ -165,18 +208,12 @@ export async function captureViewportScreenshot(
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    ctx.drawImage(domCanvas, 0, 0, outW, outH);
+    drawCanvasPreservingAspect(ctx, domCanvas, outW, outH);
 
     const cropped = cropSidebarFromCanvas(canvas, sidebarInset, scale);
-    const scrollContainer = getPrototypeScrollContainer();
     return {
       dataUrl: cropped.toDataURL("image/jpeg", quality),
-      captureViewport: {
-        width: contentWidth,
-        height: viewportHeight,
-        scrollY: window.scrollY,
-        scrollTop: scrollContainer?.scrollTop ?? 0,
-      },
+      captureViewport,
     };
   } catch (err) {
     console.warn("[prototype-comments] Viewport capture failed:", err);

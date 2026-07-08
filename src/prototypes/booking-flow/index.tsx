@@ -1,8 +1,8 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { usePrototypeComments } from "@prototype/lib/prototypes/use-prototype-comments";
-import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
+import { PrototypeComponent } from "proto-plugin";
+import { usePrototypeComments } from "proto-plugin";
+import { usePrototypeReviewOptional } from "proto-plugin";
 import { AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

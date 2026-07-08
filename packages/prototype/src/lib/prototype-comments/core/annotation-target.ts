@@ -1,4 +1,5 @@
 import { getElementClasses } from "./element-identification";
+import { getPrototypeScreenshotRoot } from "@prototype/lib/tool-portal";
 
 export const PROTOTYPE_TARGET_ATTR = "data-prototype-target";
 const PROTOTYPE_SCREENSHOT_ROOT = "[data-prototype-screenshot]";
@@ -37,9 +38,17 @@ export function getCommentsSidebarWidth(): number {
 }
 
 export function getCommentsSidebarInset(): number {
-  if (!document.documentElement.hasAttribute("data-comments-sidebar-open")) return 0;
-  // Inline sidebar already shrinks the prototype content area — no coordinate offset needed.
-  if (document.documentElement.hasAttribute("data-comments-sidebar-inline")) return 0;
+  const isOpen =
+    document.documentElement.hasAttribute("data-comments-sidebar-open") ||
+    document.documentElement.hasAttribute("data-prototype-review-sidebar-open");
+  if (!isOpen) return 0;
+
+  const isInline =
+    document.documentElement.hasAttribute("data-comments-sidebar-inline") ||
+    document.documentElement.hasAttribute("data-prototype-review-sidebar-inline") ||
+    getPrototypeScreenshotRoot() != null;
+  if (isInline) return 0;
+
   return getCommentsSidebarWidth();
 }
 

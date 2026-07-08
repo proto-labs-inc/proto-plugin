@@ -53,6 +53,7 @@ import { getRootAnnotations, resolveThreadRootId } from "../core/comment-threads
 import {
   buildCommentCaptureCursorStyles,
   isCommentCaptureBlockedTarget,
+  isCommentModeChromeInteraction,
 } from "../core/comment-capture-blocked";
 import { closestCrossingShadow } from "../core/element-identification";
 import { injectCaptureColorTokens } from "../core/capture-theme";
@@ -209,6 +210,13 @@ export function CommentCaptureToolbar<TState = unknown>({
   const [scrollY, setScrollY] = useState(0);
 
   const isFeedbackActive = isGiveAMomentMode;
+  const isChangelogModeActive =
+    isGiveAMomentMode &&
+    integratedReview &&
+    review?.captureChannel === "changelog";
+  const isCommentModeActive =
+    isGiveAMomentMode &&
+    (!integratedReview || review?.captureChannel === "comment");
   const annotationTargetOptions = useMemo(() => {
     if (typeof resolveTargetOptions === "function") {
       return resolveTargetOptions();
@@ -353,6 +361,18 @@ export function CommentCaptureToolbar<TState = unknown>({
     setActiveRestoreId(null);
     setIsGiveAMomentMode((active) => !active);
   }, [integratedReview, review]);
+
+  const exitCommentMode = useCallback(() => {
+    setPendingMultiSelectElements([]);
+    setPendingAnnotation(null);
+    setPendingExiting(false);
+    setHoverInfo(null);
+    setIsGiveAMomentMode(false);
+    modifiersHeldRef.current = { cmd: false, shift: false };
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, []);
 
   const cancelAnnotation = useCallback(() => {
     setPendingExiting(true);
@@ -984,6 +1004,28 @@ export function CommentCaptureToolbar<TState = unknown>({
   ]);
 
   useEffect(() => {
+    if (!isCommentModeActive) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      exitCommentMode();
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = (event.composedPath()[0] || event.target) as HTMLElement;
+      if (!isCommentModeChromeInteraction(target)) return;
+      exitCommentMode();
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [exitCommentMode, isCommentModeActive]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isTyping =
         e.target instanceof HTMLInputElement ||
@@ -1000,7 +1042,7 @@ export function CommentCaptureToolbar<TState = unknown>({
           return;
         }
         if (pendingAnnotation) return;
-        if (isGiveAMomentMode) {
+        if (isChangelogModeActive) {
           setIsGiveAMomentMode(false);
           e.preventDefault();
           if (document.activeElement instanceof HTMLElement) {
@@ -1028,7 +1070,7 @@ export function CommentCaptureToolbar<TState = unknown>({
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [
-    isGiveAMomentMode,
+    isChangelogModeActive,
     pendingAnnotation,
     pendingMultiSelectElements.length,
     activateToolbar,
@@ -1051,14 +1093,6 @@ export function CommentCaptureToolbar<TState = unknown>({
       syncShareCommentParam(null);
     }
   }, [isActive, integratedReview, prototypeSlug]);
-
-  const isChangelogModeActive =
-    isGiveAMomentMode &&
-    integratedReview &&
-    review.captureChannel === "changelog";
-  const isCommentModeActive =
-    isGiveAMomentMode &&
-    (!integratedReview || review.captureChannel === "comment");
 
   const bridgeValue = useMemo<CommentCaptureBridgeValue>(
     () => ({
@@ -1175,6 +1209,7 @@ export function CommentCaptureToolbar<TState = unknown>({
                           e.stopPropagation();
                           setIsGiveAMomentMode((active) => !active);
                         }}
+                        data-prototype-comment-mode-toggle
                         data-active={isGiveAMomentMode}
                         aria-label={
                           isGiveAMomentMode

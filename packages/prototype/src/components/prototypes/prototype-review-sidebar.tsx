@@ -7,33 +7,24 @@ import { useCommentStore } from "@prototype/lib/prototype-comments/react/Comment
 import { CommentHeaderCount } from "@prototype/lib/prototype-comments/ui/CommentHeaderCount";
 import { CommentsGrid } from "@prototype/lib/prototype-comments/ui/CommentsGrid";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
-import {
-  SIDEBAR_ICON_BUTTON_CLASS,
-  Sidebar,
-} from "@prototype/components/platform-ui/sidebar";
-import { IconButton } from "@prototype/components/platform-ui/icon-button";
-import { cn } from "@prototype/lib/utils";
+import { Sidebar } from "@prototype/components/platform-ui/sidebar";
 import { EmptyState } from "@prototype/components/platform-ui/empty-state";
 import { PrototypeChangeLogPanel } from "@prototype/components/prototypes/prototype-change-log-panel";
 import { PrototypeCommentStorageEmptyState } from "@prototype/components/prototypes/prototype-comment-storage-empty-state";
+import { PrototypeSpecPanelEmptyState } from "@prototype/components/prototypes/prototype-spec-panel-empty-state";
 import { miniPillTextFromLabel } from "@prototype/components/prototypes/mini-pill-label";
-import { MessageSquarePlus } from "lucide-react";
 import { useMemo } from "react";
 
 type PrototypeReviewSidebarProps = {
   onSelect: (id: string) => void;
   selectedId?: string | null;
   onClose: () => void;
-  isCommentModeActive?: boolean;
-  onToggleCommentMode?: () => void;
 };
 
 export function PrototypeReviewSidebar({
   onSelect,
   selectedId,
   onClose,
-  isCommentModeActive = false,
-  onToggleCommentMode,
 }: PrototypeReviewSidebarProps) {
   const review = usePrototypeReview();
   const { annotations, deleteAnnotation, updateAnnotation, resolveAnnotation, storageError, storageReady, storageConfigured } = useCommentStore();
@@ -95,25 +86,6 @@ export function PrototypeReviewSidebar({
           />
         ) : undefined
       }
-      headerActions={
-        isCommentsPanel && onToggleCommentMode ? (
-          <IconButton
-            type="button"
-            onClick={onToggleCommentMode}
-            onMouseDown={(event) => event.preventDefault()}
-            aria-label={
-              isCommentModeActive ? "Exit comment mode" : "Add comment"
-            }
-            aria-pressed={isCommentModeActive}
-            className={cn(
-              SIDEBAR_ICON_BUTTON_CLASS,
-              isCommentModeActive && "bg-accent text-accent-foreground",
-            )}
-          >
-            <MessageSquarePlus size={16} strokeWidth={2} />
-          </IconButton>
-        ) : undefined
-      }
       onClose={
         isVariantsPanel
           ? review.closeVariants
@@ -136,12 +108,7 @@ export function PrototypeReviewSidebar({
       widthCssVar="--comments-sidebar-width"
     >
       {isSpecPanel ? (
-        specContent ?? (
-          <EmptyState>
-            No PRs configured yet. Add a PR split spec on this prototype to
-            see implementation cards here.
-          </EmptyState>
-        )
+        specContent ?? <PrototypeSpecPanelEmptyState />
       ) : isVariantsPanel ? (
         variantsContent ?? (
           <EmptyState>No variant overview available.</EmptyState>

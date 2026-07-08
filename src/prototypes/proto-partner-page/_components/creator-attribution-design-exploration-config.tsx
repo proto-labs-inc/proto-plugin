@@ -1,8 +1,8 @@
 "use client";
 
-import { DesignExplorationVariantPreviewShell } from "@prototype/components/prototypes/design-exploration-variant-preview-shell";
-import type { DesignExplorationConfig } from "@prototype/lib/prototypes/design-exploration-types";
-import { buildDesignExplorationRenderers } from "@prototype/lib/prototypes/build-design-exploration-renderers";
+import { DesignExplorationVariantPreviewShell } from "proto-plugin";
+import type { DesignExplorationConfig } from "proto-plugin";
+import { buildDesignExplorationRenderers } from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { CreatorAttributionBlock } from "./creator-attribution-block";

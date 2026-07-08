@@ -4,3 +4,6 @@ export const PR_TARGET_HIGHLIGHT_BORDER =
 
 export const PR_TARGET_HIGHLIGHT_FILL =
   "color-mix(in srgb, var(--prototype-comment-color-blue) 6%, transparent)";
+
+/** Root wrapper for PR split wireframes — full-page schematic, not a cropped excerpt. */
+export const PR_SPLIT_WIREFRAME_FRAME_CLASS = "aspect-video w-full overflow-hidden";

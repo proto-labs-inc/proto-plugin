@@ -1,7 +1,10 @@
 "use client";
 
-import { ControlsPanelSelect } from "@prototype/components/platform-ui/controls-panel-select";
-import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
+import {
+  ControlsPanelSelect,
+  PrototypeControl,
+  usePrototypeReviewOptional,
+} from "proto-plugin";
 import { useLayoutEffect } from "react";
 
 import {
@@ -36,5 +39,5 @@ export function EventTypesPreviewStateSelect({
     return () => setTweaksContent(null);
   }, [onPreviewStateChange, previewStateId, setTweaksContent]);
 
-  return null;
+  return <PrototypeControl id="event-types-preview-state-select" />;
 }

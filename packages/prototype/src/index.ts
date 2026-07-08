@@ -1,5 +1,7 @@
 export { definePrototypeConfig } from "./config/define-prototype-config";
-export { createPrototypeGalleryPage } from "./config/create-prototype-gallery-page";
+// NOTE: `createPrototypeGalleryPage` is server-only (reads the screenshot manifest
+// from disk) and lives in `proto-plugin/server`. Keeping it out of this barrel is
+// what lets client prototype components import from `proto-plugin` safely.
 export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
@@ -56,6 +58,16 @@ export {
 export { usePrototypeComments } from "./lib/prototypes/use-prototype-comments";
 
 export {
+  SHARE_TARGET_PARAM,
+  SHARE_STATE_PARAM,
+  SHARE_COMMENT_PARAM,
+  encodeShareState,
+  decodeShareState,
+  readShareLinkParams,
+} from "./lib/prototypes/prototype-share-link";
+export type { ShareLinkParams } from "./lib/prototypes/prototype-share-link";
+
+export {
   usePersistPrototypeLiveState,
   readPersistedPrototypeLiveState,
 } from "./lib/prototypes/use-persisted-local-state";
@@ -63,6 +75,8 @@ export {
 export type {
   DesignExplorationBaselineOption,
   DesignExplorationConfig,
+  DesignExplorationRationale,
+  MobbinReference,
 } from "./lib/prototypes/design-exploration-types";
 
 export {
@@ -312,10 +326,18 @@ export type { PrototypeSpecPanelContentProps } from "./components/prototypes/pro
 export {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
+  PR_SPLIT_WIREFRAME_FRAME_CLASS,
 } from "./lib/pr-split/pr-split-highlight";
 
 export { buildPrSplitPrototypeUrl } from "./lib/pr-split/build-pr-split-prototype-url";
 export { buildPrAgentPrompt } from "./lib/pr-split/build-pr-agent-prompt";
+export {
+  buildPrSplitPlanPrompt,
+  buildPrSplitPlanCopyText,
+} from "./lib/pr-split/build-pr-split-plan-prompt";
+export type { PrSplitPlanPromptOptions } from "./lib/pr-split/build-pr-split-plan-prompt";
+
+export { PrototypeSpecPanelEmptyState } from "./components/prototypes/prototype-spec-panel-empty-state";
 
 export type {
   PrSplitEntry,

@@ -3,14 +3,14 @@
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Button } from "@prototype/components/ui/button";
+import { Button } from "./button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@prototype/components/ui/dropdown-menu";
-import { cn } from "@prototype/lib/utils";
+} from "./dropdown-menu";
+import { cn } from "../../lib/utils";
 
 export type OptionSelectItem<T extends string = string> = {
   value: T;

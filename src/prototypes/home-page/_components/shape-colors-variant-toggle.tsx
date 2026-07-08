@@ -1,7 +1,7 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { PrototypeVariantExplorer } from "@prototype/components/prototypes/prototype-variant-explorer";
+import { PrototypeComponent } from "proto-plugin";
+import { PrototypeVariantExplorer } from "proto-plugin";
 
 import { SHAPE_COLORS_VARIANT_SET } from "./home-page-variant-sets";
 import {

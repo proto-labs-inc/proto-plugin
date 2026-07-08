@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "@prototype/lib/prototypes/prototype-component-registry";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "page",
@@ -6,10 +6,13 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "partner-shape-canvas",
   "partner-page-flow-block",
   "partner-page-flow-block.partner-page-back-button",
+  "partner-page-nav-button.partner-page-back-button",
   "submit-shape-modal",
   "submit-shape-modal-block",
   "submit-shape-modal.partner-shape-canvas",
   "submit-modal-variant-toggle",
+  "submit-modal-card-texture-background",
+  "submit-modal-layouts.submit-modal-actions",
   "submit-modal-explorer",
   "submit-modal-variant-tabs",
   "submit-modal-mobbin-inspiration-gallery",
@@ -21,6 +24,12 @@ export const PROTO_PARTNER_PAGE_COMPONENT_IDS = [
   "proto-shape-icons.proto-color-swatch",
   "proto-shape-icons.proto-texture-swatch",
   "invite-copy-block",
+  "invite-copy-block.invite-follow-up-copy",
+  "invite-copy-block.invite-follow-up-title",
+  "invite-copy-block.invite-follow-up-body",
+  "invite-copy-block.invite-follow-up-content",
+  "invite-eyebrow-header",
+  "invite-eyebrow-header.animated-invite-eyebrow-header",
   "invite-follow-up-nav",
   "invite-follow-up-shape-examples",
   "creator-attribution-block",

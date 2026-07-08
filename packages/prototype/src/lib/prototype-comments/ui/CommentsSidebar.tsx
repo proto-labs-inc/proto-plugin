@@ -3,14 +3,9 @@
 import { countUnresolvedAnnotations } from "../core/annotation-status";
 import { useCommentStore } from "../react/CommentProvider";
 import { CommentHeaderCount } from "./CommentHeaderCount";
+import { CommentModeToggleButton } from "./CommentModeToggleButton";
 import { CommentsGrid } from "./CommentsGrid";
-import {
-  SIDEBAR_ICON_BUTTON_CLASS,
-  Sidebar,
-} from "@prototype/components/platform-ui/sidebar";
-import { IconButton } from "@prototype/components/platform-ui/icon-button";
-import { cn } from "@prototype/lib/utils";
-import { MessageSquarePlus } from "lucide-react";
+import { Sidebar } from "@prototype/components/platform-ui/sidebar";
 
 type CommentsSidebarProps = {
   open: boolean;
@@ -47,19 +42,10 @@ export function CommentsSidebar({
       widthCssVar="--comments-sidebar-width"
       headerActions={
         onToggleCommentMode ? (
-          <IconButton
-            type="button"
+          <CommentModeToggleButton
+            isActive={isCommentModeActive}
             onClick={onToggleCommentMode}
-            onMouseDown={(event) => event.preventDefault()}
-            aria-label={isCommentModeActive ? "Exit comment mode" : "Add comment"}
-            aria-pressed={isCommentModeActive}
-            className={cn(
-              SIDEBAR_ICON_BUTTON_CLASS,
-              isCommentModeActive && "bg-accent text-accent-foreground",
-            )}
-          >
-            <MessageSquarePlus size={16} strokeWidth={2} />
-          </IconButton>
+          />
         ) : null
       }
     >

@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -99,19 +100,21 @@ export function SubmitModalCardTextureBackground({
   ]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("relative overflow-hidden", className)}
-      style={{ backgroundColor, ...style }}
-    >
-      {showTexture ? (
-        <canvas
-          ref={canvasRef}
-          className="pointer-events-none absolute inset-0 block size-full"
-          aria-hidden
-        />
-      ) : null}
-      <div className="relative z-10 flex h-full min-h-0 flex-col">{children}</div>
-    </div>
+    <PrototypeComponent id="submit-modal-card-texture-background">
+      <div
+        ref={containerRef}
+        className={cn("relative overflow-hidden", className)}
+        style={{ backgroundColor, ...style }}
+      >
+        {showTexture ? (
+          <canvas
+            ref={canvasRef}
+            className="pointer-events-none absolute inset-0 block size-full"
+            aria-hidden
+          />
+        ) : null}
+        <div className="relative z-10 flex h-full min-h-0 flex-col">{children}</div>
+      </div>
+    </PrototypeComponent>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 import { HomePageShapesBackground } from "./home-page-shapes-background";
 import type { ShapeColorsVariant } from "./shape-colors-content";

@@ -4,9 +4,9 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "@prototype/components/ui/dialog";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { cn } from "@prototype/lib/utils";
+} from "proto-plugin/ui/dialog";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 import { motion, useReducedMotion } from "motion/react";
 
 import { SubmitShapeModalBlock } from "./submit-shape-modal-block";

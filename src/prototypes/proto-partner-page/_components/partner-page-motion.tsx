@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 import { motion, useReducedMotion, type HTMLMotionProps } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 

@@ -2,7 +2,7 @@
 
 import { Button } from "@calcom/ui/components/button";
 import Icon from "@calcom/ui/components/icon/Icon";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 import {
   formatBookingDateLabel,

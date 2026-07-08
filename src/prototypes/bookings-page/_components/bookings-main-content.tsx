@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 import { BookingsFiltersBar } from "./bookings-filters-bar";
 import {

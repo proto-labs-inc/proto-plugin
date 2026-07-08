@@ -2,7 +2,7 @@
 
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 import { CalendarIcon, MenuIcon } from "@coss/ui/icons";
 
 import { STATUS_TAB_OPTIONS } from "./bookings-page-mock-data";

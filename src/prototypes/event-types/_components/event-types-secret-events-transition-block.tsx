@@ -1,17 +1,16 @@
 "use client";
 
 import { Badge } from "@calcom/ui/components/badge";
-import { Button } from "@calcom/ui/components/button";
 import classNames from "@calcom/ui/classNames";
 import Icon from "@calcom/ui/components/icon/Icon";
 import { SegmentedControl } from "@calcom/ui/components/segmented-control";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@prototype/components/ui/dropdown-menu";
+} from "proto-plugin/ui/dropdown-menu";
 import { PlusIcon } from "@coss/ui/icons";
 import { useState } from "react";
 

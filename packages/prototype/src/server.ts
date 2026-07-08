@@ -1,5 +1,7 @@
 import "server-only";
 
+export { createPrototypeGalleryPage } from "./config/create-prototype-gallery-page";
+
 export {
   readScreenshotManifest,
   touchScreenshotManifest,

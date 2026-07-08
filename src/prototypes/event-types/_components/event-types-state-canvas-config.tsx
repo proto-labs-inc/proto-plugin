@@ -1,10 +1,10 @@
 "use client";
 
-import type { PrototypeStateCanvasConfig } from "@prototype/lib/prototypes/prototype-state-canvas-types";
 import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
-} from "@prototype/lib/pr-split/pr-split-highlight";
+  type PrototypeStateCanvasConfig,
+} from "proto-plugin";
 
 import type { EventTypesPreviewStateId } from "./event-types-types";
 import { EVENT_TYPES_PREVIEW_STATE_REGISTRY } from "./event-types-preview-states";

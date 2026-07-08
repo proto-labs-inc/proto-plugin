@@ -107,7 +107,7 @@ function MakeDefaultButton({
         type="button"
         variant="chrome"
         size="sm"
-        className="h-6 shrink-0 rounded px-2 text-[11px] bg-white/[0.09] text-white/70 hover:bg-white/14 hover:text-white/85"
+        className="h-6 shrink-0 rounded px-2 text-[11px]"
         onClick={(event) => {
           event.stopPropagation();
           copy(
@@ -326,7 +326,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
               aria-label="Multiple versions"
               className="data-[state=checked]:bg-foreground"
             />
-            <span className="text-sm text-muted-foreground">Multiple versions</span>
+            <span className="text-sm text-[var(--text-secondary)]">Multiple versions</span>
           </label>
         </PrototypeComponent>
         <PrototypeComponent id={`${componentIdPrefix}.more-variants-copy-prompt`}>
@@ -408,12 +408,6 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
             </div>
           </div>
 
-          {option.rationale ? (
-            <p className="text-muted-foreground px-0.5 text-xs leading-relaxed">
-              {option.rationale.good} {option.rationale.bad}
-            </p>
-          ) : null}
-
           <div
             role="button"
             tabIndex={0}
@@ -446,6 +440,19 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
               )}
             </div>
           </div>
+
+          {option.rationale ? (
+            <p
+              className={cn(
+                "px-0.5 leading-relaxed",
+                isSidebar
+                  ? "text-sm text-[var(--text-secondary)]"
+                  : "text-muted-foreground text-xs",
+              )}
+            >
+              {option.rationale.good} {option.rationale.bad}
+            </p>
+          ) : null}
         </div>
       </PrototypeComponent>
     );

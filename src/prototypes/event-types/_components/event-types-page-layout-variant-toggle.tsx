@@ -1,7 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { PrototypeVariantExplorer } from "@prototype/components/prototypes/prototype-variant-explorer";
+import { PrototypeComponent, PrototypeVariantExplorer } from "proto-plugin";
 
 import {
   buildEventTypesPageLayoutDesignExplorationConfig,

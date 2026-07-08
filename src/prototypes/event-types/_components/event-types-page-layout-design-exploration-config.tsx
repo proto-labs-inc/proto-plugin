@@ -1,10 +1,10 @@
 "use client";
 
-import type {
-  DesignExplorationConfig,
-  MobbinReference,
-} from "@prototype/lib/prototypes/design-exploration-types";
-import { buildDesignExplorationRenderers } from "@prototype/lib/prototypes/build-design-exploration-renderers";
+import {
+  buildDesignExplorationRenderers,
+  type DesignExplorationConfig,
+  type MobbinReference,
+} from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { DEFAULT_EVENT_TYPES } from "./event-types-mock-data";

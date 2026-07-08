@@ -1,4 +1,4 @@
-import { definePreviewStateRegistry } from "@prototype/lib/prototypes/prototype-preview-state-registry";
+import { definePreviewStateRegistry } from "proto-plugin";
 
 import type { BookingsLiveState, BookingsPagePreviewStateId } from "./bookings-page-types";
 

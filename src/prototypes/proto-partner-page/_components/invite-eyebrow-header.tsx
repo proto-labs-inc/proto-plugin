@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 import { motion, type HTMLMotionProps } from "motion/react";
 
 import {
@@ -17,14 +18,14 @@ export function InviteEyebrowHeader({
   className,
   hideLabel,
 }: InviteEyebrowHeaderProps) {
-  if (hideLabel) {
-    return null;
-  }
-
   return (
-    <div className={cn(inviteHeaderRowClass, className)}>
-      <p className={cn(inviteEyebrowClass, "mb-0")}>Design partner invite</p>
-    </div>
+    <PrototypeComponent id="invite-eyebrow-header">
+      {hideLabel ? null : (
+        <div className={cn(inviteHeaderRowClass, className)}>
+          <p className={cn(inviteEyebrowClass, "mb-0")}>Design partner invite</p>
+        </div>
+      )}
+    </PrototypeComponent>
   );
 }
 
@@ -33,13 +34,13 @@ export function AnimatedInviteEyebrowHeader({
   hideLabel,
   ...motionProps
 }: InviteEyebrowHeaderProps & HTMLMotionProps<"div">) {
-  if (hideLabel) {
-    return null;
-  }
-
   return (
-    <motion.div className={cn(inviteHeaderRowClass, className)} {...motionProps}>
-      <p className={cn(inviteEyebrowClass, "mb-0")}>Design partner invite</p>
-    </motion.div>
+    <PrototypeComponent id="invite-eyebrow-header.animated-invite-eyebrow-header">
+      {hideLabel ? null : (
+        <motion.div className={cn(inviteHeaderRowClass, className)} {...motionProps}>
+          <p className={cn(inviteEyebrowClass, "mb-0")}>Design partner invite</p>
+        </motion.div>
+      )}
+    </PrototypeComponent>
   );
 }

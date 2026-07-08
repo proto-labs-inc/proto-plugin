@@ -1,4 +1,4 @@
-import type { DesignExplorationRationale } from "@prototype/lib/prototypes/design-exploration-types";
+import type { DesignExplorationRationale } from "proto-plugin";
 
 export type EventTypesSecretEventsTransitionVariant =
   | "filter-chip-row"

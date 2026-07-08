@@ -1,4 +1,4 @@
-$canvas-chrome-bg: var(--tool-chrome-bg);
+$canvas-chrome-bg: var(--prototype-state-map-canvas-bg, var(--tool-chrome-bg));
 $canvas-chrome-muted: var(--tool-chrome-surface-muted, #fafafa);
 $canvas-border: var(--tool-chrome-border);
 $canvas-border-strong: var(--tool-chrome-border-strong);
@@ -9,35 +9,15 @@ $canvas-edge-base: var(--prototype-state-canvas-edge, rgba(0, 0, 0, 0.22));
 // Pre-blend to canvas bg so edges stay subtle without semi-transparent layering at corners/arrowheads.
 $canvas-edge-color: color-mix(in srgb, $canvas-edge-base 50%, $canvas-chrome-bg);
 
-$wireframe-bg: #ffffff;
-$wireframe-subtle: var(--color-gray-50);
-$wireframe-border: #edebeb;
-$wireframe-border-medium: var(--color-gray-300);
-$wireframe-text: var(--color-gray-900);
-
-// Always light mode — independent of the gallery/review tool theme toggle.
-@mixin state-map-light-chrome {
-  --tool-chrome-gray-highlight: rgba(0, 0, 0, 0.05);
-  --tool-chrome-button-bg: rgba(0, 0, 0, 0.06);
-  --tool-chrome-button-text: rgba(0, 0, 0, 0.72);
-  --tool-chrome-button-bg-hover: rgba(0, 0, 0, 0.1);
-  --tool-chrome-button-text-hover: rgba(0, 0, 0, 0.92);
-  --tool-chrome-ground: #f5f5f5;
-  --tool-chrome-bg: #ffffff;
-  --tool-chrome-surface: #ffffff;
-  --tool-chrome-surface-muted: #fafafa;
-  --tool-chrome-text: rgba(0, 0, 0, 0.85);
-  --tool-chrome-text-heading: rgba(0, 0, 0, 0.92);
-  --tool-chrome-text-muted: rgba(0, 0, 0, 0.55);
-  --tool-chrome-icon: rgba(0, 0, 0, 0.45);
-  --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
-  --tool-chrome-border: rgba(0, 0, 0, 0.1);
-  --tool-chrome-border-strong: rgba(0, 0, 0, 0.16);
-  --prototype-state-canvas-edge: rgba(0, 0, 0, 0.22);
-}
+$wireframe-bg: var(--prototype-state-map-node-surface, var(--tool-chrome-surface));
+$wireframe-subtle: var(--prototype-state-map-node-preview-bg, var(--tool-chrome-surface-muted));
+$wireframe-border: var(--tool-chrome-border);
+$wireframe-border-medium: var(--tool-chrome-border-strong);
+$wireframe-footer-bg: var(--prototype-state-map-node-footer-bg, var(--tool-chrome-surface-muted));
+$wireframe-footer-border: var(--prototype-state-map-node-footer-border, var(--tool-chrome-border-strong));
+$wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-chrome-text-heading));
 
 .page {
-  @include state-map-light-chrome;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -47,7 +27,6 @@ $wireframe-text: var(--color-gray-900);
 }
 
 .overlay {
-  @include state-map-light-chrome;
   position: absolute;
   inset: 0;
   z-index: 20;
@@ -246,7 +225,6 @@ $wireframe-text: var(--color-gray-900);
 .nodePreview {
   height: 132px;
   overflow: hidden;
-  border-bottom: 1px solid $wireframe-border;
   background: $wireframe-subtle;
   pointer-events: none;
 }
@@ -262,15 +240,16 @@ $wireframe-text: var(--color-gray-900);
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  min-height: 36px;
-  padding: 0 0.625rem;
-  background: $wireframe-bg;
+  min-height: 40px;
+  padding: 0 0.75rem;
+  border-top: 1px solid $wireframe-footer-border;
+  background: $wireframe-footer-bg;
 }
 
 .nodeLabelText {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: $wireframe-text;
+  font-weight: 600;
+  color: $wireframe-footer-text;
 }
 
 .calloutTray {
@@ -301,7 +280,7 @@ $wireframe-text: var(--color-gray-900);
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       border-color: $wireframe-border-medium;
-      background: color-mix(in srgb, var(--color-gray-900) 4%, $wireframe-bg);
+      background: var(--tool-chrome-gray-highlight);
     }
   }
 
@@ -320,11 +299,11 @@ $wireframe-text: var(--color-gray-900);
   min-width: 0;
   font-size: 0.6875rem;
   font-weight: 500;
-  color: $wireframe-text;
+  color: $wireframe-footer-text;
 }
 
 .calloutHint {
   flex-shrink: 0;
   font-size: 0.625rem;
-  color: var(--color-gray-500);
+  color: var(--tool-chrome-text-muted);
 }

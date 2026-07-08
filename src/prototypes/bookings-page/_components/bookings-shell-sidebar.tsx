@@ -3,7 +3,7 @@
 import { Avatar } from "@calcom/ui/components/avatar";
 import Icon from "@calcom/ui/components/icon/Icon";
 import classNames from "@calcom/ui/classNames";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 import { BOOKINGS_USER } from "./bookings-page-mock-data";
 

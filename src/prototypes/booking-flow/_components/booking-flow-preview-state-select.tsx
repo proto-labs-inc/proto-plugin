@@ -1,7 +1,8 @@
 "use client";
 
-import { ControlsPanelSelect } from "@prototype/components/platform-ui/controls-panel-select";
-import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
+import { PrototypeControl } from "proto-plugin";
+import { ControlsPanelSelect } from "proto-plugin";
+import { usePrototypeReviewOptional } from "proto-plugin";
 import { useLayoutEffect } from "react";
 
 import {
@@ -36,5 +37,5 @@ export function BookingFlowPreviewStateSelect({
     return () => setTweaksContent(null);
   }, [onStepChange, setTweaksContent, step]);
 
-  return null;
+  return <PrototypeControl id="booking-flow-preview-state-select" />;
 }

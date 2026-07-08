@@ -1,7 +1,7 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 
 import {
   INVITE_COPY,
@@ -30,35 +30,45 @@ const equalBodyClass =
   "pointer-events-none text-foreground text-[0.875rem] leading-[1.6]";
 
 export function InviteFollowUpCopy() {
-  return <>{INVITE_COPY.followUp}</>;
+  return (
+    <PrototypeComponent id="invite-copy-block.invite-follow-up-copy">
+      {INVITE_COPY.followUp}
+    </PrototypeComponent>
+  );
 }
 
 export function InviteFollowUpTitle() {
   return (
-    <h2 className={inviteFollowUpHeadlineClass}>
-      <span className={inviteLineHighlightClass}>
-        {INVITE_COPY.followUpHeadline}
-      </span>
-    </h2>
+    <PrototypeComponent id="invite-copy-block.invite-follow-up-title">
+      <h2 className={inviteFollowUpHeadlineClass}>
+        <span className={inviteLineHighlightClass}>
+          {INVITE_COPY.followUpHeadline}
+        </span>
+      </h2>
+    </PrototypeComponent>
   );
 }
 
 export function InviteFollowUpBody() {
   return (
-    <p className={inviteBodyClass}>
-      <span className={inviteBodyLineHighlightClass}>
-        <InviteFollowUpCopy />
-      </span>
-    </p>
+    <PrototypeComponent id="invite-copy-block.invite-follow-up-body">
+      <p className={inviteBodyClass}>
+        <span className={inviteBodyLineHighlightClass}>
+          <InviteFollowUpCopy />
+        </span>
+      </p>
+    </PrototypeComponent>
   );
 }
 
 export function InviteFollowUpContent() {
   return (
-    <div className={inviteFollowUpStackClass}>
-      <InviteFollowUpTitle />
-      <InviteFollowUpBody />
-    </div>
+    <PrototypeComponent id="invite-copy-block.invite-follow-up-content">
+      <div className={inviteFollowUpStackClass}>
+        <InviteFollowUpTitle />
+        <InviteFollowUpBody />
+      </div>
+    </PrototypeComponent>
   );
 }
 

@@ -737,7 +737,6 @@ export function PrototypeStateCanvasView<T extends string>({
         layout === "page" ? styles.page : styles.overlay,
       )}
       data-prototype-state-canvas
-      data-prototype-comment-theme="light"
       role={layout === "page" ? undefined : "dialog"}
       aria-modal={layout === "page" ? undefined : "true"}
       aria-label="State map"

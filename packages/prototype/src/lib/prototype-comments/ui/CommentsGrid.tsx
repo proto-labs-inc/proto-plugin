@@ -584,28 +584,20 @@ function CommentCard<TState>({
         <div className={cardStyles.screenshotInner}>
           <div
             className={cardStyles.screenshot}
-            style={
-              isSidebarLayout
-                ? undefined
-                : { aspectRatio: aspectRatio ?? "16 / 9" }
-            }
+            style={{
+              aspectRatio: aspectRatio ?? "16 / 9",
+              ...(isSidebarLayout ? { maxHeight: 220 } : {}),
+            }}
           >
             {annotation.screenshot ? (
               <>
                 <img
                   src={annotation.screenshot}
                   alt={annotation.comment}
-                  className={
-                    isSidebarLayout ? cardStyles.screenshotImgSidebar : undefined
-                  }
-                  style={
-                    isSidebarLayout
-                      ? { objectPosition: screenshotObjectPosition }
-                      : {
-                          ...s.screenshotImg,
-                          objectPosition: screenshotObjectPosition,
-                        }
-                  }
+                  style={{
+                    ...s.screenshotImg,
+                    objectPosition: screenshotObjectPosition,
+                  }}
                 />
                 {viewportBox && viewport && (
                   <div

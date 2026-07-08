@@ -22,6 +22,28 @@ export function isCommentCaptureBlockedTarget(target: HTMLElement): boolean {
   );
 }
 
+/** Plugin chrome where interacting should exit comment mode (not the prototype canvas). */
+export const COMMENT_MODE_CHROME_SELECTORS = [
+  "[data-prototype-review-trigger]",
+  "[data-prototype-review-sidebar]",
+  "[data-prototype-review-panel]",
+  "[data-feedback-toolbar]",
+  "[data-comment-capture-toolbar]",
+  "[data-comments-sidebar]",
+  "#prototype-comments-sidebar-root",
+] as const;
+
+export const COMMENT_MODE_TOGGLE_SELECTOR = "[data-prototype-comment-mode-toggle]";
+
+export function isCommentModeChromeInteraction(target: HTMLElement): boolean {
+  if (closestCrossingShadow(target, COMMENT_MODE_TOGGLE_SELECTOR) != null) {
+    return false;
+  }
+  return COMMENT_MODE_CHROME_SELECTORS.some(
+    (selector) => closestCrossingShadow(target, selector) != null,
+  );
+}
+
 /** CSS :not() chain for descendants that should not receive comment-mode crosshair. */
 export function buildCommentCaptureCursorExclusionCss(): string {
   return COMMENT_CAPTURE_BLOCKED_SELECTORS.flatMap((selector) => [

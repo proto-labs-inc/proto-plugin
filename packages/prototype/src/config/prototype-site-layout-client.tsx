@@ -1,5 +1,6 @@
 "use client";
 
+import { PrototypePluginUpdatePopup } from "@prototype/components/shell/prototype-plugin-update-popup";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode } from "react";
 
@@ -35,6 +36,7 @@ export function PrototypeSiteLayoutClient({
         >
           {children}
         </GalleryShell>
+        <PrototypePluginUpdatePopup />
         {toaster}
       </div>
     );
@@ -43,6 +45,7 @@ export function PrototypeSiteLayoutClient({
   return (
     <div className="bg-[var(--bg-ground)] flex h-svh overflow-hidden">
       {children}
+      <PrototypePluginUpdatePopup />
       {toaster}
     </div>
   );

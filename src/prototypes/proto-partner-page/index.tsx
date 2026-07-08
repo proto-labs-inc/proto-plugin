@@ -1,8 +1,8 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { cn } from "@prototype/lib/utils";
-import { usePrototypeComments } from "@prototype/lib/prototypes/use-prototype-comments";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
+import { usePrototypeComments } from "proto-plugin";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 

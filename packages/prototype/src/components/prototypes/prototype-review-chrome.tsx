@@ -48,6 +48,7 @@ import {
   LayoutGrid,
   MapPin,
   MessageSquare,
+  MessageSquarePlus,
   Monitor,
   Moon,
   Network,
@@ -250,6 +251,7 @@ function ReviewToolbarButton({
   onClick,
   hoverOnly = false,
   hoverTriggerProps,
+  commentModeToggle = false,
   children,
 }: {
   label: string;
@@ -260,6 +262,7 @@ function ReviewToolbarButton({
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   hoverOnly?: boolean;
   hoverTriggerProps?: ToolbarTooltipAnchorProps;
+  commentModeToggle?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -272,6 +275,9 @@ function ReviewToolbarButton({
             pressed && !highlightActive && styles.toolbarButtonHovered,
           )}
           data-active={highlightActive && pressed ? "true" : undefined}
+          data-prototype-comment-mode-toggle={
+            commentModeToggle ? true : undefined
+          }
           aria-label={label}
           aria-pressed={pressed}
           onClick={(event) => {
@@ -1121,6 +1127,21 @@ export function PrototypeReviewChrome({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {onToggleCommentMode ? (
+            <ReviewToolbarButton
+              label={
+                isCommentModeActive ? "Exit comment mode" : "Add comment"
+              }
+              tooltip="Add comment"
+              pressed={isCommentModeActive ?? false}
+              highlightActive={isCommentModeActive ?? false}
+              commentModeToggle
+              onClick={() => onToggleCommentMode()}
+            >
+              <MessageSquarePlus size={16} strokeWidth={2} />
+            </ReviewToolbarButton>
+          ) : null}
+
           <ReviewToolbarButton
             label={
               review.open && review.sidebarPanel === "comments"
@@ -1204,8 +1225,6 @@ export function PrototypeReviewChrome({
               onSelect={onSelect}
               selectedId={selectedId}
               onClose={onClose}
-              isCommentModeActive={isCommentModeActive}
-              onToggleCommentMode={onToggleCommentMode}
             />,
             sidebarPortalTarget,
           )

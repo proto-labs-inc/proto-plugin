@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 import { ArrowRight } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useSyncExternalStore } from "react";
@@ -123,13 +124,14 @@ export function SubmitModalActions({
 
   if (backgroundVariant === "footer-texture" && selection) {
     return (
-      <div
-        className={cn(
-          "pointer-events-auto",
-          submitModalActionsClass,
-          className,
-        )}
-      >
+      <PrototypeComponent id="submit-modal-layouts.submit-modal-actions">
+        <div
+          className={cn(
+            "pointer-events-auto",
+            submitModalActionsClass,
+            className,
+          )}
+        >
         {/* Shadow on a non-clipping wrapper — see full-bleed card note; the
             inner texture layer keeps `overflow:hidden` for the rounded clip. */}
         <div className={cn("rounded-xl shadow-lg", buttonClassName)}>
@@ -150,14 +152,16 @@ export function SubmitModalActions({
             </button>
           </SubmitModalCardTextureBackground>
         </div>
-      </div>
+        </div>
+      </PrototypeComponent>
     );
   }
 
   return (
-    <div
-      className={cn("pointer-events-auto", submitModalActionsClass, className)}
-    >
+    <PrototypeComponent id="submit-modal-layouts.submit-modal-actions">
+      <div
+        className={cn("pointer-events-auto", submitModalActionsClass, className)}
+      >
       <button
         type="button"
         onClick={onSeeOnHomepage}
@@ -178,7 +182,8 @@ export function SubmitModalActions({
       >
         {buttonLabel}
       </button>
-    </div>
+      </div>
+    </PrototypeComponent>
   );
 }
 

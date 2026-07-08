@@ -1,5 +1,5 @@
-$wireframe-bg: #ffffff;
-$wireframe-border: #edebeb;
+$wireframe-bg: var(--tool-chrome-surface);
+$wireframe-border: var(--tool-chrome-border);
 $enter-duration: 0.12s;
 $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
 
@@ -38,7 +38,7 @@ $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
   margin: 0;
   font-size: 0.6875rem;
   line-height: 1.45;
-  color: var(--color-gray-500);
+  color: var(--tool-chrome-text-muted);
   white-space: pre-wrap;
 }
 
@@ -54,13 +54,13 @@ $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
   padding: 0.1875rem 0 0.1875rem 0.875rem;
   font-size: 0.6875rem;
   line-height: 1.45;
-  color: var(--color-gray-500);
+  color: var(--tool-chrome-text-muted);
 
   &::before {
     content: "•";
     position: absolute;
     left: 0;
-    color: var(--color-gray-400);
+    color: var(--tool-chrome-icon);
   }
 
   & + & {
@@ -78,12 +78,12 @@ $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background: color-mix(in srgb, var(--tool-chrome-blue) 6%, $wireframe-bg);
-      color: var(--color-gray-700);
+      color: var(--tool-chrome-text-heading);
     }
   }
 }
 
 .bulletItemActive {
   background: color-mix(in srgb, var(--tool-chrome-blue) 8%, $wireframe-bg);
-  color: var(--color-gray-700);
+  color: var(--tool-chrome-text-heading);
 }

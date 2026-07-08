@@ -1,17 +1,19 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 import { EventTypesCreateModal } from "./event-types-create-modal";
-import { EventTypesFiltersBar } from "./event-types-filters-bar";
 import { EventTypesPageHeader } from "./event-types-page-header";
 import { EventTypesPageLayoutBlock } from "./event-types-page-layout-block";
 import type { EventTypesPageLayoutVariant } from "./event-types-page-layout-content";
+import { EventTypesSecretEventsTransitionBlock } from "./event-types-secret-events-transition-block";
+import type { EventTypesSecretEventsTransitionChoice } from "./event-types-secret-events-transition-content";
 import type { EventTypesLiveState } from "./event-types-types";
 
 type EventTypesMainContentProps = {
   liveState: EventTypesLiveState;
   layoutVariant: EventTypesPageLayoutVariant;
+  secretEventsTransitionVariant: EventTypesSecretEventsTransitionChoice;
   onSearchTermChange: (searchTerm: string) => void;
   onSecretFilterChange: (active: boolean) => void;
   onCreateModalOpenChange: (open: boolean) => void;
@@ -22,6 +24,7 @@ type EventTypesMainContentProps = {
 export function EventTypesMainContent({
   liveState,
   layoutVariant,
+  secretEventsTransitionVariant,
   onSearchTermChange,
   onSecretFilterChange,
   onCreateModalOpenChange,
@@ -39,12 +42,11 @@ export function EventTypesMainContent({
         onNewClick={() => onCreateModalOpenChange(true)}
       />
 
-      {liveState.secretFilterActive ? (
-        <EventTypesFiltersBar
-          secretFilterActive={liveState.secretFilterActive}
-          onSecretFilterChange={onSecretFilterChange}
-        />
-      ) : null}
+      <EventTypesSecretEventsTransitionBlock
+        variant={secretEventsTransitionVariant}
+        secretFilterActive={liveState.secretFilterActive}
+        onSecretFilterChange={onSecretFilterChange}
+      />
 
       <div
         className={

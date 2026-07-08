@@ -23,7 +23,7 @@ Read the prototype's `index.tsx`, any `*-preview-states.ts`, and design-explorat
    - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts` so `/prototypes/<slug>/states` is populated
 4. Run `pnpm verify:prototype-preview-states` whenever a registry file exists.
 
-**State map:** stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Always light mode. See `packages/prototype/AGENTS.md` → **State map behavior**.
+**State map:** stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Follows tool light/dark theme. See `packages/prototype/AGENTS.md` → **State map behavior**.
 
 ## Do not
 

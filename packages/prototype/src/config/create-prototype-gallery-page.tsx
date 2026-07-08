@@ -9,7 +9,7 @@ import { createPrototypeRegistry } from "@prototype/lib/prototypes/create-protot
 import type { PrototypeConfig } from "@prototype/lib/prototypes/prototype-config-types";
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
-import { sortPrototypesByRecency } from "../lib/prototypes/sort-prototypes-by-recency";
+import { sortPrototypesByCreationDate } from "../lib/prototypes/sort-prototypes-by-creation-date";
 
 type PrototypeGalleryPageOptions = {
   title?: string;
@@ -33,10 +33,7 @@ export function createPrototypeGalleryPage(
       Promise.resolve(registry.getAllPrototypes()),
       readScreenshotManifest(),
     ]);
-    const sortedPrototypes = await sortPrototypesByRecency(
-      prototypes,
-      screenshotManifest,
-    );
+    const sortedPrototypes = await sortPrototypesByCreationDate(prototypes);
     const screenshotVersions =
       process.env.NODE_ENV === "development" ? screenshotManifest : {};
 

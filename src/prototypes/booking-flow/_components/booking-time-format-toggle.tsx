@@ -1,7 +1,7 @@
 "use client";
 
 import { SegmentedControl } from "@calcom/ui/components/segmented-control";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 type BookingTimeFormatToggleProps = {
   use24h: boolean;

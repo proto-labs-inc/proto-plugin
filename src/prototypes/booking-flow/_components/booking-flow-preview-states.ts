@@ -1,4 +1,4 @@
-import { definePreviewStateRegistry } from "@prototype/lib/prototypes/prototype-preview-state-registry";
+import { definePreviewStateRegistry } from "proto-plugin";
 
 export const BOOKING_FLOW_STEP_IDS = [
   "month-picker",

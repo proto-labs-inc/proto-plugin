@@ -1,5 +1,6 @@
 "use client";
 
+import { PrototypeComponent } from "proto-plugin";
 import { useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 
@@ -51,21 +52,27 @@ export function DragAttributionTooltipLayer({
   if (!mounted) return null;
 
   if (portaled) {
-    return createPortal(
-      <DragAttributionTooltip
-        tooltipRef={tooltipRef}
-        labelRef={labelRef}
-        className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
-      />,
-      document.body,
+    return (
+      <PrototypeComponent id="drag-attribution-tooltip-layer">
+        {createPortal(
+          <DragAttributionTooltip
+            tooltipRef={tooltipRef}
+            labelRef={labelRef}
+            className={DRAG_ATTRIBUTION_TOOLTIP_CLASS}
+          />,
+          document.body,
+        )}
+      </PrototypeComponent>
     );
   }
 
   return (
-    <DragAttributionTooltip
-      tooltipRef={tooltipRef}
-      labelRef={labelRef}
-      className={DRAG_ATTRIBUTION_TOOLTIP_LAYERED_CLASS}
-    />
+    <PrototypeComponent id="drag-attribution-tooltip-layer">
+      <DragAttributionTooltip
+        tooltipRef={tooltipRef}
+        labelRef={labelRef}
+        className={DRAG_ATTRIBUTION_TOOLTIP_LAYERED_CLASS}
+      />
+    </PrototypeComponent>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { PrototypeComponent } from "proto-plugin";
 import classNames from "@calcom/ui/classNames";
 import { Input } from "@calcom/ui/components/form/inputs/TextField";
 import { Label } from "@calcom/ui/components/form/inputs/Label";
@@ -32,7 +33,10 @@ export function EventTypesFormField({
   "data-testid": dataTestId,
 }: EventTypesFormFieldProps) {
   return (
-    <div className={classNames("mb-2", containerClassName)}>
+    <PrototypeComponent
+      id="event-types-form-field"
+      className={classNames("mb-2", containerClassName)}
+    >
       <Label className="mb-1 block text-sm font-medium leading-6">
         {label}
         {required ? <span className="text-error ml-1">*</span> : null}
@@ -66,6 +70,6 @@ export function EventTypesFormField({
           </div>
         ) : null}
       </div>
-    </div>
+    </PrototypeComponent>
   );
 }

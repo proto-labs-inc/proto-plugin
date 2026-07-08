@@ -1,7 +1,7 @@
 "use client";
 
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 
 import { PartnerShapeCanvas } from "../partner-shape-canvas";
 import { renderSubmitModalCardPattern } from "./submit-modal-card-patterns";

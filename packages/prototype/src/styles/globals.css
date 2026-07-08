@@ -30,26 +30,34 @@
   --tool-chrome-pink-highlight: rgba(255, 70, 100, 0.13);
   --tool-chrome-yellow-highlight: rgba(217, 174, 0, 0.15);
   --tool-chrome-blue-highlight: rgba(0, 151, 254, 0.13);
-  --tool-chrome-gray-highlight: rgba(255, 255, 255, 0.05);
-  --tool-chrome-button-bg: rgba(255, 255, 255, 0.12);
-  --tool-chrome-button-text: rgba(255, 255, 255, 0.9);
-  --tool-chrome-button-bg-hover: rgba(255, 255, 255, 0.2);
+  --tool-chrome-gray-highlight: rgba(255, 255, 255, 0.08);
+  --tool-chrome-button-bg: rgba(255, 255, 255, 0.14);
+  --tool-chrome-button-text: rgba(255, 255, 255, 0.92);
+  --tool-chrome-button-bg-hover: rgba(255, 255, 255, 0.22);
   --tool-chrome-button-text-hover: #ffffff;
 
   /* Tool chrome surfaces — deep dark palette.
-     Content (bg) is darkest to match prototypes; chrome (ground) is a distinct
-     elevated panel for sidebar + header. */
-  --tool-chrome-ground: #181818;
-  --tool-chrome-bg: #0d0d0d;
+     Chrome (ground) is darkest for sidebar + header; content (bg) is a lighter
+     elevated panel for the gallery grid and review preview frame.
+
+     Neutral scale (measured against the #151515 content surface):
+       heading  #f0f0f0  ~13:1   crisp titles
+       text     #d0d0d0  ~9:1    body copy
+       muted    #a0a0a0  ~5:1    labels, descriptions (AA)
+       icon     #9a9a9a          glyphs, dimmer than body
+       border   #333333          hairline dividers
+       strong   #454545          inputs, structural edges */
+  --tool-chrome-ground: #121212;
+  --tool-chrome-bg: #151515;
   --tool-chrome-surface: #1c1c1c;
-  --tool-chrome-surface-muted: #151515;
-  --tool-chrome-text: #e0e0e0;
-  --tool-chrome-text-heading: #e0e0e0;
-  --tool-chrome-text-muted: #888888;
-  --tool-chrome-icon: #888888;
-  --tool-chrome-icon-hover: #a3a3a3;
-  --tool-chrome-border: #2a2a2a;
-  --tool-chrome-border-strong: #383838;
+  --tool-chrome-surface-muted: #181818;
+  --tool-chrome-text: #d0d0d0;
+  --tool-chrome-text-heading: #f0f0f0;
+  --tool-chrome-text-muted: #9c9c9c;
+  --tool-chrome-icon: #9a9a9a;
+  --tool-chrome-icon-hover: #d4d4d4;
+  --tool-chrome-border: #333333;
+  --tool-chrome-border-strong: #454545;
   --tool-dialog-separator: #404040;
   --prototype-state-canvas-edge: var(--tool-chrome-icon-hover);
 
@@ -58,10 +66,10 @@
   --tool-review-card-radius: 6px;
   --tool-review-card-shadow:
     0 1px 2px rgb(0 0 0 / 0.18),
-    0 0 0 1px #2a2a2a;
+    0 0 0 1px var(--tool-chrome-border);
   --tool-review-card-shadow-hover:
     0 1px 3px rgb(0 0 0 / 0.22),
-    0 0 0 1px #383838;
+    0 0 0 1px var(--tool-chrome-border-strong);
   --radius: 0.625rem;
 
   font-family: var(--tool-font-body);
@@ -75,13 +83,13 @@
   --bg-main: var(--tool-chrome-bg);
   --bg-top: var(--tool-chrome-surface);
   --bg-subtle: var(--tool-chrome-surface-muted);
-  --bg-layered: #202020;
+  --bg-layered: #1c1c1c;
   --bg-invert: var(--tool-chrome-text-heading);
   --bg-white: var(--tool-chrome-bg);
 
   --text-primary: var(--tool-chrome-text);
   --text-secondary: var(--tool-chrome-text-muted);
-  --text-tertiary: #666666;
+  --text-tertiary: #8a8a8a;
   --text-invert: #0d0d0d;
 
   --border-faint: var(--tool-chrome-border);
@@ -157,12 +165,12 @@
   --color-bg-main: var(--tool-chrome-bg);
   --color-bg-top: var(--tool-chrome-surface);
   --color-bg-subtle: var(--tool-chrome-surface-muted);
-  --color-bg-layered: #202020;
+  --color-bg-layered: #1c1c1c;
   --color-bg-invert: var(--tool-chrome-text-heading);
   --color-bg-white: var(--tool-chrome-bg);
   --color-text-primary: var(--tool-chrome-text);
   --color-text-secondary: var(--tool-chrome-text-muted);
-  --color-text-tertiary: #666666;
+  --color-text-tertiary: #8a8a8a;
   --color-text-invert: #121212;
 
   color: var(--tool-chrome-text);
@@ -173,52 +181,78 @@
   font-family: inherit;
 }
 
-[data-prototype-review-sidebar] {
+/*
+ * Sidebar chrome — a content-dense reading surface, so it pins every semantic
+ * "content" token to the bright end of the neutral scale (headings crisp, body
+ * legible, muted labels still ~5:1). Borders step up one notch from the base so
+ * dividers and input edges read clearly against the elevated ground, without
+ * turning into harsh wireframe lines.
+ */
+[data-prototype-review-sidebar],
+[data-comments-sidebar],
+[data-platform-sidebar] {
   font-family: var(--tool-font-body);
   --font-sans: var(--tool-font-body);
   --font-display: var(--tool-font-display);
   --font-mono: var(--tool-font-body);
 
   --tool-chrome-icon: #b0b0b0;
-  --tool-chrome-icon-hover: #d8d8d8;
+  --tool-chrome-icon-hover: #e6e6e6;
+  --tool-chrome-gray-highlight: rgba(255, 255, 255, 0.09);
+  --tool-chrome-border: #3a3a3a;
+  --tool-chrome-border-strong: #4d4d4d;
+  --tool-chrome-input-surface: rgba(255, 255, 255, 0.035);
 
-  color: var(--tool-chrome-icon);
-
-  --tool-chrome-text: var(--tool-chrome-icon-hover);
-  --tool-chrome-text-heading: var(--tool-chrome-icon-hover);
-  --tool-chrome-text-muted: var(--tool-chrome-icon);
+  color: var(--tool-chrome-text);
 
   --bg-ground: var(--tool-chrome-ground);
   --bg-main: var(--tool-chrome-bg);
   --bg-top: var(--tool-chrome-bg);
   --bg-subtle: var(--tool-chrome-surface-muted);
-  --bg-layered: #202020;
+  --bg-layered: #1a1a1a;
   --border-faint: var(--tool-chrome-border);
   --border-solid: var(--tool-chrome-border);
   --border-medium: var(--tool-chrome-border-strong);
 
-  --text-primary: var(--tool-chrome-icon-hover);
-  --text-secondary: var(--tool-chrome-icon);
-  --text-tertiary: #909090;
+  --text-primary: var(--tool-chrome-text-heading);
+  --text-secondary: var(--tool-chrome-text);
+  --text-tertiary: var(--tool-chrome-text-muted);
+
+  --foreground: var(--tool-chrome-text-heading);
+  --muted-foreground: var(--tool-chrome-text-muted);
+  --border: var(--tool-chrome-border);
+  --input: var(--tool-chrome-border-strong);
 
   --color-background: var(--tool-chrome-bg);
-  --color-foreground: var(--tool-chrome-icon-hover);
+  --color-foreground: var(--tool-chrome-text-heading);
   --color-card: var(--tool-chrome-surface);
-  --color-card-foreground: var(--tool-chrome-icon-hover);
+  --color-card-foreground: var(--tool-chrome-text-heading);
   --color-muted: var(--tool-chrome-surface-muted);
-  --color-muted-foreground: var(--tool-chrome-icon);
+  --color-muted-foreground: var(--tool-chrome-text-muted);
   --color-accent: var(--tool-chrome-gray-highlight);
-  --color-accent-foreground: var(--tool-chrome-icon-hover);
+  --color-accent-foreground: var(--tool-chrome-text-heading);
   --color-border: var(--tool-chrome-border);
-  --color-ring: var(--tool-chrome-icon-hover);
+  --color-border-faint: var(--tool-chrome-border);
+  --color-border-solid: var(--tool-chrome-border);
+  --color-border-medium: var(--tool-chrome-border-strong);
+  --color-input: var(--tool-chrome-border-strong);
+  --color-ring: var(--tool-chrome-text-heading);
   --color-bg-ground: var(--tool-chrome-ground);
   --color-bg-main: var(--tool-chrome-bg);
   --color-bg-top: var(--tool-chrome-bg);
   --color-bg-subtle: var(--tool-chrome-surface-muted);
-  --color-bg-layered: #202020;
-  --color-text-primary: var(--tool-chrome-icon-hover);
-  --color-text-secondary: var(--tool-chrome-icon);
-  --color-text-tertiary: #909090;
+  --color-bg-layered: #1a1a1a;
+  --color-text-primary: var(--tool-chrome-text-heading);
+  --color-text-secondary: var(--tool-chrome-text);
+  --color-text-tertiary: var(--tool-chrome-text-muted);
+}
+
+/* Give brief/prompt inputs a faint filled surface so the field reads as an
+   affordance rather than an empty hairline rectangle. */
+[data-prototype-review-sidebar] textarea:not([data-prototype-screenshot] *),
+[data-comments-sidebar] textarea:not([data-prototype-screenshot] *),
+[data-platform-sidebar] textarea:not([data-prototype-screenshot] *) {
+  background-color: var(--tool-chrome-input-surface);
 }
 
 [data-prototype-review-sidebar] :is(
@@ -456,7 +490,7 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 @media (hover: hover) and (pointer: fine) {
   [data-prototype-root] .tool-toolbar-button:hover {
-    background: #202020;
+    background: var(--tool-chrome-surface);
     color: var(--tool-chrome-icon-hover);
   }
 }
@@ -692,10 +726,26 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   color: var(--tool-chrome-text-muted);
 }
 
-/* State map chrome — one surface color for header + canvas pan area. */
+/* State map chrome — dedicated canvas bed + node footer tokens per theme. */
 [data-prototype-root] [data-prototype-state-canvas] {
-  background-color: var(--tool-chrome-bg);
+  --prototype-state-map-canvas-bg: var(--tool-chrome-ground);
+  --prototype-state-map-node-surface: var(--tool-chrome-surface);
+  --prototype-state-map-node-preview-bg: var(--tool-chrome-surface-muted);
+  --prototype-state-map-node-footer-bg: var(--tool-chrome-surface-muted);
+  --prototype-state-map-node-footer-border: var(--tool-chrome-border-strong);
+  --prototype-state-map-node-footer-text: var(--tool-chrome-text-heading);
+
+  background-color: var(--prototype-state-map-canvas-bg);
   color: var(--tool-chrome-text);
+}
+
+[data-prototype-root][data-prototype-comment-theme="dark"] [data-prototype-state-canvas] {
+  --prototype-state-map-canvas-bg: var(--tool-chrome-ground);
+  --prototype-state-map-node-surface: var(--tool-chrome-surface);
+  --prototype-state-map-node-preview-bg: var(--tool-chrome-surface-muted);
+  --prototype-state-map-node-footer-bg: var(--tool-chrome-surface-muted);
+  --prototype-state-map-node-footer-border: var(--tool-chrome-border-strong);
+  --prototype-state-map-node-footer-text: var(--tool-chrome-text-heading);
 }
 
 /* Restore host prototype preview theme inside screenshot capture and source

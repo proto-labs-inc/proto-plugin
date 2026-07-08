@@ -3,17 +3,17 @@
 import {
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
-} from "@prototype/components/prototypes/prototype-state-canvas";
-import { buildPrototypeTargetId } from "@prototype/components/prototypes/prototype-target";
+} from "proto-plugin";
+import { buildPrototypeTargetId } from "proto-plugin";
 import {
   encodeShareState,
   SHARE_STATE_PARAM,
   SHARE_TARGET_PARAM,
-} from "@prototype/lib/prototypes/prototype-share-link";
+} from "proto-plugin";
 import {
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
-} from "@prototype/lib/prototypes/prototype-state-canvas-types";
+} from "proto-plugin";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 

@@ -870,9 +870,13 @@
 }
 
 :global(html[data-comments-sidebar-open]) .markersLayer,
+:global(html[data-prototype-review-sidebar-open]) .markersLayer,
 :global(html[data-comments-sidebar-open]) .fixedMarkersLayer,
+:global(html[data-prototype-review-sidebar-open]) .fixedMarkersLayer,
 :global(html[data-comments-sidebar-open]) .overlay,
-:global(html[data-comments-sidebar-open]) .targetHighlightLayer {
+:global(html[data-prototype-review-sidebar-open]) .overlay,
+:global(html[data-comments-sidebar-open]) .targetHighlightLayer,
+:global(html[data-prototype-review-sidebar-open]) .targetHighlightLayer {
   right: var(--comments-sidebar-width, 400px);
 }
 

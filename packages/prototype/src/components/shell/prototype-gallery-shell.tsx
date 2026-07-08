@@ -21,7 +21,7 @@ export function PrototypeGalleryShell({
   return (
     <PrototypeProvider className="bg-[var(--bg-main)] flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
       {footer ? (
-        <div className="border-[var(--tool-chrome-border)] bg-[var(--bg-ground)] flex shrink-0 items-center justify-end border-b px-10 py-3 lg:px-16">
+        <div className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] flex shrink-0 items-center justify-end border-b px-10 py-3 lg:px-16">
           {footer}
         </div>
       ) : null}
@@ -31,7 +31,7 @@ export function PrototypeGalleryShell({
           sourceDirectoryName={sourceDirectoryName}
           sourcePath={sourcePath}
         />
-        <main className="bg-[var(--bg-main)] flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main className="bg-[var(--bg-ground)] flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </main>
       </div>
@@ -52,7 +52,7 @@ export function PrototypeGalleryPageLayout({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {header}
-      <div className="bg-[var(--bg-main)] min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+      <div className="bg-[var(--bg-ground)] min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div className="h-fit w-full">{children}</div>
       </div>
     </div>
@@ -75,7 +75,7 @@ export function PrototypeGalleryHeader({
   return (
     <div
       className={cn(
-        "border-[var(--tool-chrome-border)] bg-[var(--bg-ground)] shrink-0 border-b px-10 py-6 lg:px-16",
+        "border-[var(--tool-chrome-border)] bg-[var(--bg-main)] shrink-0 border-b px-10 py-6 lg:px-16",
         className,
       )}
     >

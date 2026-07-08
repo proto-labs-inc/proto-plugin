@@ -332,7 +332,7 @@ Prototypes with preview modes use `definePreviewStateRegistry` in `*-preview-sta
 The state map is a **stateless picker** — it must **not** reflect, highlight, or mark the current preview state.
 
 - **No active-state association** — Do not pass the current preview mode, `liveState`, or any `activeStateId` into `PrototypeStateCanvasConfig` or `build…StateCanvasConfig`. Clicking a node navigates to that state; there is no checkmark, selected border, or `aria-current` on the map.
-- **Always light mode** — The state map canvas (background, chrome, edges, section labels) always renders in light mode regardless of the gallery/review tool theme toggle. Wireframe node cards use fixed light neutral colors.
+- **Follows tool theme** — The state map canvas (background, chrome, edges, section labels, node cards) uses `--tool-chrome-*` tokens and matches the gallery/review light/dark mode toggle.
 - **`build…StateCanvasConfig(onStateSelect)`** — The builder takes only the select handler. Wire it once in `index.tsx` and `state-map-page.tsx`; do not re-build when `liveState` changes.
 
 Reference: `src/prototypes/booking-flow/_components/booking-flow-state-canvas-config.tsx`, `state-map-page.tsx`.
@@ -524,15 +524,16 @@ export const PR_SPLIT_ENTRIES: MyPrSplitEntry[] = [
 
 ### Wireframes (`pr-split-wireframes.tsx`)
 
-Prototype-specific schematic thumbnails for each `wireframeId`. Pattern:
+Prototype-specific **full-page** schematic previews for each `wireframeId`. Each card must show the complete page shell (sidebar, header/toolbar, main content) — not a cropped excerpt or zoomed-in slice of the PR target. Pattern:
 
-1. Define a `PageShell` (or layout scaffold) matching the prototype page structure.
-2. Use low-fidelity `Wire` blocks — neutral grays for chrome, **highlighted** regions for the PR target.
+1. Define a `PageShell` (or layout scaffold) matching the prototype's real page structure — every zone reviewers see in the live preview.
+2. Use low-fidelity `Wire` blocks — neutral grays for chrome, **highlighted** regions for the PR target only.
 3. Import highlight tokens from the tool: `PR_TARGET_HIGHLIGHT_BORDER`, `PR_TARGET_HIGHLIGHT_FILL`.
-4. Register one renderer per `wireframeId` in a `Record<WireframeId, () => ReactNode>`.
-5. Export `PrSplitWireframe` wrapped in `PrototypeComponent` (register id in `component-ids.ts`).
+4. Fill the card preview: wrap the wireframe root in `PR_SPLIT_WIREFRAME_FRAME_CLASS` from `prototype` (`aspect-video w-full overflow-hidden`) so the schematic reads as a full screen, not a short strip.
+5. Register one renderer per `wireframeId` in a `Record<WireframeId, () => ReactNode>`.
+6. Export `PrSplitWireframe` wrapped in `PrototypeComponent` (register id in `component-ids.ts`).
 
-Highlighted areas must match what `targetId` points to on the real prototype.
+Highlighted areas must match what `targetId` points to on the real prototype; surrounding chrome provides context for where the change sits on the page.
 
 ### Page wiring (`index.tsx`)
 

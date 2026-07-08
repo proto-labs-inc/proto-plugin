@@ -20,8 +20,19 @@ export function clampSidebarWidth(width: number) {
   return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
 }
 
+/** e.g. `data-comments-sidebar` + `"open"` → `data-comments-sidebar-open` */
+export function getSidebarStateAttribute(
+  dataAttribute: string,
+  suffix: "open" | "inline" | "resizing",
+): string {
+  const base = dataAttribute.startsWith("data-")
+    ? dataAttribute.slice(5)
+    : dataAttribute;
+  return `data-${base}-${suffix}`;
+}
+
 const SIDEBAR_TITLE_CLASS =
-  "font-display truncate text-sm font-semibold text-[var(--tool-chrome-icon-hover)]";
+  "font-display truncate text-sm font-semibold text-[var(--tool-chrome-text-heading)]";
 
 export const SIDEBAR_ICON_BUTTON_CLASS =
   "cursor-pointer text-[var(--tool-chrome-icon)] hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-icon-hover)] focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
@@ -59,6 +70,9 @@ export function Sidebar({
   className,
   overlay = false,
 }: SidebarProps) {
+  const openAttr = getSidebarStateAttribute(dataAttribute, "open");
+  const inlineAttr = getSidebarStateAttribute(dataAttribute, "inline");
+  const resizingAttr = getSidebarStateAttribute(dataAttribute, "resizing");
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartRef = useRef<{ startX: number; startWidth: number } | null>(
@@ -80,7 +94,9 @@ export function Sidebar({
   );
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-platform-sidebar-inline", "");
+    if (!overlay) {
+      document.documentElement.setAttribute(inlineAttr, "");
+    }
     document.documentElement.style.setProperty(
       widthCssVar,
       `${DEFAULT_SIDEBAR_WIDTH}px`,
@@ -88,22 +104,19 @@ export function Sidebar({
 
     return () => {
       document.documentElement.style.removeProperty(widthCssVar);
-      document.documentElement.removeAttribute("data-platform-sidebar-open");
-      document.documentElement.removeAttribute("data-platform-sidebar-resizing");
-      document.documentElement.removeAttribute("data-platform-sidebar-inline");
+      document.documentElement.removeAttribute(openAttr);
+      document.documentElement.removeAttribute(resizingAttr);
+      document.documentElement.removeAttribute(inlineAttr);
     };
-  }, [widthCssVar]);
+  }, [inlineAttr, openAttr, overlay, resizingAttr, widthCssVar]);
 
   useEffect(() => {
-    document.documentElement.toggleAttribute("data-platform-sidebar-open", open);
-  }, [open]);
+    document.documentElement.toggleAttribute(openAttr, open);
+  }, [open, openAttr]);
 
   useEffect(() => {
-    document.documentElement.toggleAttribute(
-      "data-platform-sidebar-resizing",
-      isResizing,
-    );
-  }, [isResizing]);
+    document.documentElement.toggleAttribute(resizingAttr, isResizing);
+  }, [isResizing, resizingAttr]);
 
   const handleResizeStart = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -152,7 +165,7 @@ export function Sidebar({
           : { width: open ? sidebarWidth : 0 }
       }
       className={cn(
-        "flex h-full shrink-0 flex-col overflow-hidden bg-[var(--tool-chrome-ground)] text-[var(--tool-chrome-icon)]",
+        "flex h-full shrink-0 flex-col overflow-hidden bg-[var(--tool-chrome-ground)] text-[var(--tool-chrome-text)]",
         isResizing && "select-none transition-none",
         overlay
           ? "absolute inset-y-0 right-0 shadow-2xl transition-transform duration-200 ease-out"
@@ -226,13 +239,18 @@ type SidebarResizeHandleProps = {
 export function SidebarResizeHandle({
   open,
   sidebarWidth,
+  isResizing,
   onResizeStart,
   onResizeMove,
   onResizeEnd,
 }: SidebarResizeHandleProps) {
   return (
     <div
-      className="absolute top-0 left-[-4px] z-[1] h-full w-2 cursor-col-resize touch-none before:absolute before:top-0 before:left-[3px] before:h-full before:w-0.5 before:bg-transparent before:transition-colors hover:before:bg-border [[data-platform-sidebar-resizing]_&]:before:bg-border"
+      data-resizing={isResizing ? "" : undefined}
+      className={cn(
+        "absolute top-0 left-[-4px] z-[1] h-full w-2 cursor-col-resize touch-none before:absolute before:top-0 before:left-[3px] before:h-full before:w-0.5 before:bg-transparent before:transition-colors hover:before:bg-border data-resizing:before:bg-border",
+        isResizing && "select-none",
+      )}
       onPointerDown={onResizeStart}
       onPointerMove={onResizeMove}
       onPointerUp={onResizeEnd}

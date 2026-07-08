@@ -1,10 +1,10 @@
 "use client";
 
-import type { PrototypeStateCanvasConfig } from "@prototype/lib/prototypes/prototype-state-canvas-types";
+import type { PrototypeStateCanvasConfig } from "proto-plugin";
 import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
-} from "@prototype/lib/pr-split/pr-split-highlight";
+} from "proto-plugin";
 
 import type { BookingsPagePreviewStateId } from "./bookings-page-preview-states";
 import { BOOKINGS_PAGE_PREVIEW_STATE_REGISTRY } from "./bookings-page-preview-states";

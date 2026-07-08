@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@prototype/lib/utils";
+import { PrototypeComponent } from "proto-plugin";
+import { cn } from "@/lib/cn";
 import { useMemo, useSyncExternalStore } from "react";
 
 import {
@@ -79,15 +80,17 @@ export function InviteFollowUpShapeExamples({
   }, [dragAttributionLabel, isMobileViewport, layoutVariant]);
 
   return (
-    <HomePageShapesBackground
-      config={config}
-      previewKey={`${previewKey}-${isMobileViewport ? "mobile" : "desktop"}`}
-      className={cn(
-        "pointer-events-auto absolute inset-0 z-10 overflow-hidden bg-transparent",
-        className,
-      )}
-      componentId="invite-follow-up-shape-examples"
-      ariaLabel="Interactive proto shape examples"
-    />
+    <PrototypeComponent id="invite-follow-up-shape-examples">
+      <HomePageShapesBackground
+        config={config}
+        previewKey={`${previewKey}-${isMobileViewport ? "mobile" : "desktop"}`}
+        className={cn(
+          "pointer-events-auto absolute inset-0 z-10 overflow-hidden bg-transparent",
+          className,
+        )}
+        componentId="invite-follow-up-shape-examples"
+        ariaLabel="Interactive proto shape examples"
+      />
+    </PrototypeComponent>
   );
 }

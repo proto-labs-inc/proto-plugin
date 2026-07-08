@@ -1,8 +1,9 @@
-import { definePrototypeComponentRegistry } from "@prototype/lib/prototypes/prototype-component-registry";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const PROTO_SHAPES_COMPONENT_IDS = [
   "page",
   "scroll-container",
+  "drag-attribution-tooltip-layer",
   "springs-shapes-canvas",
 ] as const;
 

@@ -4,12 +4,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import * as React from "react";
 
-import { isCommentCaptureBlockedTarget } from "@prototype/lib/prototype-comments/core/comment-capture-blocked";
+import { isCommentCaptureBlockedTarget } from "../../lib/prototype-comments/core/comment-capture-blocked";
 import {
   getPrototypeDialogPortalContainer,
   getPrototypeToolDialogPortalContainer,
-} from "@prototype/lib/tool-portal";
-import { cn } from "@prototype/lib/utils";
+} from "../../lib/tool-portal";
+import { cn } from "../../lib/utils";
 
 import styles from "./dialog.module.scss";
 

@@ -17,7 +17,8 @@ export function useLayoutShift(): number {
       for (const mutation of mutations) {
         if (
           mutation.type === "attributes" &&
-          mutation.attributeName === "data-comments-sidebar-open"
+          (mutation.attributeName === "data-comments-sidebar-open" ||
+            mutation.attributeName === "data-prototype-review-sidebar-open")
         ) {
           bump();
           break;
@@ -26,7 +27,13 @@ export function useLayoutShift(): number {
     });
     mutationObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-comments-sidebar-open", "data-comments-sidebar-resizing", "style"],
+      attributeFilter: [
+        "data-comments-sidebar-open",
+        "data-prototype-review-sidebar-open",
+        "data-comments-sidebar-resizing",
+        "data-prototype-review-sidebar-resizing",
+        "style",
+      ],
     });
 
     const handleTransitionEnd = (event: TransitionEvent) => {

@@ -3,10 +3,11 @@
 import { Avatar } from "@calcom/ui/components/avatar";
 import Icon from "@calcom/ui/components/icon/Icon";
 import classNames from "@calcom/ui/classNames";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 import { ChevronDownIcon } from "@coss/ui/icons";
 
-import { EVENT_TYPES_USER } from "./event-types-mock-data";
+import { EVENT_TYPES_USER, SECRET_EVENTS_FILTER_LABEL } from "./event-types-mock-data";
+import type { EventTypesSecretEventsTransitionChoice } from "./event-types-secret-events-transition-content";
 
 type NavItem = {
   id: string;
@@ -28,11 +29,18 @@ const BOTTOM_NAV: NavItem[] = [
   { id: "copy-link", label: "Copy public page link", icon: "copy" },
 ];
 
-function NavLink({ item }: { item: NavItem }) {
+function NavLink({
+  item,
+  onClick,
+}: {
+  item: NavItem;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
       aria-current={item.active ? "page" : undefined}
+      onClick={onClick}
       className={classNames(
         "group relative mt-0.5 flex w-full items-center justify-start rounded-md px-2 py-1.5 text-left text-sm font-medium transition",
         "[&[aria-current='page']]:text-emphasis",
@@ -53,11 +61,23 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-export function EventTypesShellSidebar() {
+type EventTypesShellSidebarProps = {
+  secretEventsTransitionVariant?: EventTypesSecretEventsTransitionChoice;
+  secretFilterActive?: boolean;
+  onSecretFilterChange?: (active: boolean) => void;
+};
+
+export function EventTypesShellSidebar({
+  secretEventsTransitionVariant = "no-entry",
+  secretFilterActive = false,
+  onSecretFilterChange,
+}: EventTypesShellSidebarProps) {
+  const showSecretSubNav = secretEventsTransitionVariant === "sidebar-subnav";
+
   return (
     <PrototypeComponent
       id="event-types-shell-sidebar"
-      className="border-muted bg-cal-muted relative hidden h-full w-56 shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r px-3 md:flex"
+      className="border-muted bg-cal-muted relative hidden h-full w-56 shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r px-3 @min-[64rem]/shell:flex"
     >
       <div className="flex h-full flex-col justify-between py-3 pt-4">
         <div>
@@ -103,7 +123,35 @@ export function EventTypesShellSidebar() {
 
           <nav className="mt-4 flex-1">
             {MAIN_NAV.map((item) => (
-              <NavLink key={item.id} item={item} />
+              <div key={item.id}>
+                <NavLink
+                  item={{
+                    ...item,
+                    active: item.id === "event-types" && !secretFilterActive,
+                  }}
+                  onClick={
+                    showSecretSubNav && item.id === "event-types" && secretFilterActive
+                      ? () => onSecretFilterChange?.(false)
+                      : undefined
+                  }
+                />
+                {showSecretSubNav && item.id === "event-types" ? (
+                  <button
+                    type="button"
+                    aria-current={secretFilterActive ? "page" : undefined}
+                    onClick={() => onSecretFilterChange?.(true)}
+                    className={classNames(
+                      "text-default hover:bg-subtle hover:text-emphasis relative mt-0.5 flex w-full items-center justify-start rounded-md py-1.5 pl-8 pr-2 text-left text-sm font-medium transition",
+                      secretFilterActive && "bg-emphasis text-emphasis",
+                    )}
+                  >
+                    <Icon name="disc" className="h-4 w-4 shrink-0 ltr:mr-2 rtl:ml-2" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {SECRET_EVENTS_FILTER_LABEL}
+                    </span>
+                  </button>
+                ) : null}
+              </div>
             ))}
           </nav>
         </div>

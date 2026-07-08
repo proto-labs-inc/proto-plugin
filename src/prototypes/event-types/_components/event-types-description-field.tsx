@@ -1,7 +1,7 @@
 "use client";
 
 import { Label } from "@calcom/ui/components/form";
-import { PrototypeComponent } from "@prototype/components/prototypes/prototype-target";
+import { PrototypeComponent } from "proto-plugin";
 
 type EventTypesDescriptionFieldProps = {
   value: string;

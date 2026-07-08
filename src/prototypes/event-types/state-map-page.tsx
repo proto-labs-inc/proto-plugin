@@ -1,19 +1,15 @@
 "use client";
 
 import {
-  PrototypeStateCanvasRegistrar,
-  PrototypeStateCanvasView,
-} from "@prototype/components/prototypes/prototype-state-canvas";
-import { buildPrototypeTargetId } from "@prototype/components/prototypes/prototype-target";
-import {
+  buildPrototypeTargetId,
   encodeShareState,
-  SHARE_STATE_PARAM,
-  SHARE_TARGET_PARAM,
-} from "@prototype/lib/prototypes/prototype-share-link";
-import {
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
-} from "@prototype/lib/prototypes/prototype-state-canvas-types";
+  PrototypeStateCanvasRegistrar,
+  PrototypeStateCanvasView,
+  SHARE_STATE_PARAM,
+  SHARE_TARGET_PARAM,
+} from "proto-plugin";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 

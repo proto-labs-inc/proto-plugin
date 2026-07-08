@@ -16,4 +16,4 @@ When building or fixing prototypes under `src/prototypes/`, follow **Prototype v
 
 When building or modifying prototypes, follow **Live state & preview states (mandatory)** in `packages/prototype/AGENTS.md`. Use the plugin's `liveState` + `definePreviewStateRegistry` pattern — do not invent separate state management. Register preview states (including `state-map-page.tsx` and `stateMapComponent`) in the same change as new screens, tabs, filters, modals, or branches.
 
-**State map:** never tie the map to the current preview state (no checkmarks / `activeStateId`). The map always renders in light mode — see **State map behavior** in `packages/prototype/AGENTS.md`.
+**State map:** never tie the map to the current preview state (no checkmarks / `activeStateId`). The map follows the tool light/dark theme — see **State map behavior** in `packages/prototype/AGENTS.md`.
