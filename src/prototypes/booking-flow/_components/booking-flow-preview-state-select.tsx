@@ -21,6 +21,13 @@ export function BookingFlowPreviewStateSelect({
 }: BookingFlowPreviewStateSelectProps) {
   const review = usePrototypeReviewOptional();
   const setTweaksContent = review?.setTweaksContent;
+  const setActivePreviewStateId = review?.setActivePreviewStateId;
+
+  useLayoutEffect(() => {
+    if (!setActivePreviewStateId) return;
+    setActivePreviewStateId(step);
+    return () => setActivePreviewStateId(null);
+  }, [setActivePreviewStateId, step]);
 
   useLayoutEffect(() => {
     if (!setTweaksContent) return;

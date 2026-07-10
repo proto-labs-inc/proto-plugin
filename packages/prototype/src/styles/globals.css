@@ -743,6 +743,14 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   background-color: var(--prototype-state-map-canvas-bg);
 }
 
+/* Mini map: compact dark nodes over the live preview; edges stay a step lighter. */
+[data-prototype-root] [data-prototype-state-canvas][data-prototype-state-canvas-layout="mini"] {
+  --prototype-state-map-node-surface: #171717;
+  --prototype-state-map-node-preview-bg: #171717;
+  --prototype-state-map-node-footer-text: rgba(255, 255, 255, 0.92);
+  --prototype-mini-edge-color: #5a5a5a;
+}
+
 [data-prototype-root][data-prototype-comment-theme="dark"] [data-prototype-state-canvas] {
   --prototype-state-map-canvas-bg: var(--tool-chrome-ground);
   --prototype-state-map-node-surface: var(--tool-chrome-surface);

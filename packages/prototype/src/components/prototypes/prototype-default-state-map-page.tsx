@@ -9,8 +9,9 @@ import {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
-import { X } from "lucide-react";
+import { Minimize2 } from "lucide-react";
 
+import { PrototypeStateMapAddStateButton } from "@prototype/components/prototypes/prototype-state-map-add-state-button";
 import styles from "./prototype-state-canvas-overlay.module.scss";
 
 type PrototypeDefaultStateMapPageProps = {
@@ -45,13 +46,16 @@ export function PrototypeDefaultStateMapPage({
             Preview states appear here once this prototype defines a state map.
           </p>
         </div>
-        <Link
-          href={backHref}
-          className={styles.closeButton}
-          aria-label="Back to prototype"
-        >
-          <X size={16} strokeWidth={2} />
-        </Link>
+        <div className={styles.headerActions}>
+          <PrototypeStateMapAddStateButton />
+          <Link
+            href={backHref}
+            className={styles.closeButton}
+            aria-label="Back to prototype"
+          >
+            <Minimize2 size={16} strokeWidth={2} />
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-6">

@@ -23,6 +23,13 @@ export function EventTypesPreviewStateSelect({
 }: EventTypesPreviewStateSelectProps) {
   const review = usePrototypeReviewOptional();
   const setTweaksContent = review?.setTweaksContent;
+  const setActivePreviewStateId = review?.setActivePreviewStateId;
+
+  useLayoutEffect(() => {
+    if (!setActivePreviewStateId) return;
+    setActivePreviewStateId(previewStateId);
+    return () => setActivePreviewStateId(null);
+  }, [previewStateId, setActivePreviewStateId]);
 
   useLayoutEffect(() => {
     if (!setTweaksContent) return;

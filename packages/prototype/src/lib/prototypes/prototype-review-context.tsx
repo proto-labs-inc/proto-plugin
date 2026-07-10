@@ -86,6 +86,11 @@ type PrototypeReviewContextValue = {
   /** Preview states from the controls panel select (read via ref for New state modal). */
   previewStatesRef: MutableRefObject<PrototypePreviewState[]>;
   registerPreviewStates: (states: PrototypePreviewState[]) => void;
+  /** Currently previewed state id (from the States menu select). */
+  activePreviewStateId: string | null;
+  setActivePreviewStateId: (id: string | null) => void;
+  registerOpenCreateStateModal: (handler: (() => void) | null) => void;
+  openCreateStateModal: () => void;
   referenceDocs: PrototypeReferenceDoc[];
   referenceDocsConfigFilePath: string | undefined;
   registerReferenceDocs: (
@@ -188,6 +193,10 @@ export function PrototypeReviewProvider({
   const [variantSidebarRevision, setVariantSidebarRevision] = useState(0);
   const [variantSetOrder, setVariantSetOrder] = useState<string[]>([]);
   const previewStatesRef = useRef<PrototypePreviewState[]>([]);
+  const [activePreviewStateId, setActivePreviewStateId] = useState<string | null>(
+    null,
+  );
+  const openCreateStateModalRef = useRef<(() => void) | null>(null);
   const [referenceDocs, setReferenceDocs] = useState<PrototypeReferenceDoc[]>(
     [],
   );
@@ -253,6 +262,14 @@ export function PrototypeReviewProvider({
 
   const registerPreviewStates = useCallback((states: PrototypePreviewState[]) => {
     previewStatesRef.current = states;
+  }, []);
+
+  const registerOpenCreateStateModal = useCallback((handler: (() => void) | null) => {
+    openCreateStateModalRef.current = handler;
+  }, []);
+
+  const openCreateStateModal = useCallback(() => {
+    openCreateStateModalRef.current?.();
   }, []);
 
   const registerReferenceDocs = useCallback(
@@ -758,6 +775,10 @@ export function PrototypeReviewProvider({
       setStateCanvasPagePath,
       previewStatesRef,
       registerPreviewStates,
+      activePreviewStateId,
+      setActivePreviewStateId,
+      registerOpenCreateStateModal,
+      openCreateStateModal,
       referenceDocs,
       referenceDocsConfigFilePath,
       registerReferenceDocs,
@@ -832,6 +853,10 @@ export function PrototypeReviewProvider({
       setStateCanvasPagePath,
       previewStatesRef,
       registerPreviewStates,
+      activePreviewStateId,
+      setActivePreviewStateId,
+      registerOpenCreateStateModal,
+      openCreateStateModal,
       referenceDocs,
       referenceDocsConfigFilePath,
       registerReferenceDocs,

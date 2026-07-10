@@ -121,6 +121,7 @@ $morph-duration: 0.25s;
 $proto-accent-pink: #fc388c;
 $proto-accent-cyan: #10c4e2;
 $proto-accent-gold: #fcc028;
+$proto-accent-blue: #0097fe;
 
 .footerTabAccent {
   text-decoration: underline;
@@ -138,6 +139,10 @@ $proto-accent-gold: #fcc028;
 
 .footerTabAccentGold {
   text-decoration-color: $proto-accent-gold;
+}
+
+.footerTabAccentBlue {
+  text-decoration-color: $proto-accent-blue;
 }
 
 .footerUtilities {
@@ -645,6 +650,53 @@ $proto-accent-gold: #fcc028;
   ::selection {
     background: rgba(0, 0, 0, 0.08);
     color: rgba(0, 0, 0, 0.92);
+  }
+
+  &.footerRoot {
+    background: var(--tool-chrome-ground);
+    --tool-chrome-icon: rgba(0, 0, 0, 0.45);
+    --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
+  }
+
+  .footerBar {
+    background: var(--tool-chrome-ground);
+  }
+
+  .footerBrand {
+    color: var(--tool-chrome-text-heading);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: var(--tool-chrome-gray-highlight);
+        color: var(--tool-chrome-text-heading);
+      }
+    }
+  }
+
+  .footerTab {
+    color: var(--tool-chrome-text);
+
+    &:focus-visible {
+      outline: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover:not(.footerTabActive) {
+        background: var(--tool-chrome-gray-highlight);
+        color: var(--tool-chrome-text-heading);
+      }
+    }
+  }
+
+  .footerTabActive {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--tool-chrome-text-heading);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: var(--tool-chrome-text-heading);
+      }
+    }
   }
 
   .morphToolbar {

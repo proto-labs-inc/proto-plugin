@@ -75,6 +75,24 @@ function getSelectableOptions<T extends string>(
   });
 }
 
+function resolveActivePreviewStateId<T extends string>(
+  value: T,
+  submenuValue: string | undefined,
+  options: ControlsPanelSelectEntry<T>[],
+): string {
+  const submenuEntry = options.find(
+    (entry) => isControlsPanelSelectSubmenu(entry) && entry.value === value,
+  );
+  if (
+    submenuEntry &&
+    isControlsPanelSelectSubmenu(submenuEntry) &&
+    submenuValue
+  ) {
+    return submenuValue;
+  }
+  return value;
+}
+
 type ControlsPanelSelectProps<T extends string = string> = {
   value: T;
   onValueChange: (value: T) => void;
@@ -118,6 +136,7 @@ export function ControlsPanelSelect<T extends string>({
   const isMenuList = appearance === "menuList";
   const review = usePrototypeReviewOptional();
   const registerPreviewStates = review?.registerPreviewStates;
+  const setActivePreviewStateId = review?.setActivePreviewStateId;
   const { commentTheme } = usePrototypeToolTheme();
   const triggerLabel = isMiniPill ? (miniPillLabel ?? activeLabel) : activeLabel;
   const [open, setOpen] = useState(false);
@@ -133,6 +152,19 @@ export function ControlsPanelSelect<T extends string>({
       })),
     );
   }, [isMenuList, options, registerPreviewStates]);
+
+  useEffect(() => {
+    if (!isMenuList || !setActivePreviewStateId) return;
+
+    setActivePreviewStateId(
+      resolveActivePreviewStateId(value, submenuValue, options),
+    );
+  }, [isMenuList, options, setActivePreviewStateId, submenuValue, value]);
+
+  useEffect(() => {
+    if (!isMenuList || !setActivePreviewStateId) return;
+    return () => setActivePreviewStateId(null);
+  }, [isMenuList, setActivePreviewStateId]);
 
   const selectSubmenuEntry = useCallback(
     (

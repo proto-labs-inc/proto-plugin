@@ -13,7 +13,7 @@ import {
   getStateCanvasNodeHeight,
 } from "@prototype/lib/prototypes/prototype-state-canvas-constants";
 import { cn } from "@prototype/lib/utils";
-import { Maximize2, Minus, Plus, X } from "lucide-react";
+import { Minimize2 } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -23,6 +23,9 @@ import {
   useState,
 } from "react";
 
+import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
+
+import { PrototypeStateMapAddStateButton } from "./prototype-state-map-add-state-button";
 import {
   StateMapAnnotationTooltip,
   getStateMapAnnotationAnchor,
@@ -44,9 +47,9 @@ const ZOOM_WHEEL_SENSITIVITY = 0.003;
 const ZOOM_MOMENTUM_DECAY = 5.5;
 const ZOOM_MOMENTUM_STOP_VELOCITY = 0.02;
 const MAX_ZOOM_VELOCITY = 5;
-const ZOOM_BUTTON_FACTOR = 1.28;
 const ANNOTATION_FADE_MS = 120;
 const MINI_NODE_LABEL_SCREEN_PX = 13;
+const MINI_NODE_SELECTED_BORDER_SCREEN_PX = 2.5;
 const MINI_CALLOUT_LABEL_SCREEN_PX = 10;
 const MINI_NODE_PREVIEW_HEIGHT_PX = 168;
 const MINI_NODE_LABEL_PADDING_PX = 24;
@@ -151,22 +154,34 @@ function getMaxMiniLabelCanvasPx(
   return Math.min(byHeight, byWidth);
 }
 
+function getConstantScreenCanvasPx(
+  canvasScale: number,
+  targetScreenPx: number,
+  maxCanvasPx?: number,
+): number {
+  if (canvasScale <= 0) {
+    return maxCanvasPx != null
+      ? Math.min(targetScreenPx, maxCanvasPx)
+      : targetScreenPx;
+  }
+  const uncappedCanvasPx = targetScreenPx / canvasScale;
+  return maxCanvasPx != null
+    ? Math.min(uncappedCanvasPx, maxCanvasPx)
+    : uncappedCanvasPx;
+}
+
 function getConstantScreenLabelFontSize(
   canvasScale: number,
   targetScreenPx: number,
   maxCanvasPx: number,
 ): string {
-  if (canvasScale <= 0) {
-    return `${Math.min(targetScreenPx, maxCanvasPx)}px`;
-  }
-  const uncappedCanvasPx = targetScreenPx / canvasScale;
-  return `${Math.min(uncappedCanvasPx, maxCanvasPx)}px`;
+  return `${getConstantScreenCanvasPx(canvasScale, targetScreenPx, maxCanvasPx)}px`;
 }
 
 function getMiniArrowMarkerSize(canvasScale: number) {
-  const targetScreenPx = 9;
-  if (canvasScale <= 0) return 9;
-  return Math.min(16, Math.max(7, targetScreenPx / canvasScale));
+  const targetScreenPx = 12;
+  if (canvasScale <= 0) return 12;
+  return Math.min(18, Math.max(8, targetScreenPx / canvasScale));
 }
 
 function getNodeHeight(node: PrototypeStateCanvasNode): number {
@@ -377,6 +392,8 @@ type PrototypeStateCanvasViewProps<T extends string> = {
   layout?: "page" | "overlay" | "mini";
   backHref?: string;
   onClose?: () => void;
+  /** Highlights the node matching the currently previewed state. */
+  activeStateId?: string | null;
 };
 
 export function PrototypeStateCanvasView<T extends string>({
@@ -384,8 +401,11 @@ export function PrototypeStateCanvasView<T extends string>({
   layout = "overlay",
   backHref,
   onClose,
+  activeStateId = null,
 }: PrototypeStateCanvasViewProps<T>) {
   const isMiniLayout = layout === "mini";
+  const review = usePrototypeReviewOptional();
+  const setActivePreviewStateId = review?.setActivePreviewStateId;
   const {
     onStateSelect,
     nodes,
@@ -421,6 +441,7 @@ export function PrototypeStateCanvasView<T extends string>({
   const annotationFadeFrameRef = useRef<number | null>(null);
   const annotationFadeTimerRef = useRef<number | null>(null);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const [miniHighlightedId, setMiniHighlightedId] = useState<T | null>(null);
   const hoverDismissTimerRef = useRef<number | null>(null);
   const hasFitRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
@@ -683,12 +704,13 @@ export function PrototypeStateCanvasView<T extends string>({
     (id: T) => {
       setHoverTarget(null);
       setActiveHighlightId(null);
+      setActivePreviewStateId?.(id);
       onStateSelect(id);
       if (!isMiniLayout) {
         onClose?.();
       }
     },
-    [isMiniLayout, onClose, onStateSelect],
+    [isMiniLayout, onClose, onStateSelect, setActivePreviewStateId],
   );
 
   const showAnnotationForTarget = useCallback(
@@ -711,13 +733,6 @@ export function PrototypeStateCanvasView<T extends string>({
   useEffect(() => {
     return () => clearHoverDismissTimer();
   }, [clearHoverDismissTimer]);
-
-  const fitToView = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    stopZoomMomentum();
-    applyTransform(fitTransformToViewport(viewport, size.width, size.height));
-  }, [applyTransform, size.height, size.width, stopZoomMomentum]);
 
   useEffect(() => {
     if (hasFitRef.current) return;
@@ -828,22 +843,6 @@ export function PrototypeStateCanvasView<T extends string>({
     return () => observer.disconnect();
   }, [applyTransform, isMiniLayout, size.height, size.width, stopZoomMomentum]);
 
-  const handleZoomBy = useCallback((factor: number) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    stopZoomMomentum();
-    const rect = viewport.getBoundingClientRect();
-    applyTransform(
-      zoomAtPoint(
-        transformRef.current,
-        rect.left + rect.width / 2,
-        rect.top + rect.height / 2,
-        viewport,
-        factor,
-      ),
-    );
-  }, [applyTransform, stopZoomMomentum]);
-
   const layoutClass =
     layout === "page"
       ? styles.page
@@ -882,24 +881,27 @@ export function PrototypeStateCanvasView<T extends string>({
               Scroll to pan, pinch or ⌘ scroll to zoom. Click a state to preview it. Hover for planning notes.
             </p>
           </div>
-          {layout === "page" && backHref ? (
-            <Link
-              href={backHref}
-              className={styles.closeButton}
-              aria-label="Back to prototype"
-            >
-              <X size={16} strokeWidth={2} />
-            </Link>
-          ) : onClose ? (
-            <button
-              type="button"
-              className={styles.closeButton}
-              aria-label="Close state map"
-              onClick={onClose}
-            >
-              <X size={16} strokeWidth={2} />
-            </button>
-          ) : null}
+          <div className={styles.headerActions}>
+            {layout === "page" ? <PrototypeStateMapAddStateButton /> : null}
+            {layout === "page" && backHref ? (
+              <Link
+                href={backHref}
+                className={styles.closeButton}
+                aria-label="Back to prototype"
+              >
+                <Minimize2 size={16} strokeWidth={2} />
+              </Link>
+            ) : onClose ? (
+              <button
+                type="button"
+                className={styles.closeButton}
+                aria-label="Close state map"
+                onClick={onClose}
+              >
+                <Minimize2 size={16} strokeWidth={2} />
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -915,41 +917,6 @@ export function PrototypeStateCanvasView<T extends string>({
             }
           : {})}
       >
-        {!isMiniLayout ? (
-          <div className={styles.zoomControls}>
-            <button
-              type="button"
-              className={styles.zoomButton}
-              aria-label="Zoom out"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => handleZoomBy(1 / ZOOM_BUTTON_FACTOR)}
-            >
-              <Minus size={14} strokeWidth={2} aria-hidden />
-            </button>
-            <span className={styles.zoomLabel}>
-              {Math.round(transform.scale * 100)}%
-            </span>
-            <button
-              type="button"
-              className={styles.zoomButton}
-              aria-label="Zoom in"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => handleZoomBy(ZOOM_BUTTON_FACTOR)}
-            >
-              <Plus size={14} strokeWidth={2} aria-hidden />
-            </button>
-            <button
-              type="button"
-              className={styles.zoomButton}
-              aria-label="Fit map to view"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={fitToView}
-            >
-              <Maximize2 size={14} strokeWidth={2} aria-hidden />
-            </button>
-          </div>
-        ) : null}
-
         <div
           className={styles.canvasLayer}
           style={{
@@ -1028,20 +995,63 @@ export function PrototypeStateCanvasView<T extends string>({
               hoverSource != null &&
               (hoverTarget?.id === node.id ||
                 node.callouts?.some((callout) => callout.id === hoverTarget?.id));
+            const miniNodeHighlighted =
+              isMiniLayout &&
+              (miniHighlightedId === node.id ||
+                node.callouts?.some((callout) => callout.id === miniHighlightedId));
+            const isNodeSelected =
+              activeStateId != null &&
+              (activeStateId === node.id ||
+                node.callouts?.some((callout) => callout.id === activeStateId));
+            const miniSelectedBorderWidth = isMiniLayout && isNodeSelected
+              ? getConstantScreenCanvasPx(
+                  transform.scale,
+                  MINI_NODE_SELECTED_BORDER_SCREEN_PX,
+                )
+              : null;
 
             return (
               <div
                 key={node.id}
-                className={styles.nodeGroup}
-                style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
+                className={cn(
+                  styles.nodeGroup,
+                  miniNodeHighlighted &&
+                    !isNodeSelected &&
+                    styles.nodeGroupHighlighted,
+                  isNodeSelected && styles.nodeGroupSelected,
+                )}
+                style={{
+                  left: node.x,
+                  top: node.y,
+                  width: NODE_WIDTH,
+                  ...(miniSelectedBorderWidth != null
+                    ? {
+                        borderWidth: miniSelectedBorderWidth,
+                        borderStyle: "solid",
+                        borderColor: "var(--tool-chrome-blue)",
+                      }
+                    : {}),
+                }}
               >
                 <button
                   type="button"
                   className={styles.node}
+                  aria-current={isNodeSelected ? "true" : undefined}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => handleNodeSelect(node.id)}
                   {...(isMiniLayout
-                    ? {}
+                    ? {
+                        onMouseEnter: () => setMiniHighlightedId(node.id),
+                        onMouseLeave: () =>
+                          setMiniHighlightedId((current) =>
+                            current === node.id ? null : current,
+                          ),
+                        onFocus: () => setMiniHighlightedId(node.id),
+                        onBlur: () =>
+                          setMiniHighlightedId((current) =>
+                            current === node.id ? null : current,
+                          ),
+                      }
                     : {
                         onMouseEnter: () => {
                           showAnnotationForTarget({
@@ -1107,7 +1117,18 @@ export function PrototypeStateCanvasView<T extends string>({
                           onPointerDown={(event) => event.stopPropagation()}
                           onClick={() => handleNodeSelect(callout.id)}
                           {...(isMiniLayout
-                            ? {}
+                            ? {
+                                onMouseEnter: () => setMiniHighlightedId(callout.id),
+                                onMouseLeave: () =>
+                                  setMiniHighlightedId((current) =>
+                                    current === callout.id ? null : current,
+                                  ),
+                                onFocus: () => setMiniHighlightedId(callout.id),
+                                onBlur: () =>
+                                  setMiniHighlightedId((current) =>
+                                    current === callout.id ? null : current,
+                                  ),
+                              }
                             : {
                                 onMouseEnter: () => {
                                   showAnnotationForTarget(

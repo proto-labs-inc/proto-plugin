@@ -227,7 +227,7 @@ function ReviewToolbarTooltip({
   );
 }
 
-type FooterTabAccent = "pink" | "cyan" | "gold";
+type FooterTabAccent = "pink" | "cyan" | "gold" | "blue";
 
 function ReviewToolbarTextTabTrigger({
   label,
@@ -254,6 +254,7 @@ function ReviewToolbarTextTabTrigger({
             accent === "pink" && styles.footerTabAccentPink,
             accent === "cyan" && styles.footerTabAccentCyan,
             accent === "gold" && styles.footerTabAccentGold,
+            accent === "blue" && styles.footerTabAccentBlue,
             styles.toolbarMenuTrigger,
           )}
           data-menu-open={open ? "true" : undefined}
@@ -435,6 +436,7 @@ export function PrototypeReviewChrome({
   const [createStateModalOpen, setCreateStateModalOpen] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [viewportMenuOpen, setViewportMenuOpen] = useState(false);
+  const [miniStateMapMinimized, setMiniStateMapMinimized] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { annotations } = useCommentStore();
@@ -519,6 +521,12 @@ export function PrototypeReviewChrome({
     blurToolbarFocus();
     setCreateStateModalOpen(true);
   }, [blurToolbarFocus]);
+
+  const registerOpenCreateStateModal = review.registerOpenCreateStateModal;
+  useEffect(() => {
+    registerOpenCreateStateModal(openCreateStateModal);
+    return () => registerOpenCreateStateModal(null);
+  }, [openCreateStateModal, registerOpenCreateStateModal]);
 
   const openShareMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
@@ -633,6 +641,12 @@ export function PrototypeReviewChrome({
   const showShareMenu = Boolean(shareCommand);
   const stateMapPagePath =
     review.stateCanvasPagePath ?? getDefaultPrototypeStateMapPath(review.slug);
+  const onStateMapPage =
+    stateMapPagePath != null
+      ? pathname.startsWith(stateMapPagePath)
+      : /\/prototypes\/[^/]+\/states\/?$/.test(pathname);
+  const showStateMapTab = review.hasStateCanvas && !onStateMapPage;
+  const stateMapTabActive = showStateMapTab && !miniStateMapMinimized;
   const stateMapQuery = searchParams.toString();
   const prototypeReturnTo = `${pathname}${stateMapQuery ? `?${stateMapQuery}` : ""}`;
   const stateMapHref = buildStateMapHref(
@@ -905,6 +919,24 @@ export function PrototypeReviewChrome({
         </div>
 
         <div className={styles.footerUtilities}>
+          {showStateMapTab ? (
+            <button
+              type="button"
+              className={cn(
+                styles.footerTab,
+                stateMapTabActive && styles.footerTabActive,
+                styles.footerTabAccent,
+                styles.footerTabAccentPink,
+                styles.toolbarMenuTrigger,
+              )}
+              aria-label="State Map"
+              aria-pressed={stateMapTabActive}
+              onClick={() => setMiniStateMapMinimized((current) => !current)}
+            >
+              State Map
+            </button>
+          ) : null}
+
           {showShareMenu ? (
             <DropdownMenu
               modal={false}
@@ -1003,10 +1035,12 @@ export function PrototypeReviewChrome({
 
       {chromePortalTarget ? createPortal(chrome, chromePortalTarget) : null}
 
-      <PrototypeMiniStateMap
-        stateMapHref={stateMapHref}
-        onOpenCreateState={openCreateStateModal}
-      />
+      {review.hasStateCanvas && !miniStateMapMinimized && !onStateMapPage ? (
+        <PrototypeMiniStateMap
+          stateMapHref={stateMapHref}
+          onMinimize={() => setMiniStateMapMinimized(true)}
+        />
+      ) : null}
 
       {review.highlightTargetId ? (
         <PrototypeTweakHighlight
