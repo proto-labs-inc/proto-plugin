@@ -1200,7 +1200,7 @@ export function PrototypeStateCanvasView<T extends string>({
   );
 }
 
-/** @deprecated Use PrototypeStateCanvasView on a dedicated route instead. */
+/** @deprecated Use PrototypeStateMapModal instead. */
 export function PrototypeStateCanvasOverlay<T extends string>(
   props: PrototypeStateCanvasViewProps<T>,
 ) {

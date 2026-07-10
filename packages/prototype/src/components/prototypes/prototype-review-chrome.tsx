@@ -10,7 +10,6 @@ import type { PrototypeViewportLayout } from "@prototype/lib/prototypes/prototyp
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import { getPrototypeChromeRoot } from "@prototype/lib/tool-portal";
 import {
-  buildStateMapHref,
   getDefaultPrototypeStateMapPath,
 } from "@prototype/lib/prototypes/prototype-state-canvas-types";
 import {
@@ -43,7 +42,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
   cloneElement,
@@ -60,7 +59,8 @@ import { VariantSetLucideIcon } from "@prototype/lib/prototypes/variant-set-luci
 import { miniPillTextFromLabel } from "./mini-pill-label";
 import { PrototypeCreateExplorationModal } from "./prototype-create-exploration-modal";
 import { PrototypeCreateStateModal } from "./prototype-create-state-modal";
-import { PrototypeMiniStateMap } from "./prototype-mini-state-map";
+import { PrototypeMiniStateMap, type PrototypeMiniStateMapHandle } from "./prototype-mini-state-map";
+import { PrototypeStateMapModal } from "./prototype-state-map-modal";
 import { PrototypeShareCommandButton } from "./prototype-controls";
 import { PrototypeTweakHighlight } from "./prototype-tweak-highlight";
 import { PrototypeReviewSidebar } from "./prototype-review-sidebar";
@@ -428,6 +428,8 @@ export function PrototypeReviewChrome({
   const review = usePrototypeReview();
   const { commentTheme } = usePrototypeToolTheme();
   const chromeRef = useRef<HTMLDivElement>(null);
+  const stateMapTabRef = useRef<HTMLButtonElement>(null);
+  const miniStateMapRef = useRef<PrototypeMiniStateMapHandle>(null);
   const [explorationsMenuOpen, setExplorationsMenuOpen] = useState(false);
   const [commentsMenuOpen, setCommentsMenuOpen] = useState(false);
   const [handoffMenuOpen, setHandoffMenuOpen] = useState(false);
@@ -437,8 +439,9 @@ export function PrototypeReviewChrome({
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [viewportMenuOpen, setViewportMenuOpen] = useState(false);
   const [miniStateMapMinimized, setMiniStateMapMinimized] = useState(false);
+  const [miniStateMapRestoring, setMiniStateMapRestoring] = useState(false);
+  const [stateMapModalOpen, setStateMapModalOpen] = useState(false);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { annotations } = useCommentStore();
   const [mounted, setMounted] = useState(false);
 
@@ -449,6 +452,24 @@ export function PrototypeReviewChrome({
     injectCaptureColorTokens();
     setMounted(true);
   }, []);
+
+  const handleMiniMapMinimize = useCallback(() => {
+    setMiniStateMapMinimized(true);
+    setMiniStateMapRestoring(false);
+  }, []);
+
+  const handleMiniMapRestoreComplete = useCallback(() => {
+    setMiniStateMapRestoring(false);
+    setMiniStateMapMinimized(false);
+  }, []);
+
+  const handleStateMapTabClick = useCallback(() => {
+    if (miniStateMapMinimized) {
+      setMiniStateMapRestoring(true);
+      return;
+    }
+    miniStateMapRef.current?.minimize();
+  }, [miniStateMapMinimized]);
 
   const closeToolbarMenus = useCallback(() => {
     setExplorationsMenuOpen(false);
@@ -646,14 +667,7 @@ export function PrototypeReviewChrome({
       ? pathname.startsWith(stateMapPagePath)
       : /\/prototypes\/[^/]+\/states\/?$/.test(pathname);
   const showStateMapTab = review.hasStateCanvas && !onStateMapPage;
-  const stateMapTabActive = showStateMapTab && !miniStateMapMinimized;
-  const stateMapQuery = searchParams.toString();
-  const prototypeReturnTo = `${pathname}${stateMapQuery ? `?${stateMapQuery}` : ""}`;
-  const stateMapHref = buildStateMapHref(
-    stateMapPagePath,
-    prototypeReturnTo,
-    searchParams,
-  );
+  const stateMapTabActive = showStateMapTab && !miniStateMapMinimized && !stateMapModalOpen;
 
   const commentsTabActive =
     commentsMenuOpen ||
@@ -921,6 +935,7 @@ export function PrototypeReviewChrome({
         <div className={styles.footerUtilities}>
           {showStateMapTab ? (
             <button
+              ref={stateMapTabRef}
               type="button"
               className={cn(
                 styles.footerTab,
@@ -931,7 +946,7 @@ export function PrototypeReviewChrome({
               )}
               aria-label="State Map"
               aria-pressed={stateMapTabActive}
-              onClick={() => setMiniStateMapMinimized((current) => !current)}
+              onClick={handleStateMapTabClick}
             >
               State Map
             </button>
@@ -1035,12 +1050,22 @@ export function PrototypeReviewChrome({
 
       {chromePortalTarget ? createPortal(chrome, chromePortalTarget) : null}
 
-      {review.hasStateCanvas && !miniStateMapMinimized && !onStateMapPage ? (
+      {review.hasStateCanvas && !onStateMapPage && !stateMapModalOpen ? (
         <PrototypeMiniStateMap
-          stateMapHref={stateMapHref}
-          onMinimize={() => setMiniStateMapMinimized(true)}
+          ref={miniStateMapRef}
+          minimized={miniStateMapMinimized}
+          restoring={miniStateMapRestoring}
+          onExpand={() => setStateMapModalOpen(true)}
+          onMinimize={handleMiniMapMinimize}
+          onRestoreComplete={handleMiniMapRestoreComplete}
+          minimizeTargetRef={stateMapTabRef}
         />
       ) : null}
+
+      <PrototypeStateMapModal
+        open={stateMapModalOpen}
+        onOpenChange={setStateMapModalOpen}
+      />
 
       {review.highlightTargetId ? (
         <PrototypeTweakHighlight

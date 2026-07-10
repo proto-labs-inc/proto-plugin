@@ -1,0 +1,20 @@
+.overlay {
+  background: color-mix(in srgb, var(--tool-chrome-bg) 35%, rgba(0, 0, 0, 0.55));
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  width: min(96rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  height: min(92svh, calc(100vh - 2rem));
+  max-height: min(92svh, calc(100vh - 2rem));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--tool-chrome-border);
+  border-radius: 0.75rem;
+  background: var(--tool-chrome-bg);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.28),
+    0 8px 16px rgba(0, 0, 0, 0.16);
+}

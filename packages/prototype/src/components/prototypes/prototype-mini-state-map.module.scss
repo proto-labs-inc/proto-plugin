@@ -1,14 +1,18 @@
-.root {
-  pointer-events: auto;
-  position: absolute;
-  right: 1rem;
-  bottom: 3rem;
-  z-index: 40;
-  width: 14rem;
-  height: 14rem;
-  max-width: calc(100% - 2rem);
-  background: none;
+.themeRoot {
+  pointer-events: none;
+}
 
+.rootShell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.rootShellFlying {
+  pointer-events: none;
 }
 
 .actions {

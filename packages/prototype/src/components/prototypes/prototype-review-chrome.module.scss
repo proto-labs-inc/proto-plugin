@@ -127,6 +127,8 @@ $proto-accent-blue: #0097fe;
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
+  // Extend hover/active background to cover the accent underline.
+  padding-bottom: calc(0.375rem + 0.2em + 2px);
 }
 
 .footerTabAccentPink {

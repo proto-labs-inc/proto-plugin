@@ -15,6 +15,9 @@ import ProtoPartnerPage from "./src/prototypes/proto-partner-page";
 import { protoPartnerPageComponentRegistry } from "./src/prototypes/proto-partner-page/component-ids";
 import ProtoShapes from "./src/prototypes/proto-shapes";
 import { protoShapesComponentRegistry } from "./src/prototypes/proto-shapes/component-ids";
+import AutomatWorkflowsPage from "./src/prototypes/automat-workflows-page";
+import { automatWorkflowsPageComponentRegistry } from "./src/prototypes/automat-workflows-page/component-ids";
+import AutomatWorkflowsPageStateMapPage from "./src/prototypes/automat-workflows-page/state-map-page";
 
 export default definePrototypeConfig({
   prototypes: [
@@ -62,6 +65,14 @@ export default definePrototypeConfig({
       component: EventTypes,
       componentRegistry: eventTypesComponentRegistry,
       stateMapComponent: EventTypesStateMapPage,
+    },
+    {
+      slug: "automat-workflows-page",
+      title: "Automat Workflows Page",
+      screenshot: "/prototypes/screenshots/automat-workflows-page.png",
+      component: AutomatWorkflowsPage,
+      componentRegistry: automatWorkflowsPageComponentRegistry,
+      stateMapComponent: AutomatWorkflowsPageStateMapPage,
     },
   ],
 });
