@@ -46,6 +46,15 @@ const ZOOM_MOMENTUM_STOP_VELOCITY = 0.02;
 const MAX_ZOOM_VELOCITY = 5;
 const ZOOM_BUTTON_FACTOR = 1.28;
 const ANNOTATION_FADE_MS = 120;
+const MINI_NODE_LABEL_SCREEN_PX = 13;
+const MINI_CALLOUT_LABEL_SCREEN_PX = 10;
+const MINI_NODE_PREVIEW_HEIGHT_PX = 168;
+const MINI_NODE_LABEL_PADDING_PX = 24;
+const MINI_NODE_LABEL_MAX_LINES = 2;
+const MINI_NODE_LABEL_LINE_HEIGHT = 1.15;
+const MINI_NODE_LABEL_MAX_WIDTH_RATIO = 0.22;
+const MINI_CALLOUT_MIN_HEIGHT_PX = 36;
+const MINI_CALLOUT_MAX_WIDTH_RATIO = 0.18;
 
 function normalizeWheelDeltaY(
   event: WheelEvent,
@@ -126,6 +135,38 @@ function fitTransformToViewport(
   );
 
   return centerTransformAtScale(viewport, canvasWidth, canvasHeight, scale);
+}
+
+function getMaxMiniLabelCanvasPx(
+  containerHeight: number,
+  containerWidth: number,
+  maxLines: number,
+  maxWidthRatio: number,
+): number {
+  const byHeight =
+    (containerHeight - MINI_NODE_LABEL_PADDING_PX) /
+    (maxLines * MINI_NODE_LABEL_LINE_HEIGHT);
+  const byWidth =
+    (containerWidth - MINI_NODE_LABEL_PADDING_PX) * maxWidthRatio;
+  return Math.min(byHeight, byWidth);
+}
+
+function getConstantScreenLabelFontSize(
+  canvasScale: number,
+  targetScreenPx: number,
+  maxCanvasPx: number,
+): string {
+  if (canvasScale <= 0) {
+    return `${Math.min(targetScreenPx, maxCanvasPx)}px`;
+  }
+  const uncappedCanvasPx = targetScreenPx / canvasScale;
+  return `${Math.min(uncappedCanvasPx, maxCanvasPx)}px`;
+}
+
+function getMiniArrowMarkerSize(canvasScale: number) {
+  const targetScreenPx = 9;
+  if (canvasScale <= 0) return 9;
+  return Math.min(16, Math.max(7, targetScreenPx / canvasScale));
 }
 
 function getNodeHeight(node: PrototypeStateCanvasNode): number {
@@ -333,7 +374,7 @@ function resolveHoverAnnotationSource<T extends string>(
 
 type PrototypeStateCanvasViewProps<T extends string> = {
   config: PrototypeStateCanvasConfig<T>;
-  layout?: "page" | "overlay";
+  layout?: "page" | "overlay" | "mini";
   backHref?: string;
   onClose?: () => void;
 };
@@ -344,6 +385,7 @@ export function PrototypeStateCanvasView<T extends string>({
   backHref,
   onClose,
 }: PrototypeStateCanvasViewProps<T>) {
+  const isMiniLayout = layout === "mini";
   const {
     onStateSelect,
     nodes,
@@ -381,6 +423,14 @@ export function PrototypeStateCanvasView<T extends string>({
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const hoverDismissTimerRef = useRef<number | null>(null);
   const hasFitRef = useRef(false);
+  const hasUserInteractedRef = useRef(false);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+  } | null>(null);
 
   const clearAnnotationFadeTimers = useCallback(() => {
     if (annotationFadeFrameRef.current != null) {
@@ -634,9 +684,11 @@ export function PrototypeStateCanvasView<T extends string>({
       setHoverTarget(null);
       setActiveHighlightId(null);
       onStateSelect(id);
-      onClose?.();
+      if (!isMiniLayout) {
+        onClose?.();
+      }
     },
-    [onClose, onStateSelect],
+    [isMiniLayout, onClose, onStateSelect],
   );
 
   const showAnnotationForTarget = useCallback(
@@ -685,6 +737,7 @@ export function PrototypeStateCanvasView<T extends string>({
     const handleWheel = (event: WheelEvent) => {
       if (isZoomWheelEvent(event)) {
         event.preventDefault();
+        hasUserInteractedRef.current = true;
         const deltaY = normalizeWheelDeltaY(event, viewport);
         const factor = Math.exp(-deltaY * ZOOM_WHEEL_SENSITIVITY);
         const next = zoomAtPoint(
@@ -701,6 +754,7 @@ export function PrototypeStateCanvasView<T extends string>({
 
       stopZoomMomentum();
       event.preventDefault();
+      hasUserInteractedRef.current = true;
       applyTransform({
         ...transformRef.current,
         panX: transformRef.current.panX - event.deltaX,
@@ -714,6 +768,65 @@ export function PrototypeStateCanvasView<T extends string>({
       stopZoomMomentum();
     };
   }, [addZoomImpulse, applyTransform, stopZoomMomentum]);
+
+  const handleMiniViewportPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!isMiniLayout || event.button !== 0) return;
+      stopZoomMomentum();
+      hasUserInteractedRef.current = true;
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startPanX: transformRef.current.panX,
+        startPanY: transformRef.current.panY,
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [isMiniLayout, stopZoomMomentum],
+  );
+
+  const handleMiniViewportPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      applyTransform({
+        ...transformRef.current,
+        panX: drag.startPanX + (event.clientX - drag.startX),
+        panY: drag.startPanY + (event.clientY - drag.startY),
+      });
+    },
+    [applyTransform],
+  );
+
+  const handleMiniViewportPointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      dragRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!isMiniLayout) return;
+    const viewport = viewportRef.current;
+    if (!viewport || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      if (hasUserInteractedRef.current) return;
+      if (viewport.clientWidth === 0 || viewport.clientHeight === 0) return;
+      stopZoomMomentum();
+      applyTransform(fitTransformToViewport(viewport, size.width, size.height));
+    });
+
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [applyTransform, isMiniLayout, size.height, size.width, stopZoomMomentum]);
 
   const handleZoomBy = useCallback((factor: number) => {
     const viewport = viewportRef.current;
@@ -731,76 +844,111 @@ export function PrototypeStateCanvasView<T extends string>({
     );
   }, [applyTransform, stopZoomMomentum]);
 
+  const layoutClass =
+    layout === "page"
+      ? styles.page
+      : layout === "mini"
+        ? styles.mini
+        : styles.overlay;
+
+  const arrowMarkerSize = isMiniLayout
+    ? getMiniArrowMarkerSize(transform.scale)
+    : 8;
+  const arrowMarkerId = isMiniLayout
+    ? "prototype-state-canvas-arrow-mini"
+    : "prototype-state-canvas-arrow";
+  const arrowMarkerStartId = isMiniLayout
+    ? "prototype-state-canvas-arrow-start-mini"
+    : "prototype-state-canvas-arrow-start";
+  const arrowMarkerRefX = arrowMarkerSize * 0.88;
+  const arrowMarkerRefY = arrowMarkerSize / 2;
+  const arrowMarkerPath = `M0,0 L${arrowMarkerSize},${arrowMarkerRefY} L0,${arrowMarkerSize} Z`;
+  const arrowHeadClass = styles.edgeArrowHead;
+
   return (
     <div
-      className={cn(
-        layout === "page" ? styles.page : styles.overlay,
-      )}
+      className={layoutClass}
       data-prototype-state-canvas
-      role={layout === "page" ? undefined : "dialog"}
-      aria-modal={layout === "page" ? undefined : "true"}
+      data-prototype-state-canvas-layout={layout}
+      role={layout === "page" || isMiniLayout ? undefined : "dialog"}
+      aria-modal={layout === "page" || isMiniLayout ? undefined : "true"}
       aria-label="State map"
     >
-      <div className={styles.header}>
-        <div>
-          <p className={styles.headerTitle}>State map</p>
-          <p className={styles.headerHint}>
-            Scroll to pan, pinch or ⌘ scroll to zoom. Click a state to preview it. Hover for planning notes.
-          </p>
+      {!isMiniLayout ? (
+        <div className={styles.header}>
+          <div>
+            <p className={styles.headerTitle}>State map</p>
+            <p className={styles.headerHint}>
+              Scroll to pan, pinch or ⌘ scroll to zoom. Click a state to preview it. Hover for planning notes.
+            </p>
+          </div>
+          {layout === "page" && backHref ? (
+            <Link
+              href={backHref}
+              className={styles.closeButton}
+              aria-label="Back to prototype"
+            >
+              <X size={16} strokeWidth={2} />
+            </Link>
+          ) : onClose ? (
+            <button
+              type="button"
+              className={styles.closeButton}
+              aria-label="Close state map"
+              onClick={onClose}
+            >
+              <X size={16} strokeWidth={2} />
+            </button>
+          ) : null}
         </div>
-        {layout === "page" && backHref ? (
-          <Link
-            href={backHref}
-            className={styles.closeButton}
-            aria-label="Back to prototype"
-          >
-            <X size={16} strokeWidth={2} />
-          </Link>
-        ) : onClose ? (
-          <button
-            type="button"
-            className={styles.closeButton}
-            aria-label="Close state map"
-            onClick={onClose}
-          >
-            <X size={16} strokeWidth={2} />
-          </button>
-        ) : null}
-      </div>
+      ) : null}
 
-      <div ref={viewportRef} className={styles.canvasViewport}>
-        <div className={styles.zoomControls}>
-          <button
-            type="button"
-            className={styles.zoomButton}
-            aria-label="Zoom out"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => handleZoomBy(1 / ZOOM_BUTTON_FACTOR)}
-          >
-            <Minus size={14} strokeWidth={2} aria-hidden />
-          </button>
-          <span className={styles.zoomLabel}>
-            {Math.round(transform.scale * 100)}%
-          </span>
-          <button
-            type="button"
-            className={styles.zoomButton}
-            aria-label="Zoom in"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => handleZoomBy(ZOOM_BUTTON_FACTOR)}
-          >
-            <Plus size={14} strokeWidth={2} aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={styles.zoomButton}
-            aria-label="Fit map to view"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={fitToView}
-          >
-            <Maximize2 size={14} strokeWidth={2} aria-hidden />
-          </button>
-        </div>
+      <div
+        ref={viewportRef}
+        className={isMiniLayout ? styles.miniViewport : styles.canvasViewport}
+        {...(isMiniLayout
+          ? {
+              onPointerDown: handleMiniViewportPointerDown,
+              onPointerMove: handleMiniViewportPointerMove,
+              onPointerUp: handleMiniViewportPointerUp,
+              onPointerCancel: handleMiniViewportPointerUp,
+            }
+          : {})}
+      >
+        {!isMiniLayout ? (
+          <div className={styles.zoomControls}>
+            <button
+              type="button"
+              className={styles.zoomButton}
+              aria-label="Zoom out"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => handleZoomBy(1 / ZOOM_BUTTON_FACTOR)}
+            >
+              <Minus size={14} strokeWidth={2} aria-hidden />
+            </button>
+            <span className={styles.zoomLabel}>
+              {Math.round(transform.scale * 100)}%
+            </span>
+            <button
+              type="button"
+              className={styles.zoomButton}
+              aria-label="Zoom in"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => handleZoomBy(ZOOM_BUTTON_FACTOR)}
+            >
+              <Plus size={14} strokeWidth={2} aria-hidden />
+            </button>
+            <button
+              type="button"
+              className={styles.zoomButton}
+              aria-label="Fit map to view"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={fitToView}
+            >
+              <Maximize2 size={14} strokeWidth={2} aria-hidden />
+            </button>
+          </div>
+        ) : null}
 
         <div
           className={styles.canvasLayer}
@@ -819,24 +967,24 @@ export function PrototypeStateCanvasView<T extends string>({
           >
             <defs>
               <marker
-                id="prototype-state-canvas-arrow"
-                markerWidth="8"
-                markerHeight="8"
-                refX="6"
-                refY="4"
+                id={arrowMarkerId}
+                markerWidth={arrowMarkerSize}
+                markerHeight={arrowMarkerSize}
+                refX={arrowMarkerRefX}
+                refY={arrowMarkerRefY}
                 orient="auto"
               >
-                <path d="M0,0 L8,4 L0,8 Z" className={styles.edgeArrowHead} />
+                <path d={arrowMarkerPath} className={arrowHeadClass} />
               </marker>
               <marker
-                id="prototype-state-canvas-arrow-start"
-                markerWidth="8"
-                markerHeight="8"
-                refX="6"
-                refY="4"
+                id={arrowMarkerStartId}
+                markerWidth={arrowMarkerSize}
+                markerHeight={arrowMarkerSize}
+                refX={arrowMarkerRefX}
+                refY={arrowMarkerRefY}
                 orient="auto-start-reverse"
               >
-                <path d="M0,0 L8,4 L0,8 Z" className={styles.edgeArrowHead} />
+                <path d={arrowMarkerPath} className={arrowHeadClass} />
               </marker>
             </defs>
             {uniqueEdges.map((edge: PrototypeStateCanvasEdge<T>) => {
@@ -849,22 +997,24 @@ export function PrototypeStateCanvasView<T extends string>({
                   key={`${edge.from}-${edge.to}`}
                   d={buildEdgePath(from, to, isBidirectional)}
                   className={styles.edge}
-                  markerEnd="url(#prototype-state-canvas-arrow)"
-                  markerStart={isBidirectional ? "url(#prototype-state-canvas-arrow-start)" : undefined}
+                  markerEnd={`url(#${arrowMarkerId})`}
+                  markerStart={isBidirectional ? `url(#${arrowMarkerStartId})` : undefined}
                 />
               );
             })}
           </svg>
 
-          {sections?.map((section) => (
-            <div
-              key={section.label}
-              className={styles.sectionLabel}
-              style={{ top: section.y, left: 24 }}
-            >
-              {section.label}
-            </div>
-          ))}
+          {!isMiniLayout
+            ? sections?.map((section) => (
+                <div
+                  key={section.label}
+                  className={styles.sectionLabel}
+                  style={{ top: section.y, left: 24 }}
+                >
+                  {section.label}
+                </div>
+              ))
+            : null}
 
           {nodes.map((node) => {
             const hoverSource = resolveHoverAnnotationSource(node, hoverTarget);
@@ -890,34 +1040,60 @@ export function PrototypeStateCanvasView<T extends string>({
                   className={styles.node}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => handleNodeSelect(node.id)}
-                  onMouseEnter={() => {
-                    showAnnotationForTarget({
-                      id: node.id,
-                      label: node.label,
-                      annotation: node.annotation,
-                      highlightRegions: node.highlightRegions,
-                    });
-                  }}
-                  onMouseLeave={scheduleHoverDismiss}
+                  {...(isMiniLayout
+                    ? {}
+                    : {
+                        onMouseEnter: () => {
+                          showAnnotationForTarget({
+                            id: node.id,
+                            label: node.label,
+                            annotation: node.annotation,
+                            highlightRegions: node.highlightRegions,
+                          });
+                        },
+                        onMouseLeave: scheduleHoverDismiss,
+                      })}
                 >
                   <div className={styles.nodePreview}>
-                    <StateMapHighlightProvider
-                      highlightId={nodeHighlightActive ? activeHighlightId : null}
-                    >
-                      <div
-                        className={styles.nodePreviewContent}
-                        data-prototype-wireframe-preview
+                    {isMiniLayout ? (
+                      <span
+                        className={styles.miniNodeLabel}
+                        style={{
+                          fontSize: getConstantScreenLabelFontSize(
+                            transform.scale,
+                            MINI_NODE_LABEL_SCREEN_PX,
+                            getMaxMiniLabelCanvasPx(
+                              MINI_NODE_PREVIEW_HEIGHT_PX,
+                              NODE_WIDTH,
+                              MINI_NODE_LABEL_MAX_LINES,
+                              MINI_NODE_LABEL_MAX_WIDTH_RATIO,
+                            ),
+                          ),
+                        }}
                       >
-                        {renderWireframe(previewNodeId)}
-                        {previewHighlightRect ? (
-                          <StateMapPreviewHighlightOverlay rect={previewHighlightRect} />
-                        ) : null}
-                      </div>
-                    </StateMapHighlightProvider>
+                        {node.label}
+                      </span>
+                    ) : (
+                      <StateMapHighlightProvider
+                        highlightId={nodeHighlightActive ? activeHighlightId : null}
+                      >
+                        <div
+                          className={styles.nodePreviewContent}
+                          data-prototype-wireframe-preview
+                        >
+                          {renderWireframe(previewNodeId)}
+                          {previewHighlightRect ? (
+                            <StateMapPreviewHighlightOverlay rect={previewHighlightRect} />
+                          ) : null}
+                        </div>
+                      </StateMapHighlightProvider>
+                    )}
                   </div>
-                  <div className={styles.nodeLabel}>
-                    <span className={styles.nodeLabelText}>{node.label}</span>
-                  </div>
+                  {!isMiniLayout ? (
+                    <div className={styles.nodeLabel}>
+                      <span className={styles.nodeLabelText}>{node.label}</span>
+                    </div>
+                  ) : null}
                 </button>
 
                 {node.callouts?.length ? (
@@ -930,20 +1106,46 @@ export function PrototypeStateCanvasView<T extends string>({
                           className={styles.callout}
                           onPointerDown={(event) => event.stopPropagation()}
                           onClick={() => handleNodeSelect(callout.id)}
-                          onMouseEnter={() => {
-                            showAnnotationForTarget(
-                              {
-                                id: callout.id,
-                                label: callout.label,
-                                annotation: callout.annotation,
-                                highlightRegions: callout.highlightRegions,
-                              },
-                              node.label,
-                            );
-                          }}
-                          onMouseLeave={scheduleHoverDismiss}
+                          {...(isMiniLayout
+                            ? {}
+                            : {
+                                onMouseEnter: () => {
+                                  showAnnotationForTarget(
+                                    {
+                                      id: callout.id,
+                                      label: callout.label,
+                                      annotation: callout.annotation,
+                                      highlightRegions: callout.highlightRegions,
+                                    },
+                                    node.label,
+                                  );
+                                },
+                                onMouseLeave: scheduleHoverDismiss,
+                              })}
                         >
-                          <span className={styles.calloutLabel}>
+                          <span
+                            className={
+                              isMiniLayout
+                                ? styles.miniCalloutLabel
+                                : styles.calloutLabel
+                            }
+                            {...(isMiniLayout
+                              ? {
+                                  style: {
+                                    fontSize: getConstantScreenLabelFontSize(
+                                      transform.scale,
+                                      MINI_CALLOUT_LABEL_SCREEN_PX,
+                                      getMaxMiniLabelCanvasPx(
+                                        MINI_CALLOUT_MIN_HEIGHT_PX,
+                                        NODE_WIDTH,
+                                        1,
+                                        MINI_CALLOUT_MAX_WIDTH_RATIO,
+                                      ),
+                                    ),
+                                  },
+                                }
+                              : {})}
+                          >
                             {callout.label}
                           </span>
                           {callout.hint ? (
@@ -960,7 +1162,7 @@ export function PrototypeStateCanvasView<T extends string>({
             );
           })}
 
-          {displayedAnnotation && displayedAnnotationAnchor ? (
+          {!isMiniLayout && displayedAnnotation && displayedAnnotationAnchor ? (
             <StateMapAnnotationTooltip
               target={displayedAnnotation.target}
               anchor={displayedAnnotationAnchor}

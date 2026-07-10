@@ -5,7 +5,7 @@ import { Button } from "@prototype/components/ui/button";
 import { PrototypeLinkSourceModal } from "@prototype/components/shell/prototype-link-source-modal";
 import { cn } from "@prototype/lib/utils";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
-import { LibraryBig, Moon, Pencil, Shapes, Sun } from "lucide-react";
+import { LayoutGrid, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -14,7 +14,7 @@ const GALLERY_NAV_ITEMS = [
   {
     href: "/",
     label: "Prototypes",
-    icon: Shapes,
+    icon: LayoutGrid,
   },
   {
     href: "/component-library",
@@ -39,6 +39,18 @@ export function PrototypeGalleryNav({
   return (
     <aside className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] flex h-full min-h-0 w-56 shrink-0 flex-col self-stretch overflow-hidden border-r">
       <nav aria-label="Gallery" className="flex flex-col gap-1 p-3">
+        <div className="mb-2 flex items-center gap-2 px-3">
+          <img
+            src="/proto-logo.png"
+            alt=""
+            width={14}
+            height={14}
+            className="size-3.5 shrink-0 object-contain"
+          />
+          <span className="text-lg font-bold text-[var(--tool-chrome-text-heading)]">
+            Proto
+          </span>
+        </div>
         {GALLERY_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/"

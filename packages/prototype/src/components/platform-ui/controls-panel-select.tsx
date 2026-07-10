@@ -15,6 +15,7 @@ import { MiniPillLabel } from "@prototype/components/prototypes/mini-pill-label"
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import {
+  DropdownMenu,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -194,8 +195,9 @@ export function ControlsPanelSelect<T extends string>({
 
   if (isMenuList) {
     return (
-      <div className={cn(pillStyles.controlsPanelMenuList, className)}>
-        {options.map((entry, index) => {
+      <DropdownMenu open modal={false}>
+        <div className={cn(pillStyles.controlsPanelMenuList, className)}>
+          {options.map((entry, index) => {
           if (isControlsPanelSelectSeparator(entry)) {
             return (
               <ControlsPanelOptionSeparator
@@ -238,16 +240,6 @@ export function ControlsPanelSelect<T extends string>({
                   }}
                 >
                   <span>{entry.label}</span>
-                  {parentSelected ? (
-                    <Check
-                      className={cn(
-                        "size-3.5 shrink-0",
-                        pillStyles.dropdownMenuItemCheck,
-                      )}
-                      strokeWidth={2.5}
-                      aria-hidden
-                    />
-                  ) : null}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent
                   sideOffset={6}
@@ -271,16 +263,6 @@ export function ControlsPanelSelect<T extends string>({
                         onSelect={() => selectSubmenuEntry(entry, subOption)}
                       >
                         <span>{subOption.label}</span>
-                        {selected ? (
-                          <Check
-                            className={cn(
-                              "size-3.5 shrink-0",
-                              pillStyles.dropdownMenuItemCheck,
-                            )}
-                            strokeWidth={2.5}
-                            aria-hidden
-                          />
-                        ) : null}
                       </DropdownMenuItem>
                     );
                   })}
@@ -300,17 +282,11 @@ export function ControlsPanelSelect<T extends string>({
               onSelect={() => handleValueChange(entry.value)}
             >
               <span>{entry.label}</span>
-              {selected ? (
-                <Check
-                  className={cn("size-3.5 shrink-0", pillStyles.dropdownMenuItemCheck)}
-                  strokeWidth={2.5}
-                  aria-hidden
-                />
-              ) : null}
             </DropdownMenuItem>
           );
-        })}
-      </div>
+          })}
+        </div>
+      </DropdownMenu>
     );
   }
 

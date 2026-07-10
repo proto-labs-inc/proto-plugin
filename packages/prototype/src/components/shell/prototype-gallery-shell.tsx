@@ -75,17 +75,17 @@ export function PrototypeGalleryHeader({
   return (
     <div
       className={cn(
-        "border-[var(--tool-chrome-border)] bg-[var(--bg-main)] shrink-0 border-b px-10 py-6 lg:px-16",
+        "border-[var(--tool-chrome-border)] bg-[var(--bg-main)] shrink-0 border-b px-10 py-4 lg:px-16",
         className,
       )}
     >
       {eyebrow ? (
         <p className="text-xs text-[var(--tool-chrome-text-muted)]">{eyebrow}</p>
       ) : null}
-      <h1 className="mt-0 text-2xl font-medium tracking-tight text-[var(--tool-chrome-text-heading)]">
+      <h1 className="mt-0 text-xl font-medium tracking-tight text-[var(--tool-chrome-text-heading)]">
         {title}
       </h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
+      <p className="mt-1 max-w-2xl text-sm leading-normal text-[var(--tool-chrome-text-muted)]">
         {description}
       </p>
     </div>

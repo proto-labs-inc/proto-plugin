@@ -8,22 +8,20 @@ import { PROTOTYPE_SOURCE_SURFACE_ATTR } from "@prototype/lib/tool-portal";
 import type { ReactNode } from "react";
 
 type PrototypeComponentLibraryPageOptions = {
-  title?: string;
-  description?: string;
-  eyebrow?: string;
   children?: ReactNode;
   sourcePath?: string;
   syncConfigPath?: string;
   componentLibraryPagePath?: string;
 };
 
+const COMPONENT_LIBRARY_HEADER_TITLE = "Component Library";
+const COMPONENT_LIBRARY_HEADER_DESCRIPTION =
+  "Base components from the source directory.";
+
 export function createPrototypeComponentLibraryPage(
   options: PrototypeComponentLibraryPageOptions = {},
 ) {
   const {
-    title = "Component Library",
-    description = "Shared UI primitives and building blocks used across prototypes.",
-    eyebrow,
     children,
     sourcePath = process.env.SOURCE_PATH,
     syncConfigPath,
@@ -38,9 +36,8 @@ export function createPrototypeComponentLibraryPage(
       <PrototypeGalleryPageLayout
         header={
           <PrototypeGalleryHeader
-            eyebrow={eyebrow}
-            title={title}
-            description={description}
+            title={COMPONENT_LIBRARY_HEADER_TITLE}
+            description={COMPONENT_LIBRARY_HEADER_DESCRIPTION}
             className="mb-0"
           />
         }

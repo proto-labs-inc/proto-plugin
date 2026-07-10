@@ -765,6 +765,31 @@ $enter-duration: 150ms;
   color: rgba(255, 255, 255, 0.72);
 }
 
+.dropdownItemWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dropdownItemLeadingIcon {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dropdownItemTrailingGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.dropdownItemCount {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .dropdownMenuSubTrigger {
   width: 100%;
 
@@ -845,6 +870,19 @@ $enter-duration: 150ms;
   padding: 4px;
 }
 
+.dropdownContentCompact {
+  min-width: 0;
+  width: max-content;
+  padding: 4px;
+}
+
+.dropdownContentFooterMenu {
+  width: 13rem;
+  min-width: 13rem;
+  max-width: min(13rem, calc(100vw - 2rem));
+  padding: 4px;
+}
+
 .controlsPanel {
   display: flex;
   flex-direction: column;
@@ -872,6 +910,37 @@ $enter-duration: 150ms;
   width: max-content;
   min-width: 11.5rem;
   max-width: min(20rem, calc(100vw - 2rem));
+}
+
+.controlsPanelCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: max-content;
+  min-width: 0;
+  max-width: min(18rem, calc(100vw - 2rem));
+  padding: 0;
+  align-items: stretch;
+}
+
+.controlsPanelFooterMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  align-items: stretch;
+
+  .controlsPanelMenuList {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .explorationBriefPanel {
+    width: 100%;
+  }
 }
 
 .toolbarIconPicker {
@@ -938,7 +1007,7 @@ $enter-duration: 150ms;
 .explorationBriefTrigger {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
   width: 100%;
   padding: 0.4375rem 0.625rem;

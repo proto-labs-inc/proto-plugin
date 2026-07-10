@@ -5,17 +5,9 @@ import { countUnresolvedAnnotations } from "@prototype/lib/prototype-comments/co
 import { injectCaptureColorTokens } from "@prototype/lib/prototype-comments/core/capture-theme";
 import { useCommentStore } from "@prototype/lib/prototype-comments/react/CommentProvider";
 import toolbarStyles from "@prototype/lib/prototype-comments/ui/capture-styles.module.scss";
-import {
-  getPrototypeTweaksRegistration,
-  subscribePrototypeTweaks,
-} from "@prototype/lib/prototypes/prototype-tweak-registry";
-import { groupPrototypeTweaksByCategory } from "@prototype/lib/prototypes/prototype-tweak-types";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
 import type { PrototypeViewportLayout } from "@prototype/lib/prototypes/prototype-review-context";
-import {
-  usePrototypeToolTheme,
-  type PrototypeToolTheme,
-} from "@prototype/lib/prototypes/use-prototype-tool-theme";
+import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import { getPrototypeChromeRoot } from "@prototype/lib/tool-portal";
 import {
   buildStateMapHref,
@@ -26,7 +18,6 @@ import {
   getPrototypeSlugFromPathname,
 } from "@prototype/lib/prototypes/share-command";
 import {
-  preventToolbarHoverButtonActivation,
   TOOLBAR_HOVER_ONLY_BUTTON_PROPS,
   useToolbarHoverPanel,
 } from "@prototype/lib/prototypes/use-toolbar-hover-panel";
@@ -43,22 +34,13 @@ import {
   TooltipTrigger,
 } from "@prototype/components/ui/tooltip";
 import {
-  ArrowLeft,
-  Layers,
-  LayoutGrid,
-  MapPin,
   MessageSquare,
   MessageSquarePlus,
   Monitor,
-  Moon,
-  Network,
-  Plus,
   Rocket,
   ScrollText,
   Share2,
-  SlidersHorizontal,
   Smartphone,
-  Sun,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -69,7 +51,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type MouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
   type ReactNode,
@@ -79,6 +60,7 @@ import { VariantSetLucideIcon } from "@prototype/lib/prototypes/variant-set-luci
 import { miniPillTextFromLabel } from "./mini-pill-label";
 import { PrototypeCreateExplorationModal } from "./prototype-create-exploration-modal";
 import { PrototypeCreateStateModal } from "./prototype-create-state-modal";
+import { PrototypeMiniStateMap } from "./prototype-mini-state-map";
 import { PrototypeShareCommandButton } from "./prototype-controls";
 import { PrototypeTweakHighlight } from "./prototype-tweak-highlight";
 import { PrototypeReviewSidebar } from "./prototype-review-sidebar";
@@ -94,10 +76,6 @@ type PrototypeReviewChromeProps = {
   onClose: () => void;
 };
 
-function clearPillTextSelection() {
-  window.getSelection()?.removeAllRanges();
-}
-
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return (
@@ -112,6 +90,13 @@ const TOOLBAR_MENU_CONTENT_CLASS = cn(
   "z-[1051] border-0 bg-transparent p-0 text-foreground shadow-none ring-0",
   "data-[state=open]:animate-none data-[state=closed]:animate-none",
 );
+
+const FOOTER_MENU_CONTENT_CLASS = cn(
+  TOOLBAR_MENU_CONTENT_CLASS,
+  pillStyles.dropdownContentFooterMenu,
+);
+
+const FOOTER_MENU_PANEL_CLASS = pillStyles.controlsPanelFooterMenu;
 
 const TOOLBAR_MENU_CONTENT_PROPS = {
   side: "top" as const,
@@ -242,87 +227,44 @@ function ReviewToolbarTooltip({
   );
 }
 
-function ReviewToolbarButton({
+type FooterTabAccent = "pink" | "cyan" | "gold";
+
+function ReviewToolbarTextTabTrigger({
   label,
-  tooltip,
-  pressed = false,
-  highlightActive = false,
-  badge,
-  onClick,
-  hoverOnly = false,
+  active,
+  open,
+  accent,
   hoverTriggerProps,
-  commentModeToggle = false,
-  children,
 }: {
   label: string;
-  tooltip?: string;
-  pressed?: boolean;
-  highlightActive?: boolean;
-  badge?: ReactNode;
-  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
-  hoverOnly?: boolean;
+  active: boolean;
+  open: boolean;
+  accent?: FooterTabAccent;
   hoverTriggerProps?: ToolbarTooltipAnchorProps;
-  commentModeToggle?: boolean;
-  children: ReactNode;
 }) {
   return (
-    <ReviewToolbarTooltip label={tooltip ?? label} disabled={pressed}>
-      <div className={toolbarStyles.buttonWrapper} {...hoverTriggerProps}>
+    <div {...hoverTriggerProps}>
+      <DropdownMenuTrigger asChild>
         <button
           type="button"
           className={cn(
-            toolbarStyles.controlButton,
-            pressed && !highlightActive && styles.toolbarButtonHovered,
+            styles.footerTab,
+            active && styles.footerTabActive,
+            accent && styles.footerTabAccent,
+            accent === "pink" && styles.footerTabAccentPink,
+            accent === "cyan" && styles.footerTabAccentCyan,
+            accent === "gold" && styles.footerTabAccentGold,
+            styles.toolbarMenuTrigger,
           )}
-          data-active={highlightActive && pressed ? "true" : undefined}
-          data-prototype-comment-mode-toggle={
-            commentModeToggle ? true : undefined
-          }
+          data-menu-open={open ? "true" : undefined}
           aria-label={label}
-          aria-pressed={pressed}
-          onClick={(event) => {
-            if (hoverOnly) {
-              preventToolbarHoverButtonActivation(event);
-              return;
-            }
-            event.stopPropagation();
-            onClick?.(event);
-          }}
-          onPointerDown={
-            hoverOnly ? preventToolbarHoverButtonActivation : undefined
-          }
+          aria-expanded={open}
+          {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
         >
-          {children}
-          {badge}
+          {label}
         </button>
-      </div>
-    </ReviewToolbarTooltip>
-  );
-}
-
-function ReviewToolbarLink({
-  label,
-  href,
-  children,
-}: {
-  label: string;
-  href: string;
-  children: ReactNode;
-}) {
-  return (
-    <ReviewToolbarTooltip label={label}>
-      <div className={toolbarStyles.buttonWrapper}>
-        <Link
-          href={href}
-          className={toolbarStyles.controlButton}
-          style={{ textDecoration: "none" }}
-          aria-label={label}
-          onClick={(event) => event.stopPropagation()}
-        >
-          {children}
-        </Link>
-      </div>
-    </ReviewToolbarTooltip>
+      </DropdownMenuTrigger>
+    </div>
   );
 }
 
@@ -333,16 +275,6 @@ function CreateExplorationPanelTrigger({
 }) {
   return (
     <CreatePanelTrigger onOpen={onOpen} label="New exploration…" />
-  );
-}
-
-function CreateStatePanelTrigger({
-  onOpen,
-}: {
-  onOpen: () => void;
-}) {
-  return (
-    <CreatePanelTrigger onOpen={onOpen} label="New state…" />
   );
 }
 
@@ -367,12 +299,6 @@ function CreatePanelTrigger({
         <span className={pillStyles.explorationBriefTriggerLabel}>
           {label}
         </span>
-        <Plus
-          size={12}
-          strokeWidth={2}
-          className={pillStyles.dropdownItemIcon}
-          aria-hidden
-        />
       </button>
     </div>
   );
@@ -490,19 +416,6 @@ const VIEWPORT_LAYOUT_OPTIONS: ReviewToolbarIconPickerOption<PrototypeViewportLa
     },
   ];
 
-const THEME_OPTIONS: ReviewToolbarIconPickerOption<PrototypeToolTheme>[] = [
-  {
-    value: "light",
-    label: "Light mode",
-    icon: <Sun size={16} strokeWidth={2} />,
-  },
-  {
-    value: "dark",
-    label: "Dark mode",
-    icon: <Moon size={16} strokeWidth={2} />,
-  },
-];
-
 export function PrototypeReviewChrome({
   onSelect,
   selectedId,
@@ -512,17 +425,16 @@ export function PrototypeReviewChrome({
   onClose,
 }: PrototypeReviewChromeProps) {
   const review = usePrototypeReview();
-  const { commentTheme, theme, setTheme } = usePrototypeToolTheme();
+  const { commentTheme } = usePrototypeToolTheme();
   const chromeRef = useRef<HTMLDivElement>(null);
-  const [statesOpen, setStatesOpen] = useState(false);
   const [explorationsMenuOpen, setExplorationsMenuOpen] = useState(false);
+  const [commentsMenuOpen, setCommentsMenuOpen] = useState(false);
+  const [handoffMenuOpen, setHandoffMenuOpen] = useState(false);
   const [createExplorationModalOpen, setCreateExplorationModalOpen] =
     useState(false);
   const [createStateModalOpen, setCreateStateModalOpen] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [viewportMenuOpen, setViewportMenuOpen] = useState(false);
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
-  const [tweakVersion, setTweakVersion] = useState(0);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { annotations } = useCommentStore();
@@ -534,26 +446,16 @@ export function PrototypeReviewChrome({
   useEffect(() => {
     injectCaptureColorTokens();
     setMounted(true);
-    setTweakVersion((v) => v + 1);
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = subscribePrototypeTweaks(() => {
-      setTweakVersion((v) => v + 1);
-    });
-    setTweakVersion((v) => v + 1);
-    return unsubscribe;
   }, []);
 
   const closeToolbarMenus = useCallback(() => {
-    setStatesOpen(false);
     setExplorationsMenuOpen(false);
+    setCommentsMenuOpen(false);
+    setHandoffMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(false);
-    setThemeMenuOpen(false);
-    review.closeTweaks();
     dismissReviewToolbarTooltips();
-  }, [review.closeTweaks]);
+  }, []);
 
   const blurToolbarFocus = useCallback(() => {
     const active = document.activeElement;
@@ -562,35 +464,48 @@ export function PrototypeReviewChrome({
     }
   }, []);
 
-  const openStatesMenu = useCallback(() => {
-    dismissReviewToolbarTooltips();
-    review.closeSettings();
-    setExplorationsMenuOpen(false);
-    setShareMenuOpen(false);
-    setViewportMenuOpen(false);
-    setThemeMenuOpen(false);
-    review.closeTweaks();
-    setStatesOpen(true);
-  }, [review.closeSettings, review.closeTweaks]);
-
-  const closeStatesMenu = useCallback(() => {
-    setStatesOpen(false);
-    blurToolbarFocus();
-  }, [blurToolbarFocus]);
-
   const openExplorationsMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
     review.closeSettings();
-    setStatesOpen(false);
+    setCommentsMenuOpen(false);
+    setHandoffMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(false);
-    setThemeMenuOpen(false);
-    review.closeTweaks();
     setExplorationsMenuOpen(true);
-  }, [review.closeSettings, review.closeTweaks]);
+  }, [review.closeSettings]);
 
   const closeExplorationsMenu = useCallback(() => {
     setExplorationsMenuOpen(false);
+    blurToolbarFocus();
+  }, [blurToolbarFocus]);
+
+  const openCommentsMenu = useCallback(() => {
+    dismissReviewToolbarTooltips();
+    review.closeSettings();
+    setExplorationsMenuOpen(false);
+    setHandoffMenuOpen(false);
+    setShareMenuOpen(false);
+    setViewportMenuOpen(false);
+    setCommentsMenuOpen(true);
+  }, [review.closeSettings]);
+
+  const closeCommentsMenu = useCallback(() => {
+    setCommentsMenuOpen(false);
+    blurToolbarFocus();
+  }, [blurToolbarFocus]);
+
+  const openHandoffMenu = useCallback(() => {
+    dismissReviewToolbarTooltips();
+    review.closeSettings();
+    setExplorationsMenuOpen(false);
+    setCommentsMenuOpen(false);
+    setShareMenuOpen(false);
+    setViewportMenuOpen(false);
+    setHandoffMenuOpen(true);
+  }, [review.closeSettings]);
+
+  const closeHandoffMenu = useCallback(() => {
+    setHandoffMenuOpen(false);
     blurToolbarFocus();
   }, [blurToolbarFocus]);
 
@@ -601,7 +516,6 @@ export function PrototypeReviewChrome({
   }, [blurToolbarFocus]);
 
   const openCreateStateModal = useCallback(() => {
-    setStatesOpen(false);
     blurToolbarFocus();
     setCreateStateModalOpen(true);
   }, [blurToolbarFocus]);
@@ -621,43 +535,31 @@ export function PrototypeReviewChrome({
   const openViewportMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
     review.closeSettings();
-    setStatesOpen(false);
     setExplorationsMenuOpen(false);
+    setCommentsMenuOpen(false);
+    setHandoffMenuOpen(false);
     setShareMenuOpen(false);
-    setThemeMenuOpen(false);
-    review.closeTweaks();
     setViewportMenuOpen(true);
-  }, [review.closeSettings, review.closeTweaks]);
+  }, [review.closeSettings]);
 
   const closeViewportMenu = useCallback(() => {
     setViewportMenuOpen(false);
     blurToolbarFocus();
   }, [blurToolbarFocus]);
 
-  const openThemeMenu = useCallback(() => {
-    dismissReviewToolbarTooltips();
-    review.closeSettings();
-    setStatesOpen(false);
-    setExplorationsMenuOpen(false);
-    setShareMenuOpen(false);
-    setViewportMenuOpen(false);
-    review.closeTweaks();
-    setThemeMenuOpen(true);
-  }, [review.closeSettings, review.closeTweaks]);
-
-  const closeThemeMenu = useCallback(() => {
-    setThemeMenuOpen(false);
-    blurToolbarFocus();
-  }, [blurToolbarFocus]);
-
-  const statesHover = useToolbarHoverPanel({
-    onOpen: openStatesMenu,
-    onClose: closeStatesMenu,
-  });
-
   const explorationsHover = useToolbarHoverPanel({
     onOpen: openExplorationsMenu,
     onClose: closeExplorationsMenu,
+  });
+
+  const commentsHover = useToolbarHoverPanel({
+    onOpen: openCommentsMenu,
+    onClose: closeCommentsMenu,
+  });
+
+  const handoffHover = useToolbarHoverPanel({
+    onOpen: openHandoffMenu,
+    onClose: closeHandoffMenu,
   });
 
   const shareHover = useToolbarHoverPanel({
@@ -668,11 +570,6 @@ export function PrototypeReviewChrome({
   const viewportHover = useToolbarHoverPanel({
     onOpen: openViewportMenu,
     onClose: closeViewportMenu,
-  });
-
-  const themeHover = useToolbarHoverPanel({
-    onOpen: openThemeMenu,
-    onClose: closeThemeMenu,
   });
 
   useEffect(() => {
@@ -686,7 +583,13 @@ export function PrototypeReviewChrome({
 
       let dismissed = false;
 
-      if (statesOpen || explorationsMenuOpen || review.tweaksOpen || shareMenuOpen || viewportMenuOpen || themeMenuOpen) {
+      if (
+        explorationsMenuOpen ||
+        commentsMenuOpen ||
+        handoffMenuOpen ||
+        shareMenuOpen ||
+        viewportMenuOpen
+      ) {
         closeToolbarMenus();
         dismissed = true;
       } else if (review.variantsOpen) {
@@ -707,13 +610,12 @@ export function PrototypeReviewChrome({
   }, [
     blurToolbarFocus,
     closeToolbarMenus,
+    commentsMenuOpen,
     explorationsMenuOpen,
+    handoffMenuOpen,
     review.closeVariants,
-    review.tweaksOpen,
     review.variantsOpen,
     shareMenuOpen,
-    statesOpen,
-    themeMenuOpen,
     viewportMenuOpen,
   ]);
 
@@ -727,14 +629,7 @@ export function PrototypeReviewChrome({
 
   const commentAnnotations = filterAnnotationsByChannel(annotations, "comment");
   const commentCount = countUnresolvedAnnotations(commentAnnotations);
-  void tweakVersion;
-  const tweaksRegistration = getPrototypeTweaksRegistration();
-  const tweakItems = tweaksRegistration?.items ?? [];
-  const tweakGroups = groupPrototypeTweaksByCategory(tweakItems);
-  const hasTweakItems = tweakItems.length > 0;
-  const showTweaksMenu = hasTweakItems;
 
-  const tweaksContent = review.tweaksContentRef.current;
   const showShareMenu = Boolean(shareCommand);
   const stateMapPagePath =
     review.stateCanvasPagePath ?? getDefaultPrototypeStateMapPath(review.slug);
@@ -745,7 +640,19 @@ export function PrototypeReviewChrome({
     prototypeReturnTo,
     searchParams,
   );
-  const onStateMapPage = pathname.startsWith(stateMapPagePath);
+
+  const commentsTabActive =
+    commentsMenuOpen ||
+    isCommentModeActive ||
+    (review.open && review.sidebarPanel === "comments");
+  const explorationsTabActive =
+    explorationsMenuOpen ||
+    (review.open && review.sidebarPanel === "variants");
+  const handoffTabActive =
+    handoffMenuOpen ||
+    (review.open &&
+      (review.sidebarPanel === "change-log" || review.sidebarPanel === "spec"));
+
   const chrome = (
     <div
       ref={chromeRef}
@@ -757,277 +664,18 @@ export function PrototypeReviewChrome({
       data-prototype-review-trigger
     >
       <div className={styles.footerBar}>
-        <div className={styles.footerGroup}>
-          <ReviewToolbarLink label="Back to gallery" href="/">
-            <ArrowLeft size={16} strokeWidth={2} />
-          </ReviewToolbarLink>
-
-          <ReviewToolbarIconPickerMenu
-            label="Layout"
-            tooltip="Layout"
-            value={review.viewportLayout}
-            onValueChange={review.setViewportLayout}
-            options={VIEWPORT_LAYOUT_OPTIONS}
-            open={viewportMenuOpen}
-            onOpenChange={(open) => {
-              if (open) {
-                openViewportMenu();
-                return;
-              }
-              closeViewportMenu();
-            }}
-            hoverPanel={viewportHover}
-            panelId="viewport"
-            triggerIcon={
-              review.viewportLayout === "mobile" ? (
-                <Smartphone size={16} strokeWidth={2} />
-              ) : (
-                <Monitor size={16} strokeWidth={2} />
-              )
-            }
+        <Link href="/" className={styles.footerBrand} aria-label="Back to gallery">
+          <img
+            src="/proto-logo.png"
+            alt=""
+            width={14}
+            height={14}
+            className={styles.footerBrandLogo}
           />
+          <span className={styles.footerBrandName}>Proto</span>
+        </Link>
 
-          <ReviewToolbarIconPickerMenu
-            label="Brightness"
-            tooltip="Brightness"
-            value={theme}
-            onValueChange={setTheme}
-            options={THEME_OPTIONS}
-            open={themeMenuOpen}
-            onOpenChange={(open) => {
-              if (open) {
-                openThemeMenu();
-                return;
-              }
-              closeThemeMenu();
-            }}
-            hoverPanel={themeHover}
-            panelId="theme"
-            triggerIcon={
-              theme === "light" ? (
-                <Sun size={16} strokeWidth={2} />
-              ) : (
-                <Moon size={16} strokeWidth={2} />
-              )
-            }
-          />
-
-          <DropdownMenu
-            modal={false}
-            open={statesOpen}
-            onOpenChange={(open) => {
-              if (open) {
-                openStatesMenu();
-                return;
-              }
-              closeStatesMenu();
-            }}
-          >
-            <ReviewToolbarTooltip label="States" disabled={statesOpen}>
-              <div
-                className={cn(
-                  styles.footerBarControls,
-                  toolbarStyles.buttonWrapper,
-                )}
-                {...statesHover.triggerProps}
-              >
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      toolbarStyles.controlButton,
-                      styles.toolbarMenuTrigger,
-                      statesOpen && styles.toolbarButtonHovered,
-                    )}
-                    data-menu-open={statesOpen ? "true" : undefined}
-                    aria-label="States"
-                    aria-expanded={statesOpen}
-                    aria-pressed={statesOpen}
-                    {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
-                  >
-                    <Layers size={16} strokeWidth={2} />
-                  </button>
-                </DropdownMenuTrigger>
-              </div>
-            </ReviewToolbarTooltip>
-
-            <DropdownMenuContent
-              {...TOOLBAR_MENU_CONTENT_PROPS}
-              {...statesHover.panelProps}
-              data-prototype-comment-theme={commentTheme}
-              data-prototype-review-panel="states"
-            >
-              <div
-                className={cn(
-                  pillStyles.controlsPanel,
-                  pillStyles.controlsPanelStates,
-                )}
-              >
-                <CreateStatePanelTrigger onOpen={openCreateStateModal} />
-                {tweaksContent ? (
-                  <div
-                    className={pillStyles.explorationBriefSeparator}
-                    role="separator"
-                    aria-hidden
-                  />
-                ) : null}
-                {tweaksContent}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <ReviewToolbarLink label="State map" href={stateMapHref}>
-            <span
-              className={cn(onStateMapPage && styles.toolbarButtonHovered)}
-            >
-              <Network size={16} strokeWidth={2} />
-            </span>
-          </ReviewToolbarLink>
-
-          {showTweaksMenu ? (
-            <DropdownMenu
-              modal={false}
-              open={review.tweaksOpen}
-              onOpenChange={(open) => {
-                if (!open) {
-                  review.closeTweaks();
-                  blurToolbarFocus();
-                  return;
-                }
-                review.closeSettings();
-                setStatesOpen(false);
-                setExplorationsMenuOpen(false);
-                setShareMenuOpen(false);
-                setViewportMenuOpen(false);
-                setThemeMenuOpen(false);
-                review.openTweaks();
-              }}
-            >
-              <ReviewToolbarTooltip label="Tweaks" disabled={review.tweaksOpen}>
-                <div
-                  className={cn(
-                    styles.footerBarControls,
-                    toolbarStyles.buttonWrapper,
-                  )}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className={cn(
-                        toolbarStyles.controlButton,
-                        styles.toolbarMenuTrigger,
-                        review.tweaksOpen && styles.toolbarButtonHovered,
-                      )}
-                      data-menu-open={review.tweaksOpen ? "true" : undefined}
-                      aria-label="Prototype tweaks"
-                      aria-expanded={review.tweaksOpen}
-                      aria-pressed={review.tweaksOpen}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        clearPillTextSelection();
-                      }}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onPointerDown={(event) => event.stopPropagation()}
-                    >
-                      <SlidersHorizontal size={16} strokeWidth={2} />
-                    </button>
-                  </DropdownMenuTrigger>
-                </div>
-              </ReviewToolbarTooltip>
-
-              <DropdownMenuContent
-                {...TOOLBAR_MENU_CONTENT_PROPS}
-                data-prototype-comment-theme={commentTheme}
-                data-prototype-review-panel="tweaks"
-              >
-                <div className={pillStyles.controlsPanel}>
-                  {tweakGroups.map((group) => (
-                    <div
-                      key={group.category}
-                      className={pillStyles.controlsPanelSection}
-                    >
-                      <div className={pillStyles.dropdownLabel}>
-                        {group.label}
-                      </div>
-                      {group.items.map((tweak) => (
-                        <DropdownMenuItem
-                          key={tweak.id}
-                          className={pillStyles.dropdownItem}
-                          onSelect={() => {
-                            review.closeTweaks();
-                            blurToolbarFocus();
-                            review.focusTweak(tweak.id);
-                          }}
-                        >
-                          {tweak.label}
-                          <MapPin
-                            size={10}
-                            className={pillStyles.dropdownItemIcon}
-                          />
-                        </DropdownMenuItem>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-
-          {showShareMenu ? (
-            <DropdownMenu
-              modal={false}
-              open={shareMenuOpen}
-              onOpenChange={(open) => {
-                if (open) {
-                  openShareMenu();
-                  return;
-                }
-                closeShareMenu();
-              }}
-            >
-              <ReviewToolbarTooltip label="Share" disabled={shareMenuOpen}>
-                <div
-                  className={cn(
-                    styles.footerBarControls,
-                    toolbarStyles.buttonWrapper,
-                  )}
-                  {...shareHover.triggerProps}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className={cn(
-                        toolbarStyles.controlButton,
-                        styles.toolbarMenuTrigger,
-                        shareMenuOpen && styles.toolbarButtonHovered,
-                      )}
-                      data-menu-open={shareMenuOpen ? "true" : undefined}
-                      aria-label="Share"
-                      aria-expanded={shareMenuOpen}
-                      aria-pressed={shareMenuOpen}
-                      {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
-                    >
-                      <Share2 size={16} strokeWidth={2} />
-                    </button>
-                  </DropdownMenuTrigger>
-                </div>
-              </ReviewToolbarTooltip>
-
-              <DropdownMenuContent
-                {...TOOLBAR_MENU_CONTENT_PROPS}
-                {...shareHover.panelProps}
-                data-prototype-comment-theme={commentTheme}
-                data-prototype-review-panel="share"
-              >
-                <div className={pillStyles.controlsPanel}>
-                  <PrototypeShareCommandButton command={shareCommand!} />
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </div>
-
-        <div className={styles.footerGroup}>
+        <div className={styles.footerTabs}>
           <DropdownMenu
             modal={false}
             open={explorationsMenuOpen}
@@ -1039,51 +687,21 @@ export function PrototypeReviewChrome({
               closeExplorationsMenu();
             }}
           >
-            <ReviewToolbarTooltip
-              label="Explorations"
-              disabled={explorationsMenuOpen}
-            >
-              <div
-                className={cn(
-                  styles.footerBarControls,
-                  toolbarStyles.buttonWrapper,
-                )}
-                {...explorationsHover.triggerProps}
-              >
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className={cn(
-                      toolbarStyles.controlButton,
-                      styles.toolbarMenuTrigger,
-                      explorationsMenuOpen && styles.toolbarButtonHovered,
-                    )}
-                    data-menu-open={
-                      explorationsMenuOpen ? "true" : undefined
-                    }
-                    aria-label="Explorations"
-                    aria-expanded={explorationsMenuOpen}
-                    aria-pressed={explorationsMenuOpen}
-                    {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
-                  >
-                    <LayoutGrid size={16} strokeWidth={2} />
-                  </button>
-                </DropdownMenuTrigger>
-              </div>
-            </ReviewToolbarTooltip>
-
+            <ReviewToolbarTextTabTrigger
+              label="Design Explorations"
+              active={explorationsTabActive}
+              open={explorationsMenuOpen}
+              accent="pink"
+              hoverTriggerProps={explorationsHover.triggerProps}
+            />
             <DropdownMenuContent
               {...TOOLBAR_MENU_CONTENT_PROPS}
               {...explorationsHover.panelProps}
+              className={FOOTER_MENU_CONTENT_CLASS}
               data-prototype-comment-theme={commentTheme}
               data-prototype-review-panel="explorations"
             >
-              <div
-                className={cn(
-                  pillStyles.controlsPanel,
-                  pillStyles.controlsPanelExplorations,
-                )}
-              >
+              <div className={FOOTER_MENU_PANEL_CLASS}>
                 <CreateExplorationPanelTrigger onOpen={openCreateExplorationModal} />
                 {review.variantSets.length > 0 ? (
                   <div
@@ -1127,91 +745,244 @@ export function PrototypeReviewChrome({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {onToggleCommentMode ? (
-            <ReviewToolbarButton
-              label={
-                isCommentModeActive ? "Exit comment mode" : "Add comment"
+          <DropdownMenu
+            modal={false}
+            open={commentsMenuOpen}
+            onOpenChange={(open) => {
+              if (open) {
+                openCommentsMenu();
+                return;
               }
-              tooltip="Add comment"
-              pressed={isCommentModeActive ?? false}
-              highlightActive={isCommentModeActive ?? false}
-              commentModeToggle
-              onClick={() => onToggleCommentMode()}
+              closeCommentsMenu();
+            }}
+          >
+            <ReviewToolbarTextTabTrigger
+              label="Comments"
+              active={commentsTabActive}
+              open={commentsMenuOpen}
+              accent="cyan"
+              hoverTriggerProps={commentsHover.triggerProps}
+            />
+            <DropdownMenuContent
+              {...TOOLBAR_MENU_CONTENT_PROPS}
+              {...commentsHover.panelProps}
+              className={FOOTER_MENU_CONTENT_CLASS}
+              data-prototype-comment-theme={commentTheme}
+              data-prototype-review-panel="comments"
             >
-              <MessageSquarePlus size={16} strokeWidth={2} />
-            </ReviewToolbarButton>
+              <div className={FOOTER_MENU_PANEL_CLASS}>
+                {onToggleCommentMode ? (
+                  <DropdownMenuItem
+                    className={pillStyles.dropdownMenuItem}
+                    onSelect={() => {
+                      setCommentsMenuOpen(false);
+                      blurToolbarFocus();
+                      onToggleCommentMode();
+                    }}
+                  >
+                    <span className={pillStyles.dropdownItemWithIcon}>
+                      <MessageSquarePlus
+                        size={14}
+                        strokeWidth={2}
+                        className={pillStyles.dropdownItemLeadingIcon}
+                        aria-hidden
+                      />
+                      Add comment
+                    </span>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem
+                  className={pillStyles.dropdownMenuItem}
+                  onSelect={() => {
+                    setCommentsMenuOpen(false);
+                    blurToolbarFocus();
+                    closeShareMenu();
+                    if (review.open && review.sidebarPanel === "comments") {
+                      onClose();
+                    } else {
+                      onOpenCommentsPanel?.();
+                    }
+                  }}
+                >
+                  <span className={pillStyles.dropdownItemWithIcon}>
+                    <MessageSquare
+                      size={14}
+                      strokeWidth={2}
+                      className={pillStyles.dropdownItemLeadingIcon}
+                      aria-hidden
+                    />
+                    View comments
+                  </span>
+                  {commentCount > 0 ? (
+                    <span className={pillStyles.dropdownItemCount}>
+                      {commentCount > 99 ? "99+" : commentCount}
+                    </span>
+                  ) : null}
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu
+            modal={false}
+            open={handoffMenuOpen}
+            onOpenChange={(open) => {
+              if (open) {
+                openHandoffMenu();
+                return;
+              }
+              closeHandoffMenu();
+            }}
+          >
+            <ReviewToolbarTextTabTrigger
+              label="Handoff"
+              active={handoffTabActive}
+              open={handoffMenuOpen}
+              accent="gold"
+              hoverTriggerProps={handoffHover.triggerProps}
+            />
+            <DropdownMenuContent
+              {...TOOLBAR_MENU_CONTENT_PROPS}
+              {...handoffHover.panelProps}
+              className={FOOTER_MENU_CONTENT_CLASS}
+              data-prototype-comment-theme={commentTheme}
+              data-prototype-review-panel="handoff"
+            >
+              <div className={FOOTER_MENU_PANEL_CLASS}>
+                <DropdownMenuItem
+                  className={pillStyles.dropdownMenuItem}
+                  onSelect={() => {
+                    setHandoffMenuOpen(false);
+                    blurToolbarFocus();
+                    if (review.open && review.sidebarPanel === "change-log") {
+                      review.closeSidebar();
+                    } else {
+                      review.closeSettings();
+                      closeToolbarMenus();
+                      closeShareMenu();
+                      review.openSidebar("change-log");
+                    }
+                  }}
+                >
+                  <span className={pillStyles.dropdownItemWithIcon}>
+                    <ScrollText
+                      size={14}
+                      strokeWidth={2}
+                      className={pillStyles.dropdownItemLeadingIcon}
+                      aria-hidden
+                    />
+                    Overview Writeup
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className={pillStyles.dropdownMenuItem}
+                  onSelect={() => {
+                    setHandoffMenuOpen(false);
+                    blurToolbarFocus();
+                    if (review.open && review.sidebarPanel === "spec") {
+                      review.closeSidebar();
+                    } else {
+                      review.closeSettings();
+                      closeToolbarMenus();
+                      closeShareMenu();
+                      review.openSidebar("spec");
+                    }
+                  }}
+                >
+                  <span className={pillStyles.dropdownItemWithIcon}>
+                    <Rocket
+                      size={14}
+                      strokeWidth={2}
+                      className={pillStyles.dropdownItemLeadingIcon}
+                      aria-hidden
+                    />
+                    PR Plan
+                  </span>
+                </DropdownMenuItem>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className={styles.footerUtilities}>
+          {showShareMenu ? (
+            <DropdownMenu
+              modal={false}
+              open={shareMenuOpen}
+              onOpenChange={(open) => {
+                if (open) {
+                  openShareMenu();
+                  return;
+                }
+                closeShareMenu();
+              }}
+            >
+              <ReviewToolbarTooltip label="Share" disabled={shareMenuOpen}>
+                <div
+                  className={cn(
+                    styles.footerBarControls,
+                    toolbarStyles.buttonWrapper,
+                  )}
+                  {...shareHover.triggerProps}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        toolbarStyles.controlButton,
+                        styles.toolbarMenuTrigger,
+                        shareMenuOpen && styles.toolbarButtonHovered,
+                      )}
+                      data-menu-open={shareMenuOpen ? "true" : undefined}
+                      aria-label="Share"
+                      aria-expanded={shareMenuOpen}
+                      aria-pressed={shareMenuOpen}
+                      {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
+                    >
+                      <Share2 size={16} strokeWidth={2} />
+                    </button>
+                  </DropdownMenuTrigger>
+                </div>
+              </ReviewToolbarTooltip>
+
+              <DropdownMenuContent
+                {...TOOLBAR_MENU_CONTENT_PROPS}
+                {...shareHover.panelProps}
+                className={FOOTER_MENU_CONTENT_CLASS}
+                data-prototype-comment-theme={commentTheme}
+                data-prototype-review-panel="share"
+              >
+                <div className={FOOTER_MENU_PANEL_CLASS}>
+                  <PrototypeShareCommandButton command={shareCommand!} />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : null}
 
-          <ReviewToolbarButton
-            label={
-              review.open && review.sidebarPanel === "comments"
-                ? "Close comments panel"
-                : "Open comments panel"
-            }
-            tooltip="Comments"
-            pressed={review.open && review.sidebarPanel === "comments"}
-            onClick={() => {
-              if (review.open && review.sidebarPanel === "comments") {
-                onClose();
-              } else {
-                closeShareMenu();
-                onOpenCommentsPanel?.();
+          <ReviewToolbarIconPickerMenu
+            label="Layout"
+            tooltip="Layout"
+            value={review.viewportLayout}
+            onValueChange={review.setViewportLayout}
+            options={VIEWPORT_LAYOUT_OPTIONS}
+            open={viewportMenuOpen}
+            onOpenChange={(open) => {
+              if (open) {
+                openViewportMenu();
+                return;
               }
+              closeViewportMenu();
             }}
-            badge={
-              commentCount > 0 ? (
-                <span className={toolbarStyles.buttonBadge}>
-                  {commentCount > 99 ? "99+" : commentCount}
-                </span>
-              ) : undefined
+            hoverPanel={viewportHover}
+            panelId="viewport"
+            triggerIcon={
+              review.viewportLayout === "mobile" ? (
+                <Smartphone size={16} strokeWidth={2} />
+              ) : (
+                <Monitor size={16} strokeWidth={2} />
+              )
             }
-          >
-            <MessageSquare size={16} strokeWidth={2} />
-          </ReviewToolbarButton>
-
-          <ReviewToolbarButton
-            label={
-              review.open && review.sidebarPanel === "change-log"
-                ? "Close overview"
-                : "Open overview"
-            }
-            tooltip="Overview"
-            pressed={review.open && review.sidebarPanel === "change-log"}
-            onClick={() => {
-              if (review.open && review.sidebarPanel === "change-log") {
-                review.closeSidebar();
-              } else {
-                review.closeSettings();
-                closeToolbarMenus();
-                closeShareMenu();
-                review.openSidebar("change-log");
-              }
-            }}
-          >
-            <ScrollText size={16} strokeWidth={2} />
-          </ReviewToolbarButton>
-
-          <ReviewToolbarButton
-            label={
-              review.open && review.sidebarPanel === "spec"
-                ? "Close PRs"
-                : "Open PRs"
-            }
-            tooltip="PRs"
-            pressed={review.open && review.sidebarPanel === "spec"}
-            onClick={() => {
-              if (review.open && review.sidebarPanel === "spec") {
-                review.closeSidebar();
-              } else {
-                review.closeSettings();
-                closeToolbarMenus();
-                closeShareMenu();
-                review.openSidebar("spec");
-              }
-            }}
-          >
-            <Rocket size={16} strokeWidth={2} />
-          </ReviewToolbarButton>
+          />
         </div>
       </div>
     </div>
@@ -1231,6 +1002,11 @@ export function PrototypeReviewChrome({
         : null}
 
       {chromePortalTarget ? createPortal(chrome, chromePortalTarget) : null}
+
+      <PrototypeMiniStateMap
+        stateMapHref={stateMapHref}
+        onOpenCreateState={openCreateStateModal}
+      />
 
       {review.highlightTargetId ? (
         <PrototypeTweakHighlight

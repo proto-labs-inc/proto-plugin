@@ -735,8 +735,12 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --prototype-state-map-node-footer-border: var(--tool-chrome-border-strong);
   --prototype-state-map-node-footer-text: var(--tool-chrome-text-heading);
 
-  background-color: var(--prototype-state-map-canvas-bg);
   color: var(--tool-chrome-text);
+}
+
+/* Full-page / overlay maps get a canvas bed; floating mini map stays transparent. */
+[data-prototype-root] [data-prototype-state-canvas]:not([data-prototype-state-canvas-layout="mini"]) {
+  background-color: var(--prototype-state-map-canvas-bg);
 }
 
 [data-prototype-root][data-prototype-comment-theme="dark"] [data-prototype-state-canvas] {
