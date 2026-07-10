@@ -43,10 +43,14 @@ const footerNav = [
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
-export function AutomatSidebar() {
+type AutomatSidebarProps = {
+  collapsible?: "icon" | "offcanvas";
+};
+
+export function AutomatSidebar({ collapsible = "icon" }: AutomatSidebarProps) {
   return (
     <PrototypeComponent id="automat-sidebar">
-      <Sidebar variant="inset" collapsible="icon">
+      <Sidebar variant="inset" collapsible={collapsible}>
         <SidebarHeader className="flex flex-col gap-2 p-2">
           <a
             className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-sidebar-accent"

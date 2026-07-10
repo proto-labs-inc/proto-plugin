@@ -703,6 +703,28 @@ export function PrototypeReviewChrome({
           <span className={styles.footerBrandName}>Proto</span>
         </Link>
 
+        <div className={styles.footerLeft}>
+          {showStateMapTab ? (
+            <button
+              ref={stateMapTabRef}
+              type="button"
+              className={cn(
+                styles.footerTab,
+                stateMapTabActive && styles.footerTabActive,
+                styles.footerTabAccent,
+                styles.footerTabAccentPink,
+                styles.toolbarMenuTrigger,
+              )}
+              aria-label="State Map"
+              aria-pressed={stateMapTabActive}
+              onClick={handleStateMapTabClick}
+            >
+              State Map
+            </button>
+          ) : null}
+        </div>
+
+        <div className={styles.footerRight}>
         <div className={styles.footerTabs}>
           <DropdownMenu
             modal={false}
@@ -933,25 +955,6 @@ export function PrototypeReviewChrome({
         </div>
 
         <div className={styles.footerUtilities}>
-          {showStateMapTab ? (
-            <button
-              ref={stateMapTabRef}
-              type="button"
-              className={cn(
-                styles.footerTab,
-                stateMapTabActive && styles.footerTabActive,
-                styles.footerTabAccent,
-                styles.footerTabAccentPink,
-                styles.toolbarMenuTrigger,
-              )}
-              aria-label="State Map"
-              aria-pressed={stateMapTabActive}
-              onClick={handleStateMapTabClick}
-            >
-              State Map
-            </button>
-          ) : null}
-
           {showShareMenu ? (
             <DropdownMenu
               modal={false}
@@ -1030,6 +1033,7 @@ export function PrototypeReviewChrome({
               )
             }
           />
+        </div>
         </div>
       </div>
     </div>

@@ -349,7 +349,10 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
     >
       <div style={collapseStyle}>
         <div className="overflow-hidden">
-          <div className="border-b border-[var(--border-solid)]">
+          <div
+            className="border-b border-[var(--border-solid)]"
+            data-prototype-wireframe-preview
+          >
             {renderWireframe(entry.wireframeId)}
           </div>
         </div>

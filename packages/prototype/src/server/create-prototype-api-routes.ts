@@ -255,10 +255,6 @@ export function createPrototypeScreenshotRoute(config: PrototypeConfig) {
   const registry = createPrototypeRegistry(config);
 
   async function POST(request: NextRequest, { params }: SlugRouteContext) {
-    if (process.env.NODE_ENV !== "development") {
-      return NextResponse.json({ error: "Not available" }, { status: 404 });
-    }
-
     const { slug } = await params;
     const prototype = registry.getPrototype(slug);
 

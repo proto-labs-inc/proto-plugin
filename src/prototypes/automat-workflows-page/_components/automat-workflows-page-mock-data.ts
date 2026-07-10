@@ -2,10 +2,26 @@ import type {
   AutomatActivityItem,
   AutomatChartPoint,
   AutomatChatThread,
+  AutomatProjectId,
   AutomatWorkflow,
 } from "./automat-workflows-page-types";
 
 export const AUTOMAT_ASSET_BASE = "/prototypes/automat-workflows-page";
+
+export const AUTOMAT_ORGANIZATION_NAME = "Acme Corporation";
+
+export const AUTOMAT_PROJECTS = [
+  {
+    id: "finance-automation",
+    name: "Finance Automation",
+    description: "AP/AR process automation and financial reporting",
+  },
+  {
+    id: "hr-digital-transformation",
+    name: "HR Digital Transformation",
+    description: "Modernizing HR processes with automation",
+  },
+] as const;
 
 export const AUTOMAT_WORKFLOWS: AutomatWorkflow[] = [
   {
@@ -176,6 +192,43 @@ export const AUTOMAT_CHAT_THREADS: AutomatChatThread[] = [
   },
 ];
 
-export const AUTOMAT_ACTIVE_WORKFLOW_COUNT = 10;
-export const AUTOMAT_AGENTIC_COUNT = 6;
-export const AUTOMAT_IDP_COUNT = 4;
+export const AUTOMAT_HR_WORKFLOWS: AutomatWorkflow[] = [
+  {
+    id: "wf-003",
+    name: "HR Onboarding",
+    description: "Employee onboarding automation",
+    status: "active",
+    lastSession: "2024-01-20T10:15:00Z",
+    totalSessions: 89,
+    successRate: 92.1,
+  },
+];
+
+export type AutomatProjectDashboardData = {
+  activeWorkflowCount: number;
+  agenticCount: number;
+  idpCount: number;
+  workflows: AutomatWorkflow[];
+};
+
+export const AUTOMAT_PROJECT_DASHBOARD_DATA: Record<
+  AutomatProjectId,
+  AutomatProjectDashboardData
+> = {
+  "finance-automation": {
+    activeWorkflowCount: 10,
+    agenticCount: 6,
+    idpCount: 4,
+    workflows: AUTOMAT_WORKFLOWS,
+  },
+  "hr-digital-transformation": {
+    activeWorkflowCount: 1,
+    agenticCount: 1,
+    idpCount: 0,
+    workflows: AUTOMAT_HR_WORKFLOWS,
+  },
+};
+
+export function getAutomatProjectDashboardData(projectId: AutomatProjectId) {
+  return AUTOMAT_PROJECT_DASHBOARD_DATA[projectId];
+}

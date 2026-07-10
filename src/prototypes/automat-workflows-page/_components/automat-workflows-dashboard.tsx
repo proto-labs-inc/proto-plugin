@@ -1,23 +1,26 @@
 "use client";
 
 import { PrototypeComponent } from "proto-plugin";
-import { AutomatRecentActivity } from "./automat-recent-activity";
-import { AutomatStatsCards } from "./automat-stats-cards";
-import { AutomatVolumeChart } from "./automat-volume-chart";
+import { AutomatAnalyticsBlock } from "./automat-analytics-block";
 import { AutomatWorkflowsOverview } from "./automat-workflows-overview";
 import { AutomatWorkflowsTable } from "./automat-workflows-table";
-import type { AutomatStatusFilter } from "./automat-workflows-page-types";
+import type { AutomatAnalyticsVariant } from "./automat-analytics-content";
+import type { AutomatProjectId, AutomatStatusFilter } from "./automat-workflows-page-types";
 
 type AutomatWorkflowsDashboardProps = {
+  projectId: AutomatProjectId;
   searchQuery: string;
   statusFilter: AutomatStatusFilter;
+  analyticsVariant: AutomatAnalyticsVariant;
   onSearchQueryChange: (query: string) => void;
   onStatusFilterChange: (filter: AutomatStatusFilter) => void;
 };
 
 export function AutomatWorkflowsDashboard({
+  projectId,
   searchQuery,
   statusFilter,
+  analyticsVariant,
   onSearchQueryChange,
   onStatusFilterChange,
 }: AutomatWorkflowsDashboardProps) {
@@ -29,13 +32,10 @@ export function AutomatWorkflowsDashboard({
       <div className="flex flex-col gap-6">
         <AutomatWorkflowsOverview />
 
-        <div className="grid gap-4 @xl/page:grid-cols-2 @4xl/page:grid-cols-4">
-          <AutomatStatsCards />
-          <AutomatVolumeChart />
-          <AutomatRecentActivity />
-        </div>
+        <AutomatAnalyticsBlock variant={analyticsVariant} projectId={projectId} />
 
         <AutomatWorkflowsTable
+          projectId={projectId}
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           onSearchQueryChange={onSearchQueryChange}

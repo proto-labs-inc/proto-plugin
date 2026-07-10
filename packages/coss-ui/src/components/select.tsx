@@ -44,28 +44,40 @@ function SelectButton({
   children,
   ...props
 }: SelectButtonProps) {
-  const typeValue: React.ButtonHTMLAttributes<HTMLButtonElement>["type"] =
-    render ? undefined : "button";
+  const triggerContent = (
+    <>
+      <span className="flex-1 truncate in-data-placeholder:text-muted-foreground/72">
+        {children}
+      </span>
+      <ChevronsUpDownIcon className={selectTriggerIconClassName} />
+    </>
+  );
+  const triggerClassName = cn(selectTriggerVariants({ size }), "min-w-0", className);
 
-  const defaultProps = {
-    children: (
-      <>
-        <span className="flex-1 truncate in-data-placeholder:text-muted-foreground/72">
-          {children}
-        </span>
-        <ChevronsUpDownIcon className={selectTriggerIconClassName} />
-      </>
-    ),
-    className: cn(selectTriggerVariants({ size }), "min-w-0", className),
-    "data-slot": "select-button",
-    type: typeValue,
-  };
+  if (render) {
+    const defaultProps = {
+      children: triggerContent,
+      className: triggerClassName,
+      "data-slot": "select-button",
+      type: "button" as const,
+    };
 
-  return useRender({
-    defaultTagName: "button",
-    props: mergeProps<"button">(defaultProps, props),
-    render,
-  });
+    return useRender({
+      defaultTagName: "button",
+      props: mergeProps<"button">(defaultProps, props),
+      render,
+    });
+  }
+
+  return (
+    <SelectPrimitive.Trigger
+      className={triggerClassName}
+      data-slot="select-button"
+      {...props}
+    >
+      {triggerContent}
+    </SelectPrimitive.Trigger>
+  );
 }
 
 function SelectTrigger({

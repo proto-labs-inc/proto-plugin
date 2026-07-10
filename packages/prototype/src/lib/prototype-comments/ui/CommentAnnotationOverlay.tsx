@@ -24,6 +24,11 @@ import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-t
 import { AnnotationPopupCSS } from "./annotation-popup";
 import { AnnotationMarker } from "./annotation-marker";
 import styles from "./capture-styles.module.scss";
+import {
+  PrototypeTargetHighlightLayer,
+  toHighlightPortalStyle,
+  useHighlightPortalContainer,
+} from "@prototype/components/prototypes/prototype-target-highlight-layer";
 
 type CommentAnnotationOverlayProps<TState = unknown> = {
   annotation: CommentAnnotation<TState>;
@@ -44,6 +49,7 @@ export function CommentAnnotationOverlay<TState = unknown>({
   const { annotations, updateAnnotation, deleteAnnotation } =
     useCommentStore<TState>();
   const { useLightTheme, commentTheme } = usePrototypeToolTheme();
+  const highlightPortal = useHighlightPortalContainer();
   const [mounted, setMounted] = useState(false);
   const [ready, setReady] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -133,6 +139,18 @@ export function CommentAnnotationOverlay<TState = unknown>({
     !resolveAnnotationTargetById(rootAnnotation.targetId!);
 
   const outlineBox = getAnnotationOutlineBox(rootAnnotation, targetElement, scrollY);
+  const portalOutlineBox =
+    outlineBox != null
+      ? toHighlightPortalStyle(
+          {
+            left: outlineBox.x,
+            top: outlineBox.y,
+            width: outlineBox.width,
+            height: outlineBox.height,
+          },
+          highlightPortal,
+        )
+      : null;
   const positionStyle = getAnnotationMarkerPosition(rootAnnotation, targetElement, scrollY);
   const markerViewport = getMarkerViewportPosition(rootAnnotation, scrollY, targetElement);
   const popupLeft = Math.max(160, Math.min(window.innerWidth - 160, markerViewport.x));
@@ -179,29 +197,18 @@ export function CommentAnnotationOverlay<TState = unknown>({
           </div>
         )}
 
-        {outlineBox ? (
-          <div
-            className={styles.targetHighlightLayer}
-            data-comment-target-highlight=""
-          >
+        {portalOutlineBox ? (
+          <PrototypeTargetHighlightLayer marker="target">
             <div
               className={`${rootAnnotation.isMultiSelect ? styles.multiSelectOutline : styles.singleSelectOutline} ${styles.enter}`}
               style={{
-                left: outlineBox.x,
-                top: outlineBox.y,
-                width: outlineBox.width,
-                height: outlineBox.height,
-                ...(rootAnnotation.isMultiSelect
-                  ? {}
-                  : {
-                      borderColor:
-                        "color-mix(in srgb, var(--prototype-comment-color-accent) 60%, transparent)",
-                      backgroundColor:
-                        "color-mix(in srgb, var(--prototype-comment-color-accent) 5%, transparent)",
-                    }),
+                left: portalOutlineBox.left,
+                top: portalOutlineBox.top,
+                width: portalOutlineBox.width,
+                height: portalOutlineBox.height,
               }}
             />
-          </div>
+          </PrototypeTargetHighlightLayer>
         ) : null}
 
         <div className={styles.overlay} style={{ zIndex: 99999 }}>

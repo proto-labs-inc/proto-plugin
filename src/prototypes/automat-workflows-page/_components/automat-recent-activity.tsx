@@ -8,7 +8,7 @@ import { AUTOMAT_RECENT_ACTIVITY } from "./automat-workflows-page-mock-data";
 export function AutomatRecentActivity() {
   return (
     <PrototypeComponent id="automat-recent-activity">
-      <Card className="flex max-h-[240px] flex-col gap-2 rounded-3xl border p-6 @xl/page:col-span-2">
+      <Card className="flex max-h-[240px] flex-col gap-2 rounded-3xl border p-6">
         <CardHeader className="grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 p-0">
           <CardTitle className="mb-3 font-semibold leading-none">Recent Activity</CardTitle>
         </CardHeader>

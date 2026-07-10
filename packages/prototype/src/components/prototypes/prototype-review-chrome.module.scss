@@ -59,6 +59,21 @@ $morph-duration: 0.25s;
   white-space: nowrap;
 }
 
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .footerTabs {
   display: flex;
   align-items: center;
@@ -152,7 +167,6 @@ $proto-accent-blue: #0097fe;
   align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .footerGroup {

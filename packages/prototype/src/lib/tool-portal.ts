@@ -14,6 +14,9 @@ export const PROTOTYPE_SOURCE_SURFACE_ATTR = "data-prototype-source-surface";
 export const PROTOTYPE_COMMENTS_SIDEBAR_ROOT_ID =
   "prototype-comments-sidebar-root";
 
+/** Floating tool overlays (mini state map) — above preview, below portaled menus. */
+export const PROTOTYPE_TOOL_OVERLAY_ROOT_ID = "prototype-tool-overlay-root";
+
 export function getPrototypePortalContainer(): HTMLElement | undefined {
   if (typeof document === "undefined") return undefined;
   return document.getElementById(PROTOTYPE_ROOT_ID) ?? undefined;
@@ -48,6 +51,36 @@ export function getPrototypePreviewStage(): HTMLElement | undefined {
 export function getPrototypeChromeRoot(): HTMLElement | undefined {
   if (typeof document === "undefined") return undefined;
   return document.getElementById(PROTOTYPE_CHROME_ROOT_ID) ?? undefined;
+}
+
+export function getPrototypeToolOverlayRoot(): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined;
+  return document.getElementById(PROTOTYPE_TOOL_OVERLAY_ROOT_ID) ?? undefined;
+}
+
+/** Comment/PR target highlights — scoped to preview content, below tool overlays. */
+export function getPrototypeHighlightPortalContainer(): HTMLElement | undefined {
+  return getPrototypeDialogPortalContainer();
+}
+
+export type PortalRelativeRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export function getPortalRelativeClientRect(
+  rect: Pick<DOMRect, "left" | "top" | "width" | "height">,
+  portal: HTMLElement,
+): PortalRelativeRect {
+  const portalRect = portal.getBoundingClientRect();
+  return {
+    left: rect.left - portalRect.left,
+    top: rect.top - portalRect.top,
+    width: rect.width,
+    height: rect.height,
+  };
 }
 
 export function getPrototypeScreenshotRoot(): HTMLElement | undefined {

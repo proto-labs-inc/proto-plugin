@@ -5,7 +5,12 @@ import { resolveAnnotationTargetById } from "@prototype/lib/prototype-comments/c
 import styles from "@prototype/lib/prototype-comments/ui/capture-styles.module.scss";
 import { cn } from "@prototype/lib/utils";
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+
+import {
+  PrototypeTargetHighlightLayer,
+  toHighlightPortalStyle,
+  useHighlightPortalContainer,
+} from "./prototype-target-highlight-layer";
 
 type HighlightRect = {
   top: number;
@@ -23,11 +28,6 @@ type PrototypeTweakHighlightProps = {
 const HOLD_MS = 1500;
 const FADE_MS = 250;
 
-const HIGHLIGHT_BORDER =
-  "color-mix(in srgb, var(--prototype-comment-color-blue) 60%, transparent)";
-const HIGHLIGHT_FILL =
-  "color-mix(in srgb, var(--prototype-comment-color-blue) 5%, transparent)";
-
 function findTweakTarget(targetId: string): HTMLElement | null {
   const byExact = resolveAnnotationTargetById(targetId);
   if (byExact) return byExact;
@@ -44,6 +44,7 @@ export function PrototypeTweakHighlight({
   targetId,
   onComplete,
 }: PrototypeTweakHighlightProps) {
+  const highlightPortal = useHighlightPortalContainer();
   const [mounted, setMounted] = useState(false);
   const [rect, setRect] = useState<HighlightRect | null>(null);
   const [isExiting, setIsExiting] = useState(false);
@@ -63,7 +64,10 @@ export function PrototypeTweakHighlight({
         return;
       }
 
-      const nextRect = element.getBoundingClientRect();
+      const nextRect = toHighlightPortalStyle(
+        element.getBoundingClientRect(),
+        highlightPortal,
+      );
       setRect({
         top: nextRect.top,
         left: nextRect.left,
@@ -104,29 +108,28 @@ export function PrototypeTweakHighlight({
       window.removeEventListener("scroll", updateRect, true);
       window.removeEventListener("resize", updateRect);
     };
-  }, [mounted, onComplete, targetId]);
+  }, [highlightPortal, mounted, onComplete, targetId]);
 
   if (!mounted || !rect) return null;
 
-  return createPortal(
-    <div
-      aria-hidden
-      data-prototype-comment-accent="blue"
-      className={cn(
-        styles.singleSelectOutline,
-        isExiting ? styles.exit : styles.enter,
-        "z-[1045] motion-reduce:transition-none",
-      )}
-      style={{
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        borderColor: HIGHLIGHT_BORDER,
-        backgroundColor: HIGHLIGHT_FILL,
-        animationDuration: `${FADE_MS}ms`,
-      }}
-    />,
-    document.body,
+  return (
+    <PrototypeTargetHighlightLayer marker="target">
+      <div
+        aria-hidden
+        data-prototype-comment-accent="blue"
+        className={cn(
+          styles.singleSelectOutline,
+          isExiting ? styles.exit : styles.enter,
+          "motion-reduce:transition-none",
+        )}
+        style={{
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          animationDuration: `${FADE_MS}ms`,
+        }}
+      />
+    </PrototypeTargetHighlightLayer>
   );
 }

@@ -11,7 +11,6 @@ import { useCommentCaptureBridgeOptional } from "@prototype/lib/prototype-commen
 import styles from "@prototype/lib/prototype-comments/ui/capture-styles.module.scss";
 import { usePrototypeCommentRegistry } from "@prototype/lib/prototypes/prototype-comment-registry";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
-import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import { buildComponentShareLink } from "@prototype/lib/prototypes/prototype-share-link";
 import { cn } from "@prototype/lib/utils";
 import { X } from "lucide-react";
@@ -19,16 +18,17 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-const SHARE_BORDER =
-  "color-mix(in srgb, var(--prototype-comment-color-blue) 60%, transparent)";
-const SHARE_FILL =
-  "color-mix(in srgb, var(--prototype-comment-color-blue) 5%, transparent)";
+import {
+  PrototypeTargetHighlightLayer,
+  toHighlightPortalStyle,
+  useHighlightPortalContainer,
+} from "./prototype-target-highlight-layer";
 
 export function PrototypeShareMode() {
   const review = usePrototypeReview();
-  const { commentTheme } = usePrototypeToolTheme();
   const bridge = useCommentCaptureBridgeOptional();
   const { readHandlers } = usePrototypeCommentRegistry();
+  const highlightPortal = useHighlightPortalContainer();
   const [mounted, setMounted] = useState(false);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [hoverLabel, setHoverLabel] = useState<string | null>(null);
@@ -157,30 +157,27 @@ export function PrototypeShareMode() {
 
   if (!mounted || !review.shareModeActive) return null;
 
+  const portalHoverRect =
+    hoverRect != null
+      ? toHighlightPortalStyle(hoverRect, highlightPortal)
+      : null;
+
   return createPortal(
     <>
-      <div
-        data-prototype-comment-theme={commentTheme}
-        data-prototype-comment-accent="blue"
-        data-prototype-comment-root=""
-        data-prototype-share-overlay=""
-        className={styles.targetHighlightLayer}
-      >
-        {hoverRect ? (
+      <PrototypeTargetHighlightLayer marker="share">
+        {portalHoverRect ? (
           <div
             aria-hidden
             className={cn(styles.singleSelectOutline, styles.enter)}
             style={{
-              left: hoverRect.left,
-              top: hoverRect.top,
-              width: hoverRect.width,
-              height: hoverRect.height,
-              borderColor: SHARE_BORDER,
-              backgroundColor: SHARE_FILL,
+              left: portalHoverRect.left,
+              top: portalHoverRect.top,
+              width: portalHoverRect.width,
+              height: portalHoverRect.height,
             }}
           />
         ) : null}
-      </div>
+      </PrototypeTargetHighlightLayer>
 
       <div
         data-prototype-share-hint

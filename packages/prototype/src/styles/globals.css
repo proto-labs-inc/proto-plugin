@@ -889,6 +889,8 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 /* Light schematic previews (state map + PR split wireframes). */
 [data-prototype-wireframe-preview] {
+  --prototype-wireframe-block: #e4e6ea;
+  --prototype-wireframe-block-subtle: #eceef1;
   --bg-bedrock: var(--color-gray-100);
   --bg-main: #ffffff;
   --bg-top: #ffffff;
@@ -902,6 +904,12 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --border-faint: color-mix(in srgb, var(--color-gray-900) 7%, transparent);
   --border-solid: var(--color-gray-200);
   --border-medium: var(--color-gray-300);
+  --border-subtle: var(--color-gray-200);
+  --muted: var(--prototype-wireframe-block-subtle);
+  --color-muted: var(--prototype-wireframe-block);
+  --color-muted-foreground: var(--color-gray-400);
+  --cal-bg: #ffffff;
+  --cal-bg-emphasis: var(--prototype-wireframe-block);
   --color-background: #ffffff;
   --color-foreground: var(--color-gray-900);
   --color-border: var(--border-solid);

@@ -503,7 +503,7 @@ $enter-duration: 150ms;
   color: #e0e0e0;
   user-select: none;
   outline: none;
-  // Above comment target highlights (capture-styles targetHighlightLayer: 1040).
+  // Above prototype preview content; target highlights live inside #prototype-viewport.
   z-index: 1051;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.24),

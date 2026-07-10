@@ -125,6 +125,16 @@ export function getDesignExplorationDisplayOptions<
   ];
 }
 
+/** Mobbin references tagged with `variantHint` matching a layout direction label. */
+export function getMobbinReferencesForVariantLabel(
+  references: MobbinReference[],
+  variantLabel: string,
+): MobbinReference[] {
+  return references.filter(
+    (reference) => reference.variantHint === variantLabel,
+  );
+}
+
 /** Plain-text copy of the overview fields as shown in the design brief modal. */
 export function buildBriefOverviewCopyText(
   title: string,

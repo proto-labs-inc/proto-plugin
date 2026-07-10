@@ -25,15 +25,33 @@ function WireBlock({
               background: PR_TARGET_HIGHLIGHT_FILL,
               border: `1px solid ${PR_TARGET_HIGHLIGHT_BORDER}`,
             }
-          : { background: "var(--color-muted, #e5e7eb)" }
+          : { background: "var(--prototype-wireframe-block, #e4e6ea)" }
       }
     />
+  );
+}
+
+function renderFilterWireframe({ emptySearch = false }: { emptySearch?: boolean } = {}) {
+  return (
+    <div className="flex h-full flex-col gap-1 p-2">
+      <WireBlock className="h-3 w-full rounded-sm" />
+      <WireBlock className="h-4 w-2/3 rounded-sm" highlight />
+      <WireBlock
+        className={
+          emptySearch
+            ? "flex-1 rounded-sm border border-dashed"
+            : "flex-1 rounded-sm"
+        }
+        highlight
+      />
+    </div>
   );
 }
 
 function renderWireframe(stateId: AutomatWorkflowsPagePreviewStateId) {
   switch (stateId) {
     case "overview-default":
+    case "finance-automation":
       return (
         <div className="flex h-full flex-col gap-1 p-2">
           <WireBlock className="h-3 w-full rounded-sm" />
@@ -45,25 +63,30 @@ function renderWireframe(stateId: AutomatWorkflowsPagePreviewStateId) {
           <WireBlock className="h-8 flex-1 rounded-sm" highlight />
         </div>
       );
-    case "search-filtered":
+    case "hr-project":
+      return (
+        <div className="flex h-full flex-col gap-1 p-2">
+          <WireBlock className="h-3 w-full rounded-sm" />
+          <div className="grid flex-1 grid-cols-3 gap-1">
+            <WireBlock className="rounded-sm" />
+            <WireBlock className="rounded-sm" />
+            <WireBlock className="rounded-sm" />
+          </div>
+          <WireBlock className="h-4 flex-1 rounded-sm" highlight />
+        </div>
+      );
+    case "valid-text-filter":
     case "status-active":
     case "status-scheduled":
     case "status-inactive":
-      return (
-        <div className="flex h-full flex-col gap-1 p-2">
-          <WireBlock className="h-3 w-full rounded-sm" />
-          <WireBlock className="h-4 w-2/3 rounded-sm" highlight />
-          <WireBlock className="flex-1 rounded-sm" highlight />
-        </div>
-      );
+    case "hr-valid-text-filter":
+    case "hr-status-active":
+    case "hr-status-scheduled":
+    case "hr-status-inactive":
+      return renderFilterWireframe();
     case "empty-search":
-      return (
-        <div className="flex h-full flex-col gap-1 p-2">
-          <WireBlock className="h-3 w-full rounded-sm" />
-          <WireBlock className="h-4 w-2/3 rounded-sm" highlight />
-          <WireBlock className="flex-1 rounded-sm border border-dashed" highlight />
-        </div>
-      );
+    case "hr-empty-search":
+      return renderFilterWireframe({ emptySearch: true });
     case "chat-open":
       return (
         <div className="relative flex h-full flex-col gap-1 p-2">
@@ -73,16 +96,6 @@ function renderWireframe(stateId: AutomatWorkflowsPagePreviewStateId) {
             className="absolute right-1 bottom-1 h-3/4 w-2/5 rounded-sm"
             highlight
           />
-        </div>
-      );
-    case "sidebar-collapsed":
-      return (
-        <div className="flex h-full gap-1 p-2">
-          <WireBlock className="w-3 rounded-sm" highlight />
-          <div className="flex flex-1 flex-col gap-1">
-            <WireBlock className="h-3 w-full rounded-sm" />
-            <WireBlock className="flex-1 rounded-sm" />
-          </div>
         </div>
       );
     default:

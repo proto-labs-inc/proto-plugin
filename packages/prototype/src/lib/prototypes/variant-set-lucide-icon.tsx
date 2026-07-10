@@ -2,6 +2,7 @@ import type { LucideIcon, LucideProps } from "lucide-react";
 import {
   ArrowDownUp,
   BadgeCheck,
+  BarChart3,
   CalendarDays,
   Clock,
   FilterX,
@@ -30,6 +31,7 @@ type VariantSetIconRule = {
 /** First match wins — order rules from most specific to broadest. */
 const VARIANT_SET_ICON_RULES: VariantSetIconRule[] = [
   { test: /event-types-page-layout|event types page layout/i, icon: PanelsTopLeft },
+  { test: /automat-analytics|analytics layout/i, icon: BarChart3 },
   // proto-partner-page explorations
   { test: /creator-attribution|creator attribution/i, icon: BadgeCheck },
   { test: /submit-modal|submit modal/i, icon: Send },

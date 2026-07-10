@@ -5,6 +5,8 @@ import { Switch } from "@prototype/components/ui/switch";
 import {
   PrototypeComponent,
   usePrototypeSlug,
+  buildPrototypeTargetId,
+  PROTOTYPE_TARGET_ATTR,
 } from "@prototype/components/prototypes/prototype-target";
 import { PrototypeBriefTextarea } from "@prototype/components/prototypes/prototype-brief-field";
 import { PrototypeDesignContextPanel } from "@prototype/components/prototypes/prototype-design-context-panel";
@@ -15,6 +17,7 @@ import {
   buildSetDefaultVariantPrompt,
   getDesignExplorationDisplayOptions,
   getDesignExplorationVariantOptions,
+  getMobbinReferencesForVariantLabel,
   resolveDesignExplorationBaselineOption,
   type DesignExplorationBaselineOption,
   type DesignExplorationBrief,
@@ -22,6 +25,7 @@ import {
   type DesignExplorationMobbin,
   type DesignExplorationVariantOption,
   type DesignExplorationVariantsSection,
+  type MobbinReference,
 } from "@prototype/lib/prototypes/design-exploration-types";
 import {
   usePersistedLocalBoolean,
@@ -87,6 +91,68 @@ export type PrototypeDesignBriefPanelProps<TVariant extends string> = {
 
 const SIDEBAR_OVERVIEW_COPY_BUTTON_CLASS =
   "cursor-pointer text-[var(--tool-chrome-icon)] hover:text-[var(--tool-chrome-icon-hover)] inline-flex size-7 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 transition-colors duration-200 ease outline-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0";
+
+function VariantMobbinLinks({
+  componentIdPrefix,
+  optionIdSuffix,
+  references,
+}: {
+  componentIdPrefix: string;
+  optionIdSuffix: string;
+  references: MobbinReference[];
+}) {
+  const slug = usePrototypeSlug();
+
+  if (references.length === 0) return null;
+
+  const scrollToReference = (referenceId: string) => {
+    if (!slug) return;
+
+    const targetId = buildPrototypeTargetId(
+      slug,
+      `${componentIdPrefix}.mobbin-reference.${referenceId}`,
+    );
+    const element = document.querySelector(
+      `[${PROTOTYPE_TARGET_ATTR}="${targetId}"]`,
+    );
+
+    if (element instanceof HTMLElement) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  return (
+    <>
+      <span className="text-sm text-muted-foreground" aria-hidden>
+        ·
+      </span>
+      {references.map((reference, index) => (
+        <span key={reference.id} className="inline-flex items-center">
+          {index > 0 ? (
+            <span className="text-sm text-muted-foreground pr-1.5" aria-hidden>
+              ,
+            </span>
+          ) : null}
+          <PrototypeComponent
+            id={`${componentIdPrefix}.overview-option.${optionIdSuffix}.mobbin-link.${reference.id}`}
+          >
+            <button
+              type="button"
+              className="text-sm text-[var(--text-secondary)] underline underline-offset-2 transition-colors duration-200 ease hover:text-[var(--tool-chrome-text)]"
+              onClick={(event) => {
+                event.stopPropagation();
+                scrollToReference(reference.id);
+              }}
+              aria-label={`Scroll to ${reference.appName} Mobbin reference`}
+            >
+              {reference.appName}
+            </button>
+          </PrototypeComponent>
+        </span>
+      ))}
+    </>
+  );
+}
 
 function MakeDefaultButton({
   componentId,
@@ -364,6 +430,10 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
       defaultVariantValue !== undefined &&
       option.value === defaultVariantValue;
     const optionIdSuffix = badgeSuffix ?? option.value;
+    const mobbinReferences =
+      isSidebar && mobbin
+        ? getMobbinReferencesForVariantLabel(mobbin.references, option.label)
+        : [];
 
     return (
       <PrototypeComponent
@@ -372,10 +442,8 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
       >
         <div className="flex flex-col gap-2">
           <div className="flex items-start justify-between gap-2 px-0.5">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <p className={cn(cardTitleClass, "min-w-0 truncate")}>
-                {option.label}
-              </p>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <p className={cn(cardTitleClass, "shrink-0")}>{option.label}</p>
               {isBaseline ? (
                 <PrototypeComponent
                   id={`${componentIdPrefix}.overview-option.${optionIdSuffix}.baseline`}
@@ -386,6 +454,11 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
                   </span>
                 </PrototypeComponent>
               ) : null}
+              <VariantMobbinLinks
+                componentIdPrefix={componentIdPrefix}
+                optionIdSuffix={optionIdSuffix}
+                references={mobbinReferences}
+              />
             </div>
 
             <div className="flex shrink-0 items-center gap-3">

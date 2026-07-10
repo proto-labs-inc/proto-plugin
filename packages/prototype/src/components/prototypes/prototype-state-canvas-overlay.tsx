@@ -13,7 +13,7 @@ import {
   getStateCanvasNodeHeight,
 } from "@prototype/lib/prototypes/prototype-state-canvas-constants";
 import { cn } from "@prototype/lib/utils";
-import { Minimize2 } from "lucide-react";
+import { Minimize2, X } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -25,6 +25,7 @@ import {
 
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 
+import { PrototypeStateScreenshotPreview } from "./prototype-state-screenshot-preview";
 import { PrototypeStateMapAddStateButton } from "./prototype-state-map-add-state-button";
 import {
   StateMapAnnotationTooltip,
@@ -200,8 +201,11 @@ function getNodeCenter(node: PrototypeStateCanvasNode): Point {
 
 type AnchorSide = "left" | "right" | "top" | "bottom";
 
-// Use side anchors only when the target is significantly more horizontal than vertical.
-const HORIZONTAL_RATIO_THRESHOLD = 2.5;
+// Connect on the sides only when both nodes sit on the same row (near-equal
+// vertical centers). Any real vertical separation (parent → child on the next
+// row) always anchors bottom → top, so sibling edges share one downward trunk
+// and horizontal rail instead of fanning out of the parent's sides ("octopus").
+const SAME_ROW_Y_THRESHOLD = NODE_PREVIEW_HEIGHT;
 const ARROW_INSET = 5;
 const CORNER_RADIUS = 10;
 
@@ -209,7 +213,7 @@ function getAnchorSide(node: PrototypeStateCanvasNode, target: Point): AnchorSid
   const center = getNodeCenter(node);
   const dx = target.x - center.x;
   const dy = target.y - center.y;
-  if (Math.abs(dx) > Math.abs(dy) * HORIZONTAL_RATIO_THRESHOLD) {
+  if (Math.abs(dy) < SAME_ROW_Y_THRESHOLD) {
     return dx > 0 ? "right" : "left";
   }
   return dy > 0 ? "bottom" : "top";
@@ -387,6 +391,12 @@ function resolveHoverAnnotationSource<T extends string>(
   };
 }
 
+type MiniViewportRepositionHandlers = {
+  onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onPointerUp: (event: React.PointerEvent<HTMLDivElement>) => void;
+};
+
 type PrototypeStateCanvasViewProps<T extends string> = {
   config: PrototypeStateCanvasConfig<T>;
   layout?: "page" | "overlay" | "mini";
@@ -394,6 +404,8 @@ type PrototypeStateCanvasViewProps<T extends string> = {
   onClose?: () => void;
   /** Highlights the node matching the currently previewed state. */
   activeStateId?: string | null;
+  /** When set, mini viewport drag repositions the shell instead of panning the canvas. */
+  miniRepositionHandlers?: MiniViewportRepositionHandlers;
 };
 
 export function PrototypeStateCanvasView<T extends string>({
@@ -402,9 +414,11 @@ export function PrototypeStateCanvasView<T extends string>({
   backHref,
   onClose,
   activeStateId = null,
+  miniRepositionHandlers,
 }: PrototypeStateCanvasViewProps<T>) {
   const isMiniLayout = layout === "mini";
   const review = usePrototypeReviewOptional();
+  const slug = review?.slug;
   const setActivePreviewStateId = review?.setActivePreviewStateId;
   const {
     onStateSelect,
@@ -898,7 +912,7 @@ export function PrototypeStateCanvasView<T extends string>({
                 aria-label="Close state map"
                 onClick={onClose}
               >
-                <Minimize2 size={16} strokeWidth={2} />
+                <X size={16} strokeWidth={2} />
               </button>
             ) : null}
           </div>
@@ -909,12 +923,17 @@ export function PrototypeStateCanvasView<T extends string>({
         ref={viewportRef}
         className={isMiniLayout ? styles.miniViewport : styles.canvasViewport}
         {...(isMiniLayout
-          ? {
-              onPointerDown: handleMiniViewportPointerDown,
-              onPointerMove: handleMiniViewportPointerMove,
-              onPointerUp: handleMiniViewportPointerUp,
-              onPointerCancel: handleMiniViewportPointerUp,
-            }
+          ? miniRepositionHandlers
+            ? {
+                ...miniRepositionHandlers,
+                onPointerCancel: miniRepositionHandlers.onPointerUp,
+              }
+            : {
+                onPointerDown: handleMiniViewportPointerDown,
+                onPointerMove: handleMiniViewportPointerMove,
+                onPointerUp: handleMiniViewportPointerUp,
+                onPointerCancel: handleMiniViewportPointerUp,
+              }
           : {})}
       >
         <div
@@ -1091,7 +1110,15 @@ export function PrototypeStateCanvasView<T extends string>({
                           className={styles.nodePreviewContent}
                           data-prototype-wireframe-preview
                         >
-                          {renderWireframe(previewNodeId)}
+                          {slug ? (
+                            <PrototypeStateScreenshotPreview
+                              slug={slug}
+                              stateId={previewNodeId}
+                              fallback={renderWireframe(previewNodeId)}
+                            />
+                          ) : (
+                            renderWireframe(previewNodeId)
+                          )}
                           {previewHighlightRect ? (
                             <StateMapPreviewHighlightOverlay rect={previewHighlightRect} />
                           ) : null}

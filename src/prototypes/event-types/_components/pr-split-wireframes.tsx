@@ -33,7 +33,7 @@ function WireBlock({
                 background: "transparent",
                 border: "1px dashed var(--border-subtle, #d1d5db)",
               }
-            : { background: "var(--cal-bg-emphasis, #e5e7eb)" }
+            : { background: "var(--prototype-wireframe-block, #e4e6ea)" }
       }
     />
   );

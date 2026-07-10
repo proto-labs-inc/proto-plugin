@@ -23,11 +23,7 @@ import type { CommentAnnotation } from "../core/types";
 import { useCommentStoreOptional } from "../react/CommentProvider";
 import { CommentThread } from "./CommentThread";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
-import {
-  getCaptureAspectRatio,
-  getScreenshotObjectPosition,
-  getViewportBoundingBox,
-} from "./comment-highlight";
+import { getViewportBoundingBox } from "./comment-highlight";
 import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
@@ -106,9 +102,7 @@ const s = {
   screenshotImg: {
     display: "block",
     width: "100%",
-    height: "100%",
-    objectFit: "cover" as const,
-    objectPosition: "top",
+    height: "auto",
   },
   noScreenshot: {
     display: "flex",
@@ -406,8 +400,6 @@ function CommentCard<TState>({
   const viewportBox = getViewportBoundingBox(annotation);
   const viewport = annotation.captureViewport;
   const isSidebarLayout = layout === "sidebar";
-  const aspectRatio = getCaptureAspectRatio(annotation);
-  const screenshotObjectPosition = getScreenshotObjectPosition(annotation);
   const showResolvedBadge =
     showResolveActions && isResolved && !isCondensed;
 
@@ -582,22 +574,13 @@ function CommentCard<TState>({
 
       <div className={cardStyles.screenshotCollapse}>
         <div className={cardStyles.screenshotInner}>
-          <div
-            className={cardStyles.screenshot}
-            style={{
-              aspectRatio: aspectRatio ?? "16 / 9",
-              ...(isSidebarLayout ? { maxHeight: 220 } : {}),
-            }}
-          >
+          <div className={cardStyles.screenshot}>
             {annotation.screenshot ? (
               <>
                 <img
                   src={annotation.screenshot}
                   alt={annotation.comment}
-                  style={{
-                    ...s.screenshotImg,
-                    objectPosition: screenshotObjectPosition,
-                  }}
+                  style={s.screenshotImg}
                 />
                 {viewportBox && viewport && (
                   <div

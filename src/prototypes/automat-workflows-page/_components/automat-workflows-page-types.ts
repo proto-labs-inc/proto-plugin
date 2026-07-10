@@ -2,19 +2,27 @@ export type AutomatWorkflowStatus = "active" | "scheduled" | "inactive";
 
 export type AutomatStatusFilter = "all" | AutomatWorkflowStatus;
 
+export type AutomatProjectId = "finance-automation" | "hr-digital-transformation";
+
 export type AutomatWorkflowsPagePreviewStateId =
   | "overview-default"
-  | "search-filtered"
+  | "chat-open"
+  | "finance-automation"
+  | "hr-project"
+  | "valid-text-filter"
   | "status-active"
   | "status-scheduled"
   | "status-inactive"
   | "empty-search"
-  | "chat-open"
-  | "sidebar-collapsed";
+  | "hr-valid-text-filter"
+  | "hr-status-active"
+  | "hr-status-scheduled"
+  | "hr-status-inactive"
+  | "hr-empty-search";
 
 export type AutomatLiveState = {
   previewStateId: AutomatWorkflowsPagePreviewStateId;
-  sidebarOpen: boolean;
+  projectId: AutomatProjectId;
   searchQuery: string;
   statusFilter: AutomatStatusFilter;
   chatOpen: boolean;

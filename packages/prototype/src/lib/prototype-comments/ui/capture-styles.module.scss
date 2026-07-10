@@ -714,13 +714,14 @@
 }
 
 // =============================================================================
-// Target highlights (below prototype review chrome at 1050)
+// Target highlights (inside #prototype-viewport — below tool overlays & footer)
 // =============================================================================
 
 .targetHighlightLayer {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 1040;
+  z-index: 1;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -756,13 +757,13 @@
 // =============================================================================
 
 .hoverHighlight {
-  position: fixed;
+  position: absolute;
   border: 2px solid
-    color-mix(in srgb, var(--prototype-comment-color-accent) 50%, transparent);
+    color-mix(in srgb, var(--prototype-comment-color-blue) 55%, transparent);
   border-radius: 4px;
   background-color: color-mix(
     in srgb,
-    var(--prototype-comment-color-accent) 4%,
+    var(--prototype-comment-color-blue) 6%,
     transparent
   );
   pointer-events: none !important;
@@ -776,7 +777,7 @@
 }
 
 .multiSelectOutline {
-  position: fixed;
+  position: absolute;
   border: 2px dashed
     color-mix(in srgb, var(--prototype-comment-color-green) 60%, transparent);
   border-radius: 4px;
@@ -799,14 +800,14 @@
 }
 
 .singleSelectOutline {
-  position: fixed;
+  position: absolute;
   border: 2px solid
-    color-mix(in srgb, var(--prototype-comment-color-blue) 60%, transparent);
+    color-mix(in srgb, var(--prototype-comment-color-blue) 55%, transparent);
   border-radius: 4px;
   pointer-events: none !important;
   background-color: color-mix(
     in srgb,
-    var(--prototype-comment-color-blue) 5%,
+    var(--prototype-comment-color-blue) 6%,
     transparent
   );
   box-sizing: border-box;
@@ -874,9 +875,7 @@
 :global(html[data-comments-sidebar-open]) .fixedMarkersLayer,
 :global(html[data-prototype-review-sidebar-open]) .fixedMarkersLayer,
 :global(html[data-comments-sidebar-open]) .overlay,
-:global(html[data-prototype-review-sidebar-open]) .overlay,
-:global(html[data-comments-sidebar-open]) .targetHighlightLayer,
-:global(html[data-prototype-review-sidebar-open]) .targetHighlightLayer {
+:global(html[data-prototype-review-sidebar-open]) .overlay {
   right: var(--comments-sidebar-width, 400px);
 }
 

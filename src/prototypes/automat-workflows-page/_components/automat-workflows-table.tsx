@@ -10,7 +10,6 @@ import {
   SelectButton,
   SelectItem,
   SelectPopup,
-  SelectValue,
 } from "@coss/ui/components/select";
 import {
   Table,
@@ -24,10 +23,16 @@ import { cn } from "@coss/ui/lib/utils";
 import { useMemo } from "react";
 
 import styles from "../automat-workflows-page.module.scss";
-import { AUTOMAT_WORKFLOWS } from "./automat-workflows-page-mock-data";
-import type { AutomatStatusFilter, AutomatWorkflow, AutomatWorkflowStatus } from "./automat-workflows-page-types";
+import { getAutomatProjectDashboardData } from "./automat-workflows-page-mock-data";
+import type {
+  AutomatProjectId,
+  AutomatStatusFilter,
+  AutomatWorkflow,
+  AutomatWorkflowStatus,
+} from "./automat-workflows-page-types";
 
 type AutomatWorkflowsTableProps = {
+  projectId: AutomatProjectId;
   searchQuery: string;
   statusFilter: AutomatStatusFilter;
   onSearchQueryChange: (query: string) => void;
@@ -83,15 +88,21 @@ function filterWorkflows(
 }
 
 export function AutomatWorkflowsTable({
+  projectId,
   searchQuery,
   statusFilter,
   onSearchQueryChange,
   onStatusFilterChange,
 }: AutomatWorkflowsTableProps) {
+  const workflows = getAutomatProjectDashboardData(projectId).workflows;
+
   const filteredWorkflows = useMemo(
-    () => filterWorkflows(AUTOMAT_WORKFLOWS, searchQuery, statusFilter),
-    [searchQuery, statusFilter],
+    () => filterWorkflows(workflows, searchQuery, statusFilter),
+    [workflows, searchQuery, statusFilter],
   );
+
+  const selectedStatusLabel =
+    STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? "All statuses";
 
   return (
     <PrototypeComponent id="automat-workflows-table">
@@ -107,11 +118,12 @@ export function AutomatWorkflowsTable({
               />
             </div>
             <Select
+              items={STATUS_OPTIONS}
               value={statusFilter}
               onValueChange={(value) => onStatusFilterChange(value as AutomatStatusFilter)}
             >
               <SelectButton className="h-9 w-[220px] shadow-xs">
-                <SelectValue />
+                <span className="truncate">{selectedStatusLabel}</span>
               </SelectButton>
               <SelectPopup>
                 {STATUS_OPTIONS.map((option) => (

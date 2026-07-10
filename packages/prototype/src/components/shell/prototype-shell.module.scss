@@ -52,6 +52,15 @@
   padding: 0;
 }
 
+// Above the viewport frame, below portaled review menus (prototype-floating-pill z-index: 1051).
+.toolOverlayRoot {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
 .previewStageMobile .previewStageBody {
   align-items: center;
   justify-content: center;

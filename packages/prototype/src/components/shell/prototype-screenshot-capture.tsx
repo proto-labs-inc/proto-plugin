@@ -11,8 +11,6 @@ export function PrototypeScreenshotCapture({
   slug,
 }: PrototypeScreenshotCaptureProps) {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
-
     let cancelled = false;
 
     const capture = async () => {

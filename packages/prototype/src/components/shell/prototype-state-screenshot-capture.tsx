@@ -21,7 +21,7 @@ export function PrototypeStateScreenshotCapture({
   enabled = true,
 }: PrototypeStateScreenshotCaptureProps) {
   useEffect(() => {
-    if (!enabled || !stateId || process.env.NODE_ENV !== "development") return;
+    if (!enabled || !stateId) return;
 
     let cancelled = false;
 

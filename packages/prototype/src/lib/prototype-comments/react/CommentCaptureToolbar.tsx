@@ -15,6 +15,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { CommentCaptureTargetHighlights } from "./CommentCaptureTargetHighlights";
+
 import {
   getPrototypeTargetElement,
   getPrototypeTargetIdFromElement,
@@ -1247,179 +1249,86 @@ export function CommentCaptureToolbar<TState = unknown>({
               />
             )}
 
-            {isFeedbackActive && (
-              <>
-                <div
-                  className={styles.targetHighlightLayer}
-                  data-comment-capture-highlights
-                >
-                  {hoverInfo?.rect && !pendingAnnotation && (
-                    <div
-                      className={`${styles.singleSelectOutline} ${styles.enter}`}
-                      style={{
-                        left: hoverInfo.rect.left,
-                        top: hoverInfo.rect.top,
-                        width: hoverInfo.rect.width,
-                        height: hoverInfo.rect.height,
-                        borderColor:
-                          "color-mix(in srgb, var(--prototype-comment-color-accent) 60%, transparent)",
-                        backgroundColor:
-                          "color-mix(in srgb, var(--prototype-comment-color-accent) 5%, transparent)",
-                      }}
-                    />
-                  )}
+            {isFeedbackActive ? (
+              <CommentCaptureTargetHighlights
+                hoverInfo={hoverInfo}
+                pendingAnnotation={pendingAnnotation}
+                pendingExiting={pendingExiting}
+                pendingMultiSelectElements={pendingMultiSelectElements}
+                scrollY={scrollY}
+              />
+            ) : null}
 
-                  {pendingMultiSelectElements.map((item, index) => {
-                    const rect = item.element.getBoundingClientRect();
-                    return (
-                      <div
-                        key={`multi-hover-${index}`}
-                        className={`${styles.multiSelectOutline} ${styles.enter}`}
+            {isFeedbackActive && pendingAnnotation ? (
+              <div className={styles.overlay} data-comment-capture-overlay>
+                {(() => {
+                  const pendingPosition = getAnnotationMarkerPosition(
+                    {
+                      x: pendingAnnotation.x,
+                      y: pendingAnnotation.y,
+                      boundingBox: pendingAnnotation.boundingBox,
+                      isFixed: pendingAnnotation.isFixed,
+                      positionAnchor: pendingAnnotation.positionAnchor,
+                    },
+                    pendingAnnotation.targetElement ?? null,
+                    scrollY,
+                  );
+                  const markerViewport = getMarkerViewportPosition(
+                    {
+                      x: pendingAnnotation.x,
+                      y: pendingAnnotation.y,
+                      boundingBox: pendingAnnotation.boundingBox,
+                      isFixed: pendingAnnotation.isFixed,
+                      positionAnchor: pendingAnnotation.positionAnchor,
+                    },
+                    scrollY,
+                    pendingAnnotation.targetElement ?? null,
+                  );
+
+                  return (
+                    <>
+                      <PendingMarker
+                        x={pendingAnnotation.x}
+                        y={pendingAnnotation.y}
+                        positionStyle={pendingPosition}
+                        isMultiSelect={pendingAnnotation.isMultiSelect}
+                        isExiting={pendingExiting}
+                      />
+
+                      <AnnotationPopupCSS
+                        ref={popupRef as RefObject<AnnotationPopupCSSHandle>}
+                        element={pendingAnnotation.element}
+                        selectedText={pendingAnnotation.selectedText}
+                        computedStyles={pendingAnnotation.computedStylesObj}
+                        onSubmit={addAnnotation}
+                        onCancel={cancelAnnotation}
+                        isExiting={pendingExiting}
+                        lightMode={useLightTheme}
+                        showElementPath={false}
+                        accentColor="var(--prototype-comment-color-accent)"
                         style={{
-                          left: rect.left,
-                          top: rect.top,
-                          width: rect.width,
-                          height: rect.height,
+                          left: Math.max(
+                            160,
+                            Math.min(
+                              window.innerWidth - 160,
+                              markerViewport.x,
+                            ),
+                          ),
+                          ...(markerViewport.y > window.innerHeight - 290
+                            ? {
+                                bottom:
+                                  window.innerHeight -
+                                  markerViewport.y +
+                                  20,
+                              }
+                            : { top: markerViewport.y + 20 }),
                         }}
                       />
-                    );
-                  })}
-
-                  {pendingAnnotation &&
-                    (pendingAnnotation.multiSelectElements?.length
-                      ? pendingAnnotation.multiSelectElements
-                          .filter((el) => document.contains(el))
-                          .map((el, index) => {
-                            const rect = el.getBoundingClientRect();
-                            return (
-                              <div
-                                key={`pending-multi-${index}`}
-                                className={`${styles.multiSelectOutline} ${
-                                  pendingExiting ? styles.exit : styles.enter
-                                }`}
-                                style={{
-                                  left: rect.left,
-                                  top: rect.top,
-                                  width: rect.width,
-                                  height: rect.height,
-                                }}
-                              />
-                            );
-                          })
-                      : pendingAnnotation.targetElement &&
-                          document.contains(pendingAnnotation.targetElement)
-                        ? (() => {
-                            const rect =
-                              pendingAnnotation.targetElement!.getBoundingClientRect();
-                            return (
-                              <div
-                                className={`${styles.singleSelectOutline} ${
-                                  pendingExiting ? styles.exit : styles.enter
-                                }`}
-                                style={{
-                                  left: rect.left,
-                                  top: rect.top,
-                                  width: rect.width,
-                                  height: rect.height,
-                                  borderColor:
-                                    "color-mix(in srgb, var(--prototype-comment-color-accent) 60%, transparent)",
-                                  backgroundColor:
-                                    "color-mix(in srgb, var(--prototype-comment-color-accent) 5%, transparent)",
-                                }}
-                              />
-                            );
-                          })()
-                        : pendingAnnotation.boundingBox && (
-                            <div
-                              className={`${
-                                pendingAnnotation.isMultiSelect
-                                  ? styles.multiSelectOutline
-                                  : styles.singleSelectOutline
-                              } ${pendingExiting ? styles.exit : styles.enter}`}
-                              style={{
-                                left: pendingAnnotation.boundingBox.x,
-                                top: pendingAnnotation.boundingBox.y - scrollY,
-                                width: pendingAnnotation.boundingBox.width,
-                                height: pendingAnnotation.boundingBox.height,
-                              }}
-                            />
-                          ))}
-                </div>
-
-                {pendingAnnotation && (
-                  <div className={styles.overlay} data-comment-capture-overlay>
-                    {(() => {
-                      const pendingPosition = getAnnotationMarkerPosition(
-                        {
-                          x: pendingAnnotation.x,
-                          y: pendingAnnotation.y,
-                          boundingBox: pendingAnnotation.boundingBox,
-                          isFixed: pendingAnnotation.isFixed,
-                          positionAnchor: pendingAnnotation.positionAnchor,
-                        },
-                        pendingAnnotation.targetElement ?? null,
-                        scrollY,
-                      );
-                      const markerViewport = getMarkerViewportPosition(
-                        {
-                          x: pendingAnnotation.x,
-                          y: pendingAnnotation.y,
-                          boundingBox: pendingAnnotation.boundingBox,
-                          isFixed: pendingAnnotation.isFixed,
-                          positionAnchor: pendingAnnotation.positionAnchor,
-                        },
-                        scrollY,
-                        pendingAnnotation.targetElement ?? null,
-                      );
-
-                      return (
-                        <>
-                          <PendingMarker
-                            x={pendingAnnotation.x}
-                            y={pendingAnnotation.y}
-                            positionStyle={pendingPosition}
-                            isMultiSelect={pendingAnnotation.isMultiSelect}
-                            isExiting={pendingExiting}
-                          />
-
-                          <AnnotationPopupCSS
-                            ref={
-                              popupRef as RefObject<AnnotationPopupCSSHandle>
-                            }
-                            element={pendingAnnotation.element}
-                            selectedText={pendingAnnotation.selectedText}
-                            computedStyles={pendingAnnotation.computedStylesObj}
-                            onSubmit={addAnnotation}
-                            onCancel={cancelAnnotation}
-                            isExiting={pendingExiting}
-                            lightMode={useLightTheme}
-                            showElementPath={false}
-                            accentColor="var(--prototype-comment-color-accent)"
-                            style={{
-                              left: Math.max(
-                                160,
-                                Math.min(
-                                  window.innerWidth - 160,
-                                  markerViewport.x,
-                                ),
-                              ),
-                              ...(markerViewport.y > window.innerHeight - 290
-                                ? {
-                                    bottom:
-                                      window.innerHeight -
-                                      markerViewport.y +
-                                      20,
-                                  }
-                                : { top: markerViewport.y + 20 }),
-                            }}
-                          />
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-              </>
-            )}
+                    </>
+                  );
+                })()}
+              </div>
+            ) : null}
           </div>
         ) as ReactNode,
         document.body

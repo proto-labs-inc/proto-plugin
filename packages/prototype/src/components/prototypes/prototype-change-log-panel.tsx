@@ -17,7 +17,7 @@ import { Switch } from "@prototype/components/ui/switch";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { Plus } from "lucide-react";
 import { cn } from "@prototype/lib/utils";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import { PrototypeReferenceDocs } from "./prototype-reference-docs";
 import { PrototypeCommentStorageEmptyState } from "./prototype-comment-storage-empty-state";
@@ -114,6 +114,7 @@ export function PrototypeChangeLogPanel({
       prototypeReviewPreferenceKey(review.slug, "changelog-description-brief"),
       "",
     );
+  const [hasEditedDescription, setHasEditedDescription] = useState(false);
   const {
     copy: copyDescriptionPrompt,
     icon: copyDescriptionIcon,
@@ -124,6 +125,11 @@ export function PrototypeChangeLogPanel({
     [annotations],
   );
   const canCopyDescription = description.trim().length > 0;
+  const showCopyDescriptionPrompt = hasEditedDescription && canCopyDescription;
+
+  useEffect(() => {
+    setHasEditedDescription(false);
+  }, [review.slug]);
 
   const handleCopyDescriptionPrompt = () => {
     if (!canCopyDescription) return;
@@ -147,24 +153,28 @@ export function PrototypeChangeLogPanel({
         <textarea
           id="prototype-changelog-overview"
           value={description}
-          onChange={(event) => updateDescription(event.target.value)}
+          onChange={(event) => {
+            setHasEditedDescription(true);
+            updateDescription(event.target.value);
+          }}
           rows={3}
           placeholder="Summarize what changed and why…"
           aria-label="Description"
           className={CHANGELOG_OVERVIEW_FIELD_CLASS}
         />
-        <Button
-          type="button"
-          variant="chrome"
-          size="sm"
-          className="h-8 gap-1.5 self-start"
-          disabled={!canCopyDescription}
-          onClick={handleCopyDescriptionPrompt}
-          aria-label="Copy description prompt"
-        >
-          {isDescriptionCopied ? "Copied prompt" : "Copy prompt"}
-          {copyDescriptionIcon}
-        </Button>
+        {showCopyDescriptionPrompt ? (
+          <Button
+            type="button"
+            variant="chrome"
+            size="sm"
+            className="h-8 gap-1.5 self-start"
+            onClick={handleCopyDescriptionPrompt}
+            aria-label="Copy description prompt"
+          >
+            {isDescriptionCopied ? "Copied prompt" : "Copy prompt"}
+            {copyDescriptionIcon}
+          </Button>
+        ) : null}
       </section>
 
       <PrototypeReferenceDocs

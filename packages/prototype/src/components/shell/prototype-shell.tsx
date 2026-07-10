@@ -15,6 +15,7 @@ import {
   PROTOTYPE_CHROME_ROOT_ID,
   PROTOTYPE_COMMENTS_SIDEBAR_ROOT_ID,
   PROTOTYPE_PREVIEW_STAGE_ID,
+  PROTOTYPE_TOOL_OVERLAY_ROOT_ID,
   PROTOTYPE_VIEWPORT_ID,
 } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
@@ -22,6 +23,7 @@ import { cn } from "@prototype/lib/utils";
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
 
 import { PrototypeScreenshotCapture } from "./prototype-screenshot-capture";
+import { PrototypeStateScreenshotCapture } from "./prototype-state-screenshot-capture";
 import styles from "./prototype-shell.module.scss";
 import { usePathname } from "next/navigation";
 
@@ -83,6 +85,11 @@ function PrototypePreviewArea({
     >
       <div className={styles.previewStageBody}>
         <div
+          id={PROTOTYPE_TOOL_OVERLAY_ROOT_ID}
+          className={styles.toolOverlayRoot}
+          data-prototype-tool-overlay-root
+        />
+        <div
           className={cn(
             styles.viewportFrame,
             isMobileViewport && styles.viewportFrameMobile,
@@ -108,7 +115,15 @@ function PrototypePreviewArea({
             <div className={styles.viewportContent}>
               <div className={styles.viewportPage}>{children}</div>
             </div>
-            {!onStateMapPage ? <PrototypeScreenshotCapture slug={slug} /> : null}
+            {!onStateMapPage ? (
+              <>
+                <PrototypeScreenshotCapture slug={slug} />
+                <PrototypeStateScreenshotCapture
+                  slug={slug}
+                  stateId={review.activePreviewStateId}
+                />
+              </>
+            ) : null}
           </div>
         </div>
       </div>

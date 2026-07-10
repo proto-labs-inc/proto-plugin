@@ -91,6 +91,7 @@ export {
   getAdjacentDesignExplorationVariant,
   getDesignExplorationDisplayOptions,
   getDesignExplorationVariantOptions,
+  getMobbinReferencesForVariantLabel,
   resolveDesignExplorationBaselineOption,
 } from "./lib/prototypes/design-exploration-types";
 
@@ -288,12 +289,14 @@ export {
   PROTOTYPE_ROOT_ID,
   PROTOTYPE_SCREENSHOT_ATTR,
   PROTOTYPE_SOURCE_SURFACE_ATTR,
+  PROTOTYPE_TOOL_OVERLAY_ROOT_ID,
   PROTOTYPE_VIEWPORT_ID,
   getPrototypeChromeRoot,
   getPrototypeDialogPortalContainer,
   getPrototypeToolDialogPortalContainer,
   getPrototypePreviewStage,
   getPrototypeScreenshotRoot,
+  getPrototypeToolOverlayRoot,
 } from "./lib/tool-portal";
 
 export {
