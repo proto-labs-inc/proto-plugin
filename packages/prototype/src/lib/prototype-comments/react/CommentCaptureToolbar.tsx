@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 
 import { CommentCaptureTargetHighlights } from "./CommentCaptureTargetHighlights";
 
+import { PrototypeComponentAnchorLayer } from "@prototype/components/prototypes/prototype-component-anchor-layer";
 import {
   getPrototypeTargetElement,
   getPrototypeTargetIdFromElement,
@@ -36,12 +37,14 @@ import {
   computeElementCenterMarkerPosition,
   computeElementRelativeMarkerPosition,
   deepElementFromPoint,
-  getAnnotationMarkerPosition,
+  getElementRelativeMarkerStyle,
   getMarkerViewportPosition,
+  getPrototypeCaptureViewport,
   getPrototypeScrollContainer,
   resolveAnnotationTargetById,
   type AnnotationTargetOptions,
 } from "../core/annotation-target";
+import type { AnnotationBoundingBox, CaptureViewport } from "../core/types";
 import {
   getAdjacentDisplayCommentId,
   sortAnnotationsForDisplay,
@@ -113,10 +116,23 @@ type PendingAnnotation = {
   targetElement?: HTMLElement;
   targetId?: string;
   positionAnchor?: "viewport" | "element";
+  captureViewport?: CaptureViewport;
+  viewportBoundingBox?: AnnotationBoundingBox;
 };
 
 function resolveCaptureAnchor(elementUnder: HTMLElement): HTMLElement {
   return getPrototypeTargetElement(elementUnder) ?? elementUnder;
+}
+
+function toViewportBoundingBox(
+  rect: Pick<DOMRect, "left" | "top" | "width" | "height">,
+): AnnotationBoundingBox {
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+  };
 }
 
 type HoverInfo = {
@@ -408,6 +424,8 @@ export function CommentCaptureToolbar<TState = unknown>({
           width: rect.width,
           height: rect.height,
         },
+        captureViewport: getPrototypeCaptureViewport(anchor),
+        viewportBoundingBox: toViewportBoundingBox(rect),
         isFixed,
         fullPath: getFullElementPath(anchor),
         accessibility: getAccessibilityInfo(anchor),
@@ -455,6 +473,13 @@ export function CommentCaptureToolbar<TState = unknown>({
           width: bounds.right - bounds.left,
           height: bounds.bottom - bounds.top,
         },
+        captureViewport: getPrototypeCaptureViewport(lastEl),
+        viewportBoundingBox: toViewportBoundingBox({
+          left: bounds.left,
+          top: bounds.top,
+          width: bounds.right - bounds.left,
+          height: bounds.bottom - bounds.top,
+        }),
         isMultiSelect: true,
         isFixed: isElementFixed(lastEl),
         elementBoundingBoxes: freshRects.map((rect) => ({
@@ -489,6 +514,17 @@ export function CommentCaptureToolbar<TState = unknown>({
 
       const screenshotResult = await captureViewportScreenshot();
       const id = Date.now().toString();
+      const clickViewport =
+        pendingAnnotation.captureViewport ??
+        getPrototypeCaptureViewport(pendingAnnotation.targetElement ?? null);
+      const screenshotViewport = screenshotResult?.captureViewport;
+      const captureViewport: CaptureViewport = {
+        width: screenshotViewport?.width ?? clickViewport.width,
+        height: screenshotViewport?.height ?? clickViewport.height,
+        scrollY: clickViewport.scrollY,
+        scrollTop: clickViewport.scrollTop,
+        scrollContainerTargetId: clickViewport.scrollContainerTargetId,
+      };
 
       store.addAnnotation({
         id,
@@ -502,6 +538,7 @@ export function CommentCaptureToolbar<TState = unknown>({
         timestamp: Date.now(),
         selectedText: pendingAnnotation.selectedText,
         boundingBox: pendingAnnotation.boundingBox,
+        viewportBoundingBox: pendingAnnotation.viewportBoundingBox,
         nearbyText: pendingAnnotation.nearbyText,
         cssClasses: pendingAnnotation.cssClasses,
         isMultiSelect: pendingAnnotation.isMultiSelect,
@@ -513,7 +550,7 @@ export function CommentCaptureToolbar<TState = unknown>({
         reactComponents: pendingAnnotation.reactComponents,
         sourceFile: pendingAnnotation.sourceFile,
         screenshot: screenshotResult?.dataUrl ?? undefined,
-        captureViewport: screenshotResult?.captureViewport,
+        captureViewport,
         channel: integratedReview ? review.captureChannel : "comment",
       });
 
@@ -936,6 +973,8 @@ export function CommentCaptureToolbar<TState = unknown>({
           width: rect.width,
           height: rect.height,
         },
+        captureViewport: getPrototypeCaptureViewport(anchor),
+        viewportBoundingBox: toViewportBoundingBox(rect),
         nearbyText: getNearbyText(anchor),
         cssClasses: getElementClasses(anchor),
         isFixed,
@@ -1260,41 +1299,40 @@ export function CommentCaptureToolbar<TState = unknown>({
             ) : null}
 
             {isFeedbackActive && pendingAnnotation ? (
-              <div className={styles.overlay} data-comment-capture-overlay>
-                {(() => {
-                  const pendingPosition = getAnnotationMarkerPosition(
-                    {
-                      x: pendingAnnotation.x,
-                      y: pendingAnnotation.y,
-                      boundingBox: pendingAnnotation.boundingBox,
-                      isFixed: pendingAnnotation.isFixed,
-                      positionAnchor: pendingAnnotation.positionAnchor,
-                    },
-                    pendingAnnotation.targetElement ?? null,
-                    scrollY,
-                  );
-                  const markerViewport = getMarkerViewportPosition(
-                    {
-                      x: pendingAnnotation.x,
-                      y: pendingAnnotation.y,
-                      boundingBox: pendingAnnotation.boundingBox,
-                      isFixed: pendingAnnotation.isFixed,
-                      positionAnchor: pendingAnnotation.positionAnchor,
-                    },
-                    scrollY,
-                    pendingAnnotation.targetElement ?? null,
-                  );
+              <>
+                <PrototypeComponentAnchorLayer
+                  targetId={pendingAnnotation.targetId}
+                  targetElement={pendingAnnotation.targetElement ?? null}
+                  marker="capture"
+                >
+                  <div className={styles.markersLayerInViewport}>
+                    <PendingMarker
+                      x={pendingAnnotation.x}
+                      y={pendingAnnotation.y}
+                      positionStyle={getElementRelativeMarkerStyle({
+                        x: pendingAnnotation.x,
+                        y: pendingAnnotation.y,
+                      })}
+                      isMultiSelect={pendingAnnotation.isMultiSelect}
+                      isExiting={pendingExiting}
+                    />
+                  </div>
+                </PrototypeComponentAnchorLayer>
 
-                  return (
-                    <>
-                      <PendingMarker
-                        x={pendingAnnotation.x}
-                        y={pendingAnnotation.y}
-                        positionStyle={pendingPosition}
-                        isMultiSelect={pendingAnnotation.isMultiSelect}
-                        isExiting={pendingExiting}
-                      />
+                <div className={styles.overlay} data-comment-capture-overlay>
+                  {(() => {
+                    const markerViewport = getMarkerViewportPosition(
+                      {
+                        x: pendingAnnotation.x,
+                        y: pendingAnnotation.y,
+                        boundingBox: pendingAnnotation.boundingBox,
+                        isFixed: pendingAnnotation.isFixed,
+                        positionAnchor: pendingAnnotation.positionAnchor,
+                      },
+                      pendingAnnotation.targetElement ?? null,
+                    );
 
+                    return (
                       <AnnotationPopupCSS
                         ref={popupRef as RefObject<AnnotationPopupCSSHandle>}
                         element={pendingAnnotation.element}
@@ -1324,10 +1362,10 @@ export function CommentCaptureToolbar<TState = unknown>({
                             : { top: markerViewport.y + 20 }),
                         }}
                       />
-                    </>
-                  );
-                })()}
-              </div>
+                    );
+                  })()}
+                </div>
+              </>
             ) : null}
           </div>
         ) as ReactNode,

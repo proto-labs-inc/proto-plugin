@@ -35,7 +35,7 @@ export async function isDomCaptureAvailable(): Promise<boolean> {
 
 import {
   getCommentsSidebarInset,
-  getPrototypeScrollContainer,
+  getPrototypeCaptureViewport,
 } from "./annotation-target";
 import {
   getPrototypeScreenshotRoot,
@@ -171,12 +171,9 @@ export async function captureViewportScreenshot(
     const contentWidth = Math.max(1, viewportWidth - sidebarInset);
     const maxWidth = 1200;
     const scale = Math.min(1, maxWidth / contentWidth);
-    const scrollContainer = getPrototypeScrollContainer();
     const captureViewport: CaptureViewport = {
+      ...getPrototypeCaptureViewport(),
       width: screenshotRoot ? viewportWidth : contentWidth,
-      height: viewportHeight,
-      scrollY: window.scrollY,
-      scrollTop: scrollContainer?.scrollTop ?? 0,
     };
 
     if (screenshotRoot) {

@@ -11,10 +11,11 @@ import {
   getDesignExplorationDisplayOptions,
   type DesignExplorationConfig,
 } from "@prototype/lib/prototypes/design-exploration-types";
+import { usePrototypeCommentRegistry } from "@prototype/lib/prototypes/prototype-comment-registry";
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
 import { LayoutGrid } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 const OVERVIEW_CONTROL_BUTTON_CLASS = "tool-toolbar-button";
 
@@ -153,6 +154,31 @@ export function PrototypeVariantExplorer<TVariant extends string>({
 
   const variantSetId = variantSet?.id ?? null;
   const hasReview = review != null;
+  const {
+    registerDesignVariantCapture,
+    unregisterDesignVariantCapture,
+  } = usePrototypeCommentRegistry();
+  const variantRef = useRef(variant);
+  const onVariantChangeRef = useRef(onVariantChange);
+  variantRef.current = variant;
+  onVariantChangeRef.current = onVariantChange;
+
+  useLayoutEffect(() => {
+    if (!variantSetId) return;
+
+    registerDesignVariantCapture(variantSetId, {
+      getVariant: () => variantRef.current,
+      setVariant: (value) => {
+        onVariantChangeRef.current(value as TVariant);
+      },
+    });
+
+    return () => unregisterDesignVariantCapture(variantSetId);
+  }, [
+    registerDesignVariantCapture,
+    unregisterDesignVariantCapture,
+    variantSetId,
+  ]);
 
   useEffect(() => {
     if (!review) return;

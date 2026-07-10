@@ -94,7 +94,7 @@
   }
 
   &.pending {
-    position: fixed;
+    position: absolute;
     background-color: var(--prototype-comment-color-blue);
     cursor: default;
   }

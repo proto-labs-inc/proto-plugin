@@ -1,5 +1,9 @@
 import { getElementClasses } from "./element-identification";
-import { getPrototypeScreenshotRoot } from "@prototype/lib/tool-portal";
+import type { CaptureViewport } from "./types";
+import {
+  getPortalRelativeClientRect,
+  getPrototypeScreenshotRoot,
+} from "@prototype/lib/tool-portal";
 
 export const PROTOTYPE_TARGET_ATTR = "data-prototype-target";
 const PROTOTYPE_SCREENSHOT_ROOT = "[data-prototype-screenshot]";
@@ -344,6 +348,11 @@ export function getPrototypeTargetElement(
   return anchor instanceof HTMLElement ? anchor : null;
 }
 
+function getTargetIdFromElement(element: HTMLElement | null): string | null {
+  const anchor = getPrototypeTargetElement(element);
+  return anchor?.getAttribute(PROTOTYPE_TARGET_ATTR) ?? null;
+}
+
 export function resolveAnnotationTargetById(
   targetId: string,
 ): HTMLElement | null {
@@ -358,21 +367,145 @@ export function resolveAnnotationTargetById(
   return el;
 }
 
-export function getPrototypeScrollContainer(): HTMLElement | null {
+export function isScrollableElement(element: HTMLElement): boolean {
+  const style = window.getComputedStyle(element);
+  const overflowY = style.overflowY;
+  return (
+    (overflowY === "auto" ||
+      overflowY === "scroll" ||
+      overflowY === "overlay") &&
+    element.scrollHeight > element.clientHeight + 1
+  );
+}
+
+/** Innermost scrollable ancestor of `element` inside the screenshot root. */
+export function getScrollableAncestorForTarget(
+  element: HTMLElement | null,
+): HTMLElement | null {
+  const root = getPrototypeScreenshotRoot();
+  if (!element || !root) return null;
+
+  let current: HTMLElement | null = element;
+  let scrollable: HTMLElement | null = null;
+
+  while (current && current !== root && root.contains(current)) {
+    if (isScrollableElement(current)) {
+      scrollable = current;
+      break;
+    }
+    current = current.parentElement;
+  }
+
+  return scrollable;
+}
+
+function findPrimaryScrollContainer(root: HTMLElement): HTMLElement | null {
+  const scrollables = [...root.querySelectorAll<HTMLElement>("*")].filter(
+    isScrollableElement,
+  );
+  if (scrollables.length === 0) {
+    return root;
+  }
+
+  const registered = scrollables.filter((element) =>
+    element.hasAttribute(PROTOTYPE_TARGET_ATTR),
+  );
+  const candidates = registered.length > 0 ? registered : scrollables;
+
+  return candidates.reduce((best, element) =>
+    element.scrollHeight > best.scrollHeight ? element : best,
+  );
+}
+
+export function getPrototypeScrollContainer(
+  hint?: HTMLElement | null,
+): HTMLElement | null {
+  if (hint) {
+    const ancestor = getScrollableAncestorForTarget(hint);
+    if (ancestor) return ancestor;
+  }
+
   const root = document.querySelector(PROTOTYPE_SCREENSHOT_ROOT);
-  if (!root) return null;
+  if (!(root instanceof HTMLElement)) return null;
 
   const labeled = root.querySelector(
     `[${PROTOTYPE_TARGET_ATTR}$="scroll-container"]`,
   );
-  if (labeled instanceof HTMLElement) {
+  if (labeled instanceof HTMLElement && isScrollableElement(labeled)) {
     return labeled;
   }
 
-  return (
-    root.querySelector(".overflow-y-auto") ??
-    (root instanceof HTMLElement ? root : null)
-  ) as HTMLElement | null;
+  return findPrimaryScrollContainer(root);
+}
+
+/** Viewport size + scroll offsets at capture/restore time. */
+export function getPrototypeCaptureViewport(
+  hint?: HTMLElement | null,
+): CaptureViewport {
+  const screenshotRoot = getPrototypeScreenshotRoot();
+  const scrollContainer = getPrototypeScrollContainer(hint);
+
+  return {
+    width: screenshotRoot?.clientWidth ?? window.innerWidth,
+    height: screenshotRoot?.clientHeight ?? window.innerHeight,
+    scrollY: window.scrollY,
+    scrollTop: scrollContainer?.scrollTop ?? 0,
+    scrollContainerTargetId:
+      getTargetIdFromElement(scrollContainer) ?? undefined,
+  };
+}
+
+export function resolveAnnotationScrollContainer(
+  captureViewport: CaptureViewport | undefined,
+  targetId?: string,
+): HTMLElement | null {
+  if (captureViewport?.scrollContainerTargetId) {
+    const byId = resolveAnnotationTargetById(
+      captureViewport.scrollContainerTargetId,
+    );
+    if (byId) return byId;
+  }
+
+  if (targetId) {
+    const target = resolveAnnotationTargetById(targetId);
+    const ancestor = getScrollableAncestorForTarget(target);
+    if (ancestor) return ancestor;
+  }
+
+  return getPrototypeScrollContainer();
+}
+
+export function restoreAnnotationScrollPosition(
+  captureViewport: CaptureViewport | undefined,
+  options?: { targetId?: string },
+): void {
+  if (!captureViewport || typeof window === "undefined") return;
+
+  const apply = () => {
+    const scrollContainer = resolveAnnotationScrollContainer(
+      captureViewport,
+      options?.targetId,
+    );
+
+    if (scrollContainer && captureViewport.scrollTop != null) {
+      scrollContainer.scrollTop = captureViewport.scrollTop;
+    }
+
+    if (captureViewport.scrollY > 0) {
+      window.scrollTo({
+        top: captureViewport.scrollY,
+        left: 0,
+        behavior: "auto",
+      });
+    }
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(apply);
+  });
+
+  const retryTimer = window.setInterval(apply, 50);
+  window.setTimeout(() => window.clearInterval(retryTimer), 500);
 }
 
 export function resolveAnnotationTargetElement(
@@ -481,78 +614,103 @@ export function getAnnotationClickOffset(
   };
 }
 
-function getStoredElementRelativeMarkerPosition(
+
+export function getAnnotationMarkerViewportPoint(
   annotation: AnnotationTargetFields & { x: number; y: number },
-): { left: string; top: number } | null {
-  if (!annotation.boundingBox || !usesElementRelativePosition(annotation)) {
-    return null;
+  targetElement: HTMLElement | null,
+): { x: number; y: number } {
+  if (
+    targetElement &&
+    document.contains(targetElement) &&
+    annotation.boundingBox
+  ) {
+    const rect = targetElement.getBoundingClientRect();
+    const offset = getAnnotationClickOffset(annotation, rect);
+    if (offset) {
+      return {
+        x: rect.left + offset.offsetX,
+        y: rect.top + offset.offsetY,
+      };
+    }
   }
 
-  const bb = annotation.boundingBox;
+  if (annotation.boundingBox && usesElementRelativePosition(annotation)) {
+    const bb = annotation.boundingBox;
+    const markerY = bb.y + (annotation.y / 100) * bb.height;
+    return {
+      x: bb.x + (annotation.x / 100) * bb.width,
+      y: annotation.isFixed ? markerY : markerY - window.scrollY,
+    };
+  }
+
   return {
-    left: `${bb.x + (annotation.x / 100) * bb.width}px`,
-    top: bb.y + (annotation.y / 100) * bb.height,
+    x: (annotation.x / 100) * window.innerWidth,
+    y: annotation.y,
   };
 }
 
-export function getMarkerViewportX(
-  positionStyle: { left: string; top: number } | undefined,
-  fallbackXPercent: number,
-): number {
-  if (positionStyle?.left.endsWith("px")) {
-    return parseFloat(positionStyle.left);
-  }
-
-  if (positionStyle?.left.endsWith("%")) {
-    return (parseFloat(positionStyle.left) / 100) * window.innerWidth;
-  }
-
-  return (fallbackXPercent / 100) * window.innerWidth;
-}
-
+/** Marker style in browser viewport coordinates (for fixed overlays on document.body). */
 export function getAnnotationMarkerPosition(
   annotation: AnnotationTargetFields & { x: number; y: number },
   targetElement: HTMLElement | null,
-  scrollY: number,
 ): { left: string; top: number } {
-  const fallback =
-    getStoredElementRelativeMarkerPosition(annotation) ?? {
-      left: `${annotation.x}%`,
-      top: annotation.y,
-    };
+  const point = getAnnotationMarkerViewportPoint(annotation, targetElement);
+  return {
+    left: `${point.x}px`,
+    top: point.y,
+  };
+}
 
-  if (!targetElement || !document.contains(targetElement) || !annotation.boundingBox) {
-    return fallback;
+/** Marker style relative to the prototype highlight portal (#prototype-viewport). */
+export function getAnnotationMarkerPortalPosition(
+  annotation: AnnotationTargetFields & { x: number; y: number },
+  targetElement: HTMLElement | null,
+  portal: HTMLElement | null,
+): { left: string; top: number } {
+  const point = getAnnotationMarkerViewportPoint(annotation, targetElement);
+  if (!portal) {
+    return { left: `${point.x}px`, top: point.y };
   }
 
-  const rect = targetElement.getBoundingClientRect();
-  const offset = getAnnotationClickOffset(annotation, rect);
-  if (!offset) return fallback;
-
-  const markerViewportX = rect.left + offset.offsetX;
-  const markerViewportY = rect.top + offset.offsetY;
-
+  const relative = getPortalRelativeClientRect(
+    { left: point.x, top: point.y, width: 0, height: 0 },
+    portal,
+  );
   return {
-    left: `${markerViewportX}px`,
-    top: annotation.isFixed ? markerViewportY : markerViewportY + scrollY,
+    left: `${relative.left}px`,
+    top: relative.top,
+  };
+}
+
+export function getElementRelativeMarkerStyle(
+  annotation: AnnotationTargetFields & { x: number; y: number },
+): { left: string; top: string } {
+  return {
+    left: `${annotation.x}%`,
+    top: `${annotation.y}%`,
   };
 }
 
 export function getMarkerViewportPosition(
   annotation: AnnotationTargetFields & { x: number; y: number },
-  scrollY: number,
   targetElement?: HTMLElement | null,
 ): { x: number; y: number } {
-  const positionStyle = getAnnotationMarkerPosition(
+  if (
+    targetElement &&
+    document.contains(targetElement) &&
+    usesElementRelativePosition(annotation)
+  ) {
+    const rect = targetElement.getBoundingClientRect();
+    return {
+      x: rect.left + (annotation.x / 100) * rect.width,
+      y: rect.top + (annotation.y / 100) * rect.height,
+    };
+  }
+
+  return getAnnotationMarkerViewportPoint(
     annotation,
     targetElement ?? null,
-    scrollY,
   );
-
-  return {
-    x: getMarkerViewportX(positionStyle, annotation.x),
-    y: annotation.isFixed ? positionStyle.top : positionStyle.top - scrollY,
-  };
 }
 
 export function getAnnotationOutlineBox(

@@ -12,6 +12,13 @@ import {
 import type { AnnotationTargetOptions } from "@prototype/lib/prototype-comments/core/annotation-target";
 
 import {
+  augmentLiveStateWithDesignVariants,
+  collectDesignVariants,
+  restoreDesignVariants,
+  splitDesignVariants,
+  type PrototypeCommentDesignVariantCapture,
+} from "./prototype-comment-design-variants";
+import {
   augmentLiveStateWithReviewState,
   restoreLiveStateWithReviewState,
   type PrototypeCommentReviewStateBridge,
@@ -29,6 +36,11 @@ type PrototypeCommentRegistryValue = {
   registerReviewStateBridge: (
     bridge: PrototypeCommentReviewStateBridge | null,
   ) => void;
+  registerDesignVariantCapture: (
+    variantSetId: string,
+    capture: PrototypeCommentDesignVariantCapture,
+  ) => void;
+  unregisterDesignVariantCapture: (variantSetId: string) => void;
   readHandlers: () => PrototypeCommentHandlers | null;
   /** Notify subscribers that the prototype's live state changed. */
   notifyLiveStateChange: () => void;
@@ -48,6 +60,9 @@ export function PrototypeCommentRegistryProvider({
   const reviewBridgeRef = useRef<PrototypeCommentReviewStateBridge | null>(
     null,
   );
+  const designVariantCapturesRef = useRef<
+    Map<string, PrototypeCommentDesignVariantCapture>
+  >(new Map());
   const liveStateListenersRef = useRef<Set<() => void>>(new Set());
 
   const notifyLiveStateChange = useCallback(() => {
@@ -78,27 +93,71 @@ export function PrototypeCommentRegistryProvider({
     [],
   );
 
+  const registerDesignVariantCapture = useCallback(
+    (variantSetId: string, capture: PrototypeCommentDesignVariantCapture) => {
+      designVariantCapturesRef.current.set(variantSetId, capture);
+    },
+    [],
+  );
+
+  const unregisterDesignVariantCapture = useCallback((variantSetId: string) => {
+    designVariantCapturesRef.current.delete(variantSetId);
+  }, []);
+
   const readHandlers = useCallback((): PrototypeCommentHandlers | null => {
     const prototypeHandlers = handlersRef.current;
     if (!prototypeHandlers) return null;
 
     const bridge = reviewBridgeRef.current;
-    if (!bridge?.prodReferenceAvailable) {
+    const designVariantCaptures = designVariantCapturesRef.current;
+    const hasDesignVariants = designVariantCaptures.size > 0;
+    const hasReviewBridge = bridge?.prodReferenceAvailable === true;
+
+    if (!hasDesignVariants && !hasReviewBridge) {
       return prototypeHandlers;
     }
 
     return {
-      getLiveState: () =>
-        augmentLiveStateWithReviewState(
-          prototypeHandlers.getLiveState(),
-          bridge.getShowProdReference(),
-        ),
+      getLiveState: () => {
+        let live = prototypeHandlers.getLiveState();
+
+        if (hasDesignVariants) {
+          live = augmentLiveStateWithDesignVariants(
+            live,
+            collectDesignVariants(designVariantCaptures),
+          );
+        }
+
+        if (hasReviewBridge) {
+          live = augmentLiveStateWithReviewState(
+            live,
+            bridge.getShowProdReference(),
+          );
+        }
+
+        return live;
+      },
       onRestore: (live) => {
-        restoreLiveStateWithReviewState(
-          live,
-          prototypeHandlers.onRestore,
-          bridge,
-        );
+        const { designVariants, prototypeLive: liveWithoutDesignVariants } =
+          splitDesignVariants(live);
+
+        const restorePrototypeLive = (restoredLive: unknown) => {
+          prototypeHandlers.onRestore(restoredLive);
+          requestAnimationFrame(() => {
+            restoreDesignVariants(designVariants, designVariantCaptures);
+          });
+        };
+
+        if (hasReviewBridge) {
+          restoreLiveStateWithReviewState(
+            liveWithoutDesignVariants,
+            restorePrototypeLive,
+            bridge,
+          );
+          return;
+        }
+
+        restorePrototypeLive(liveWithoutDesignVariants);
       },
       ...(prototypeHandlers.resolveTargetOptions
         ? {
@@ -113,6 +172,8 @@ export function PrototypeCommentRegistryProvider({
       register,
       unregister,
       registerReviewStateBridge,
+      registerDesignVariantCapture,
+      unregisterDesignVariantCapture,
       readHandlers,
       notifyLiveStateChange,
       subscribeLiveStateChange,
@@ -121,6 +182,8 @@ export function PrototypeCommentRegistryProvider({
       register,
       unregister,
       registerReviewStateBridge,
+      registerDesignVariantCapture,
+      unregisterDesignVariantCapture,
       readHandlers,
       notifyLiveStateChange,
       subscribeLiveStateChange,

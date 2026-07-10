@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { restoreAnnotationScrollPosition } from "../core/annotation-target";
 import { captureInteractionState } from "../core/capture";
 import { getRepliesForParent } from "../core/comment-threads";
 import { commentToLiveState } from "../core/restore";
@@ -261,6 +262,13 @@ export function CommentProvider<TState>({
       if (!annotation) return undefined;
       const live = commentToLiveState(annotation.interactionState);
       onRestoreRef.current(live);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          restoreAnnotationScrollPosition(annotation.captureViewport, {
+            targetId: annotation.targetId,
+          });
+        });
+      });
       return annotation;
     },
     [annotations],

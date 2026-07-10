@@ -21,9 +21,13 @@ export {
 export {
   resolveAnnotationTargetElement,
   resolveAnnotationTargetById,
+  getPrototypeCaptureViewport,
   getPrototypeScrollContainer,
+  restoreAnnotationScrollPosition,
   getAnnotationMarkerPosition,
+  getAnnotationMarkerPortalPosition,
   getAnnotationOutlineBox,
+  getElementRelativeMarkerStyle,
   getMarkerViewportPosition,
   PROTOTYPE_TARGET_ATTR,
   type AnnotationTargetOptions,

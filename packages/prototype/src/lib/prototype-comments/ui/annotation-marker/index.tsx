@@ -27,7 +27,7 @@ type AnnotationMarkerProps = {
   renumberFrom: number | null;
   markerClickBehavior: MarkerClickBehavior;
   tooltipStyle?: React.CSSProperties;
-  positionStyle?: { left: string; top: number };
+  positionStyle?: { left: string; top: string | number };
   onHoverEnter: (annotation: MarkerAnnotation) => void;
   onHoverLeave: () => void;
   onClick: (annotation: MarkerAnnotation) => void;
@@ -80,7 +80,7 @@ export function AnnotationMarker({
       data-annotation-marker
       style={{
         left: positionStyle?.left ?? `${annotation.x}%`,
-        top: positionStyle?.top ?? annotation.y,
+        top: positionStyle?.top ?? `${annotation.y}%`,
         backgroundColor: showDeleteHover ? undefined : markerColor,
         animationDelay,
       }}
@@ -146,7 +146,7 @@ type PendingMarkerProps = {
   y: number;
   isMultiSelect?: boolean;
   isExiting: boolean;
-  positionStyle?: { left: string; top: number };
+  positionStyle?: { left: string; top: string | number };
 };
 
 export function PendingMarker({
@@ -162,7 +162,7 @@ export function PendingMarker({
       data-annotation-marker
       style={{
         left: positionStyle?.left ?? `${x}%`,
-        top: positionStyle?.top ?? y,
+        top: positionStyle?.top ?? `${y}%`,
         backgroundColor: isMultiSelect
           ? "var(--prototype-comment-color-green)"
           : "var(--prototype-comment-color-accent)",
@@ -180,7 +180,7 @@ export function PendingMarker({
 type ExitingMarkerProps = {
   annotation: MarkerAnnotation;
   fixed?: boolean;
-  positionStyle?: { left: string; top: number };
+  positionStyle?: { left: string; top: string | number };
 };
 
 export function ExitingMarker({ annotation, fixed, positionStyle }: ExitingMarkerProps) {
@@ -191,7 +191,7 @@ export function ExitingMarker({ annotation, fixed, positionStyle }: ExitingMarke
       data-annotation-marker
       style={{
         left: positionStyle?.left ?? `${annotation.x}%`,
-        top: positionStyle?.top ?? annotation.y,
+        top: positionStyle?.top ?? `${annotation.y}%`,
       }}
     >
       <IconXmark size={isMulti ? 12 : 10} />

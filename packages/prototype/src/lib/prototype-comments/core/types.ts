@@ -11,6 +11,8 @@ export type CaptureViewport = {
   scrollY: number;
   /** Scroll offset of the prototype content container (not window) */
   scrollTop?: number;
+  /** Registered target id of the element that owns scrollTop */
+  scrollContainerTargetId?: string;
 };
 
 export type CommentAnnotationFields = {

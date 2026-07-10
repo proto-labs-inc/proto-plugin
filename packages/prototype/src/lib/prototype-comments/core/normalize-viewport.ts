@@ -1,3 +1,4 @@
+import { getPrototypeCaptureViewport } from "./annotation-target";
 import type { AnnotationBoundingBox, CaptureViewport, CommentAnnotationFields } from "./types";
 
 type ViewportNormalizeInput = Pick<
@@ -11,16 +12,11 @@ export function normalizeAnnotationViewport(annotation: ViewportNormalizeInput):
 } {
   const captureViewport =
     annotation.captureViewport ??
-    (typeof window !== "undefined"
-      ? {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          scrollY: window.scrollY,
-        }
-      : undefined);
+    (typeof window !== "undefined" ? getPrototypeCaptureViewport() : undefined);
 
   const viewportBoundingBox =
-    annotation.boundingBox && captureViewport
+    annotation.viewportBoundingBox ??
+    (annotation.boundingBox && captureViewport
       ? {
           x: annotation.boundingBox.x,
           y: annotation.isFixed
@@ -29,7 +25,7 @@ export function normalizeAnnotationViewport(annotation: ViewportNormalizeInput):
           width: annotation.boundingBox.width,
           height: annotation.boundingBox.height,
         }
-      : annotation.viewportBoundingBox;
+      : undefined);
 
   return { captureViewport, viewportBoundingBox };
 }

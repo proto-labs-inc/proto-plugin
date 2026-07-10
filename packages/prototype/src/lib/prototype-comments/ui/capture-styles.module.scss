@@ -725,6 +725,32 @@
   pointer-events: none;
 }
 
+.componentAnchorBox {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
+
+  > :global(*) {
+    pointer-events: auto;
+  }
+}
+
+.componentAnchorOutline {
+  position: absolute;
+  inset: 0;
+  border: 2px solid
+    color-mix(in srgb, var(--prototype-comment-color-blue) 55%, transparent);
+  border-radius: 4px;
+  pointer-events: none !important;
+  background-color: color-mix(
+    in srgb,
+    var(--prototype-comment-color-blue) 6%,
+    transparent
+  );
+  box-sizing: border-box;
+}
+
 // =============================================================================
 // Overlay
 // =============================================================================
@@ -849,6 +875,18 @@
   right: 0;
   height: 0;
   z-index: 99998;
+  pointer-events: none;
+
+  > :global(*) {
+    pointer-events: auto;
+  }
+}
+
+.markersLayerInViewport {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: visible;
   pointer-events: none;
 
   > :global(*) {
