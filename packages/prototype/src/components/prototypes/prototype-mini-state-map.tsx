@@ -21,6 +21,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
@@ -69,6 +70,10 @@ type PrototypeMiniStateMapProps = {
   onRestoreComplete?: () => void;
   restoring?: boolean;
   minimizeTargetRef: RefObject<HTMLElement | null>;
+  hoverPanelProps?: {
+    onPointerEnter: (event: ReactPointerEvent<HTMLElement>) => void;
+    onPointerLeave: () => void;
+  };
 };
 
 function useOnStateMapPage(stateMapPagePath: string | null): boolean {
@@ -187,6 +192,7 @@ export const PrototypeMiniStateMap = forwardRef<
     onRestoreComplete,
     restoring = false,
     minimizeTargetRef,
+    hoverPanelProps,
   },
   ref,
 ) {
@@ -547,6 +553,7 @@ export const PrototypeMiniStateMap = forwardRef<
         )}
         data-prototype-mini-state-map
         style={shellStyle}
+        {...hoverPanelProps}
       >
         {mapContent}
         {!isFlying && !minimized ? (

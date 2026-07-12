@@ -1,0 +1,56 @@
+import { definePrototypeComponentRegistry } from "proto-plugin";
+
+export const TABLE_EDITOR_FILTERS_COMPONENT_IDS = [
+  "page",
+  "scroll-container",
+  "table-editor-filters-preview-state-select",
+  "table-editor-page",
+  "project-shell.project-header",
+  "project-shell.product-sidebar",
+  "table-editor-icons.sql-editor-icon",
+  "table-editor-menu",
+  "table-editor-grid",
+  "table-editor-toolbar",
+  "table-editor-footer",
+  "grid-loading-skeleton",
+  "grid-error-state",
+  "grid-error-state-variant-toggle",
+  "grid-error-state-content.grid-error-state-block",
+  "grid-error-state-explorer",
+  "grid-error-state-variant-tabs",
+  "grid-error-state-mobbin-inspiration-gallery",
+  "grid-empty-state",
+  "grid-filtered-empty-state",
+  "grid-empty-state-variant-toggle",
+  "grid-empty-state-content.grid-empty-state-block",
+  "grid-empty-state-explorer",
+  "grid-empty-state-variant-tabs",
+  "grid-empty-state-mobbin-inspiration-gallery",
+  "mobbin-inspiration-gallery",
+  "insert-row-panel",
+  "edit-row-panel",
+  "insert-column-panel",
+  "insert-column-content.insert-column-form-content",
+  "insert-column-variant-toggle",
+  "insert-column-explorer",
+  "insert-column-variant-tabs",
+  "insert-column-mobbin-inspiration-gallery",
+] as const;
+
+export const TABLE_EDITOR_FILTERS_DYNAMIC_TARGET_PREFIXES = [
+  "grid-error-state-explorer.",
+  "grid-error-state-variant-tabs.",
+  "grid-error-state-mobbin-inspiration-gallery.",
+  "grid-empty-state-explorer.",
+  "grid-empty-state-variant-tabs.",
+  "grid-empty-state-mobbin-inspiration-gallery.",
+  "insert-column-explorer.",
+  "insert-column-variant-tabs.",
+  "insert-column-mobbin-inspiration-gallery.",
+  "mobbin-inspiration-gallery.",
+] as const;
+
+export const tableEditorFiltersComponentRegistry = definePrototypeComponentRegistry({
+  ids: TABLE_EDITOR_FILTERS_COMPONENT_IDS,
+  dynamicPrefixes: TABLE_EDITOR_FILTERS_DYNAMIC_TARGET_PREFIXES,
+});

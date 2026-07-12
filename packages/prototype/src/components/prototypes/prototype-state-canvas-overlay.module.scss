@@ -49,7 +49,9 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   }
 
   .nodeGroup {
+    box-sizing: border-box;
     overflow: hidden;
+    height: 168px;
     border: 1.5px solid rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
     background: var(--prototype-state-map-node-surface);
@@ -83,6 +85,9 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
 
   .nodeGroupSelected {
     z-index: 2;
+    // Keep the default mini border; selection ring is drawn via box-shadow
+    // so node dimensions stay 220×168 (see PrototypeStateCanvasView).
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
   }
 
   .nodePreview {

@@ -1007,7 +1007,7 @@ $enter-duration: 150ms;
 .explorationBriefTrigger {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
   width: 100%;
   padding: 0.4375rem 0.625rem;

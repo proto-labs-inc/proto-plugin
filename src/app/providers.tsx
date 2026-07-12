@@ -1,8 +1,8 @@
 "use client";
 
-import * as RadixTooltip from "@radix-ui/react-tooltip";
 import type { ReactNode } from "react";
+import { TooltipProvider } from "ui";
 
-export function CalTooltipProvider({ children }: { children: ReactNode }) {
-  return <RadixTooltip.Provider>{children}</RadixTooltip.Provider>;
+export function SupabaseTooltipProvider({ children }: { children: ReactNode }) {
+  return <TooltipProvider delayDuration={0}>{children}</TooltipProvider>;
 }

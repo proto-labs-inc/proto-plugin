@@ -21,8 +21,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@calcom/lib/*": ["./packages/lib/*"],
-      "@calcom/ui/*": ["./packages/ui/*"],
+      "@calcom/ui/*": ["./packages/calcom-ui/*"],
       "@coss/ui/*": ["./packages/coss-ui/src/*"],
+      "@ui/*": ["./packages/ui/src/*"],
       "@prototype/*": ["./packages/prototype/src/*"],
       "prototype": ["./packages/prototype/src/index.ts"],
       "proto-plugin": ["./packages/prototype/src/index.ts"],

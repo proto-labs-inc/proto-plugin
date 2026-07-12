@@ -1,16 +1,9 @@
 "use client";
 
 import {
+  PREVIEW_STATE_PARAM,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
-} from "proto-plugin";
-import { buildPrototypeTargetId } from "proto-plugin";
-import {
-  encodeShareState,
-  SHARE_STATE_PARAM,
-  SHARE_TARGET_PARAM,
-} from "proto-plugin";
-import {
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
 } from "proto-plugin";
@@ -18,10 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import { buildBookingsPageStateCanvasConfig } from "./_components/bookings-page-state-canvas-config";
-import {
-  createLiveStateForPreview,
-  type BookingsPagePreviewStateId,
-} from "./_components/bookings-page-preview-states";
+import type { BookingsPagePreviewStateId } from "./_components/bookings-page-preview-states";
 
 const BOOKINGS_PAGE_SLUG = "bookings-page";
 
@@ -39,14 +29,7 @@ export default function BookingsPageStateMapPage() {
   const handleStateSelect = useCallback(
     (stateId: BookingsPagePreviewStateId) => {
       const url = new URL(backHref, window.location.origin);
-      url.searchParams.set(
-        SHARE_TARGET_PARAM,
-        buildPrototypeTargetId(BOOKINGS_PAGE_SLUG, "page"),
-      );
-      url.searchParams.set(
-        SHARE_STATE_PARAM,
-        encodeShareState(createLiveStateForPreview(stateId)),
-      );
+      url.searchParams.set(PREVIEW_STATE_PARAM, stateId);
       router.push(`${url.pathname}${url.search}`);
     },
     [backHref, router],

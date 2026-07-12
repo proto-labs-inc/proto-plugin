@@ -1,7 +1,9 @@
 "use client";
 
 import { PrototypeCreatePrototypeModal } from "@prototype/components/prototypes/prototype-create-prototype-modal";
+import { PROTOTYPE_GALLERY_GRID_GAP_CLASS } from "@prototype/components/shell/prototype-gallery-shell";
 import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
+import type { StarterScreenMetadata } from "@prototype/lib/prototypes/starter-screen-config-types";
 import { screenshotSrc } from "@prototype/lib/prototypes/screenshot-src";
 import { cn } from "@prototype/lib/utils";
 import { Plus } from "lucide-react";
@@ -12,6 +14,7 @@ import { useState } from "react";
 type PrototypeGalleryClientProps = {
   prototypes: PrototypeMetadata[];
   screenshotVersions: Record<string, number>;
+  starterScreens?: StarterScreenMetadata[];
 };
 
 const prototypeGalleryTitleClassName =
@@ -27,13 +30,13 @@ function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
     >
       <div
         className={cn(
-          "rounded-xl",
+          "rounded-[var(--tool-review-card-radius)]",
           "shadow-[var(--tool-review-card-shadow)]",
           "translate-y-0 transition-[translate,box-shadow] duration-300 ease-out will-change-[translate]",
           "group-hover:-translate-y-1 group-hover:shadow-[var(--tool-review-card-shadow-hover)]",
         )}
       >
-        <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)] text-[var(--tool-chrome-text-muted)] transition-colors duration-300 ease-out group-hover:text-[var(--tool-chrome-text-heading)]">
+        <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-[var(--tool-review-card-radius)] border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)] text-[var(--tool-chrome-text-muted)] transition-colors duration-300 ease-out group-hover:text-[var(--tool-chrome-text-heading)]">
           <Plus size={20} strokeWidth={2} aria-hidden />
         </div>
       </div>
@@ -47,13 +50,19 @@ function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
 export function PrototypeGalleryClient({
   prototypes,
   screenshotVersions,
+  starterScreens = [],
 }: PrototypeGalleryClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   return (
     <>
       <div className="@container/gallery w-full">
-        <div className="grid grid-cols-1 gap-4 @xl/gallery:grid-cols-2 @4xl/gallery:grid-cols-3">
+        <div
+          className={cn(
+            "grid grid-cols-1 @xl/gallery:grid-cols-2 @4xl/gallery:grid-cols-3",
+            PROTOTYPE_GALLERY_GRID_GAP_CLASS,
+          )}
+        >
         <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
         {prototypes.map((prototype) => (
           <Link
@@ -63,13 +72,13 @@ export function PrototypeGalleryClient({
           >
             <div
               className={cn(
-                "rounded-xl",
+                "rounded-[var(--tool-review-card-radius)]",
                 "shadow-[var(--tool-review-card-shadow)]",
                 "translate-y-0 transition-[translate,box-shadow] duration-300 ease-out will-change-[translate]",
                 "group-hover:-translate-y-1 group-hover:shadow-[var(--tool-review-card-shadow-hover)]",
               )}
             >
-              <div className="relative aspect-video overflow-hidden rounded-xl border border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)]">
+              <div className="relative aspect-video overflow-hidden rounded-[var(--tool-review-card-radius)] border border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)]">
                 <Image
                   src={screenshotSrc(
                     prototype.screenshot,
@@ -93,6 +102,8 @@ export function PrototypeGalleryClient({
       <PrototypeCreatePrototypeModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
+        starterScreens={starterScreens}
+        screenshotVersions={screenshotVersions}
       />
     </>
   );

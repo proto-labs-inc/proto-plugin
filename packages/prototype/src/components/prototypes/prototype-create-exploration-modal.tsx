@@ -37,11 +37,16 @@ export function PrototypeCreateExplorationModal({
 
     const origin =
       typeof window !== "undefined" ? window.location.origin : undefined;
+    const previewUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${window.location.pathname}${window.location.search}`
+        : undefined;
     copy(
       buildCreateDesignExplorationCopyText({
         slug,
         existingExplorations,
         origin,
+        previewUrl,
         briefText: brief,
         includeMobbin,
       }),

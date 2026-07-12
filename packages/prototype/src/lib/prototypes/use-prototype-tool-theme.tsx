@@ -3,6 +3,7 @@
 import { TooltipProvider } from "@prototype/components/ui/tooltip";
 import { PROTOTYPE_ROOT_ID } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
+import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -23,9 +24,22 @@ type PrototypeToolThemeContextValue = {
   theme: PrototypeToolTheme;
   useLightTheme: boolean;
   commentTheme: PrototypeToolTheme;
+  isThemeLocked: boolean;
   setTheme: (theme: PrototypeToolTheme) => void;
   toggleTheme: () => void;
 };
+
+function isComponentLibraryPath(pathname: string | null): boolean {
+  return (
+    pathname === "/component-library" ||
+    pathname?.startsWith("/component-library/") === true
+  );
+}
+
+function useRouteLockedToolTheme(): PrototypeToolTheme | undefined {
+  const pathname = usePathname();
+  return isComponentLibraryPath(pathname) ? "light" : undefined;
+}
 
 const PrototypeToolThemeContext =
   createContext<PrototypeToolThemeContextValue | null>(null);
@@ -56,34 +70,45 @@ export function PrototypeToolThemeProvider({
   children,
   className,
 }: PrototypeToolThemeProviderProps) {
+  const forcedTheme = useRouteLockedToolTheme();
   const { value, updateValue } = usePersistedLocalString(
     PROTOTYPE_TOOL_THEME_STORAGE_KEY,
     DEFAULT_THEME,
   );
-  const theme = normalizeTheme(value);
+  const storedTheme = normalizeTheme(value);
+  const theme = forcedTheme ?? storedTheme;
   const useLightTheme = theme === "light";
+  const isThemeLocked = forcedTheme != null;
+
+  useEffect(() => {
+    if (!forcedTheme) return;
+    disableThemeTransitions();
+  }, [forcedTheme]);
 
   const setTheme = useCallback(
     (next: PrototypeToolTheme) => {
+      if (forcedTheme) return;
       disableThemeTransitions();
       updateValue(next);
     },
-    [updateValue],
+    [forcedTheme, updateValue],
   );
 
   const toggleTheme = useCallback(() => {
+    if (forcedTheme) return;
     setTheme(useLightTheme ? "dark" : "light");
-  }, [setTheme, useLightTheme]);
+  }, [forcedTheme, setTheme, useLightTheme]);
 
   const contextValue = useMemo<PrototypeToolThemeContextValue>(
     () => ({
       theme,
       useLightTheme,
       commentTheme: theme,
+      isThemeLocked,
       setTheme,
       toggleTheme,
     }),
-    [setTheme, theme, toggleTheme, useLightTheme],
+    [isThemeLocked, setTheme, theme, toggleTheme, useLightTheme],
   );
 
   return (
@@ -108,6 +133,7 @@ export function usePrototypeToolTheme(): PrototypeToolThemeContextValue {
       theme: DEFAULT_THEME,
       useLightTheme: false,
       commentTheme: DEFAULT_THEME,
+      isThemeLocked: false,
       setTheme: () => {},
       toggleTheme: () => {},
     };

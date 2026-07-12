@@ -6,6 +6,7 @@ import {
   PrototypeSpecPanelContent,
   usePrototypeComments,
   usePrototypeReviewOptional,
+  useSyncPrototypePreviewStateToUrl,
 } from "proto-plugin";
 import { useCallback, useEffect, useState } from "react";
 
@@ -92,6 +93,8 @@ export default function EventTypesPage() {
   const setPreviewState = useCallback((previewStateId: EventTypesPreviewStateId) => {
     setLiveState(createLiveStateForPreview(previewStateId));
   }, []);
+
+  useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState);
 
   const setSearchTerm = useCallback((searchTerm: string) => {
     setLiveState((current) => {

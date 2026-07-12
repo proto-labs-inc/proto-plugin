@@ -1,8 +1,10 @@
 export { definePrototypeConfig } from "./config/define-prototype-config";
+export { defineStarterScreenConfig } from "./config/define-starter-screen-config";
 // NOTE: `createPrototypeGalleryPage` is server-only (reads the screenshot manifest
 // from disk) and lives in `proto-plugin/server`. Keeping it out of this barrel is
 // what lets client prototype components import from `proto-plugin` safely.
 export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
+export { createPrototypeStarterScreenPage } from "./config/create-prototype-starter-screen-page";
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
 export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
@@ -25,6 +27,12 @@ export type {
   PrototypeExtraRoute,
   PrototypeMetadata,
 } from "./lib/prototypes/prototype-config-types";
+
+export type {
+  StarterScreenConfig,
+  StarterScreenDefinition,
+  StarterScreenMetadata,
+} from "./lib/prototypes/starter-screen-config-types";
 
 export {
   PrototypeComponent,
@@ -70,9 +78,17 @@ export {
 export type { ShareLinkParams } from "./lib/prototypes/prototype-share-link";
 
 export {
+  PREVIEW_STATE_PARAM,
+  readPreviewStateParam,
+  syncPreviewStateParam,
+} from "./lib/prototypes/prototype-preview-state-url";
+
+export {
   usePersistPrototypeLiveState,
   readPersistedPrototypeLiveState,
 } from "./lib/prototypes/use-persisted-local-state";
+
+export { useSyncPrototypePreviewStateToUrl } from "./lib/prototypes/use-sync-prototype-preview-state-to-url";
 
 export type {
   DesignExplorationBaselineOption,
@@ -111,13 +127,24 @@ export {
 export {
   buildCreatePrototypeCopyText,
   buildCreatePrototypePrompt,
+  normalizeCreatePrototypeDocLinks,
   suggestPrototypeSlug,
+  type CreatePrototypeStarterScreen,
 } from "./lib/prototypes/create-prototype-prompt";
+
+export {
+  buildCreateStarterScreenCopyText,
+  buildCreateStarterScreenPrompt,
+} from "./lib/prototypes/create-starter-screen-prompt";
 
 export {
   buildPopulateComponentLibraryCopyText,
   buildPopulateComponentLibraryPrompt,
 } from "./lib/prototypes/populate-component-library-prompt";
+export {
+  buildClearComponentLibraryCopyText,
+  buildClearComponentLibraryPrompt,
+} from "./lib/prototypes/clear-component-library-prompt";
 export {
   buildLinkSourceCopyText,
   buildLinkSourcePrompt,
@@ -176,6 +203,9 @@ export {
   PrototypeGalleryHeader,
   PrototypeGalleryPage,
   PrototypeGalleryPageLayout,
+  PROTOTYPE_GALLERY_CONTENT_INSET_CLASS,
+  PROTOTYPE_GALLERY_GRID_GAP_CLASS,
+  PROTOTYPE_GALLERY_HEADER_INSET_CLASS,
 } from "./components/shell/prototype-gallery-shell";
 
 export { screenshotSrc } from "./lib/prototypes/screenshot-src";
@@ -281,6 +311,7 @@ export {
 } from "./lib/prototypes/variant-set-lucide-icon";
 export { usePrototypeViewportFrame } from "./lib/prototypes/use-prototype-viewport-frame";
 export { usePrototypeMobileViewportFrame } from "./lib/prototypes/use-prototype-mobile-viewport-frame";
+export { usePrototypeProductOverlayPortal } from "./lib/prototypes/use-prototype-product-overlay-portal";
 
 export {
   PROTOTYPE_CHROME_ROOT_ID,

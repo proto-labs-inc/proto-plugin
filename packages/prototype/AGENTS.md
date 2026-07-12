@@ -181,6 +181,44 @@ Put `overflow-y-auto` on the **view** that scrolls, not on `scroll-container`, u
 2. Open the prototype at desktop width — main surface fills the preview frame, not hugging a corner.
 3. Toggle mobile preview — tall stacked pages still scroll; nothing hidden off-screen from `justify-center`.
 
+### Prototype overlays & side shelves (mandatory)
+
+Product **shelves, sheets, drawers, and modal overlays** (e.g. Supabase `SidePanel`, `Sheet`, Radix `Dialog`) must render **inside `#prototype-viewport`**, not on `document.body`. Default Radix portals cover the **review sidebar** and **proto bottom bar** — wrong for prototype previews.
+
+**Required pattern:**
+
+1. **Portal to the preview viewport** — pass `portalContainer` from `usePrototypeProductOverlayPortal()` (or `getPrototypeDialogPortalContainer()` in client-only render paths) to `SidePanel`, `SheetContent`, and any custom `Dialog.Portal` / `Sheet.Portal`.
+2. **Mount panels inside the page layout** — place shelf components as siblings of the main content inside a `relative overflow-hidden` wrapper (see `table-editor-filters/_components/table-editor-page.tsx`). Do not hoist shelves to the gallery shell or outside `[data-prototype-screenshot]`.
+3. **Height** — scoped panels use `h-full` / `inset-y-0`, not `h-screen` / `100vh` (viewport units ignore the preview frame height).
+4. **Preview states** — each open shelf is a distinct preview mode in `*-preview-states.ts` (see **Live state & preview states**).
+5. **Post-build check** — open a shelf state; confirm the review sidebar and black review footer remain visible and clickable.
+
+```tsx
+import { usePrototypeProductOverlayPortal } from "prototype";
+
+export function InsertRowPanel({ visible }: { visible: boolean }) {
+  const portalContainer = usePrototypeProductOverlayPortal();
+
+  return (
+    <SidePanel visible={visible} portalContainer={portalContainer} /* … */>
+      …
+    </SidePanel>
+  );
+}
+```
+
+```tsx
+// Page layout — shelves live inside the main content column
+<div className="flex flex-1 min-w-0 overflow-hidden relative">
+  <div className="flex flex-row h-full w-full">{/* grid + menu */}</div>
+  <InsertRowPanel visible={sidePanel === "insert-row"} />
+</div>
+```
+
+**Tool chrome modals** (prompt copy, link source, design brief) use `getPrototypeToolDialogPortalContainer()` / `portalScope="tool"` on `@prototype/components/ui/dialog` — not the viewport container.
+
+Reference: `src/prototypes/table-editor-filters/_components/insert-row-panel.tsx`, `insert-column-panel.tsx`, `table-editor-page.tsx`.
+
 ### Examples
 
 ```tsx
@@ -227,12 +265,12 @@ export function PrototypePreviewStateSelect({ stateId, onStateChange, options })
 3. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.
 4. Register in `prototype.config.ts` with `componentRegistry`.
 5. Wrap every UI component in `PrototypeComponent` / `PrototypeControl`.
-6. Define **`liveState`** and wire `usePrototypeComments(liveState, onRestore)` — see **Live state & preview states**.
+6. Define **`liveState`** and wire `usePrototypeComments(liveState, onRestore)` plus **`useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })`** — see **Live state & preview states**.
 7. **Enumerate preview modes** from the brief and source (tabs, empty/loading/error, filters, modals, view toggles, wizard steps) and add the full preview-state stack in the **same change** as the UI:
    - `*-preview-states.ts` (`definePreviewStateRegistry`, `createLiveStateForPreview`)
    - `*-preview-state-select.tsx` (`ControlsPanelSelect` with `appearance="menuList"` via `setTweaksContent` — not a floating pill on the page)
    - `*-state-canvas-config.tsx`
-   - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts`
+   - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts` — map clicks navigate with `?state=<id>` (`PREVIEW_STATE_PARAM`)
    - `review.setStateCanvasConfig(...)` in `index.tsx`
 8. Run `pnpm verify:prototype-ids` and `pnpm verify:prototype-preview-states`.
 9. Capture screenshot; share via `pnpm share-prototype <slug>`.
@@ -250,11 +288,12 @@ When **building or modifying** a prototype, treat preview states as part of the 
 1. **Read existing state first** — `index.tsx`, any `*-preview-states.ts`, design-exploration configs, and `pr-split-config.ts` before changing UI.
 2. **Define a typed `TLiveState`** — one JSON-serializable object holding every field a reviewer needs to reproduce the view (step/screen, modal open, form values, toggles, selected tab, etc.).
 3. **One `liveState` on the page** — `useState<TLiveState>(createDefaultLiveState)` (or hydrate from `readPersistedPrototypeLiveState`). Derive rendered UI from `liveState`; route interactions through setters that update it.
-4. **Wire comments** — `usePrototypeComments(liveState, onRestore)` where `onRestore` calls `setLiveState(restored)`. This powers annotation restore and `shareState` links. Do **not** roll custom `?step=` / `?view=` query params.
-5. **Preview states are part of the feature, not a follow-up** — for feature pages, add or update a single `definePreviewStateRegistry` in `*-preview-states.ts` (see below). Every distinct tab, empty/loading/error branch, filter mode, modal, view toggle, or wizard step reviewers should jump to gets a registry entry **in the same change** as the UI. Only skip the registry for truly static single-view pages with no reviewable modes.
-6. **Wire the state picker into the review toolbar** — `*-preview-state-select.tsx` calls `review.setTweaksContent(...)` with `ControlsPanelSelect` using `appearance="menuList"` and `pickerOptions` from the registry. Do **not** render a floating `miniPill` select on the prototype surface (see `booking-flow-preview-state-select.tsx`).
-7. **Wire the state map** — `*-state-canvas-config.tsx` builds `PrototypeStateCanvasConfig` from the same registry. In `index.tsx`, call `review.setStateCanvasConfig(...)` in an effect; depend on stable review callbacks, not the whole `review` object. Add a `stateMapComponent` on the prototype in `prototype.config.ts` (see `booking-flow/state-map-page.tsx`) so `/prototypes/<slug>/states` renders the map instead of the default empty page.
-8. **Verify** — run `pnpm verify:prototype-preview-states` whenever a `*-preview-states.ts` file exists.
+4. **Wire comments** — `usePrototypeComments(liveState, onRestore)` where `onRestore` calls `setLiveState(restored)`. This powers annotation restore and share links.
+5. **Sync every state change to the URL (mandatory)** — `useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })` keeps `?state=<preview-state-id>` updated on every mode change and hydrates from the URL on load. Copy-pasting the browser URL must reproduce the exact preview mode. Use the registry state ids (kebab-case). Do **not** invent other query param names (`?step=`, `?view=`, encoded blobs, etc.).
+6. **Preview states are part of the feature, not a follow-up** — for feature pages, add or update a single `definePreviewStateRegistry` in `*-preview-states.ts` (see below). Every distinct tab, empty/loading/error branch, filter mode, modal, view toggle, or wizard step reviewers should jump to gets a registry entry **in the same change** as the UI. Only skip the registry for truly static single-view pages with no reviewable modes.
+7. **Wire the state picker into the review toolbar** — `*-preview-state-select.tsx` calls `review.setTweaksContent(...)` with `ControlsPanelSelect` using `appearance="menuList"` and `pickerOptions` from the registry. Do **not** render a floating `miniPill` select on the prototype surface (see `booking-flow-preview-state-select.tsx`).
+8. **Wire the state map** — `*-state-canvas-config.tsx` builds `PrototypeStateCanvasConfig` from the same registry. In `index.tsx`, call `review.setStateCanvasConfig(...)` in an effect; depend on stable review callbacks, not the whole `review` object. Add a `stateMapComponent` on the prototype in `prototype.config.ts` (see `table-editor-filters/state-map-page.tsx`) so `/prototypes/<slug>/states` renders the map instead of the default empty page. State map clicks must navigate to the prototype with `?state=<id>`.
+9. **Verify** — run `pnpm verify:prototype-preview-states` whenever a `*-preview-states.ts` file exists.
 
 Optional: `usePersistPrototypeLiveState(slug, liveState)` keeps reviewer position across reloads.
 
@@ -265,12 +304,65 @@ Optional: `usePersistPrototypeLiveState(slug, liveState)` keeps reviewer positio
 | ----- | -------- | ------- |
 | `TLiveState` + `liveState` | page `index.tsx` | Single snapshot of all preview-relevant UI |
 | `usePrototypeComments` | page | Freeze/restore `liveState` for comments & share links |
+| `useSyncPrototypePreviewStateToUrl` | page | Keep `?state=<id>` in the URL on every preview mode change; hydrate on load |
 | `*-preview-states.ts` | `_components/` | `definePreviewStateRegistry` — picker, map nodes, `edges`, sections |
 | `*-preview-state-select.tsx` | `_components/` | On-page / sidebar step picker (`PrototypeControl`) |
 | `*-state-canvas-config.tsx` | `_components/` | Wireframes + registry data for the review **State** panel |
 
 
-Reference: `src/prototypes/booking-flow/` (`index.tsx`, `booking-flow-preview-states.ts`, `booking-flow-preview-state-select.tsx`, `booking-flow-state-canvas-config.tsx`).
+Reference: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.tsx`, `*-preview-states.ts`).
+
+### URL state sync (mandatory)
+
+**Every preview mode change must appear in the browser URL.** Reviewers copy-paste URLs to share a specific view — if the URL does not change when they switch states, that is a blocking defect.
+
+Use the plain query param **`?state=<registry-id>`** (kebab-case id from `definePreviewStateRegistry`). Do **not** use encoded blobs, `shareState`, or custom param names (`?step=`, `?view=`, `?mode=`, etc.) for preview navigation.
+
+| Param | Purpose |
+| ----- | ------- |
+| `state` | Preview mode navigation — **always sync this** |
+| `shareState` | Annotation share links only (full frozen snapshot) — do not use for preview navigation |
+| `shareTarget` | Annotation share links only — do not use for preview navigation |
+
+**Page (`index.tsx`):**
+
+```tsx
+import {
+  usePrototypeComments,
+  useSyncPrototypePreviewStateToUrl,
+} from "proto-plugin";
+
+const setPreviewState = useCallback((previewStateId: MyPreviewStateId) => {
+  setLiveState(createLiveStateForPreview(previewStateId));
+}, []);
+
+usePrototypeComments(liveState, onRestore);
+useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
+  validStateIds: MY_PREVIEW_STATE_IDS,
+});
+```
+
+Requirements:
+- Pass `liveState.previewStateId` (or equivalent registry id field) — the hook syncs that id to `?state=`.
+- Pass the same `setPreviewState` handler used by the state picker and state map.
+- Pass `validStateIds` from the same const array that defines your preview state union (e.g. `MY_PREVIEW_STATE_IDS`).
+- When the user interacts with the prototype (filters, shelves, loading transitions), update `liveState` so `previewStateId` stays correct (`inferPreviewStateId` / `withInferredPreviewState`) — the URL follows automatically.
+
+**State map (`state-map-page.tsx`):**
+
+When a map node is clicked, navigate back to the prototype with `?state=` set — not `shareState`:
+
+```tsx
+import { PREVIEW_STATE_PARAM } from "proto-plugin";
+
+const handleStateSelect = useCallback((previewStateId: MyPreviewStateId) => {
+  const url = new URL(backHref, window.location.origin);
+  url.searchParams.set(PREVIEW_STATE_PARAM, previewStateId);
+  router.push(`${url.pathname}${url.search}`);
+}, [backHref, router]);
+```
+
+**Before finishing:** open the prototype, switch states via the States menu and via in-prototype interactions, and confirm the URL updates each time (e.g. `/prototypes/my-slug?state=filtered-empty`). Reload that URL and confirm the same mode renders.
 
 ### Page wiring (minimal)
 
@@ -281,16 +373,23 @@ const onRestore = useCallback((restored: TLiveState) => {
   setLiveState(restored);
 }, []);
 
+const setPreviewState = useCallback((previewStateId: TPreviewStateId) => {
+  setLiveState(createLiveStateForPreview(previewStateId));
+}, []);
+
 usePrototypeComments(liveState, onRestore);
+useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
+  validStateIds: MY_PREVIEW_STATE_IDS,
+});
 
 const setStateCanvasConfig = review?.setStateCanvasConfig;
 useEffect(() => {
   if (!setStateCanvasConfig) return;
   setStateCanvasConfig(
-    buildMyStateCanvasConfig(setStep),
+    buildMyStateCanvasConfig(setPreviewState),
   );
   return () => setStateCanvasConfig(null);
-}, [setStateCanvasConfig, setStep]);
+}, [setStateCanvasConfig, setPreviewState]);
 ```
 
 ### When to add a preview-state registry entry
@@ -312,7 +411,8 @@ Multi-route prototypes (e.g. `proto-partner-page`) may use Next routes for real 
 ### Anti-patterns
 
 - Multiple independent `useState` hooks for step/modal/view **without** aggregating into `liveState`
-- Custom URL query params for preview mode — share links use `usePrototypeComments` + encoded `shareState`
+- Custom URL query params for preview mode (`?step=`, `?view=`, encoded blobs, etc.) — use `?state=<registry-id>` via `useSyncPrototypePreviewStateToUrl` instead
+- Shipping a prototype page **without** `useSyncPrototypePreviewStateToUrl` — every preview mode change must update the URL
 - Hand-rolled `<select>` / tabs for preview modes outside `ControlsPanelSelect` + the registry
 - Floating `ControlsPanelSelect` with `appearance="miniPill"` on the prototype surface — states belong in the review toolbar **States** menu via `appearance="menuList"` and `setTweaksContent`
 - Duplicating picker labels or state ids outside `definePreviewStateRegistry`
@@ -335,7 +435,7 @@ The state map is a **stateless picker** — it must **not** reflect, highlight, 
 - **Follows tool theme** — The state map canvas (background, chrome, edges, section labels, node cards) uses `--tool-chrome-*` tokens and matches the gallery/review light/dark mode toggle.
 - **`build…StateCanvasConfig(onStateSelect)`** — The builder takes only the select handler. Wire it once in `index.tsx` and `state-map-page.tsx`; do not re-build when `liveState` changes.
 
-Reference: `src/prototypes/booking-flow/_components/booking-flow-state-canvas-config.tsx`, `state-map-page.tsx`.
+Reference: `src/prototypes/booking-flow/_components/booking-flow-state-canvas-config.tsx`, `table-editor-filters/state-map-page.tsx`.
 
 ### State map layout
 
@@ -623,7 +723,9 @@ Before finishing, confirm side-by-side with source or a screenshot:
 - Approximating layout dimensions or colors
 - **Inventing custom prototype state** instead of `liveState` + `definePreviewStateRegistry` (see **Live state & preview states**)
 - **Adding screens/modals without registering preview states** in the same change
+- **Shipping preview modes without URL sync** — every mode change must update `?state=<registry-id>` via `useSyncPrototypePreviewStateToUrl`
 - Depending on the whole `review` context object in an effect's deps (see "Consuming the review context in effects") — use the specific stable callbacks instead
 - **`scroll-container` with `overflow-y-auto` and no `h-full` fill chain** — causes top-left offset and clipped content in the preview frame (see **Prototype viewport fill**)
 - **Page-level motion with `translateX` on wrappers missing `w-full flex-1`** — same offset bug; use opacity-only or fill classes first
+- **Product shelves/sheets/dialogs without `portalContainer`** — default body portals cover review sidebar and proto footer; use `usePrototypeProductOverlayPortal()` (see **Prototype overlays & side shelves**)
 

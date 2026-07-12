@@ -36,6 +36,7 @@ import {
   MessageSquare,
   MessageSquarePlus,
   Monitor,
+  Plus,
   Rocket,
   ScrollText,
   Share2,
@@ -227,19 +228,15 @@ function ReviewToolbarTooltip({
   );
 }
 
-type FooterTabAccent = "pink" | "cyan" | "gold" | "blue";
-
 function ReviewToolbarTextTabTrigger({
   label,
   active,
   open,
-  accent,
   hoverTriggerProps,
 }: {
   label: string;
   active: boolean;
   open: boolean;
-  accent?: FooterTabAccent;
   hoverTriggerProps?: ToolbarTooltipAnchorProps;
 }) {
   return (
@@ -250,11 +247,6 @@ function ReviewToolbarTextTabTrigger({
           className={cn(
             styles.footerTab,
             active && styles.footerTabActive,
-            accent && styles.footerTabAccent,
-            accent === "pink" && styles.footerTabAccentPink,
-            accent === "cyan" && styles.footerTabAccentCyan,
-            accent === "gold" && styles.footerTabAccentGold,
-            accent === "blue" && styles.footerTabAccentBlue,
             styles.toolbarMenuTrigger,
           )}
           data-menu-open={open ? "true" : undefined}
@@ -300,6 +292,12 @@ function CreatePanelTrigger({
         <span className={pillStyles.explorationBriefTriggerLabel}>
           {label}
         </span>
+        <Plus
+          size={14}
+          strokeWidth={2}
+          className={pillStyles.dropdownItemIcon}
+          aria-hidden
+        />
       </button>
     </div>
   );
@@ -429,6 +427,7 @@ export function PrototypeReviewChrome({
   const { commentTheme } = usePrototypeToolTheme();
   const chromeRef = useRef<HTMLDivElement>(null);
   const stateMapTabRef = useRef<HTMLButtonElement>(null);
+  const stateMapHoverSuppressedRef = useRef(false);
   const miniStateMapRef = useRef<PrototypeMiniStateMapHandle>(null);
   const [explorationsMenuOpen, setExplorationsMenuOpen] = useState(false);
   const [commentsMenuOpen, setCommentsMenuOpen] = useState(false);
@@ -438,7 +437,7 @@ export function PrototypeReviewChrome({
   const [createStateModalOpen, setCreateStateModalOpen] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [viewportMenuOpen, setViewportMenuOpen] = useState(false);
-  const [miniStateMapMinimized, setMiniStateMapMinimized] = useState(false);
+  const [miniStateMapMinimized, setMiniStateMapMinimized] = useState(true);
   const [miniStateMapRestoring, setMiniStateMapRestoring] = useState(false);
   const [stateMapModalOpen, setStateMapModalOpen] = useState(false);
   const pathname = usePathname();
@@ -454,6 +453,7 @@ export function PrototypeReviewChrome({
   }, []);
 
   const handleMiniMapMinimize = useCallback(() => {
+    stateMapHoverSuppressedRef.current = true;
     setMiniStateMapMinimized(true);
     setMiniStateMapRestoring(false);
   }, []);
@@ -463,13 +463,23 @@ export function PrototypeReviewChrome({
     setMiniStateMapMinimized(false);
   }, []);
 
-  const handleStateMapTabClick = useCallback(() => {
-    if (miniStateMapMinimized) {
-      setMiniStateMapRestoring(true);
+  const openStateMapHover = useCallback(() => {
+    if (stateMapHoverSuppressedRef.current || stateMapModalOpen) {
       return;
     }
-    miniStateMapRef.current?.minimize();
-  }, [miniStateMapMinimized]);
+    setMiniStateMapMinimized(false);
+    setMiniStateMapRestoring(false);
+  }, [stateMapModalOpen]);
+
+  const closeStateMapHover = useCallback(() => {
+    stateMapHoverSuppressedRef.current = false;
+    setMiniStateMapMinimized(true);
+    setMiniStateMapRestoring(false);
+  }, []);
+
+  const handleStateMapTabClick = useCallback(() => {
+    setStateMapModalOpen(true);
+  }, []);
 
   const closeToolbarMenus = useCallback(() => {
     setExplorationsMenuOpen(false);
@@ -601,6 +611,11 @@ export function PrototypeReviewChrome({
     onClose: closeViewportMenu,
   });
 
+  const stateMapHover = useToolbarHoverPanel({
+    onOpen: openStateMapHover,
+    onClose: closeStateMapHover,
+  });
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -610,8 +625,6 @@ export function PrototypeReviewChrome({
 
       dismissReviewToolbarTooltips();
 
-      let dismissed = false;
-
       if (
         explorationsMenuOpen ||
         commentsMenuOpen ||
@@ -620,14 +633,6 @@ export function PrototypeReviewChrome({
         viewportMenuOpen
       ) {
         closeToolbarMenus();
-        dismissed = true;
-      } else if (review.variantsOpen) {
-        review.closeVariants();
-        setExplorationsMenuOpen(false);
-        dismissed = true;
-      }
-
-      if (dismissed) {
         event.preventDefault();
         event.stopPropagation();
         blurToolbarFocus();
@@ -642,8 +647,6 @@ export function PrototypeReviewChrome({
     commentsMenuOpen,
     explorationsMenuOpen,
     handoffMenuOpen,
-    review.closeVariants,
-    review.variantsOpen,
     shareMenuOpen,
     viewportMenuOpen,
   ]);
@@ -667,7 +670,8 @@ export function PrototypeReviewChrome({
       ? pathname.startsWith(stateMapPagePath)
       : /\/prototypes\/[^/]+\/states\/?$/.test(pathname);
   const showStateMapTab = review.hasStateCanvas && !onStateMapPage;
-  const stateMapTabActive = showStateMapTab && !miniStateMapMinimized && !stateMapModalOpen;
+  const stateMapTabActive =
+    showStateMapTab && (!miniStateMapMinimized || stateMapModalOpen);
 
   const commentsTabActive =
     commentsMenuOpen ||
@@ -711,13 +715,12 @@ export function PrototypeReviewChrome({
               className={cn(
                 styles.footerTab,
                 stateMapTabActive && styles.footerTabActive,
-                styles.footerTabAccent,
-                styles.footerTabAccentPink,
                 styles.toolbarMenuTrigger,
               )}
               aria-label="State Map"
               aria-pressed={stateMapTabActive}
               onClick={handleStateMapTabClick}
+              {...stateMapHover.triggerProps}
             >
               State Map
             </button>
@@ -741,7 +744,6 @@ export function PrototypeReviewChrome({
               label="Design Explorations"
               active={explorationsTabActive}
               open={explorationsMenuOpen}
-              accent="pink"
               hoverTriggerProps={explorationsHover.triggerProps}
             />
             <DropdownMenuContent
@@ -810,7 +812,6 @@ export function PrototypeReviewChrome({
               label="Comments"
               active={commentsTabActive}
               open={commentsMenuOpen}
-              accent="cyan"
               hoverTriggerProps={commentsHover.triggerProps}
             />
             <DropdownMenuContent
@@ -830,15 +831,13 @@ export function PrototypeReviewChrome({
                       onToggleCommentMode();
                     }}
                   >
-                    <span className={pillStyles.dropdownItemWithIcon}>
-                      <MessageSquarePlus
-                        size={14}
-                        strokeWidth={2}
-                        className={pillStyles.dropdownItemLeadingIcon}
-                        aria-hidden
-                      />
-                      Add comment
-                    </span>
+                    <span>Add comment</span>
+                    <MessageSquarePlus
+                      size={14}
+                      strokeWidth={2}
+                      className={pillStyles.dropdownItemIcon}
+                      aria-hidden
+                    />
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem
@@ -854,20 +853,20 @@ export function PrototypeReviewChrome({
                     }
                   }}
                 >
-                  <span className={pillStyles.dropdownItemWithIcon}>
+                  <span>View comments</span>
+                  <span className={pillStyles.dropdownItemTrailingGroup}>
+                    {commentCount > 0 ? (
+                      <span className={pillStyles.dropdownItemCount}>
+                        {commentCount > 99 ? "99+" : commentCount}
+                      </span>
+                    ) : null}
                     <MessageSquare
                       size={14}
                       strokeWidth={2}
-                      className={pillStyles.dropdownItemLeadingIcon}
+                      className={pillStyles.dropdownItemIcon}
                       aria-hidden
                     />
-                    View comments
                   </span>
-                  {commentCount > 0 ? (
-                    <span className={pillStyles.dropdownItemCount}>
-                      {commentCount > 99 ? "99+" : commentCount}
-                    </span>
-                  ) : null}
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -888,7 +887,6 @@ export function PrototypeReviewChrome({
               label="Handoff"
               active={handoffTabActive}
               open={handoffMenuOpen}
-              accent="gold"
               hoverTriggerProps={handoffHover.triggerProps}
             />
             <DropdownMenuContent
@@ -914,15 +912,13 @@ export function PrototypeReviewChrome({
                     }
                   }}
                 >
-                  <span className={pillStyles.dropdownItemWithIcon}>
-                    <ScrollText
-                      size={14}
-                      strokeWidth={2}
-                      className={pillStyles.dropdownItemLeadingIcon}
-                      aria-hidden
-                    />
-                    Overview Writeup
-                  </span>
+                  <span>Overview Writeup</span>
+                  <ScrollText
+                    size={14}
+                    strokeWidth={2}
+                    className={pillStyles.dropdownItemIcon}
+                    aria-hidden
+                  />
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className={pillStyles.dropdownMenuItem}
@@ -939,15 +935,13 @@ export function PrototypeReviewChrome({
                     }
                   }}
                 >
-                  <span className={pillStyles.dropdownItemWithIcon}>
-                    <Rocket
-                      size={14}
-                      strokeWidth={2}
-                      className={pillStyles.dropdownItemLeadingIcon}
-                      aria-hidden
-                    />
-                    PR Plan
-                  </span>
+                  <span>PR Plan</span>
+                  <Rocket
+                    size={14}
+                    strokeWidth={2}
+                    className={pillStyles.dropdownItemIcon}
+                    aria-hidden
+                  />
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -1063,6 +1057,7 @@ export function PrototypeReviewChrome({
           onMinimize={handleMiniMapMinimize}
           onRestoreComplete={handleMiniMapRestoreComplete}
           minimizeTargetRef={stateMapTabRef}
+          hoverPanelProps={stateMapHover.panelProps}
         />
       ) : null}
 

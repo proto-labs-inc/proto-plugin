@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Prototype live state (mandatory)
 
-Full spec: `packages/prototype/AGENTS.md` → **Live state & preview states (mandatory)**.
+Full spec: `packages/prototype/AGENTS.md` → **Live state & preview states (mandatory)** and **URL state sync (mandatory)**.
 
 ## Before changing UI
 
@@ -15,22 +15,53 @@ Read the prototype's `index.tsx`, any `*-preview-states.ts`, and design-explorat
 ## Required pattern
 
 1. **One `liveState` object** on the page — typed, JSON-serializable, holds every field needed to reproduce the view.
-2. **`usePrototypeComments(liveState, onRestore)`** — `onRestore` must `setLiveState(restored)`. Powers comments and share links. No custom `?step=` / `?view=` params.
-3. **Preview modes (mandatory for feature pages)** → single `definePreviewStateRegistry` in `*-preview-states.ts`:
+2. **`usePrototypeComments(liveState, onRestore)`** — `onRestore` must `setLiveState(restored)`. Powers comments and annotation share links (`shareState` / `shareTarget` — annotation only).
+3. **`useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })`** — **mandatory, blocking**. Every preview mode change updates `?state=<registry-id>` in the URL; load hydrates from it. Plain kebab-case ids only — no encoded blobs, no custom param names.
+4. **Preview modes (mandatory for feature pages)** → single `definePreviewStateRegistry` in `*-preview-states.ts`:
    - Registry entry for each tab, empty/loading/error branch, filter mode, modal, view toggle, or step reviewers should jump to
    - `*-preview-state-select.tsx` (`ControlsPanelSelect` with `appearance="menuList"` via `setTweaksContent` — not a floating pill on the page)
    - `*-state-canvas-config.tsx` + `review.setStateCanvasConfig(...)` in an effect
-   - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts` so `/prototypes/<slug>/states` is populated
-4. Run `pnpm verify:prototype-preview-states` whenever a registry file exists.
+   - `state-map-page.tsx` + `stateMapComponent` in `prototype.config.ts` — map clicks navigate with `PREVIEW_STATE_PARAM` (`?state=<id>`)
+5. Run `pnpm verify:prototype-preview-states` whenever a registry file exists.
 
-**State map:** stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Follows tool light/dark theme. See `packages/prototype/AGENTS.md` → **State map behavior**.
+## URL state sync (blocking)
+
+Every prototype with preview modes **must** keep the current mode in the URL:
+
+```
+/prototypes/table-editor-filters?state=filtered-empty
+/prototypes/table-editor-filters?state=insert-row
+```
+
+**Page wiring:**
+
+```tsx
+useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
+  validStateIds: MY_PREVIEW_STATE_IDS,
+});
+```
+
+**State map wiring:**
+
+```tsx
+url.searchParams.set(PREVIEW_STATE_PARAM, previewStateId);
+```
+
+**Before finishing:** switch states via the States menu and in-prototype interactions; confirm the URL updates each time; reload and confirm the same mode renders.
+
+Missing URL sync fails `pnpm verify:prototype-preview-states`.
+
+## State map
+
+Stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Follows tool light/dark theme. See `packages/prototype/AGENTS.md` → **State map behavior**.
 
 ## Do not
 
 - Scatter `useState` for step/modal/view without aggregating into `liveState`
+- Ship a prototype page without `useSyncPrototypePreviewStateToUrl`
+- Use `shareState`, encoded blobs, or custom params (`?step=`, `?view=`) for preview navigation — `?state=<registry-id>` only
 - Hand-roll preview pickers or duplicate state ids/labels outside the registry
-- Ship new UI branches without registry + picker + state map + `stateMapComponent` updates
-- Treat preview states as optional because the page is "just one screen" — tabs, filters, and empty states count
-- Pass `liveState` or `activeStateId` into the state map — no checkmarks or selected nodes on the map
+- Ship new UI branches without registry + picker + state map + URL sync + `stateMapComponent`
+- Pass `liveState` or `activeStateId` into the state map
 
-Reference: `src/prototypes/booking-flow/`.
+Reference: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.tsx`).

@@ -1,0 +1,28 @@
+---
+description: Portal product shelves and overlays inside the prototype preview viewport
+globs: src/prototypes/**/*
+alwaysApply: false
+---
+
+# Prototype overlays & side shelves
+
+Full spec: `packages/prototype/AGENTS.md` → **Prototype overlays & side shelves (mandatory)**.
+
+## Required for SidePanel, Sheet, Dialog in prototypes
+
+1. `const portalContainer = usePrototypeProductOverlayPortal()` from `prototype`.
+2. Pass `portalContainer` to `SidePanel`, `SheetContent`, or custom `Dialog.Portal`.
+3. Mount shelves inside the page's main content column (`relative overflow-hidden` wrapper) — not outside `[data-prototype-screenshot]`.
+4. Register each open shelf as a preview state in `*-preview-states.ts`.
+
+## Do not
+
+- Use default Radix portals (body) for product overlays — they cover review sidebar + proto footer.
+- Use `h-screen` / `100vh` for scoped panels — use `h-full` inside the viewport frame.
+- Hoist shelf components to the gallery shell or prototype package layout.
+
+## Before finishing
+
+Open a shelf preview state and confirm review sidebar and black review footer stay visible.
+
+Reference: `src/prototypes/table-editor-filters/_components/table-editor-page.tsx`, `insert-row-panel.tsx`, `insert-column-panel.tsx`.

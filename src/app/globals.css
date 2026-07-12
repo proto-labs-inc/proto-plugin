@@ -1,128 +1,69 @@
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
-@source "../prototypes/**/*.{js,ts,jsx,tsx}";
+@source "../starter-screens/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/ui-patterns/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/coss-ui/src/**/*.{js,ts,jsx,tsx}";
-@source "../../packages/ui/**/*.{js,ts,jsx,tsx}";
-@source "../../apps/web/components/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/calcom-ui/**/*.{js,ts,jsx,tsx}";
+@source "../../apps/studio/components/**/*.{js,ts,jsx,tsx}";
 
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
-@plugin "tailwindcss-radix";
 
-@plugin 'tailwind-scrollbar' {
-  nocompatible: true;
-}
+@import "../../packages/config/tailwind.config.css";
+@import "../../packages/config/typography.css";
+@import "./supabase-product-surface.css";
 
-@import "./cal-tokens.css";
-@import "../../packages/coss-ui/src/styles/globals.css";
-
-/*
-  Synced source previews (component library) — Cal/coss tokens only, never tool chrome.
-  Pairs with [data-prototype-source-surface] in the prototype package for full isolation.
-*/
-[data-prototype-root] :is([data-cal-design-system], [data-prototype-source-surface]) {
-  color-scheme: light;
-
-  font-family: var(--font-product-sans);
-  --font-sans: var(--font-product-sans);
-  --font-heading: var(--font-product-cal);
-
-  /* Pin synced Cal.com light tokens — immune to tool dark mode on [data-prototype-root]. */
-  --cal-bg-emphasis: hsla(220, 13%, 91%, 1);
-  --cal-bg: hsla(0, 0%, 100%, 1);
-  --cal-bg-subtle: hsla(220, 14%, 94%, 1);
-  --cal-bg-muted: hsla(210, 20%, 97%, 1);
-  --cal-bg-inverted: hsla(210, 30%, 4%, 1);
-  --cal-bg-brand: hsla(214, 30%, 16%, 1);
-  --cal-bg-info: hsla(221, 91%, 93%, 1);
-  --cal-bg-success: hsla(142, 76%, 94%, 1);
-  --cal-bg-attention: hsla(33, 100%, 92%, 1);
-  --cal-bg-error: hsla(3, 66%, 93%, 1);
-  --cal-border-subtle: hsla(220, 13%, 91%, 1);
-  --cal-border: hsla(216, 12%, 84%, 1);
-  --cal-text-emphasis: hsla(210, 30%, 4%, 1);
-  --cal-text: hsla(220, 6%, 25%, 1);
-  --cal-text-subtle: hsla(220, 9%, 46%, 1);
-  --cal-text-muted: hsla(218, 11%, 65%, 1);
-  --cal-text-info: hsla(225, 57%, 33%, 1);
-  --cal-text-success: hsla(144, 34%, 24%, 1);
-  --cal-text-attention: hsla(16, 62%, 28%, 1);
-  --cal-text-error: hsla(0, 63%, 31%, 1);
-  --cal-brand: hsla(221, 39%, 11%, 1);
-  --cal-brand-text: hsla(0, 0%, 100%, 1);
-
-  --radius: 0.625rem;
-  --background: var(--color-white);
-  --foreground: var(--color-neutral-800);
-  --card: var(--color-white);
-  --card-foreground: var(--color-neutral-800);
-  --popover: var(--color-white);
-  --popover-foreground: var(--color-neutral-800);
-  --primary: var(--color-neutral-800);
-  --primary-foreground: var(--color-neutral-50);
-  --secondary: --alpha(var(--color-black) / 4%);
-  --secondary-foreground: var(--color-neutral-800);
-  --muted: --alpha(var(--color-black) / 4%);
-  --muted-foreground: color-mix(
-    in srgb,
-    var(--color-neutral-500) 90%,
-    var(--color-black)
-  );
-  --accent: --alpha(var(--color-black) / 4%);
-  --accent-foreground: var(--color-neutral-800);
-  --destructive: var(--color-red-500);
-  --destructive-foreground: var(--color-red-700);
-  --border: --alpha(var(--color-black) / 8%);
-  --input: --alpha(var(--color-black) / 10%);
-  --ring: var(--color-neutral-400);
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-[data-prototype-root] :is([data-cal-design-system], [data-prototype-source-surface]) * {
-  font-family: inherit;
+@theme {
+  --text-grid: 13px;
 }
 
 /*
-  Prototype preview surface: use the same synced product fonts as the source app
-  (Inter body + Cal Sans headings), overriding the plugin's generic system-font
-  default for [data-prototype-screenshot]. DM Sans stays on the tool chrome.
+  Supabase Light is pinned on <html> (see layout.tsx). Product surfaces inside
+  [data-prototype-source-surface] / [data-prototype-screenshot] inherit tokens
+  after proto-plugin gray-scale pins are cleared in supabase-product-surface.css.
 */
+[data-prototype-root] [data-prototype-source-surface],
 [data-prototype-root] [data-prototype-screenshot],
-[data-prototype-screenshot] {
-  --font-sans: var(--font-product-sans);
-  --font-display: var(--font-product-cal);
-  --font-heading: var(--font-product-cal);
-  --font-cal: var(--font-product-cal);
+[data-prototype-source-surface].light,
+[data-prototype-source-surface][data-theme="light"] {
+  color-scheme: light;
+  font-family: var(--font-inter, var(--font-sans));
+  --font-sans: var(--font-inter, "Inter", system-ui, sans-serif);
+  --font-heading: var(--font-manrope, "Manrope", system-ui, sans-serif);
+}
+
+[data-prototype-root] [data-prototype-source-surface],
+[data-prototype-root] [data-prototype-source-surface] *,
+[data-prototype-root] [data-prototype-screenshot],
+[data-prototype-root] [data-prototype-screenshot] *,
+[data-prototype-source-surface].light,
+[data-prototype-source-surface].light *,
+[data-prototype-source-surface][data-theme="light"],
+[data-prototype-source-surface][data-theme="light"] * {
+  font-family: inherit;
 }
 
 body {
   margin: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  background: var(--cal-bg, var(--background));
-  color: var(--cal-text, var(--foreground));
 }
 
-::selection {
-  color: var(--cal-brand-text, var(--foreground));
-  background: var(--cal-brand, var(--primary));
+/*
+ * Tailwind v4 defaults bare `border`/`border-b`/`border-t` to `currentColor`
+ * (near-black on light product surfaces). The source app pins the default
+ * border color to the semantic border token in a base layer — replicate it so
+ * dividers, sheet/side-panel borders, and separators render grey, not black.
+ */
+@layer base {
+  [data-prototype-screenshot],
+  [data-prototype-screenshot] *,
+  [data-prototype-screenshot] ::before,
+  [data-prototype-screenshot] ::after,
+  [data-prototype-source-surface],
+  [data-prototype-source-surface] *,
+  [data-prototype-source-surface] ::before,
+  [data-prototype-source-surface] ::after {
+    border-color: var(--border-default, currentColor);
+  }
 }

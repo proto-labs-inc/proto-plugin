@@ -1,5 +1,6 @@
 "use client";
 
+import { PrototypeStarterScreenShell } from "@prototype/components/starter-screens/prototype-starter-screen-shell";
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
 import { PrototypePluginUpdatePopup } from "@prototype/components/shell/prototype-plugin-update-popup";
 import { usePathname } from "next/navigation";
@@ -26,7 +27,21 @@ export function PrototypeSiteLayoutClient({
 }: PrototypeSiteLayoutClientProps) {
   const pathname = usePathname();
   const isGalleryRoute =
-    pathname === "/" || pathname.startsWith("/component-library");
+    pathname === "/" ||
+    pathname === "/starter-screens" ||
+    pathname.startsWith("/component-library");
+  const isStarterScreenPreview =
+    pathname.startsWith("/starter-screens/") && pathname !== "/starter-screens";
+
+  if (isStarterScreenPreview) {
+    return (
+      <PrototypeStarterScreenShell>
+        {children}
+        <PrototypePluginUpdatePopup />
+        {toaster}
+      </PrototypeStarterScreenShell>
+    );
+  }
 
   if (isGalleryRoute) {
     return (

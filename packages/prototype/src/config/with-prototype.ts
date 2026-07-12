@@ -67,6 +67,9 @@ export function withPrototype(
         {
           pathname: "/prototypes/screenshots/**",
         },
+        {
+          pathname: "/starter-screens/screenshots/**",
+        },
         ...(nextConfig.images?.localPatterns ?? []),
       ],
     },

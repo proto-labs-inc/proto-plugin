@@ -1,0 +1,258 @@
+"use client";
+
+import {
+  PROTOTYPE_PAGE_CLASS,
+  PROTOTYPE_SCROLL_CONTAINER_CLASS,
+  PrototypeComponent,
+  usePrototypeComments,
+  useRegisterPrototypeReferenceDocs,
+  usePrototypeReviewOptional,
+  useSyncPrototypePreviewStateToUrl,
+} from "proto-plugin";
+import { cn } from "ui";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { TableEditorPage } from "./_components/table-editor-page";
+import { GridEmptyStateVariantToggle } from "./_components/grid-empty-state-variant-toggle";
+import { GridErrorStateVariantToggle } from "./_components/grid-error-state-variant-toggle";
+import { InsertColumnVariantToggle } from "./_components/insert-column-variant-toggle";
+import {
+  DEFAULT_GRID_EMPTY_STATE_VARIANT,
+  type GridEmptyStateVariant,
+} from "./_components/grid-empty-state-content";
+import {
+  DEFAULT_GRID_ERROR_STATE_VARIANT,
+  type GridErrorStateVariant,
+} from "./_components/grid-error-state-content";
+import {
+  DEFAULT_INSERT_COLUMN_VARIANT,
+  type InsertColumnVariant,
+} from "./_components/insert-column-content";
+import {
+  createLiveStateForPreview,
+  DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE,
+  withInferredPreviewState,
+} from "./_components/table-editor-filters-preview-states";
+import { useRegisterTableEditorFiltersVariantSets } from "./_components/table-editor-filters-variant-sets";
+import { TableEditorFiltersPreviewStateSelect } from "./_components/table-editor-filters-preview-state-select";
+import { buildTableEditorFiltersStateCanvasConfig } from "./_components/table-editor-filters-state-canvas-config";
+import type {
+  TableEditorFiltersLiveState,
+  TableEditorFiltersPreviewStateId,
+  TableEditorDataMode,
+} from "./_components/table-editor-filters-types";
+import { TABLE_EDITOR_FILTERS_PREVIEW_STATE_IDS } from "./_components/table-editor-filters-types";
+import { REFERENCE_DOCS } from "./reference-docs";
+
+const REFRESH_LOADING_MS = 1200;
+
+function createDefaultLiveState(): TableEditorFiltersLiveState {
+  return createLiveStateForPreview(DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE);
+}
+
+export default function TableEditorFiltersPage() {
+  const [liveState, setLiveState] = useState<TableEditorFiltersLiveState>(createDefaultLiveState);
+  const [emptyStateVariant, setEmptyStateVariant] = useState<GridEmptyStateVariant>(
+    DEFAULT_GRID_EMPTY_STATE_VARIANT,
+  );
+  const [errorStateVariant, setErrorStateVariant] = useState<GridErrorStateVariant>(
+    DEFAULT_GRID_ERROR_STATE_VARIANT,
+  );
+  const [insertColumnVariant, setInsertColumnVariant] = useState<InsertColumnVariant>(
+    DEFAULT_INSERT_COLUMN_VARIANT,
+  );
+  const review = usePrototypeReviewOptional();
+  const refreshReturnModeRef = useRef<TableEditorDataMode>("populated");
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onRestore = useCallback((restored: TableEditorFiltersLiveState) => {
+    setLiveState(restored);
+  }, []);
+
+  usePrototypeComments(liveState, onRestore);
+  useRegisterPrototypeReferenceDocs(REFERENCE_DOCS);
+
+  const setPreviewState = useCallback((previewStateId: TableEditorFiltersPreviewStateId) => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
+    setLiveState(createLiveStateForPreview(previewStateId));
+  }, []);
+
+  const handleErrorStateLayoutActivate = useCallback(() => {
+    setPreviewState("error");
+  }, [setPreviewState]);
+
+  const handleEmptyStateLayoutActivate = useCallback(() => {
+    setPreviewState("empty-table");
+  }, [setPreviewState]);
+
+  const handleInsertColumnLayoutActivate = useCallback(() => {
+    setPreviewState("insert-column");
+  }, [setPreviewState]);
+
+  useRegisterTableEditorFiltersVariantSets({
+    onErrorStateLayoutActivate: handleErrorStateLayoutActivate,
+    onEmptyStateLayoutActivate: handleEmptyStateLayoutActivate,
+    onInsertColumnLayoutActivate: handleInsertColumnLayoutActivate,
+  });
+
+  useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
+    validStateIds: TABLE_EDITOR_FILTERS_PREVIEW_STATE_IDS,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const setDataMode = useCallback((dataMode: TableEditorDataMode) => {
+    setLiveState((current) =>
+      withInferredPreviewState(current, { dataMode, sidePanel: "none", expandedRowId: null }),
+    );
+  }, []);
+
+  const handleCloseSidePanel = useCallback(() => {
+    setLiveState((current) =>
+      withInferredPreviewState(current, { sidePanel: "none", expandedRowId: null }),
+    );
+  }, []);
+
+  const handleOpenInsertRow = useCallback(() => {
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        dataMode: "populated",
+        sidePanel: "insert-row",
+        expandedRowId: null,
+      }),
+    );
+  }, []);
+
+  const handleOpenInsertColumn = useCallback(() => {
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        dataMode: "populated",
+        sidePanel: "insert-column",
+        expandedRowId: null,
+      }),
+    );
+  }, []);
+
+  const handleOpenEditRow = useCallback((rowId: number) => {
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        dataMode: "populated",
+        sidePanel: "edit-row",
+        expandedRowId: rowId,
+      }),
+    );
+  }, []);
+
+  const handleApplyFilter = useCallback(() => {
+    setDataMode("filtered-empty");
+  }, [setDataMode]);
+
+  const handleRemoveFilters = useCallback(() => {
+    setDataMode("populated");
+  }, [setDataMode]);
+
+  const handleTruncateTable = useCallback(() => {
+    setDataMode("empty-table");
+  }, [setDataMode]);
+
+  const handleImportData = useCallback(() => {
+    setDataMode("populated");
+  }, [setDataMode]);
+
+  const handleRefresh = useCallback(() => {
+    if (liveState.dataMode === "loading" || liveState.dataMode === "error") return;
+
+    refreshReturnModeRef.current =
+      liveState.dataMode === "empty-table" || liveState.dataMode === "filtered-empty"
+        ? liveState.dataMode
+        : "populated";
+
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        dataMode: "loading",
+        sidePanel: "none",
+        expandedRowId: null,
+      }),
+    );
+
+    refreshTimeoutRef.current = setTimeout(() => {
+      refreshTimeoutRef.current = null;
+      setLiveState((current) => {
+        if (current.dataMode !== "loading") return current;
+        return withInferredPreviewState(current, {
+          dataMode: refreshReturnModeRef.current,
+          sidePanel: "none",
+          expandedRowId: null,
+        });
+      });
+    }, REFRESH_LOADING_MS);
+  }, [liveState.dataMode]);
+
+  const setStateCanvasConfig = review?.setStateCanvasConfig;
+  useEffect(() => {
+    if (!setStateCanvasConfig) return;
+
+    setStateCanvasConfig(buildTableEditorFiltersStateCanvasConfig(setPreviewState));
+
+    return () => setStateCanvasConfig(null);
+  }, [setPreviewState, setStateCanvasConfig]);
+
+  return (
+    <PrototypeComponent
+      id="scroll-container"
+      className={cn(PROTOTYPE_SCROLL_CONTAINER_CLASS, "bg-dash-sidebar text-default")}
+    >
+      <PrototypeComponent id="page" className={cn(PROTOTYPE_PAGE_CLASS, "bg-dash-sidebar")}>
+        <TableEditorPage
+          liveState={liveState}
+          emptyStateVariant={emptyStateVariant}
+          errorStateVariant={errorStateVariant}
+          insertColumnVariant={insertColumnVariant}
+          onCloseSidePanel={handleCloseSidePanel}
+          onOpenInsertRow={handleOpenInsertRow}
+          onOpenInsertColumn={handleOpenInsertColumn}
+          onOpenEditRow={handleOpenEditRow}
+          onApplyFilter={handleApplyFilter}
+          onRemoveFilters={handleRemoveFilters}
+          onTruncateTable={handleTruncateTable}
+          onImportData={handleImportData}
+          onRefresh={handleRefresh}
+        />
+        <div className="sr-only" aria-hidden>
+          <GridErrorStateVariantToggle
+            variant={errorStateVariant}
+            onVariantChange={setErrorStateVariant}
+            registerOnly
+          />
+          <GridEmptyStateVariantToggle
+            variant={emptyStateVariant}
+            onVariantChange={setEmptyStateVariant}
+            registerOnly
+          />
+          <InsertColumnVariantToggle
+            variant={insertColumnVariant}
+            onVariantChange={setInsertColumnVariant}
+            registerOnly
+          />
+        </div>
+        <TableEditorFiltersPreviewStateSelect
+          previewStateId={liveState.previewStateId}
+          onPreviewStateChange={setPreviewState}
+        />
+      </PrototypeComponent>
+    </PrototypeComponent>
+  );
+}

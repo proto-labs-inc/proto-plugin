@@ -1,0 +1,144 @@
+/*
+ * Clear proto-plugin's generic gray-scale token pin on product surfaces.
+ *
+ * proto-plugin sets --text-primary: var(--color-gray-900) etc., but Supabase
+ * unsets --color-gray-*, which breaks --foreground and makes text invisible.
+ * Reset those overrides so tokens inherit from html.light (Supabase semantic).
+ */
+html.light
+  [data-prototype-root]
+  :is([data-prototype-source-surface], [data-prototype-screenshot]),
+html[data-theme="light"]
+  [data-prototype-root]
+  :is([data-prototype-source-surface], [data-prototype-screenshot]),
+:is([data-prototype-source-surface], [data-prototype-screenshot]).light,
+:is(
+  [data-prototype-source-surface],
+  [data-prototype-screenshot]
+)[data-theme="light"] {
+  --bg-bedrock: initial;
+  --bg-main: initial;
+  --bg-top: initial;
+  --bg-subtle: initial;
+  --bg-layered: initial;
+  --bg-invert: initial;
+  --bg-white: initial;
+  --text-primary: initial;
+  --text-secondary: initial;
+  --text-tertiary: initial;
+  --border-faint: initial;
+  --border-solid: initial;
+  --border-medium: initial;
+  --primary: initial;
+  --primary-foreground: initial;
+  --primary-dark: initial;
+  --error: initial;
+  --success: initial;
+  --focus-ring: initial;
+  --active: initial;
+  --background: initial;
+  --foreground: initial;
+  --card: initial;
+  --card-foreground: initial;
+  --popover: initial;
+  --popover-foreground: initial;
+  --secondary: initial;
+  --secondary-foreground: initial;
+  --muted: initial;
+  --muted-foreground: initial;
+  --accent: initial;
+  --accent-foreground: initial;
+  --destructive: initial;
+  --destructive-foreground: initial;
+  --border: initial;
+  --input: initial;
+  --ring: initial;
+  --color-background: initial;
+  --color-foreground: initial;
+  --color-card: initial;
+  --color-card-foreground: initial;
+  --color-popover: initial;
+  --color-popover-foreground: initial;
+  --color-primary: initial;
+  --color-primary-foreground: initial;
+  --color-secondary: initial;
+  --color-secondary-foreground: initial;
+  --color-muted: initial;
+  --color-muted-foreground: initial;
+  --color-accent: initial;
+  --color-accent-foreground: initial;
+  --color-destructive: initial;
+  --color-destructive-foreground: initial;
+  --color-border: initial;
+  --color-input: initial;
+  --color-ring: initial;
+  color: inherit;
+  background-color: inherit;
+}
+
+/*
+ * Full-page Supabase product surfaces rendered inside proto-plugin tool chrome
+ * (e.g. starter-screen previews before layout bypass). Re-bridge shadcn tokens
+ * from the local .light theme inputs — proto-plugin's [data-prototype-root] pins
+ * --foreground to tool-chrome heading gray (#f0f0f0), which washes out text.
+ */
+html.light [data-prototype-root] :is(.light, [data-theme="light"]) {
+  --background: oklch(var(--surface) calc(var(--chroma) * 0.5) var(--surface-hue));
+  --foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--contrast-text)) calc(var(--chroma) * 0.55)
+      var(--surface-hue)
+  );
+  --card: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-1)) c h);
+  --card-foreground: var(--foreground);
+  --popover: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-2)) c h);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.76 0.15 var(--primary-hue));
+  --primary-foreground: oklch(
+    min(var(--surface), var(--foreground-lightness)) calc(var(--chroma) * 0.45) var(--primary-hue)
+  );
+  --secondary: oklch(
+    from var(--background) calc(l + var(--elevation-step) * var(--elevation-3)) c h
+  );
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(from var(--foreground) l c h / var(--muted-alpha));
+  --muted-foreground: oklch(
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * var(--muted-foreground-mix)) c h
+  );
+  --accent: oklch(from var(--foreground) l c h / var(--accent-alpha));
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(
+    var(--destructive-lightness) var(--expressive-chroma) var(--destructive-hue)
+  );
+  --destructive-foreground: oklch(
+    from var(--destructive) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --border: oklch(
+    from var(--foreground) l calc(c * 0.54) h / calc(2% + 20% * var(--contrast-border))
+  );
+  --input: oklch(
+    from var(--foreground) l calc(c * 0.5) h / calc(3% + 38% * var(--contrast-border))
+  );
+  --ring: oklch(from var(--primary) l c h / 55%);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  color: var(--foreground);
+}

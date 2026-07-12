@@ -151,16 +151,19 @@ export function buildCreateDesignExplorationPrompt({
   slug,
   existingExplorations = [],
   origin = "http://localhost:3003",
+  previewUrl,
   briefText,
   includeMobbin = true,
 }: {
   slug: string;
   existingExplorations?: Array<{ id: string; label: string }>;
   origin?: string;
+  /** Full browser URL including pathname and query params (e.g. `?state=`). */
+  previewUrl?: string;
   briefText?: string;
   includeMobbin?: boolean;
 }): string {
-  const prototypeUrl = `${origin}/prototypes/${slug}`;
+  const prototypeUrl = previewUrl ?? `${origin}/prototypes/${slug}`;
   const variantSetsRegistrar = `src/prototypes/${slug}/_components/*-variant-sets.tsx`;
   const trimmedBrief = briefText?.trim() ?? "";
 
@@ -193,6 +196,12 @@ export function buildCreateDesignExplorationPrompt({
     `- Slug: \`${slug}\``,
     `- Preview: ${prototypeUrl}`,
   );
+
+  if (previewUrl?.includes("?")) {
+    lines.push(
+      "- The preview URL includes the current page state and other URL params from review mode.",
+    );
+  }
 
   if (includeMobbin) {
     lines.push(
@@ -244,12 +253,14 @@ export function buildCreateDesignExplorationCopyText({
   slug,
   existingExplorations = [],
   origin = "http://localhost:3003",
+  previewUrl,
   briefText,
   includeMobbin = true,
 }: {
   slug: string;
   existingExplorations?: Array<{ id: string; label: string }>;
   origin?: string;
+  previewUrl?: string;
   briefText: string;
   includeMobbin?: boolean;
 }): string {
@@ -258,6 +269,7 @@ export function buildCreateDesignExplorationCopyText({
     slug,
     existingExplorations,
     origin,
+    previewUrl,
     briefText: trimmedBrief,
     includeMobbin,
   });

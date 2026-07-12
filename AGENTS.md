@@ -14,6 +14,22 @@ When building or fixing prototypes under `src/prototypes/`, follow **Prototype v
 
 ## Prototype live state
 
-When building or modifying prototypes, follow **Live state & preview states (mandatory)** in `packages/prototype/AGENTS.md`. Use the plugin's `liveState` + `definePreviewStateRegistry` pattern — do not invent separate state management. Register preview states (including `state-map-page.tsx` and `stateMapComponent`) in the same change as new screens, tabs, filters, modals, or branches.
+When building or modifying prototypes, follow **Live state & preview states (mandatory)** and **URL state sync (mandatory)** in `packages/prototype/AGENTS.md`. Use the plugin's `liveState` + `definePreviewStateRegistry` pattern — do not invent separate state management. Register preview states (including `state-map-page.tsx` and `stateMapComponent`) in the same change as new screens, tabs, filters, modals, or branches.
+
+**URL state (blocking):** every preview mode change must sync to the URL as `?state=<registry-id>` via `useSyncPrototypePreviewStateToUrl`. Copy-pasting the browser URL must reproduce the exact state. Use plain `?state=filtered-empty` — not encoded blobs, not `shareState`, not custom param names. State map clicks must also navigate with `?state=`.
 
 **State map:** never tie the map to the current preview state (no checkmarks / `activeStateId`). The map follows the tool light/dark theme — see **State map behavior** in `packages/prototype/AGENTS.md`.
+
+Reference implementation: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.tsx`).
+
+## Prototype product theme (Supabase Light)
+
+This host syncs **Supabase Studio** and pins **Light** on `<html class="light" data-theme="light">` (see `layout.tsx` and `SUPABASE_PRODUCT_THEME`). Host `supabase-product-surface.css` clears proto-plugin gray-scale token overrides on product surfaces so Supabase semantic tokens inherit correctly.
+
+When building or reviewing prototypes under `src/prototypes/`, match **Supabase Light** tokens and screenshots. Do not use `classic-dark`, `dark`, or dark-only utilities unless the prototype explicitly compares themes.
+
+The gallery/review **tool theme toggle** still only affects tool chrome — not prototype preview content.
+
+## Prototype overlays & side shelves
+
+When prototypes include product shelves (`SidePanel`), sheets (`Sheet`), drawers, or modal overlays, portal them **inside `#prototype-viewport`** with `usePrototypeProductOverlayPortal()` so they do not cover the review sidebar or proto bottom bar. See **Prototype overlays & side shelves** in `packages/prototype/AGENTS.md`.

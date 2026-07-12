@@ -4,7 +4,7 @@ $morph-duration: 0.25s;
 .footerRoot {
   width: 100%;
   user-select: none;
-  background: #000;
+  background: #181818;
   --tool-chrome-icon: rgba(255, 255, 255, 0.88);
   --tool-chrome-icon-hover: #ffffff;
 
@@ -20,7 +20,7 @@ $morph-duration: 0.25s;
   gap: 0.5rem;
   min-height: 2.5rem;
   padding: 0.25rem 1rem;
-  background: #000;
+  background: #181818;
 }
 
 .footerBrand {
@@ -53,7 +53,7 @@ $morph-duration: 0.25s;
 
 .footerBrandName {
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1;
   white-space: nowrap;
@@ -93,7 +93,7 @@ $morph-duration: 0.25s;
   color: #fff;
   font-family: inherit;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.2;
   white-space: nowrap;
@@ -130,36 +130,6 @@ $morph-duration: 0.25s;
       color: #fff;
     }
   }
-}
-
-// Proto logo accent colors — triangle pink, square cyan, circle gold.
-$proto-accent-pink: #fc388c;
-$proto-accent-cyan: #10c4e2;
-$proto-accent-gold: #fcc028;
-$proto-accent-blue: #0097fe;
-
-.footerTabAccent {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.2em;
-  // Extend hover/active background to cover the accent underline.
-  padding-bottom: calc(0.375rem + 0.2em + 2px);
-}
-
-.footerTabAccentPink {
-  text-decoration-color: $proto-accent-pink;
-}
-
-.footerTabAccentCyan {
-  text-decoration-color: $proto-accent-cyan;
-}
-
-.footerTabAccentGold {
-  text-decoration-color: $proto-accent-gold;
-}
-
-.footerTabAccentBlue {
-  text-decoration-color: $proto-accent-blue;
 }
 
 .footerUtilities {

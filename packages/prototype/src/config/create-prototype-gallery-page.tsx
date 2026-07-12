@@ -7,6 +7,8 @@ import {
 } from "@prototype/components/shell/prototype-gallery-shell";
 import { createPrototypeRegistry } from "@prototype/lib/prototypes/create-prototype-registry";
 import type { PrototypeConfig } from "@prototype/lib/prototypes/prototype-config-types";
+import { createStarterScreenRegistry } from "@prototype/lib/prototypes/create-starter-screen-registry";
+import type { StarterScreenConfig } from "@prototype/lib/prototypes/starter-screen-config-types";
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
 import { sortPrototypesByCreationDate } from "../lib/prototypes/sort-prototypes-by-creation-date";
@@ -15,6 +17,7 @@ type PrototypeGalleryPageOptions = {
   title?: string;
   description?: string;
   eyebrow?: string;
+  starterScreensConfig?: StarterScreenConfig;
 };
 
 export function createPrototypeGalleryPage(
@@ -26,12 +29,17 @@ export function createPrototypeGalleryPage(
     title = "Prototypes",
     description = "UI experiments and concept explorations. Select a prototype to open it.",
     eyebrow,
+    starterScreensConfig,
   } = options;
+  const starterScreenRegistry = starterScreensConfig
+    ? createStarterScreenRegistry(starterScreensConfig)
+    : null;
 
   async function PrototypeGallery() {
-    const [prototypes, screenshotManifest] = await Promise.all([
+    const [prototypes, screenshotManifest, starterScreens] = await Promise.all([
       Promise.resolve(registry.getAllPrototypes()),
       readScreenshotManifest(),
+      Promise.resolve(starterScreenRegistry?.getAllStarterScreens() ?? []),
     ]);
     const sortedPrototypes = await sortPrototypesByCreationDate(prototypes);
     const screenshotVersions =
@@ -41,6 +49,7 @@ export function createPrototypeGalleryPage(
       <PrototypeGalleryClient
         prototypes={sortedPrototypes}
         screenshotVersions={screenshotVersions}
+        starterScreens={starterScreens}
       />
     );
   }
@@ -57,9 +66,7 @@ export function createPrototypeGalleryPage(
           />
         }
       >
-        <div className="px-10 pt-8 pb-16 lg:px-16">
-          <PrototypeGallery />
-        </div>
+        <PrototypeGallery />
       </PrototypeGalleryPageLayout>
     );
   }

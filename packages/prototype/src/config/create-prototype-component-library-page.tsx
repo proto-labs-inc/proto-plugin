@@ -2,6 +2,7 @@ import {
   PrototypeGalleryHeader,
   PrototypeGalleryPageLayout,
 } from "@prototype/components/shell/prototype-gallery-shell";
+import { PrototypeComponentLibraryClearButton } from "@prototype/components/shell/prototype-component-library-clear-button";
 import { PrototypeComponentLibraryEmptyState } from "@prototype/components/shell/prototype-component-library-empty-state";
 import { formatSourceDirectoryName } from "@prototype/lib/format-source-directory-name";
 import { PROTOTYPE_SOURCE_SURFACE_ATTR } from "@prototype/lib/tool-portal";
@@ -34,6 +35,7 @@ export function createPrototypeComponentLibraryPage(
   function ComponentLibraryPage() {
     return (
       <PrototypeGalleryPageLayout
+        scrollClassName="bg-white"
         header={
           <PrototypeGalleryHeader
             title={COMPONENT_LIBRARY_HEADER_TITLE}
@@ -43,25 +45,29 @@ export function createPrototypeComponentLibraryPage(
         }
       >
         {isEmpty ? (
-          <div className="px-10 pt-8 pb-16 lg:px-16">
-            <PrototypeComponentLibraryEmptyState
-              sourcePath={sourceDirectoryName ?? sourcePath}
-              syncConfigPath={syncConfigPath}
-              componentLibraryPagePath={componentLibraryPagePath}
-            />
-          </div>
+          <PrototypeComponentLibraryEmptyState
+            sourcePath={sourceDirectoryName ?? sourcePath}
+            syncConfigPath={syncConfigPath}
+            componentLibraryPagePath={componentLibraryPagePath}
+          />
         ) : (
           // Isolate synced host design-system components from the tool chrome
           // theme scoped to [data-prototype-root]. This surface pins neutral
           // product tokens (see packages/prototype/src/styles/globals.css), so
           // previews never inherit tool-chrome --primary/--font-sans. Hosts layer
           // their brand token values by scoping to [data-prototype-source-surface].
-          <div
-            className="px-10 pt-8 pb-16 lg:px-16"
-            {...{ [PROTOTYPE_SOURCE_SURFACE_ATTR]: "" }}
-          >
-            {children}
-          </div>
+          <>
+            <div
+              className="light"
+              data-theme="light"
+              {...{ [PROTOTYPE_SOURCE_SURFACE_ATTR]: "" }}
+            >
+              {children}
+            </div>
+            <PrototypeComponentLibraryClearButton
+              componentLibraryPagePath={componentLibraryPagePath}
+            />
+          </>
         )}
       </PrototypeGalleryPageLayout>
     );

@@ -5,7 +5,7 @@ import { Button } from "@prototype/components/ui/button";
 import { PrototypeLinkSourceModal } from "@prototype/components/shell/prototype-link-source-modal";
 import { cn } from "@prototype/lib/utils";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
-import { LayoutGrid, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
+import { LayoutGrid, LayoutTemplate, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -17,11 +17,19 @@ const GALLERY_NAV_ITEMS = [
     icon: LayoutGrid,
   },
   {
+    href: "/starter-screens",
+    label: "Starter Screens",
+    icon: LayoutTemplate,
+  },
+  {
     href: "/component-library",
     label: "Component Library",
     icon: LibraryBig,
   },
 ] as const;
+
+const GALLERY_FOOTER_BUTTON_CLASS =
+  "rounded-lg border-[var(--tool-chrome-border-strong)] bg-transparent text-[var(--tool-chrome-text-heading)] shadow-none hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-text-heading)]";
 
 type PrototypeGalleryNavProps = {
   sourceDirectoryName?: string;
@@ -33,7 +41,7 @@ export function PrototypeGalleryNav({
   sourcePath,
 }: PrototypeGalleryNavProps) {
   const pathname = usePathname();
-  const { theme, toggleTheme } = usePrototypeToolTheme();
+  const { theme, toggleTheme, isThemeLocked } = usePrototypeToolTheme();
   const [linkSourceOpen, setLinkSourceOpen] = useState(false);
 
   return (
@@ -78,47 +86,48 @@ export function PrototypeGalleryNav({
 
       <div className="border-[var(--tool-chrome-border)] mt-auto border-t p-3">
         <div className="flex min-w-0 items-center gap-2">
-          <IconButton
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label={
-              theme === "light" ? "Switch to dark mode" : "Switch to light mode"
-            }
-            className="size-8 shrink-0 text-[var(--tool-chrome-text-muted)] hover:text-[var(--tool-chrome-text-heading)]"
-          >
-            {theme === "light" ? (
-              <Moon size={16} strokeWidth={2} aria-hidden />
-            ) : (
-              <Sun size={16} strokeWidth={2} aria-hidden />
-            )}
-          </IconButton>
+          {isThemeLocked ? null : (
+            <IconButton
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label={
+                theme === "light" ? "Switch to dark mode" : "Switch to light mode"
+              }
+              className={cn("size-9 shrink-0", GALLERY_FOOTER_BUTTON_CLASS)}
+            >
+              {theme === "light" ? (
+                <Moon size={16} strokeWidth={2} aria-hidden />
+              ) : (
+                <Sun size={16} strokeWidth={2} aria-hidden />
+              )}
+            </IconButton>
+          )}
           {sourceDirectoryName ? (
-            <>
-              <span
-                className="min-w-0 flex-1 truncate text-xs text-[var(--tool-chrome-text-muted)]"
-                title={sourcePath ?? sourceDirectoryName}
-              >
-                {sourceDirectoryName}
-              </span>
-              <IconButton
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setLinkSourceOpen(true)}
-                aria-label="Change linked source app"
-                className="size-7 shrink-0 text-[var(--tool-chrome-text-muted)] hover:text-[var(--tool-chrome-text-heading)]"
-              >
-                <Pencil size={14} strokeWidth={2} aria-hidden />
-              </IconButton>
-            </>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLinkSourceOpen(true)}
+              aria-label={`Change linked source app (${sourceDirectoryName})`}
+              title={sourcePath ?? sourceDirectoryName}
+              className={cn(
+                "h-9 min-w-0 flex-1 justify-between gap-2 px-3 text-xs font-medium",
+                GALLERY_FOOTER_BUTTON_CLASS,
+              )}
+            >
+              <span className="min-w-0 truncate">{sourceDirectoryName}</span>
+              <Pencil size={14} strokeWidth={2} aria-hidden className="size-3.5 shrink-0 opacity-70" />
+            </Button>
           ) : (
             <Button
               type="button"
-              variant="chrome"
+              variant="outline"
               onClick={() => setLinkSourceOpen(true)}
-              className="h-9 min-w-0 flex-1 justify-center rounded-lg text-sm font-medium"
+              className={cn(
+                "h-9 min-w-0 flex-1 justify-center text-sm font-medium",
+                GALLERY_FOOTER_BUTTON_CLASS,
+              )}
             >
               Link source
             </Button>

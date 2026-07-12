@@ -1,16 +1,9 @@
 "use client";
 
 import {
+  PREVIEW_STATE_PARAM,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
-} from "proto-plugin";
-import { buildPrototypeTargetId } from "proto-plugin";
-import {
-  encodeShareState,
-  SHARE_STATE_PARAM,
-  SHARE_TARGET_PARAM,
-} from "proto-plugin";
-import {
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
 } from "proto-plugin";
@@ -18,10 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import { buildAutomatWorkflowsPageStateCanvasConfig } from "./_components/automat-workflows-page-state-canvas-config";
-import {
-  createLiveStateForPreview,
-  type AutomatWorkflowsPagePreviewStateId,
-} from "./_components/automat-workflows-page-preview-states";
+import type { AutomatWorkflowsPagePreviewStateId } from "./_components/automat-workflows-page-preview-states";
 
 const AUTOMAT_WORKFLOWS_PAGE_SLUG = "automat-workflows-page";
 
@@ -39,14 +29,7 @@ export default function AutomatWorkflowsPageStateMapPage() {
   const handleStateSelect = useCallback(
     (stateId: AutomatWorkflowsPagePreviewStateId) => {
       const url = new URL(backHref, window.location.origin);
-      url.searchParams.set(
-        SHARE_TARGET_PARAM,
-        buildPrototypeTargetId(AUTOMAT_WORKFLOWS_PAGE_SLUG, "page"),
-      );
-      url.searchParams.set(
-        SHARE_STATE_PARAM,
-        encodeShareState(createLiveStateForPreview(stateId)),
-      );
+      url.searchParams.set(PREVIEW_STATE_PARAM, stateId);
       router.push(`${url.pathname}${url.search}`);
     },
     [backHref, router],

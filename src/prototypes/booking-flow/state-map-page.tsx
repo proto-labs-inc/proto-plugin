@@ -1,16 +1,9 @@
 "use client";
 
 import {
+  PREVIEW_STATE_PARAM,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
-} from "proto-plugin";
-import { buildPrototypeTargetId } from "proto-plugin";
-import {
-  encodeShareState,
-  SHARE_STATE_PARAM,
-  SHARE_TARGET_PARAM,
-} from "proto-plugin";
-import {
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
 } from "proto-plugin";
@@ -19,27 +12,8 @@ import { useCallback, useMemo } from "react";
 
 import { buildBookingFlowStateCanvasConfig } from "./_components/booking-flow-state-canvas-config";
 import type { BookingFlowStepId } from "./_components/booking-flow-preview-states";
-import type { BookingLiveState, BookingViewMode } from "./_components/booking-flow-types";
-import { BOOKING_DEFAULT_DATE } from "./_components/booking-mock-data";
 
 const BOOKING_FLOW_SLUG = "booking-flow";
-
-function stepToViewMode(step: BookingFlowStepId): BookingViewMode {
-  if (step === "week-grid" || step === "confirm-modal-week") return "week";
-  if (step === "list-view" || step === "confirm-modal-list") return "list";
-  return "month";
-}
-
-function liveStateForStep(step: BookingFlowStepId): BookingLiveState {
-  return {
-    step,
-    viewMode: stepToViewMode(step),
-    selectedDateIso: BOOKING_DEFAULT_DATE.toISOString(),
-    selectedTime: "9:30am",
-    use24h: false,
-    overlayCalendar: false,
-  };
-}
 
 export default function BookingFlowStateMapPage() {
   const router = useRouter();
@@ -55,14 +29,7 @@ export default function BookingFlowStateMapPage() {
   const handleStepSelect = useCallback(
     (step: BookingFlowStepId) => {
       const url = new URL(backHref, window.location.origin);
-      url.searchParams.set(
-        SHARE_TARGET_PARAM,
-        buildPrototypeTargetId(BOOKING_FLOW_SLUG, "page"),
-      );
-      url.searchParams.set(
-        SHARE_STATE_PARAM,
-        encodeShareState(liveStateForStep(step)),
-      );
+      url.searchParams.set(PREVIEW_STATE_PARAM, step);
       router.push(`${url.pathname}${url.search}`);
     },
     [backHref, router],

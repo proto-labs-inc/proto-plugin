@@ -1,36 +1,38 @@
-import { IconSprites } from "@calcom/ui/components/icon";
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
 import { createPrototypeSiteLayout } from "proto-plugin";
 import "proto-plugin/styles/globals.css";
 
 import "./globals.css";
-import { CalTooltipProvider } from "./providers";
+import {
+  SUPABASE_PRODUCT_THEME,
+} from "./supabase-product-theme.constants";
+import { SupabaseProductTheme } from "./supabase-product-theme";
+import { SupabaseTooltipProvider } from "./providers";
 
 const PrototypeSiteLayout = createPrototypeSiteLayout();
 
-// Product fonts loaded from the synced source files (apps/web/…), not the network,
-// so previews match the source app exactly and stay in sync via pnpm sync-from-source.
+const manrope = Manrope({
+  variable: "--font-manrope",
+  display: "swap",
+  subsets: ["latin"],
+});
+
 const inter = localFont({
-  src: "../../apps/web/public/fonts/Inter-roman.var.woff2",
-  variable: "--font-sans",
+  src: "../../apps/studio/fonts/inter/InterVariable.woff2",
+  variable: "--font-inter",
   preload: true,
   display: "swap",
   weight: "100 900",
 });
 
-const calFont = localFont({
-  src: "../../apps/web/fonts/CalSans-SemiBold.woff2",
-  variable: "--font-cal",
+const sourceCodePro = localFont({
+  src: "../../apps/studio/fonts/source-code-pro/SourceCodePro-Variable.woff2",
+  variable: "--font-source-code-pro",
   preload: true,
   display: "swap",
-  weight: "600",
-});
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
+  weight: "200 900",
 });
 
 export const metadata: Metadata = {
@@ -46,23 +48,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${calFont.variable} ${dmSans.variable} h-full overflow-hidden antialiased`}
+      className={`${SUPABASE_PRODUCT_THEME} ${inter.variable} ${manrope.variable} ${sourceCodePro.variable} h-full overflow-hidden antialiased`}
+      data-theme={SUPABASE_PRODUCT_THEME}
       style={
         {
           "--font-sans": inter.style.fontFamily.replace(/'/g, ""),
-          "--font-cal": calFont.style.fontFamily.replace(/'/g, ""),
-          "--font-product-sans": inter.style.fontFamily.replace(/'/g, ""),
-          "--font-product-cal": calFont.style.fontFamily.replace(/'/g, ""),
+          "--font-inter": inter.style.fontFamily.replace(/'/g, ""),
+          "--font-heading": manrope.style.fontFamily.replace(/'/g, ""),
+          "--font-manrope": manrope.style.fontFamily.replace(/'/g, ""),
+          "--font-source-code-pro": sourceCodePro.style.fontFamily.replace(/'/g, ""),
         } as React.CSSProperties
       }
     >
-      <body className="bg-default text-default flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="pointer-events-none fixed size-0 overflow-hidden" aria-hidden>
-          <IconSprites />
-        </div>
-        <CalTooltipProvider>
+      <body className="bg-dash-sidebar text-foreground flex h-full min-h-0 flex-col overflow-hidden">
+        <SupabaseTooltipProvider>
+          <SupabaseProductTheme />
           <PrototypeSiteLayout>{children}</PrototypeSiteLayout>
-        </CalTooltipProvider>
+        </SupabaseTooltipProvider>
       </body>
     </html>
   );

@@ -179,12 +179,6 @@ function getConstantScreenLabelFontSize(
   return `${getConstantScreenCanvasPx(canvasScale, targetScreenPx, maxCanvasPx)}px`;
 }
 
-function getMiniArrowMarkerSize(canvasScale: number) {
-  const targetScreenPx = 12;
-  if (canvasScale <= 0) return 12;
-  return Math.min(18, Math.max(8, targetScreenPx / canvasScale));
-}
-
 function getNodeHeight(node: PrototypeStateCanvasNode): number {
   return getStateCanvasNodeHeight(node.callouts);
 }
@@ -599,7 +593,7 @@ export function PrototypeStateCanvasView<T extends string>({
     [nodes],
   );
 
-  const { uniqueEdges, bidirectionalKeys } = useMemo(
+  const { uniqueEdges } = useMemo(
     () => detectBidirectionalEdges(edges),
     [edges],
   );
@@ -864,20 +858,6 @@ export function PrototypeStateCanvasView<T extends string>({
         ? styles.mini
         : styles.overlay;
 
-  const arrowMarkerSize = isMiniLayout
-    ? getMiniArrowMarkerSize(transform.scale)
-    : 8;
-  const arrowMarkerId = isMiniLayout
-    ? "prototype-state-canvas-arrow-mini"
-    : "prototype-state-canvas-arrow";
-  const arrowMarkerStartId = isMiniLayout
-    ? "prototype-state-canvas-arrow-start-mini"
-    : "prototype-state-canvas-arrow-start";
-  const arrowMarkerRefX = arrowMarkerSize * 0.88;
-  const arrowMarkerRefY = arrowMarkerSize / 2;
-  const arrowMarkerPath = `M0,0 L${arrowMarkerSize},${arrowMarkerRefY} L0,${arrowMarkerSize} Z`;
-  const arrowHeadClass = styles.edgeArrowHead;
-
   return (
     <div
       className={layoutClass}
@@ -951,40 +931,15 @@ export function PrototypeStateCanvasView<T extends string>({
             overflow="visible"
             aria-hidden
           >
-            <defs>
-              <marker
-                id={arrowMarkerId}
-                markerWidth={arrowMarkerSize}
-                markerHeight={arrowMarkerSize}
-                refX={arrowMarkerRefX}
-                refY={arrowMarkerRefY}
-                orient="auto"
-              >
-                <path d={arrowMarkerPath} className={arrowHeadClass} />
-              </marker>
-              <marker
-                id={arrowMarkerStartId}
-                markerWidth={arrowMarkerSize}
-                markerHeight={arrowMarkerSize}
-                refX={arrowMarkerRefX}
-                refY={arrowMarkerRefY}
-                orient="auto-start-reverse"
-              >
-                <path d={arrowMarkerPath} className={arrowHeadClass} />
-              </marker>
-            </defs>
             {uniqueEdges.map((edge: PrototypeStateCanvasEdge<T>) => {
               const from = nodeMap.get(edge.from);
               const to = nodeMap.get(edge.to);
               if (!from || !to) return null;
-              const isBidirectional = bidirectionalKeys.has(`${edge.from}-->${edge.to}`);
               return (
                 <path
                   key={`${edge.from}-${edge.to}`}
-                  d={buildEdgePath(from, to, isBidirectional)}
+                  d={buildEdgePath(from, to, true)}
                   className={styles.edge}
-                  markerEnd={`url(#${arrowMarkerId})`}
-                  markerStart={isBidirectional ? `url(#${arrowMarkerStartId})` : undefined}
                 />
               );
             })}
@@ -1022,12 +977,13 @@ export function PrototypeStateCanvasView<T extends string>({
               activeStateId != null &&
               (activeStateId === node.id ||
                 node.callouts?.some((callout) => callout.id === activeStateId));
-            const miniSelectedBorderWidth = isMiniLayout && isNodeSelected
-              ? getConstantScreenCanvasPx(
-                  transform.scale,
-                  MINI_NODE_SELECTED_BORDER_SCREEN_PX,
-                )
-              : null;
+            const miniSelectedRingWidth =
+              isMiniLayout && isNodeSelected
+                ? getConstantScreenCanvasPx(
+                    transform.scale,
+                    MINI_NODE_SELECTED_BORDER_SCREEN_PX,
+                  )
+                : null;
 
             return (
               <div
@@ -1043,11 +999,9 @@ export function PrototypeStateCanvasView<T extends string>({
                   left: node.x,
                   top: node.y,
                   width: NODE_WIDTH,
-                  ...(miniSelectedBorderWidth != null
+                  ...(miniSelectedRingWidth != null
                     ? {
-                        borderWidth: miniSelectedBorderWidth,
-                        borderStyle: "solid",
-                        borderColor: "var(--tool-chrome-blue)",
+                        boxShadow: `0 0 0 ${miniSelectedRingWidth}px var(--tool-chrome-blue), 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.14)`,
                       }
                     : {}),
                 }}

@@ -3,11 +3,13 @@
 import { PrototypeComponent } from "proto-plugin";
 import { usePrototypeComments } from "proto-plugin";
 import { usePrototypeReviewOptional } from "proto-plugin";
+import { useSyncPrototypePreviewStateToUrl } from "proto-plugin";
 import { AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingConfirmModalContent, BookingFormView } from "./_components/booking-form-view";
 import {
+  BOOKING_FLOW_STEP_IDS,
   DEFAULT_BOOKING_FLOW_STEP,
   type BookingFlowStepId,
 } from "./_components/booking-flow-preview-states";
@@ -59,14 +61,6 @@ export default function BookingFlowPage() {
     [liveState.selectedDateIso],
   );
 
-  const setStep = useCallback((step: BookingFlowStepId) => {
-    setLiveState((current) => ({
-      ...current,
-      step,
-      viewMode: stepToViewMode(step),
-    }));
-  }, []);
-
   const setViewMode = useCallback((viewMode: BookingViewMode) => {
     setLiveState((current) => {
       const nextStep: BookingFlowStepId =
@@ -94,6 +88,18 @@ export default function BookingFlowPage() {
   }, []);
 
   usePrototypeComments(liveState, onRestore);
+
+  const setStep = useCallback((step: BookingFlowStepId) => {
+    setLiveState((current) => ({
+      ...current,
+      step,
+      viewMode: stepToViewMode(step),
+    }));
+  }, []);
+
+  useSyncPrototypePreviewStateToUrl(liveState.step, setStep, {
+    validStateIds: BOOKING_FLOW_STEP_IDS,
+  });
 
   const setStateCanvasConfig = review?.setStateCanvasConfig;
   useEffect(() => {

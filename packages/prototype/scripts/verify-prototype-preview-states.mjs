@@ -183,6 +183,30 @@ for (const slug of listPrototypeSlugs()) {
     );
     failed = true;
   }
+
+  const indexPath = path.join(prototypesDir, slug, "index.tsx");
+  if (fs.existsSync(indexPath)) {
+    const indexSource = fs.readFileSync(indexPath, "utf8");
+    if (!indexSource.includes("useSyncPrototypePreviewStateToUrl")) {
+      console.error(
+        `[${slug}] Has *-preview-states.ts but index.tsx does not call useSyncPrototypePreviewStateToUrl(...). Every preview mode must sync to ?state=<id>. See packages/prototype/AGENTS.md → URL state sync.`,
+      );
+      failed = true;
+    }
+  }
+
+  for (const stateMapPage of stateMapPageFiles) {
+    const stateMapSource = fs.readFileSync(stateMapPage, "utf8");
+    if (
+      !stateMapSource.includes("PREVIEW_STATE_PARAM") &&
+      !stateMapSource.includes('searchParams.set("state"')
+    ) {
+      console.error(
+        `[${slug}] ${path.relative(repoRoot, stateMapPage)} must navigate with ?state=<id> (PREVIEW_STATE_PARAM), not shareState. See packages/prototype/AGENTS.md → URL state sync.`,
+      );
+      failed = true;
+    }
+  }
 }
 
 if (failed) {

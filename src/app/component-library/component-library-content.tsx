@@ -1,56 +1,42 @@
 "use client";
 
-import { ArrowButton } from "@calcom/ui/components/arrow-button";
-import { Badge as CalBadge } from "@calcom/ui/components/badge";
-import { Button as CalButton } from "@calcom/ui/components/button";
-import { EmptyScreen } from "@calcom/ui/components/empty-screen";
-import { Divider } from "@calcom/ui/components/divider";
-import { SegmentedControl } from "@calcom/ui/components/segmented-control";
-import { Badge as CossBadge } from "@coss/ui/components/badge";
-import { Button as CossButton } from "@coss/ui/components/button";
+import { Database } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@coss/ui/components/card";
-import { Checkbox } from "@coss/ui/components/checkbox";
-import {
+  Checkbox,
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@coss/ui/components/dialog";
-import { Input } from "@coss/ui/components/input";
-import { Label } from "@coss/ui/components/label";
-import { Separator } from "@coss/ui/components/separator";
-import { Switch } from "@coss/ui/components/switch";
-import {
+  Input,
+  Label,
+  Separator,
+  Switch,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@coss/ui/components/tabs";
-import { Textarea } from "@coss/ui/components/textarea";
-import {
+  Textarea,
   Tooltip,
-  TooltipPopup,
-  TooltipProvider,
+  TooltipContent,
   TooltipTrigger,
-} from "@coss/ui/components/tooltip";
-import { useState, type ReactNode } from "react";
-import * as RadixTooltip from "@radix-ui/react-tooltip";
-
-const SOURCE_SURFACE_ATTRS = {
-  "data-prototype-source-surface": true,
-  "data-cal-design-system": true,
-} as const;
+} from "ui";
+import { Admonition } from "ui-patterns/admonition";
+import { EmptyStatePresentational } from "ui-patterns/EmptyStatePresentational";
 
 function LibrarySection({
   title,
@@ -92,11 +78,8 @@ function PreviewBlock({
   children: ReactNode;
 }) {
   return (
-    <div
-      {...SOURCE_SURFACE_ATTRS}
-      className="border-subtle bg-default self-start rounded-xl border p-6"
-    >
-      <h3 className="text-emphasis mb-4 text-sm font-medium">{title}</h3>
+    <div className="self-start w-full">
+      <h3 className="text-foreground mb-4 text-sm font-medium">{title}</h3>
       <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
   );
@@ -110,246 +93,261 @@ function PreviewStack({
   children: ReactNode;
 }) {
   return (
-    <div
-      {...SOURCE_SURFACE_ATTRS}
-      className="border-subtle bg-default self-start rounded-xl border p-6"
-    >
-      <h3 className="text-emphasis mb-4 text-sm font-medium">{title}</h3>
+    <div className="self-start w-full">
+      <h3 className="text-foreground mb-4 text-sm font-medium">{title}</h3>
       <div className="flex flex-col gap-4">{children}</div>
     </div>
   );
 }
 
 export function ComponentLibraryContent() {
-  const [segment, setSegment] = useState<"day" | "week" | "month">("week");
+  const [tab, setTab] = useState<"tables" | "functions" | "replicas">("tables");
 
   return (
-    <RadixTooltip.Provider>
-      <TooltipProvider>
-      <div className="pb-20">
-        <LibrarySection
-          title="@coss/ui — Base primitives"
-          description="Synced from packages/coss-ui. Shadcn-style building blocks used in newer Cal.com surfaces."
-        >
-          <PreviewGrid>
-            <PreviewBlock title="Button variants">
-              <CossButton>Default</CossButton>
-              <CossButton variant="secondary">Secondary</CossButton>
-              <CossButton variant="outline">Outline</CossButton>
-              <CossButton variant="ghost">Ghost</CossButton>
-              <CossButton variant="destructive">Destructive</CossButton>
-              <CossButton size="sm">Small</CossButton>
-              <CossButton size="lg">Large</CossButton>
-              <CossButton disabled>Disabled</CossButton>
-            </PreviewBlock>
+    <div className="pb-20">
+      <LibrarySection
+        title="ui — Base primitives (Supabase Light)"
+        description="Synced from packages/ui. Previews use the Supabase Light theme — the default for all prototypes in this host."
+      >
+        <PreviewGrid>
+          <PreviewBlock title="Button variants">
+            <Button variant="primary">Primary</Button>
+            <Button variant="default">Default</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="outline">Outline</Button>
+            <Button variant="dashed">Dashed</Button>
+            <Button variant="text">Text</Button>
+            <Button variant="danger">Danger</Button>
+            <Button variant="primary" loading>
+              Loading
+            </Button>
+            <Button variant="primary" disabled>
+              Disabled
+            </Button>
+          </PreviewBlock>
 
-            <PreviewBlock title="Badge variants">
-              <CossBadge>Default</CossBadge>
-              <CossBadge variant="secondary">Secondary</CossBadge>
-              <CossBadge variant="outline">Outline</CossBadge>
-              <CossBadge variant="success">Success</CossBadge>
-              <CossBadge variant="warning">Warning</CossBadge>
-              <CossBadge variant="destructive">Destructive</CossBadge>
-              <CossBadge variant="info">Info</CossBadge>
-            </PreviewBlock>
+          <PreviewBlock title="Badge variants">
+            <Badge>Default</Badge>
+            <Badge variant="success">Success</Badge>
+            <Badge variant="warning">Warning</Badge>
+            <Badge variant="destructive">Destructive</Badge>
+            <Badge variant="secondary">Secondary</Badge>
+          </PreviewBlock>
 
-            <PreviewStack title="Form controls">
-              <div className="grid max-w-md gap-2">
-                <Label htmlFor="demo-email">Email</Label>
-                <Input id="demo-email" placeholder="you@example.com" />
-              </div>
-              <div className="grid max-w-md gap-2">
-                <Label htmlFor="demo-notes">Notes</Label>
-                <Textarea id="demo-notes" placeholder="Add context…" />
+          <PreviewStack title="Form controls">
+            <div className="grid max-w-md gap-2">
+              <Label htmlFor="demo-email">Email</Label>
+              <Input id="demo-email" placeholder="you@example.com" />
+            </div>
+            <div className="grid max-w-md gap-2">
+              <Label htmlFor="demo-notes">Notes</Label>
+              <Textarea id="demo-notes" placeholder="Add context…" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox id="demo-check" defaultChecked />
+              <Label htmlFor="demo-check">Enable row level security</Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch id="demo-switch" defaultChecked />
+              <Label htmlFor="demo-switch">Realtime enabled</Label>
+            </div>
+          </PreviewStack>
+
+          <PreviewStack title="Switch sizes">
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Switch id="demo-switch-small" size="small" />
+                <Label htmlFor="demo-switch-small">Small</Label>
               </div>
               <div className="flex items-center gap-3">
-                <Checkbox id="demo-check" defaultChecked />
-                <Label htmlFor="demo-check">Remember this choice</Label>
+                <Switch id="demo-switch-medium" size="medium" defaultChecked />
+                <Label htmlFor="demo-switch-medium">Medium (default)</Label>
               </div>
               <div className="flex items-center gap-3">
-                <Switch id="demo-switch" defaultChecked />
-                <Label htmlFor="demo-switch">Enable notifications</Label>
+                <Switch id="demo-switch-large" size="large" />
+                <Label htmlFor="demo-switch-large">Large</Label>
               </div>
-            </PreviewStack>
+            </div>
+          </PreviewStack>
 
-            <PreviewStack title="Card">
-              <Card className="max-w-md">
-                <CardHeader>
-                  <CardTitle>Event type</CardTitle>
-                  <CardDescription>
-                    Shared card primitive from the synced design system.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-muted-foreground text-sm">
-                  30 min · Google Meet · Public
-                </CardContent>
-                <CardFooter>
-                  <CossButton size="sm">Edit</CossButton>
-                </CardFooter>
-              </Card>
-            </PreviewStack>
+          <PreviewStack title="Card">
+            <Card className="max-w-md">
+              <CardHeader>
+                <CardTitle>Database</CardTitle>
+                <CardDescription>
+                  Shared card primitive from the synced Supabase design system.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-foreground-light text-sm">
+                Postgres 15 · us-east-1 · Active
+              </CardContent>
+              <CardFooter>
+                <Button variant="default" size="tiny">
+                  View settings
+                </Button>
+              </CardFooter>
+            </Card>
+          </PreviewStack>
 
-            <PreviewStack title="Tabs">
-              <Tabs defaultValue="upcoming" className="max-w-md">
-                <TabsList>
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="past">Past</TabsTrigger>
-                  <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-                </TabsList>
-                <TabsContent value="upcoming" className="text-sm !flex-none">
-                  No upcoming bookings in this preview state.
-                </TabsContent>
-                <TabsContent value="past" className="text-sm !flex-none">
-                  Past bookings would appear here.
-                </TabsContent>
-                <TabsContent value="cancelled" className="text-sm !flex-none">
-                  Cancelled bookings would appear here.
-                </TabsContent>
-              </Tabs>
-            </PreviewStack>
+          <PreviewStack title="Tabs">
+            <Tabs
+              value={tab}
+              onValueChange={(value) =>
+                setTab(value as "tables" | "functions" | "replicas")
+              }
+              className="max-w-md"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="tables">Tables</TabsTrigger>
+                <TabsTrigger value="functions">Functions</TabsTrigger>
+                <TabsTrigger value="replicas">Replicas</TabsTrigger>
+              </TabsList>
+              <TabsContent value="tables" className="text-sm">
+                Browse and edit table data.
+              </TabsContent>
+              <TabsContent value="functions" className="text-sm">
+                Edge functions deployed to your project.
+              </TabsContent>
+              <TabsContent value="replicas" className="text-sm">
+                Read replicas for query scaling.
+              </TabsContent>
+            </Tabs>
+          </PreviewStack>
 
-            <PreviewStack title="Dialog">
-              <Dialog>
-                <DialogTrigger>
-                  <CossButton variant="outline">Open dialog</CossButton>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Confirm change</DialogTitle>
-                    <DialogDescription>
-                      Dialog content synced from @coss/ui with backdrop and
-                      focus trap.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <DialogClose>
-                      <CossButton variant="outline">Cancel</CossButton>
-                    </DialogClose>
-                    <CossButton>Save</CossButton>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </PreviewStack>
+          <PreviewStack title="Dialog">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">Open dialog</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Confirm migration</DialogTitle>
+                  <DialogDescription>
+                    Dialog content synced from ui with backdrop and focus trap.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="default">Cancel</Button>
+                  <Button variant="primary">Apply migration</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </PreviewStack>
 
-            <PreviewBlock title="Tooltip">
-              <Tooltip>
-                <TooltipTrigger>
-                  <CossButton variant="outline">Hover me</CossButton>
-                </TooltipTrigger>
-                <TooltipPopup>Coss tooltip</TooltipPopup>
-              </Tooltip>
-            </PreviewBlock>
+          <PreviewBlock title="Tooltip">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline">Hover me</Button>
+              </TooltipTrigger>
+              <TooltipContent>Supabase tooltip</TooltipContent>
+            </Tooltip>
+          </PreviewBlock>
 
-            <PreviewBlock title="Separator">
-              <div className="flex w-full max-w-md items-center gap-4">
-                <span className="text-sm">Before</span>
-                <Separator className="flex-1" />
-                <span className="text-sm">After</span>
-              </div>
-            </PreviewBlock>
-          </PreviewGrid>
-        </LibrarySection>
+          <PreviewBlock title="Alert">
+            <Alert className="max-w-md">
+              <AlertTitle>Heads up</AlertTitle>
+              <AlertDescription>
+                You can enable replication from project settings.
+              </AlertDescription>
+            </Alert>
+          </PreviewBlock>
 
-        <LibrarySection
-          title="@calcom/ui — Product components"
-          description="Synced from packages/ui. Branded Cal.com controls used across booking, settings, and event-type surfaces."
-        >
-          <PreviewGrid>
-            <PreviewBlock title="Button colors">
-              <CalButton color="primary">Primary</CalButton>
-              <CalButton color="secondary">Secondary</CalButton>
-              <CalButton color="minimal">Minimal</CalButton>
-              <CalButton color="destructive">Destructive</CalButton>
-              <CalButton StartIcon="plus">With icon</CalButton>
-              <CalButton loading>Loading</CalButton>
-              <CalButton disabled>Disabled</CalButton>
-            </PreviewBlock>
+          <PreviewBlock title="Separator">
+            <div className="flex w-full max-w-md items-center gap-4">
+              <span className="text-foreground-light text-sm">Before</span>
+              <Separator className="flex-1" />
+              <span className="text-foreground-light text-sm">After</span>
+            </div>
+          </PreviewBlock>
+        </PreviewGrid>
+      </LibrarySection>
 
-            <PreviewBlock title="Badge variants">
-              <CalBadge variant="gray">Gray</CalBadge>
-              <CalBadge variant="green">Green</CalBadge>
-              <CalBadge variant="red">Red</CalBadge>
-              <CalBadge variant="blue">Blue</CalBadge>
-              <CalBadge variant="orange">Orange</CalBadge>
-              <CalBadge variant="purple">Purple</CalBadge>
-              <CalBadge variant="gray" size="sm">
-                Small
-              </CalBadge>
-              <CalBadge variant="green" size="lg">
-                Large
-              </CalBadge>
-            </PreviewBlock>
+      <LibrarySection
+        title="ui-patterns — Composite components"
+        description="Synced from packages/ui-patterns. Reusable patterns used across Studio surfaces."
+      >
+        <PreviewGrid>
+          <PreviewStack title="Admonition">
+            <Admonition
+              type="note"
+              title="OAuth Server is disabled"
+              description="Enable OAuth Server to make your project act as an identity provider for third-party applications."
+              actions={<Button variant="default">OAuth Server settings</Button>}
+            />
+            <Admonition
+              type="warning"
+              title="Deprecation notice"
+              description="This API will be removed in a future release."
+            />
+            <Admonition
+              type="destructive"
+              title="Action required"
+              description="Your project is over the included egress limit."
+            />
+          </PreviewStack>
 
-            <PreviewStack title="Segmented control">
-              <SegmentedControl
-                data={[
-                  { value: "day", label: "Day" },
-                  { value: "week", label: "Week" },
-                  { value: "month", label: "Month" },
-                ]}
-                value={segment}
-                onChange={setSegment}
-              />
-              <p className="text-subtle text-sm">Selected: {segment}</p>
-            </PreviewStack>
+          <PreviewStack title="Empty state">
+            <EmptyStatePresentational
+              icon={Database}
+              title="No backups yet"
+              description="Check again tomorrow or create a manual backup from project settings."
+            >
+              <Button variant="primary">Create backup</Button>
+            </EmptyStatePresentational>
+          </PreviewStack>
+        </PreviewGrid>
+      </LibrarySection>
 
-            <PreviewStack title="Empty screen">
-              <EmptyScreen
-                Icon="calendar"
-                headline="No events yet"
-                description="Create your first event type to start accepting bookings."
-                buttonText="Create event type"
-                buttonOnClick={() => undefined}
-                className="max-w-lg !p-7"
-              />
-            </PreviewStack>
-
-            <PreviewBlock title="Arrow buttons & divider">
-              <div className="group relative flex min-h-16 items-center pl-8">
-                <ArrowButton
-                  arrowDirection="up"
-                  onClick={() => undefined}
-                />
-                <ArrowButton
-                  arrowDirection="down"
-                  onClick={() => undefined}
-                />
-                <span className="text-subtle text-sm">Scroll controls</span>
-              </div>
-              <div className="w-full max-w-md">
-                <Divider />
-              </div>
-            </PreviewBlock>
-          </PreviewGrid>
-        </LibrarySection>
-
-        <LibrarySection
-          title="Design tokens"
-          description="Semantic colors from packages/config/theme/tokens.css — surfaced through Tailwind utilities like bg-default, text-emphasis, and border-subtle."
-        >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { label: "Default", className: "bg-default border-subtle border" },
-              { label: "Subtle", className: "bg-subtle border-subtle border" },
-              { label: "Emphasis", className: "bg-emphasis border-subtle border" },
-              { label: "Brand", className: "bg-brand-default text-brand border-brand-default border" },
-              { label: "Success", className: "bg-cal-success text-success border-subtle border" },
-              { label: "Attention", className: "bg-attention text-attention border-subtle border" },
-              { label: "Error", className: "bg-error text-error border-subtle border" },
-              { label: "Info", className: "bg-cal-info text-info border-subtle border" },
-            ].map((swatch) => (
-              <div
-                key={swatch.label}
-                {...SOURCE_SURFACE_ATTRS}
-                className={`rounded-lg p-4 text-sm font-medium ${swatch.className}`}
-              >
-                {swatch.label}
-              </div>
-            ))}
-          </div>
-        </LibrarySection>
-      </div>
-      </TooltipProvider>
-    </RadixTooltip.Provider>
+      <LibrarySection
+        title="Design tokens"
+        description="Semantic colors from packages/config and packages/ui/build (Supabase Light)."
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              label: "Studio",
+              className: "bg-studio text-foreground border-default border",
+            },
+            {
+              label: "Surface 100",
+              className: "bg-surface-100 text-foreground border-default border",
+            },
+            {
+              label: "Selection",
+              className: "bg-selection text-foreground border-default border",
+            },
+            {
+              label: "Brand",
+              className: "bg-brand text-brand-600 border-brand border",
+            },
+            {
+              label: "Warning",
+              className:
+                "bg-warning/10 text-warning border-border-warning border",
+            },
+            {
+              label: "Destructive",
+              className:
+                "bg-destructive/10 text-destructive border-border-destructive border",
+            },
+            {
+              label: "Foreground",
+              className: "bg-foreground text-background border-default border",
+            },
+            {
+              label: "Alternative",
+              className: "bg-alternative text-foreground border-default border",
+            },
+          ].map((swatch) => (
+            <div
+              key={swatch.label}
+              className={`rounded-lg p-4 text-sm font-medium ${swatch.className}`}
+            >
+              {swatch.label}
+            </div>
+          ))}
+        </div>
+      </LibrarySection>
+    </div>
   );
 }

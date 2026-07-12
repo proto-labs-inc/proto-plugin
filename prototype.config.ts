@@ -18,6 +18,9 @@ import { protoShapesComponentRegistry } from "./src/prototypes/proto-shapes/comp
 import AutomatWorkflowsPage from "./src/prototypes/automat-workflows-page";
 import { automatWorkflowsPageComponentRegistry } from "./src/prototypes/automat-workflows-page/component-ids";
 import AutomatWorkflowsPageStateMapPage from "./src/prototypes/automat-workflows-page/state-map-page";
+import TableEditorFilters from "./src/prototypes/table-editor-filters";
+import { tableEditorFiltersComponentRegistry } from "./src/prototypes/table-editor-filters/component-ids";
+import TableEditorFiltersStateMapPage from "./src/prototypes/table-editor-filters/state-map-page";
 
 export default definePrototypeConfig({
   prototypes: [
@@ -73,6 +76,14 @@ export default definePrototypeConfig({
       component: AutomatWorkflowsPage,
       componentRegistry: automatWorkflowsPageComponentRegistry,
       stateMapComponent: AutomatWorkflowsPageStateMapPage,
+    },
+    {
+      slug: "table-editor-filters",
+      title: "Table Editor Filters",
+      screenshot: "/prototypes/screenshots/table-editor-filters.png",
+      component: TableEditorFilters,
+      componentRegistry: tableEditorFiltersComponentRegistry,
+      stateMapComponent: TableEditorFiltersStateMapPage,
     },
   ],
 });

@@ -3,6 +3,7 @@
 import { PrototypeComponent } from "proto-plugin";
 import { usePrototypeComments } from "proto-plugin";
 import { usePrototypeReviewOptional } from "proto-plugin";
+import { useSyncPrototypePreviewStateToUrl } from "proto-plugin";
 import { useCallback, useEffect, useState } from "react";
 
 import { BookingsMainContent } from "./_components/bookings-main-content";
@@ -56,6 +57,8 @@ export default function BookingsPage() {
   const setPreviewState = useCallback((previewStateId: BookingsPagePreviewStateId) => {
     setLiveState(createLiveStateForPreview(previewStateId));
   }, []);
+
+  useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState);
 
   const setStatusTab = useCallback((statusTab: BookingsLiveState["statusTab"]) => {
     setLiveState((current) => {

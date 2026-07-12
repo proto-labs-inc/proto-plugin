@@ -9,6 +9,7 @@ import {
   usePrototypeComments,
   useRegisterPrototypeReferenceDocs,
   usePrototypeReviewOptional,
+  useSyncPrototypePreviewStateToUrl,
 } from "proto-plugin";
 import { cn } from "@coss/ui/lib/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -70,6 +71,8 @@ export default function AutomatWorkflowsPage() {
   const setPreviewState = useCallback((previewStateId: AutomatWorkflowsPagePreviewStateId) => {
     setLiveState(createLiveStateForPreview(previewStateId));
   }, []);
+
+  useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState);
 
   const setSearchQuery = useCallback((searchQuery: string) => {
     setLiveState((current) => withInferredPreviewState(current, { searchQuery }));

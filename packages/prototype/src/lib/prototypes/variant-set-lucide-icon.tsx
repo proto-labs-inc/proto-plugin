@@ -1,10 +1,13 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
+  AlertTriangle,
   ArrowDownUp,
   BadgeCheck,
   BarChart3,
   CalendarDays,
   Clock,
+  Columns3,
+  FileSpreadsheet,
   FilterX,
   Hexagon,
   Inbox,
@@ -32,6 +35,9 @@ type VariantSetIconRule = {
 const VARIANT_SET_ICON_RULES: VariantSetIconRule[] = [
   { test: /event-types-page-layout|event types page layout/i, icon: PanelsTopLeft },
   { test: /automat-analytics|analytics layout/i, icon: BarChart3 },
+  { test: /grid-error-state-layout|error state layout/i, icon: AlertTriangle },
+  { test: /grid-empty-state-layout|empty state layout/i, icon: FileSpreadsheet },
+  { test: /insert-column-layout|add column layout/i, icon: Columns3 },
   // proto-partner-page explorations
   { test: /creator-attribution|creator attribution/i, icon: BadgeCheck },
   { test: /submit-modal|submit modal/i, icon: Send },

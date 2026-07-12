@@ -55,10 +55,11 @@ export function buildCreatePreviewStatePrompt({
     "2. Extend the preview mode / live-state type if needed (e.g. in `use-mock-*-data.ts` or the page module).",
     "3. Wire mock data / fixtures so the new mode renders the correct UI.",
     "4. For nested options (e.g. billing plans), add a `variants` array on the registry entry — it becomes a picker submenu and map callouts automatically.",
-    "5. Sync URL params / liveState restore if the page persists preview mode in the query string.",
+    "5. Sync URL via `useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })` — every preview mode must appear as `?state=<registry-id>` on load and on every change. State map clicks must use `PREVIEW_STATE_PARAM`, not `shareState`.",
     "6. Open the prototype in dev — `PrototypeStateScreenshotCapture` saves a thumbnail under `public/prototypes/screenshots/<slug>/states/`.",
     "7. Run `pnpm verify:prototype-ids` if you add new UI components.",
     "8. Run `pnpm verify:prototype-preview-states` to confirm picker/map parity.",
+    "9. Reload a `?state=<new-id>` URL and confirm the new mode renders.",
     "",
     "Reference: `src/prototypes/example-feature/_components/list-preview-states.ts`.",
   );
