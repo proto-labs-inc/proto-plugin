@@ -32,4 +32,4 @@ The gallery/review **tool theme toggle** still only affects tool chrome — not 
 
 ## Prototype overlays & side shelves
 
-When prototypes include product shelves (`SidePanel`), sheets (`Sheet`), drawers, or modal overlays, portal them **inside `#prototype-viewport`** with `usePrototypeProductOverlayPortal()` so they do not cover the review sidebar or proto bottom bar. See **Prototype overlays & side shelves** in `packages/prototype/AGENTS.md`.
+When prototypes include product shelves (`SidePanel`), sheets (`Sheet`), drawers, or modal overlays, portal them **inside `#prototype-viewport`** with `usePrototypeProductOverlayPortal()` so they do not cover the review sidebar or proto bottom bar. For raw `Sheet`/`Dialog`, also pass `modal={false}` when using `portalContainer` — otherwise Radix locks `pointer-events` on `body` and blocks plugin chrome. Viewport-scoped overlays must **not dismiss** when reviewers click plugin chrome (footer, sidebar, toolbars); `SidePanel`/`SheetContent`/tool `Dialog` handle this automatically when `portalContainer` is set. See **Prototype overlays & side shelves** in `packages/prototype/AGENTS.md`.

@@ -233,14 +233,32 @@ function ReviewToolbarTextTabTrigger({
   active,
   open,
   hoverTriggerProps,
+  badgeCount,
 }: {
   label: string;
   active: boolean;
   open: boolean;
   hoverTriggerProps?: ToolbarTooltipAnchorProps;
+  badgeCount?: number;
 }) {
+  const showBadge = badgeCount != null && badgeCount > 0;
+  const badgeLabel =
+    showBadge && badgeCount != null
+      ? badgeCount > 99
+        ? "99+"
+        : String(badgeCount)
+      : null;
+
   return (
-    <div {...hoverTriggerProps}>
+    <div
+      {...hoverTriggerProps}
+      className={styles.footerTabHoverArea}
+    >
+      {badgeLabel ? (
+        <span className={styles.footerTabBadge} aria-hidden>
+          {badgeLabel}
+        </span>
+      ) : null}
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -250,7 +268,9 @@ function ReviewToolbarTextTabTrigger({
             styles.toolbarMenuTrigger,
           )}
           data-menu-open={open ? "true" : undefined}
-          aria-label={label}
+          aria-label={
+            showBadge ? `${label}, ${badgeCount} unresolved` : label
+          }
           aria-expanded={open}
           {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
         >
@@ -813,6 +833,7 @@ export function PrototypeReviewChrome({
               active={commentsTabActive}
               open={commentsMenuOpen}
               hoverTriggerProps={commentsHover.triggerProps}
+              badgeCount={commentCount}
             />
             <DropdownMenuContent
               {...TOOLBAR_MENU_CONTENT_PROPS}

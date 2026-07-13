@@ -12,17 +12,20 @@ Full spec: `packages/prototype/AGENTS.md` → **Prototype overlays & side shelve
 
 1. `const portalContainer = usePrototypeProductOverlayPortal()` from `prototype`.
 2. Pass `portalContainer` to `SidePanel`, `SheetContent`, or custom `Dialog.Portal`.
-3. Mount shelves inside the page's main content column (`relative overflow-hidden` wrapper) — not outside `[data-prototype-screenshot]`.
-4. Register each open shelf as a preview state in `*-preview-states.ts`.
+3. For `Sheet` / `Dialog.Root` (not `SidePanel`), also pass `modal={false}` — Radix default modal mode sets `pointer-events: none` on `body` and blocks the review sidebar + proto footer even when portaled to `#prototype-viewport`. `SidePanel` does this automatically when `portalContainer` is set.
+4. Viewport-scoped `SidePanel` / `SheetContent` ignore outside-dismiss on proto-plugin chrome clicks (footer, sidebar, toolbars) — shelves must stay open while reviewers use plugin UI.
+5. Mount shelves inside the page's main content column (`relative overflow-hidden` wrapper) — not outside `[data-prototype-screenshot]`.
+6. Register each open shelf as a preview state in `*-preview-states.ts`.
 
 ## Do not
 
 - Use default Radix portals (body) for product overlays — they cover review sidebar + proto footer.
+- Use viewport-scoped dialogs with default `modal={true}` — blocks all plugin chrome clicks.
 - Use `h-screen` / `100vh` for scoped panels — use `h-full` inside the viewport frame.
 - Hoist shelf components to the gallery shell or prototype package layout.
 
 ## Before finishing
 
-Open a shelf preview state and confirm review sidebar and black review footer stay visible.
+Open a shelf preview state and confirm review sidebar and proto footer stay visible, clickable, and do not dismiss the shelf.
 
 Reference: `src/prototypes/table-editor-filters/_components/table-editor-page.tsx`, `insert-row-panel.tsx`, `insert-column-panel.tsx`.

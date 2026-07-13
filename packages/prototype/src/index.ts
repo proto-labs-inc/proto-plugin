@@ -276,9 +276,7 @@ export {
   ControlsPanelOptionSeparator,
 } from "./components/platform-ui/controls-panel-options";
 
-export {
-  ControlsPanelSelect,
-} from "./components/platform-ui/controls-panel-select";
+export { ControlsPanelSelect } from "./components/platform-ui/controls-panel-select";
 export type {
   ControlsPanelSelectEntry,
   ControlsPanelSelectOption,

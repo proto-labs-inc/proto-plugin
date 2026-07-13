@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createLiveStateForPreview,
   inferPreviewStateId,
+  normalizeTableEditorFiltersLiveState,
   withInferredPreviewState,
 } from "./table-editor-filters-preview-states";
 
@@ -35,12 +36,27 @@ describe("table-editor-filters live state", () => {
       dataMode: "populated",
       sidePanel: "insert-column",
       expandedRowId: null,
+      filterInput: "",
+      activeFilter: null,
     });
     expect(createLiveStateForPreview("edit-row")).toEqual({
       previewStateId: "edit-row",
       dataMode: "populated",
       sidePanel: "edit-row",
       expandedRowId: 1,
+      filterInput: "",
+      activeFilter: null,
     });
+  });
+
+  it("normalizes restored live state with missing filter fields", () => {
+    expect(
+      normalizeTableEditorFiltersLiveState({
+        previewStateId: "populated",
+        dataMode: "populated",
+        sidePanel: "none",
+        expandedRowId: null,
+      }),
+    ).toEqual(createLiveStateForPreview("populated"));
   });
 });

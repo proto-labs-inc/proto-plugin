@@ -21,16 +21,26 @@ export function buildPrSplitPlanPrompt({
     "",
     "## Phase 1 — Audit what changed",
     "",
-    "1. Read the prototype at `" + prototypePath + "` — especially `index.tsx`, any `*-preview-states.ts`, all `*-design-exploration-config.tsx` files, mock data, and `component-ids.ts`.",
+    "1. Read the prototype at `" +
+      prototypePath +
+      "` — especially `index.tsx`, any `*-preview-states.ts`, all `*-design-exploration-config.tsx` files, mock data, and `component-ids.ts`.",
     "2. For each design exploration, compare the **baseline** option (marked **Original** in the brief) to the **default variant** in code (`DEFAULT_*_VARIANT` constants). Baselines = production / pre-exploration UI; defaults = chosen shipping direction.",
-    "3. Compare against production in the source app (`SOURCE_PATH` / `source/` symlink, repo `" + sourceRepo + "`). Find the real page under `" + sourceWorkPath + "` and list layout, behavior, and data-model deltas.",
-    "4. Run `git log` and `git diff` on `" + prototypePath + "` to capture the full change history (including uncommitted work).",
+    "3. Compare against production in the source app (`SOURCE_PATH` / `source/` symlink, repo `" +
+      sourceRepo +
+      "`). Find the real page under `" +
+      sourceWorkPath +
+      "` and list layout, behavior, and data-model deltas.",
+    "4. Run `git log` and `git diff` on `" +
+      prototypePath +
+      "` to capture the full change history (including uncommitted work).",
     "5. Read preview states in `*-preview-states.ts` — each distinct reviewer mode may map to a PR slice.",
     "6. Note explorations that should **stay in the design brief only** (alternate layout or entry-point variants not chosen for shipping).",
     "",
     "## Phase 2 — Plan the PR breakdown",
     "",
-    "Propose **3–7 small, merge-ordered PRs** for `" + sourceRepo + "`. For each PR, define:",
+    "Propose **3–7 small, merge-ordered PRs** for `" +
+      sourceRepo +
+      "`. For each PR, define:",
     "",
     "- `order`, `title`, `description` (2–3 sentences of source-repo work)",
     "- `size` (`Small` | `Medium` | `Large`)",
@@ -51,13 +61,23 @@ export function buildPrSplitPlanPrompt({
     "",
     "Follow `packages/prototype/AGENTS.md` → **PR split specs**:",
     "",
-    "1. Create `" + configPath + "` with `PR_SPLIT_CONFIG` and `PR_SPLIT_ENTRIES`",
-    "   - `slug: \"" + slug + "\"`",
-    "   - `sourceRepo: \"" + sourceRepo + "\"`, `sourceWorkPath: \"" + sourceWorkPath + "\"`",
+    "1. Create `" +
+      configPath +
+      "` with `PR_SPLIT_CONFIG` and `PR_SPLIT_ENTRIES`",
+    '   - `slug: "' + slug + '"`',
+    '   - `sourceRepo: "' +
+      sourceRepo +
+      '"`, `sourceWorkPath: "' +
+      sourceWorkPath +
+      '"`',
     "   - `writeEntryToSearchParams` restores each entry's `liveState`",
     "   - `scopeNote` guardrail: do not ship unchosen design-brief variants",
-    "2. Create `" + wireframesPath + "` — full-page schematic wireframes (see **Wireframe rules** below)",
-    "3. Wire `" + prototypePath + "index.tsx` — parse/sync `?prSplit=`, call `setSpecContent(<PrototypeSpecPanelContent ...>)`, `handlePrNavigate` with `focusShareTarget`",
+    "2. Create `" +
+      wireframesPath +
+      "` — full-page schematic wireframes (see **Wireframe rules** below)",
+    "3. Wire `" +
+      prototypePath +
+      "index.tsx` — parse/sync `?prSplit=`, call `setSpecContent(<PrototypeSpecPanelContent ...>)`, `handlePrNavigate` with `focusShareTarget`",
     "4. Update `component-ids.ts` — add `spec-panel-content`, wireframe ids, etc.",
     "5. Verify each PR card restores the correct prototype state and highlights the right component",
     "",
@@ -76,6 +96,8 @@ export function buildPrSplitPlanPrompt({
   ].join("\n");
 }
 
-export function buildPrSplitPlanCopyText(options: PrSplitPlanPromptOptions): string {
+export function buildPrSplitPlanCopyText(
+  options: PrSplitPlanPromptOptions,
+): string {
   return buildPrSplitPlanPrompt(options);
 }

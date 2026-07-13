@@ -44,7 +44,7 @@ function useRouteLockedToolTheme(): PrototypeToolTheme | undefined {
 const PrototypeToolThemeContext =
   createContext<PrototypeToolThemeContextValue | null>(null);
 
-const DEFAULT_THEME: PrototypeToolTheme = "light";
+const DEFAULT_THEME: PrototypeToolTheme = "dark";
 
 function normalizeTheme(value: string): PrototypeToolTheme {
   return value === "light" ? "light" : "dark";
@@ -131,7 +131,7 @@ export function usePrototypeToolTheme(): PrototypeToolThemeContextValue {
   if (!context) {
     return {
       theme: DEFAULT_THEME,
-      useLightTheme: false,
+      useLightTheme: DEFAULT_THEME === "light",
       commentTheme: DEFAULT_THEME,
       isThemeLocked: false,
       setTheme: () => {},

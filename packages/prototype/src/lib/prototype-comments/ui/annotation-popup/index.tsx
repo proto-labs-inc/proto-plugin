@@ -78,7 +78,7 @@ export const AnnotationPopupCSS = forwardRef<AnnotationPopupCSSHandle, Annotatio
       element,
       timestamp,
       selectedText,
-      placeholder = "What should change?",
+      placeholder = "Add a comment...",
       initialValue = "",
       submitLabel = "Add",
       onSubmit,

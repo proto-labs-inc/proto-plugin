@@ -4,7 +4,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import * as React from "react";
 
-import { isCommentCaptureBlockedTarget } from "../../lib/prototype-comments/core/comment-capture-blocked";
+import { preventDismissOnPrototypePluginChrome } from "../../lib/prototype-comments/core/comment-capture-blocked";
 import {
   getPrototypeDialogPortalContainer,
   getPrototypeToolDialogPortalContainer,
@@ -17,19 +17,6 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 const DialogPortal = DialogPrimitive.Portal;
-
-function isPrototypeToolOutsideEventTarget(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && isCommentCaptureBlockedTarget(target);
-}
-
-function ignorePrototypeToolOutsideEvent(event: {
-  preventDefault: () => void;
-  target: EventTarget | null;
-}): void {
-  if (isPrototypeToolOutsideEventTarget(event.target)) {
-    event.preventDefault();
-  }
-}
 
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
@@ -73,15 +60,15 @@ const DialogContent = React.forwardRef<
         className,
       )}
       onPointerDownOutside={(event) => {
-        ignorePrototypeToolOutsideEvent(event);
+        preventDismissOnPrototypePluginChrome(event);
         onPointerDownOutside?.(event);
       }}
       onInteractOutside={(event) => {
-        ignorePrototypeToolOutsideEvent(event);
+        preventDismissOnPrototypePluginChrome(event);
         onInteractOutside?.(event);
       }}
       onFocusOutside={(event) => {
-        ignorePrototypeToolOutsideEvent(event);
+        preventDismissOnPrototypePluginChrome(event);
         onFocusOutside?.(event);
       }}
       {...props}

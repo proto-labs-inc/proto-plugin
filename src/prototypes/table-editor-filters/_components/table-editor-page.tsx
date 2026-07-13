@@ -21,7 +21,8 @@ type TableEditorPageProps = {
   onOpenInsertRow: () => void;
   onOpenInsertColumn: () => void;
   onOpenEditRow: (rowId: number) => void;
-  onApplyFilter: () => void;
+  onApplyFilter: (filterText: string) => void;
+  onFilterInputChange: (filterInput: string) => void;
   onRemoveFilters: () => void;
   onTruncateTable: () => void;
   onImportData: () => void;
@@ -38,6 +39,7 @@ export function TableEditorPage({
   onOpenInsertColumn,
   onOpenEditRow,
   onApplyFilter,
+  onFilterInputChange,
   onRemoveFilters,
   onTruncateTable,
   onImportData,
@@ -72,12 +74,15 @@ export function TableEditorPage({
               <div className="h-full flex-1 min-w-0 overflow-hidden">
                 <TableEditorGrid
                   dataMode={liveState.dataMode}
+                  filterInput={liveState.filterInput}
+                  activeFilter={liveState.activeFilter}
                   emptyStateVariant={emptyStateVariant}
                   errorStateVariant={errorStateVariant}
                   onOpenInsertRow={onOpenInsertRow}
                   onOpenInsertColumn={onOpenInsertColumn}
                   onOpenEditRow={onOpenEditRow}
                   onApplyFilter={onApplyFilter}
+                  onFilterInputChange={onFilterInputChange}
                   onRemoveFilters={onRemoveFilters}
                   onTruncateTable={onTruncateTable}
                   onImportData={onImportData}

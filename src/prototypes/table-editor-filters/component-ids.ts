@@ -35,6 +35,8 @@ export const TABLE_EDITOR_FILTERS_COMPONENT_IDS = [
   "insert-column-explorer",
   "insert-column-variant-tabs",
   "insert-column-mobbin-inspiration-gallery",
+  "spec-panel-content",
+  "pr-split-wireframes.pr-split-wireframe",
 ] as const;
 
 export const TABLE_EDITOR_FILTERS_DYNAMIC_TARGET_PREFIXES = [

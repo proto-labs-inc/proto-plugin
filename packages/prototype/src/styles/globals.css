@@ -65,11 +65,9 @@
   --prototype-review-header-height: 3.25rem;
   --tool-review-card-radius: 6px;
   --tool-review-card-shadow:
-    0 1px 2px rgb(0 0 0 / 0.18),
-    0 0 0 1px var(--tool-chrome-border);
+    0 1px 2px rgb(0 0 0 / 0.18), 0 0 0 1px var(--tool-chrome-border);
   --tool-review-card-shadow-hover:
-    0 1px 3px rgb(0 0 0 / 0.22),
-    0 0 0 1px var(--tool-chrome-border-strong);
+    0 1px 3px rgb(0 0 0 / 0.22), 0 0 0 1px var(--tool-chrome-border-strong);
   --radius: 0.625rem;
 
   font-family: var(--tool-font-body);
@@ -255,7 +253,8 @@
   background-color: var(--tool-chrome-input-surface);
 }
 
-[data-prototype-review-sidebar] :is(
+[data-prototype-review-sidebar]
+  :is(
     button:not(:disabled),
     [role="button"]:not([aria-disabled="true"]),
     a[href],
@@ -263,7 +262,8 @@
     label:has([role="switch"]),
     label:has(input[type="checkbox"])
   ),
-[data-comments-sidebar] :is(
+[data-comments-sidebar]
+  :is(
     button:not(:disabled),
     [role="button"]:not([aria-disabled="true"]),
     a[href],
@@ -271,7 +271,8 @@
     label:has([role="switch"]),
     label:has(input[type="checkbox"])
   ),
-[data-platform-sidebar] :is(
+[data-platform-sidebar]
+  :is(
     button:not(:disabled),
     [role="button"]:not([aria-disabled="true"]),
     a[href],
@@ -279,7 +280,8 @@
     label:has([role="switch"]),
     label:has(input[type="checkbox"])
   ),
-#prototype-comments-sidebar-root :is(
+#prototype-comments-sidebar-root
+  :is(
     button:not(:disabled),
     [role="button"]:not([aria-disabled="true"]),
     a[href],
@@ -388,7 +390,8 @@
   color: rgba(0, 0, 0, 0.92);
 }
 
-[data-prototype-root][data-prototype-comment-theme="light"] [data-prototype-review-sidebar] {
+[data-prototype-root][data-prototype-comment-theme="light"]
+  [data-prototype-review-sidebar] {
   --tool-chrome-icon: rgba(0, 0, 0, 0.45);
   --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
   --tool-chrome-text: var(--tool-chrome-icon-hover);
@@ -603,12 +606,18 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 }
 
 /* Empty-state shells offset for the page header row — reset inside scaled previews. */
-[data-prototype-root] .tool-variant-card [data-prototype-screenshot] .empty-state-shell {
+[data-prototype-root]
+  .tool-variant-card
+  [data-prototype-screenshot]
+  .empty-state-shell {
   transform: none !important;
 }
 
 [data-prototype-root] .tool-variant-card [data-prototype-screenshot] :focus,
-[data-prototype-root] .tool-variant-card [data-prototype-screenshot] :focus-visible {
+[data-prototype-root]
+  .tool-variant-card
+  [data-prototype-screenshot]
+  :focus-visible {
   outline: none;
 }
 
@@ -692,7 +701,8 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --color-text-secondary: var(--tool-chrome-text-muted);
 }
 
-[data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {
+[data-prototype-root][data-prototype-comment-theme="light"]
+  .tool-dialog-surface {
   color-scheme: light;
   box-shadow:
     var(--shadow-lg),
@@ -710,7 +720,11 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 [data-prototype-root] [role="tab"][data-state="active"] {
   color: var(--tool-chrome-text-heading);
-  background: color-mix(in srgb, var(--tool-chrome-blue) 12%, var(--tool-chrome-surface-muted));
+  background: color-mix(
+    in srgb,
+    var(--tool-chrome-blue) 12%,
+    var(--tool-chrome-surface-muted)
+  );
   box-shadow:
     var(--shadow-xs),
     inset 0 0 0 1px color-mix(in srgb, var(--tool-chrome-blue) 35%, transparent);
@@ -739,19 +753,24 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 }
 
 /* Full-page / overlay maps get a canvas bed; floating mini map stays transparent. */
-[data-prototype-root] [data-prototype-state-canvas]:not([data-prototype-state-canvas-layout="mini"]) {
+[data-prototype-root]
+  [data-prototype-state-canvas]:not(
+    [data-prototype-state-canvas-layout="mini"]
+  ) {
   background-color: var(--prototype-state-map-canvas-bg);
 }
 
 /* Mini map: compact dark nodes over the live preview; edges stay a step lighter. */
-[data-prototype-root] [data-prototype-state-canvas][data-prototype-state-canvas-layout="mini"] {
+[data-prototype-root]
+  [data-prototype-state-canvas][data-prototype-state-canvas-layout="mini"] {
   --prototype-state-map-node-surface: #171717;
   --prototype-state-map-node-preview-bg: #171717;
   --prototype-state-map-node-footer-text: rgba(255, 255, 255, 0.92);
   --prototype-mini-edge-color: #5a5a5a;
 }
 
-[data-prototype-root][data-prototype-comment-theme="dark"] [data-prototype-state-canvas] {
+[data-prototype-root][data-prototype-comment-theme="dark"]
+  [data-prototype-state-canvas] {
   --prototype-state-map-canvas-bg: var(--tool-chrome-ground);
   --prototype-state-map-node-surface: var(--tool-chrome-surface);
   --prototype-state-map-node-preview-bg: var(--tool-chrome-surface-muted);
@@ -769,9 +788,11 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 [data-prototype-source-surface] {
   color-scheme: light;
 
-  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+  --font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
-  --font-display: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+  --font-display:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
     "Segoe UI Symbol", "Noto Color Emoji";
 
   --bg-bedrock: var(--color-gray-100);

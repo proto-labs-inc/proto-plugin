@@ -6,6 +6,7 @@ import React from 'react'
 
 import { Button } from '../../components/Button/Button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/shadcn/ui/tooltip'
+import { preventDismissOnPrototypePluginChrome } from '../../lib/prevent-prototype-plugin-chrome-dismiss'
 import { cn } from '../../lib/utils'
 
 export type SidePanelProps = RadixProps & CustomProps
@@ -20,6 +21,7 @@ interface RadixProps
       | 'onEscapeKeyDown'
       | 'onPointerDownOutside'
       | 'onInteractOutside'
+      | 'onFocusOutside'
     > {}
 
 interface CustomProps {
@@ -143,33 +145,48 @@ const SidePanel = ({
     onEscapeKeyDown,
     onPointerDownOutside,
     onInteractOutside,
+    onFocusOutside,
   } = props
 
+  const handleViewportScopedOutsideEvent = <E extends { preventDefault: () => void; target: EventTarget | null }>(
+    event: E,
+    userHandler?: (event: E) => void,
+  ) => {
+    const isToast = (event.target as Element | null)?.closest('#toast')
+    if (isToast) event.preventDefault()
+    if (isViewportScoped) preventDismissOnPrototypePluginChrome(event)
+    userHandler?.(event)
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange} defaultOpen={defaultOpen}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={handleOpenChange}
+      defaultOpen={defaultOpen}
+      // Viewport-scoped shelves are product UI inside #prototype-viewport — keep review
+      // sidebar and proto footer clickable (modal=true sets pointer-events:none on body).
+      modal={!isViewportScoped}
+    >
       {triggerElement && <Dialog.Trigger asChild>{triggerElement}</Dialog.Trigger>}
 
       <Dialog.Portal container={portalContainer ?? undefined}>
         <Dialog.Overlay
           className={cn(
-            'z-50 fixed inset-0 bg-alternative opacity-75 data-closed:animate-fade-out-overlay-bg data-open:animate-fade-in-overlay-bg',
-            isViewportScoped ? 'h-full w-full' : 'h-full w-full left-0 top-0',
+            'z-50 inset-0 bg-alternative opacity-75 data-closed:animate-fade-out-overlay-bg data-open:animate-fade-in-overlay-bg',
+            isViewportScoped ? 'absolute h-full w-full' : 'fixed h-full w-full left-0 top-0',
           )}
         />
         <Dialog.Content
           className={cn(
             sidePanelContentVariants({ align, size, className }),
-            isViewportScoped && 'h-full lg:h-full !w-full',
+            isViewportScoped && 'absolute h-full lg:h-full !w-full',
           )}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
           onEscapeKeyDown={onEscapeKeyDown}
-          onPointerDownOutside={onPointerDownOutside}
-          onInteractOutside={(event) => {
-            const isToast = (event.target as Element)?.closest('#toast')
-            if (isToast) event.preventDefault()
-            if (onInteractOutside) onInteractOutside(event)
-          }}
+          onPointerDownOutside={(event) => handleViewportScopedOutsideEvent(event, onPointerDownOutside)}
+          onInteractOutside={(event) => handleViewportScopedOutsideEvent(event, onInteractOutside)}
+          onFocusOutside={(event) => handleViewportScopedOutsideEvent(event, onFocusOutside)}
           {...props}
         >
           {header && (

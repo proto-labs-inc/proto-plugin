@@ -19,10 +19,7 @@ import type { PrSplitEntry } from "../../lib/pr-split/pr-split-types";
 import { usePrVercelPreviews } from "../../lib/pr-split/use-pr-vercel-previews";
 import type { VercelPreviewFromPr } from "../../lib/vercel-preview/parse-vercel-github-comment";
 
-function reviewSidebarCardBorder(
-  selected: boolean,
-  hovered: boolean,
-): string {
+function reviewSidebarCardBorder(selected: boolean, hovered: boolean): string {
   if (selected) {
     return PR_TARGET_HIGHLIGHT_BORDER;
   }
@@ -48,10 +45,7 @@ function CopyPrPrompt<TWireframeId extends string, TLiveState>({
     e.stopPropagation();
     const origin =
       typeof window !== "undefined" ? window.location.origin : undefined;
-    const prompt = buildAgentPrompt(
-      entry,
-      origin ?? "http://localhost:3003",
-    );
+    const prompt = buildAgentPrompt(entry, origin ?? "http://localhost:3003");
     navigator.clipboard.writeText(prompt).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -115,7 +109,10 @@ function CopyLinearLink({ linearUrl }: { linearUrl: string }) {
       {copied ? (
         <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
       ) : (
-        <Copy className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]" aria-hidden />
+        <Copy
+          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
+          aria-hidden
+        />
       )}
     </button>
   );
@@ -147,7 +144,10 @@ function CopyBranch({ branch }: { branch: string }) {
       {copied ? (
         <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
       ) : (
-        <Copy className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]" aria-hidden />
+        <Copy
+          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
+          aria-hidden
+        />
       )}
     </button>
   );
@@ -179,7 +179,10 @@ function CopyPrLink({ prUrl }: { prUrl: string }) {
       {copied ? (
         <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
       ) : (
-        <Copy className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]" aria-hidden />
+        <Copy
+          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
+          aria-hidden
+        />
       )}
     </button>
   );
@@ -237,7 +240,10 @@ function CopyPreviewLink<TWireframeId extends string, TLiveState>({
       {copied ? (
         <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
       ) : (
-        <Copy className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)] group-disabled:opacity-60" aria-hidden />
+        <Copy
+          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)] group-disabled:opacity-60"
+          aria-hidden
+        />
       )}
     </button>
   );
@@ -399,7 +405,9 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
               >
                 <ChevronDown
                   className="size-4 transition-transform duration-200 ease"
-                  style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                  style={{
+                    transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
                   aria-hidden
                 />
               </span>
@@ -490,9 +498,9 @@ export function PrototypeSpecPanelContent<
 }: PrototypeSpecPanelContentProps<TWireframeId, TLiveState>) {
   const prUrlsWithLinks = useMemo(
     () =>
-      entries.map((entry) => entry.prUrl).filter((url): url is string =>
-        Boolean(url),
-      ),
+      entries
+        .map((entry) => entry.prUrl)
+        .filter((url): url is string => Boolean(url)),
     [entries],
   );
 

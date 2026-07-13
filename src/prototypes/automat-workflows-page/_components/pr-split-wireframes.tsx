@@ -79,7 +79,10 @@ function AutomatPageShell({
         >
           <WireBlock className="h-2 w-full rounded-sm" />
           <div className="mt-0.5 flex flex-col gap-0.5">
-            <WireBlock className="h-2 w-full rounded-sm opacity-90" highlight={compactSidebar} />
+            <WireBlock
+              className="h-2 w-full rounded-sm opacity-90"
+              highlight={compactSidebar}
+            />
             <WireBlock className="h-2 w-full rounded-sm opacity-70" />
             <WireBlock className="h-2 w-full rounded-sm opacity-70" />
             <WireBlock className="h-2 w-full rounded-sm opacity-70" />
@@ -104,7 +107,9 @@ function AutomatPageShell({
           >
             <WireBlock className="h-2 w-[4%] min-w-[0.5rem] shrink-0 rounded-sm opacity-70" />
             <WireBlock className="h-2 w-[14%] min-w-[2rem] rounded-sm opacity-80" />
-            <span className="text-[6px] text-muted-foreground opacity-50">/</span>
+            <span className="text-[6px] text-muted-foreground opacity-50">
+              /
+            </span>
             <WireBlock
               className="h-2 w-[18%] min-w-[2.5rem] rounded-sm"
               highlight={highlightHeader}
@@ -134,9 +139,18 @@ function AutomatPageShell({
                 }
               >
                 <div className="grid grid-cols-3 gap-1">
-                  <WireBlock className="h-2.5 rounded-sm" highlight={highlightAnalytics} />
-                  <WireBlock className="h-2.5 rounded-sm" highlight={highlightAnalytics} />
-                  <WireBlock className="h-2.5 rounded-sm" highlight={highlightAnalytics} />
+                  <WireBlock
+                    className="h-2.5 rounded-sm"
+                    highlight={highlightAnalytics}
+                  />
+                  <WireBlock
+                    className="h-2.5 rounded-sm"
+                    highlight={highlightAnalytics}
+                  />
+                  <WireBlock
+                    className="h-2.5 rounded-sm"
+                    highlight={highlightAnalytics}
+                  />
                 </div>
                 <WireBlock
                   className="h-5 rounded-sm"
@@ -165,15 +179,25 @@ function AutomatPageShell({
             >
               {tableFilters ? (
                 <div className="mb-1 flex shrink-0 gap-1">
-                  <WireBlock className="h-2.5 flex-1 rounded-sm" highlight={highlightTable} />
-                  <WireBlock className="h-2.5 w-[22%] min-w-[2rem] rounded-sm" highlight={highlightTable} />
+                  <WireBlock
+                    className="h-2.5 flex-1 rounded-sm"
+                    highlight={highlightTable}
+                  />
+                  <WireBlock
+                    className="h-2.5 w-[22%] min-w-[2rem] rounded-sm"
+                    highlight={highlightTable}
+                  />
                 </div>
               ) : (
                 <WireBlock className="mb-1 h-2.5 w-full shrink-0 rounded-sm opacity-50" />
               )}
 
               {tableEmpty ? (
-                <WireBlock className="min-h-0 flex-1 rounded-sm" highlight dashed />
+                <WireBlock
+                  className="min-h-0 flex-1 rounded-sm"
+                  highlight
+                  dashed
+                />
               ) : (
                 <div className="flex min-h-0 flex-1 flex-col gap-0.5">
                   {[0, 1, 2].map((index) => (
@@ -202,31 +226,40 @@ function AutomatPageShell({
   );
 }
 
-const WIREFRAME_RENDERERS: Record<AutomatPrSplitWireframeId, () => ReactNode> = {
-  "project-scoped-table": () => (
-    <AutomatPageShell highlightTable analyticsLayout="kpi-strip" />
-  ),
-  "project-switcher": () => (
-    <AutomatPageShell highlightHeader analyticsLayout="kpi-strip" />
-  ),
-  "analytics-kpi-strip": () => (
-    <AutomatPageShell highlightAnalytics analyticsLayout="kpi-strip" />
-  ),
-  "table-filters": () => (
-    <AutomatPageShell highlightTable analyticsLayout="kpi-strip" tableFilters />
-  ),
-  "empty-search": () => (
-    <AutomatPageShell
-      highlightTable
-      analyticsLayout="kpi-strip"
-      tableFilters
-      tableEmpty
-    />
-  ),
-  "responsive-shell": () => (
-    <AutomatPageShell highlightShell analyticsLayout="kpi-strip" compactSidebar />
-  ),
-};
+const WIREFRAME_RENDERERS: Record<AutomatPrSplitWireframeId, () => ReactNode> =
+  {
+    "project-scoped-table": () => (
+      <AutomatPageShell highlightTable analyticsLayout="kpi-strip" />
+    ),
+    "project-switcher": () => (
+      <AutomatPageShell highlightHeader analyticsLayout="kpi-strip" />
+    ),
+    "analytics-kpi-strip": () => (
+      <AutomatPageShell highlightAnalytics analyticsLayout="kpi-strip" />
+    ),
+    "table-filters": () => (
+      <AutomatPageShell
+        highlightTable
+        analyticsLayout="kpi-strip"
+        tableFilters
+      />
+    ),
+    "empty-search": () => (
+      <AutomatPageShell
+        highlightTable
+        analyticsLayout="kpi-strip"
+        tableFilters
+        tableEmpty
+      />
+    ),
+    "responsive-shell": () => (
+      <AutomatPageShell
+        highlightShell
+        analyticsLayout="kpi-strip"
+        compactSidebar
+      />
+    ),
+  };
 
 type PrSplitWireframeProps = {
   id: AutomatPrSplitWireframeId;
@@ -241,7 +274,10 @@ export function PrSplitWireframe({ id, embedded }: PrSplitWireframeProps) {
   }
 
   return (
-    <PrototypeComponent id="pr-split-wireframes.pr-split-wireframe" className="w-full">
+    <PrototypeComponent
+      id="pr-split-wireframes.pr-split-wireframe"
+      className="w-full"
+    >
       {content}
     </PrototypeComponent>
   );

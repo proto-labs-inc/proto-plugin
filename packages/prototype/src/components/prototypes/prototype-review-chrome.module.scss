@@ -121,6 +121,37 @@ $morph-duration: 0.25s;
   }
 }
 
+.footerTabHoverArea {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.footerTabBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(35%, -35%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
 .footerTabActive {
   background: #2a2a2a;
   color: #fff;
@@ -683,6 +714,14 @@ $morph-duration: 0.25s;
         color: var(--tool-chrome-text-heading);
       }
     }
+  }
+
+  .footerTabBadge {
+    background-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.72);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   .morphToolbar {

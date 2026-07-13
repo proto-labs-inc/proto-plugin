@@ -16,9 +16,17 @@ export type TableEditorDataMode = "loading" | "error" | "populated" | "filtered-
 
 export type TableEditorSidePanel = "none" | "insert-row" | "insert-column" | "edit-row";
 
+export type TableEditorActiveFilter = {
+  column: string;
+  operator: string;
+  value: string;
+};
+
 export type TableEditorFiltersLiveState = {
   previewStateId: TableEditorFiltersPreviewStateId;
   dataMode: TableEditorDataMode;
   sidePanel: TableEditorSidePanel;
   expandedRowId: number | null;
+  filterInput: string;
+  activeFilter: TableEditorActiveFilter | null;
 };

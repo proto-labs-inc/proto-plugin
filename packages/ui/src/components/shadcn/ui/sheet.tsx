@@ -6,6 +6,7 @@ import { X } from 'lucide-react'
 import * as React from 'react'
 
 import { cn } from '../../../lib/utils/cn'
+import { preventDismissOnPrototypePluginChrome } from '../../../lib/prevent-prototype-plugin-chrome-dismiss'
 
 const Sheet = SheetPrimitive.Root
 
@@ -159,7 +160,7 @@ export interface DialogContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   DialogContentProps
->(({ side, size, className, children, showClose = true, hasOverlay = true, portalContainer, ...props }, ref) => (
+>(({ side, size, className, children, showClose = true, hasOverlay = true, portalContainer, onPointerDownOutside, onInteractOutside, onFocusOutside, ...props }, ref) => (
   <SheetPortal side={side} container={portalContainer ?? undefined}>
     {hasOverlay && <SheetOverlay />}
     <SheetPrimitive.Content
@@ -169,6 +170,18 @@ const SheetContent = React.forwardRef<
         portalContainer && size === 'lg' && 'w-1/2',
         className,
       )}
+      onPointerDownOutside={(event) => {
+        if (portalContainer) preventDismissOnPrototypePluginChrome(event)
+        onPointerDownOutside?.(event)
+      }}
+      onInteractOutside={(event) => {
+        if (portalContainer) preventDismissOnPrototypePluginChrome(event)
+        onInteractOutside?.(event)
+      }}
+      onFocusOutside={(event) => {
+        if (portalContainer) preventDismissOnPrototypePluginChrome(event)
+        onFocusOutside?.(event)
+      }}
       {...props}
     >
       {children}

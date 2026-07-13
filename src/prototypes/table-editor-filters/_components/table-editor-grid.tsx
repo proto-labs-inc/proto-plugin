@@ -29,12 +29,15 @@ import {
 } from "ui";
 
 import {
-  MOCK_ACTIVE_FILTER,
   MOCK_COLUMNS,
   MOCK_EMPLOYEES,
   type EmployeeRow,
 } from "./table-editor-filters-mock-data";
-import type { TableEditorDataMode } from "./table-editor-filters-types";
+import type {
+  TableEditorActiveFilter,
+  TableEditorDataMode,
+} from "./table-editor-filters-types";
+import { filterEmployeesByQuery } from "./table-editor-filters-utils";
 import {
   DEFAULT_GRID_EMPTY_STATE_VARIANT,
   GridEmptyStateBlock,
@@ -61,10 +64,18 @@ function GridHeaderCell({
     <div className="flex items-center h-[35px] px-2 border-r border-b border-secondary bg-dash-canvas text-grid min-w-0">
       <div className="flex items-center gap-1 min-w-0 flex-1">
         {isPrimaryKey ? (
-          <Key size={14} strokeWidth={2} className="text-foreground-lighter shrink-0" />
+          <Key
+            size={14}
+            strokeWidth={2}
+            className="text-foreground-lighter shrink-0"
+          />
         ) : null}
-        <span className="font-medium text-foreground truncate text-xs">{name}</span>
-        <span className="text-foreground-light shrink-0 text-xs font-normal">{format}</span>
+        <span className="font-medium text-foreground truncate text-xs">
+          {name}
+        </span>
+        <span className="text-foreground-light shrink-0 text-xs font-normal">
+          {format}
+        </span>
       </div>
       <Button
         type="button"
@@ -128,15 +139,21 @@ function GridRow({
   );
 }
 
-function FilterChip({ onRemove }: { onRemove: () => void }) {
+function FilterChip({
+  filter,
+  onRemove,
+}: {
+  filter: TableEditorActiveFilter;
+  onRemove: () => void;
+}) {
   return (
     <span
       data-filter-chip
       className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-default bg-surface-200 px-2 py-0.5 text-xs text-foreground"
     >
-      <span className="text-foreground-light">{MOCK_ACTIVE_FILTER.column}</span>
-      <span className="text-foreground-muted">{MOCK_ACTIVE_FILTER.operator}</span>
-      <span>{MOCK_ACTIVE_FILTER.value}</span>
+      <span className="text-foreground-light">{filter.column}</span>
+      <span className="text-foreground-muted">{filter.operator}</span>
+      <span>{filter.value}</span>
       <button
         type="button"
         className="text-foreground-lighter hover:text-foreground"
@@ -172,17 +189,21 @@ function GridErrorState({
 
 function GridEmptyState({
   dataMode,
+  activeFilter,
   emptyStateVariant,
   onRemoveFilters,
   onImportData,
 }: {
   dataMode: TableEditorDataMode;
+  activeFilter: TableEditorActiveFilter | null;
   emptyStateVariant: GridEmptyStateVariant;
   onRemoveFilters: () => void;
   onImportData: () => void;
 }) {
   const componentId =
-    dataMode === "filtered-empty" ? "grid-filtered-empty-state" : "grid-empty-state";
+    dataMode === "filtered-empty"
+      ? "grid-filtered-empty-state"
+      : "grid-empty-state";
 
   return (
     <PrototypeComponent
@@ -192,6 +213,7 @@ function GridEmptyState({
       <GridEmptyStateBlock
         variant={emptyStateVariant}
         dataMode={dataMode}
+        activeFilter={activeFilter}
         onRemoveFilters={onRemoveFilters}
         onImportData={onImportData}
         className={dataMode === "empty-table" ? "mt-9" : undefined}
@@ -210,7 +232,11 @@ const GRID_COLUMN_WIDTHS = {
 
 const LOADING_ROW_COUNT = 12;
 
-function SkeletonGridHeaderCell({ columnName }: { columnName: keyof typeof GRID_COLUMN_WIDTHS }) {
+function SkeletonGridHeaderCell({
+  columnName,
+}: {
+  columnName: keyof typeof GRID_COLUMN_WIDTHS;
+}) {
   return (
     <div
       className={cn(
@@ -261,12 +287,15 @@ function SkeletonGridRow({ rowIndex }: { rowIndex: number }) {
 
 type TableEditorGridProps = {
   dataMode: TableEditorDataMode;
+  filterInput: string;
+  activeFilter: TableEditorActiveFilter | null;
   emptyStateVariant?: GridEmptyStateVariant;
   errorStateVariant?: GridErrorStateVariant;
   onOpenInsertRow: () => void;
   onOpenInsertColumn: () => void;
   onOpenEditRow: (rowId: number) => void;
-  onApplyFilter: () => void;
+  onApplyFilter: (filterText: string) => void;
+  onFilterInputChange: (filterInput: string) => void;
   onRemoveFilters: () => void;
   onTruncateTable: () => void;
   onImportData: () => void;
@@ -275,12 +304,15 @@ type TableEditorGridProps = {
 
 export function TableEditorGrid({
   dataMode,
+  filterInput,
+  activeFilter,
   emptyStateVariant = DEFAULT_GRID_EMPTY_STATE_VARIANT,
   errorStateVariant = DEFAULT_GRID_ERROR_STATE_VARIANT,
   onOpenInsertRow,
   onOpenInsertColumn,
   onOpenEditRow,
   onApplyFilter,
+  onFilterInputChange,
   onRemoveFilters,
   onTruncateTable,
   onImportData,
@@ -288,11 +320,13 @@ export function TableEditorGrid({
 }: TableEditorGridProps) {
   const isLoading = dataMode === "loading";
   const isError = dataMode === "error";
-  const hasActiveFilter = dataMode === "filtered-empty";
+  const hasActiveFilter = activeFilter !== null;
   const filterRowRef = useRef<HTMLDivElement>(null);
   const placeholderMeasureRef = useRef<HTMLSpanElement>(null);
   const [showFilterPlaceholder, setShowFilterPlaceholder] = useState(true);
-  const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(() => new Set());
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   useLayoutEffect(() => {
     const row = filterRowRef.current;
@@ -306,8 +340,7 @@ export function TableEditorGrid({
       }
 
       const chip = row.querySelector<HTMLElement>("[data-filter-chip]");
-      const reservedWidth =
-        (chip?.getBoundingClientRect().width ?? 0) + 48;
+      const reservedWidth = (chip?.getBoundingClientRect().width ?? 0) + 48;
       const availableWidth = row.clientWidth - reservedWidth;
       const placeholderWidth = measureEl.getBoundingClientRect().width + 16;
 
@@ -322,7 +355,12 @@ export function TableEditorGrid({
     return () => observer.disconnect();
   }, [hasActiveFilter]);
 
-  const rows = dataMode === "populated" ? MOCK_EMPLOYEES : [];
+  const rows =
+    dataMode === "populated"
+      ? activeFilter
+        ? filterEmployeesByQuery(MOCK_EMPLOYEES, activeFilter.value)
+        : MOCK_EMPLOYEES
+      : [];
 
   const toggleRowSelection = useCallback((rowId: number, checked: boolean) => {
     setSelectedRowIds((current) => {
@@ -342,7 +380,11 @@ export function TableEditorGrid({
   );
   const allRowsSelected = rows.length > 0 && selectedCount === rows.length;
   const someRowsSelected = selectedCount > 0 && !allRowsSelected;
-  const selectAllChecked = allRowsSelected ? true : someRowsSelected ? "indeterminate" : false;
+  const selectAllChecked = allRowsSelected
+    ? true
+    : someRowsSelected
+      ? "indeterminate"
+      : false;
 
   const handleSelectAllChange = useCallback(
     (checked: boolean | "indeterminate") => {
@@ -362,20 +404,29 @@ export function TableEditorGrid({
   const showErrorOverlay = isError;
   const recordCount =
     dataMode === "populated"
-      ? 3
-      : dataMode === "empty-table" || dataMode === "filtered-empty" || dataMode === "error"
+      ? rows.length
+      : dataMode === "empty-table" ||
+          dataMode === "filtered-empty" ||
+          dataMode === "error"
         ? 0
         : 3;
 
   return (
-    <PrototypeComponent id="table-editor-grid" className="h-full flex flex-col w-full bg-dash-sidebar">
+    <PrototypeComponent
+      id="table-editor-grid"
+      className="h-full flex flex-col w-full bg-dash-sidebar"
+    >
       <div className="h-10 md:min-h-12 flex items-center bg-surface-200">
         <div className="w-full flex">
           <button
             type="button"
             className="hidden md:flex items-center justify-center w-10 h-12 hover:bg-surface-100 shrink-0 border-b border-b-default"
           >
-            <PanelLeftClose size={16} strokeWidth={1.5} className="text-foreground-lighter" />
+            <PanelLeftClose
+              size={16}
+              strokeWidth={1.5}
+              className="text-foreground-lighter"
+            />
           </button>
 
           <div className="border-b rounded-b-none gap-0 min-h-12 flex items-center w-full bg-surface-200 border-none text-clip overflow-x-auto">
@@ -384,7 +435,11 @@ export function TableEditorGrid({
                 type="button"
                 className="group flex items-center gap-2 pl-3 pr-2.5 text-xs bg-dash-sidebar border-b border-default relative h-full hover:bg-surface-300"
               >
-                <Table2 size={15} strokeWidth={1.5} className="text-foreground-muted" />
+                <Table2
+                  size={15}
+                  strokeWidth={1.5}
+                  className="text-foreground-muted"
+                />
                 <span>employees</span>
                 <span className="relative ml-1 flex size-5 items-center justify-center opacity-0 group-hover:opacity-100">
                   <X size={12} className="text-foreground-light" />
@@ -397,7 +452,11 @@ export function TableEditorGrid({
               type="button"
               className="flex items-center justify-center w-10 min-h-12 hover:bg-surface-100 shrink-0 border-b border-default"
             >
-              <Plus size={16} strokeWidth={1.5} className="text-foreground-lighter" />
+              <Plus
+                size={16}
+                strokeWidth={1.5}
+                className="text-foreground-lighter"
+              />
             </button>
             <div className="grow h-full border-b border-default pr-6" />
           </div>
@@ -422,20 +481,30 @@ export function TableEditorGrid({
                 {FILTER_PLACEHOLDER}
               </span>
               <div className="relative flex items-center justify-center shrink-0 px-2">
-                <Search size={16} strokeWidth={2} className="text-foreground-muted w-4 h-4" />
+                <Search
+                  size={16}
+                  strokeWidth={2}
+                  className="text-foreground-muted w-4 h-4"
+                />
               </div>
               <Input
                 data-filter-input
-                placeholder={showFilterPlaceholder ? FILTER_PLACEHOLDER : undefined}
+                value={filterInput}
+                placeholder={
+                  showFilterPlaceholder ? FILTER_PLACEHOLDER : undefined
+                }
                 className="border-none bg-transparent text-xs focus:ring-0 focus-visible:ring-0 flex-1 h-auto min-w-0 px-2 py-1"
+                onChange={(event) => onFilterInputChange(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    onApplyFilter();
+                    onApplyFilter(event.currentTarget.value);
                   }
                 }}
               />
-              {hasActiveFilter ? <FilterChip onRemove={onRemoveFilters} /> : null}
+              {activeFilter ? (
+                <FilterChip filter={activeFilter} onRemove={onRemoveFilters} />
+              ) : null}
             </div>
           </div>
 
@@ -455,12 +524,23 @@ export function TableEditorGrid({
               variant="danger"
               size="tiny"
               className="text-xs px-2.5 py-1 h-[26px]"
-              icon={<Lock size={14} strokeWidth={1.5} className="text-destructive" />}
+              icon={
+                <Lock
+                  size={14}
+                  strokeWidth={1.5}
+                  className="text-destructive"
+                />
+              }
             >
               RLS disabled
             </Button>
 
-            <Button type="button" variant="default" size="tiny" className="text-xs px-2.5 py-1 h-[26px] pr-3 gap-0">
+            <Button
+              type="button"
+              variant="default"
+              size="tiny"
+              className="text-xs px-2.5 py-1 h-[26px] pr-3 gap-0"
+            >
               <span className="flex items-center gap-1">
                 <span className="text-foreground-muted">Role</span>
                 <span>postgres</span>
@@ -480,7 +560,9 @@ export function TableEditorGrid({
                 />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={onTruncateTable}>Truncate table</DropdownMenuItem>
+                <DropdownMenuItem onClick={onTruncateTable}>
+                  Truncate table
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -493,7 +575,10 @@ export function TableEditorGrid({
               className="text-xs h-[26px] w-7 p-0"
               onClick={onRefresh}
             >
-              <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
+              <RefreshCw
+                size={14}
+                className={cn(isLoading && "animate-spin")}
+              />
             </Button>
 
             <DropdownMenu>
@@ -503,14 +588,24 @@ export function TableEditorGrid({
                   variant="primary"
                   size="tiny"
                   className="text-xs px-2.5 py-1 h-[26px]"
-                  icon={<ChevronDown size={14} strokeWidth={1.5} className="text-brand-600" />}
+                  icon={
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={1.5}
+                      className="text-brand-600"
+                    />
+                  }
                 >
                   Insert
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={onOpenInsertRow}>Insert row</DropdownMenuItem>
-                <DropdownMenuItem onClick={onOpenInsertColumn}>Insert column</DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenInsertRow}>
+                  Insert row
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenInsertColumn}>
+                  Insert column
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -521,7 +616,8 @@ export function TableEditorGrid({
         id="grid-loading-skeleton"
         className={cn(
           "flex flex-col relative flex-1 min-h-0 overflow-auto bg-dash-canvas border-t border-default",
-          isLoading && "[mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]",
+          isLoading &&
+            "[mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]",
         )}
       >
         <div className="sticky top-0 z-[2] flex min-w-max">
@@ -538,14 +634,22 @@ export function TableEditorGrid({
           </div>
           {isLoading
             ? MOCK_COLUMNS.map((column) => (
-                <SkeletonGridHeaderCell key={column.name} columnName={column.name} />
+                <SkeletonGridHeaderCell
+                  key={column.name}
+                  columnName={column.name}
+                />
               ))
             : MOCK_COLUMNS.map((column) => (
-                <div key={column.name} className={GRID_COLUMN_WIDTHS[column.name]}>
+                <div
+                  key={column.name}
+                  className={GRID_COLUMN_WIDTHS[column.name]}
+                >
                   <GridHeaderCell
                     name={column.name}
                     format={column.format}
-                    isPrimaryKey={"isPrimaryKey" in column ? column.isPrimaryKey : false}
+                    isPrimaryKey={
+                      "isPrimaryKey" in column ? column.isPrimaryKey : false
+                    }
                   />
                 </div>
               ))}
@@ -562,7 +666,9 @@ export function TableEditorGrid({
                   key={row.id}
                   row={row}
                   checked={selectedRowIds.has(row.id)}
-                  onCheckedChange={(checked) => toggleRowSelection(row.id, checked)}
+                  onCheckedChange={(checked) =>
+                    toggleRowSelection(row.id, checked)
+                  }
                   onExpand={() => onOpenEditRow(row.id)}
                 />
               ))}
@@ -572,6 +678,7 @@ export function TableEditorGrid({
           <div className="absolute w-full inset-0 flex flex-col items-center justify-center p-2 z-1 pointer-events-none">
             <GridEmptyState
               dataMode={dataMode}
+              activeFilter={activeFilter}
               emptyStateVariant={emptyStateVariant}
               onRemoveFilters={onRemoveFilters}
               onImportData={onImportData}
@@ -580,7 +687,10 @@ export function TableEditorGrid({
         ) : null}
         {showErrorOverlay ? (
           <div className="absolute w-full inset-0 flex flex-col items-center justify-center p-2 z-1 pointer-events-none">
-            <GridErrorState errorStateVariant={errorStateVariant} onRefresh={onRefresh} />
+            <GridErrorState
+              errorStateVariant={errorStateVariant}
+              onRefresh={onRefresh}
+            />
           </div>
         ) : null}
       </PrototypeComponent>
@@ -603,7 +713,11 @@ export function TableEditorGrid({
               <ArrowLeft size={14} />
             </Button>
             <p className="text-xs text-foreground-light">Page</p>
-            <Input value="1" readOnly className="text-xs px-2.5 py-1 h-[26px] w-12 text-center" />
+            <Input
+              value="1"
+              readOnly
+              className="text-xs px-2.5 py-1 h-[26px] w-12 text-center"
+            />
             <p className="text-xs text-foreground-light">of 1</p>
             <Button
               type="button"
@@ -615,17 +729,29 @@ export function TableEditorGrid({
             >
               <ArrowRight size={14} />
             </Button>
-            <Button type="button" variant="outline" size="tiny" className="text-xs px-2.5 py-1 h-[26px]">
+            <Button
+              type="button"
+              variant="outline"
+              size="tiny"
+              className="text-xs px-2.5 py-1 h-[26px]"
+            >
               100 rows
             </Button>
           </div>
           <p className="text-xs text-foreground-light">
-            {isLoading ? <Skeleton className="inline-block h-3 w-16 align-middle" /> : `${recordCount} records`}
+            {isLoading ? (
+              <Skeleton className="inline-block h-3 w-16 align-middle" />
+            ) : (
+              `${recordCount} records`
+            )}
           </p>
         </div>
 
         <div className="ml-auto flex items-center gap-x-2">
-          <div className="relative border border-default rounded-md h-7" style={{ padding: 1, width: 152 }}>
+          <div
+            className="relative border border-default rounded-md h-7"
+            style={{ padding: 1, width: 152 }}
+          >
             <span
               aria-hidden
               className="z-0 inline-block rounded-sm h-full bg-overlay-hover shadow-sm border border-strong absolute left-0 top-0"

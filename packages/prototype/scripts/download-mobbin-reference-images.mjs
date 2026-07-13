@@ -75,6 +75,47 @@ function extractLargestSrcSetUrl(html) {
   return candidates[0]?.url ?? null;
 }
 
+function extractOgScreenImageUrl(html) {
+  const ogMatch = html.match(/property="og:image"\s+content="([^"]+)"/);
+  if (!ogMatch) return null;
+
+  const content = ogMatch[1].replaceAll("&amp;", "&");
+  const screenUrlMatch = content.match(/screenUrl=([^&]+)/);
+  if (!screenUrlMatch) return null;
+
+  return decodeURIComponent(screenUrlMatch[1]);
+}
+
+function extractEncodedWebpUrl(html) {
+  const webpMatch = html.match(
+    /https:\/\/bytescale\.mobbin\.com\/FW25bBB\/image\/mobbin\.com\/prod\/file\.webp\?enc=[^"'\\]+/,
+  );
+  return webpMatch?.[0] ?? null;
+}
+
+function toFullResolutionWebpUrl(url) {
+  if (!url) return null;
+
+  if (url.includes("file.webp?enc=")) {
+    return url;
+  }
+
+  const parsed = new URL(url);
+  parsed.searchParams.set("f", "webp");
+  parsed.searchParams.set("w", "1920");
+  parsed.searchParams.set("q", "50");
+  parsed.searchParams.set("fit", "shrink-cover");
+  return parsed.toString();
+}
+
+function extractScreenImageUrl(html) {
+  return (
+    extractLargestSrcSetUrl(html) ??
+    extractOgScreenImageUrl(html) ??
+    extractEncodedWebpUrl(html)
+  );
+}
+
 async function downloadScreen(screenId) {
   const pageUrl = `https://mobbin.com/explore/screens/${screenId}`;
   const response = await fetch(pageUrl, {
@@ -85,9 +126,9 @@ async function downloadScreen(screenId) {
   }
 
   const html = await response.text();
-  const imageUrl = extractLargestSrcSetUrl(html);
+  const imageUrl = toFullResolutionWebpUrl(extractScreenImageUrl(html));
   if (!imageUrl) {
-    throw new Error(`${screenId}: no srcset image found`);
+    throw new Error(`${screenId}: no screen image found`);
   }
 
   const imageResponse = await fetch(imageUrl);

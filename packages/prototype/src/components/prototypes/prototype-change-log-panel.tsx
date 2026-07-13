@@ -30,7 +30,7 @@ const CHANGELOG_SECTION_CLASS =
   "flex flex-col gap-2 py-4 first:pt-0 first:border-t-0 last:pb-0";
 
 const CHANGELOG_OVERVIEW_FIELD_CLASS =
-  "text-sm text-[var(--tool-chrome-text)] field-sizing-content w-full min-h-0 resize-none border-0 bg-transparent p-0 leading-relaxed shadow-none outline-none placeholder:text-[var(--tool-chrome-text-muted)] focus-visible:ring-0 focus-visible:ring-offset-0 [&::selection]:bg-[var(--tool-chrome-gray-highlight)]";
+  "field-sizing-content w-full min-h-0 resize-none rounded-md border border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface-muted)] px-2.5 py-2 text-sm text-[var(--tool-chrome-text)] leading-relaxed shadow-none outline-none placeholder:text-[var(--tool-chrome-text-muted)] focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0 [&::selection]:bg-[var(--tool-chrome-gray-highlight)]";
 
 type PrototypeChangeLogPanelProps = {
   onSelect: (id: string) => void;

@@ -1,5 +1,6 @@
 import { definePreviewStateRegistry } from "proto-plugin";
 
+import { MOCK_ACTIVE_FILTER } from "./table-editor-filters-mock-data";
 import type {
   TableEditorFiltersLiveState,
   TableEditorFiltersPreviewStateId,
@@ -12,6 +13,8 @@ const POPULATED_LIVE_STATE = {
   dataMode: "populated",
   sidePanel: "none",
   expandedRowId: null,
+  filterInput: "",
+  activeFilter: null,
 } as const satisfies Omit<TableEditorFiltersLiveState, "previewStateId">;
 
 export function createLiveStateForPreview(
@@ -24,6 +27,8 @@ export function createLiveStateForPreview(
         dataMode: "loading",
         sidePanel: "none",
         expandedRowId: null,
+        filterInput: "",
+        activeFilter: null,
       };
     case "error":
       return {
@@ -31,6 +36,8 @@ export function createLiveStateForPreview(
         dataMode: "error",
         sidePanel: "none",
         expandedRowId: null,
+        filterInput: "",
+        activeFilter: null,
       };
     case "filtered-empty":
       return {
@@ -38,6 +45,8 @@ export function createLiveStateForPreview(
         dataMode: "filtered-empty",
         sidePanel: "none",
         expandedRowId: null,
+        filterInput: MOCK_ACTIVE_FILTER.value,
+        activeFilter: MOCK_ACTIVE_FILTER,
       };
     case "empty-table":
       return {
@@ -45,6 +54,8 @@ export function createLiveStateForPreview(
         dataMode: "empty-table",
         sidePanel: "none",
         expandedRowId: null,
+        filterInput: "",
+        activeFilter: null,
       };
     case "insert-row":
       return {
@@ -72,6 +83,24 @@ export function createLiveStateForPreview(
         ...POPULATED_LIVE_STATE,
       };
   }
+}
+
+export function normalizeTableEditorFiltersLiveState(
+  state: Partial<TableEditorFiltersLiveState> &
+    Pick<TableEditorFiltersLiveState, "dataMode" | "sidePanel">,
+): TableEditorFiltersLiveState {
+  const previewStateId =
+    state.previewStateId ?? inferPreviewStateId(state);
+  const defaults = createLiveStateForPreview(previewStateId);
+
+  return {
+    ...defaults,
+    ...state,
+    filterInput: state.filterInput ?? "",
+    activeFilter: state.activeFilter ?? null,
+    expandedRowId: state.expandedRowId ?? defaults.expandedRowId,
+    previewStateId: inferPreviewStateId(state),
+  };
 }
 
 export function inferPreviewStateId(
@@ -139,7 +168,8 @@ export const TABLE_EDITOR_FILTERS_PREVIEW_STATE_REGISTRY = definePreviewStateReg
     {
       id: "populated",
       label: "Populated",
-      annotation: "Default employees table with three rows and no active filters.",
+      annotation:
+        "Default employees table with three rows — type in the filter bar and press Enter to filter by id, name, or email.",
     },
     {
       id: "filtered-empty",

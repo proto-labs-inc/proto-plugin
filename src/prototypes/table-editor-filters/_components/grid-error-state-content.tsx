@@ -85,7 +85,7 @@ export const GRID_ERROR_STATE_BASELINE = {
 };
 
 export const DEFAULT_GRID_ERROR_STATE_VARIANT: GridErrorStateVariant =
-  GRID_ERROR_STATE_VARIANT_OPTIONS[0].value;
+  "inline-admonition";
 
 type GridErrorStateBlockProps = {
   variant: GridErrorStateVariant;

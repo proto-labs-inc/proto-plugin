@@ -76,7 +76,7 @@ export type PrototypeDesignBriefPanelProps<TVariant extends string> = {
   baseline: DesignExplorationBaselineOption<TVariant>;
   /**
    * Marked "Default" in the brief — the codebase-stored default variant
-   * (`config.defaultVariant`). Other options offer a "Make default" prompt.
+   * (`config.defaultVariant`). Non-default options (including Original) offer a "Make default" prompt.
    */
   defaultVariantValue?: TVariant;
   /** Path to design exploration config — included in copy prompts. */
@@ -426,7 +426,6 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
     const VariantPreview = renderers[option.value];
     const isActive = option.value === variant;
     const isDefaultOption =
-      !isBaseline &&
       defaultVariantValue !== undefined &&
       option.value === defaultVariantValue;
     const optionIdSuffix = badgeSuffix ?? option.value;
@@ -470,7 +469,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
                   <span aria-label="Current default variant">DEFAULT</span>
                 </PrototypeComponent>
               ) : null}
-              {!isBaseline && !isDefaultOption ? (
+              {!isDefaultOption ? (
                 <MakeDefaultButton
                   componentId={`${componentIdPrefix}.overview-option.${optionIdSuffix}.set-default`}
                   optionLabel={option.label}

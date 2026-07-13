@@ -7,8 +7,7 @@ import {
 } from "lucide-react";
 import { Button, cn } from "ui";
 
-import { MOCK_ACTIVE_FILTER } from "./table-editor-filters-mock-data";
-import type { TableEditorDataMode } from "./table-editor-filters-types";
+import type { TableEditorActiveFilter, TableEditorDataMode } from "./table-editor-filters-types";
 
 export type GridEmptyStateVariant =
   | "illustration-card"
@@ -98,12 +97,12 @@ export const GRID_EMPTY_STATE_BASELINE = {
 export const DEFAULT_GRID_EMPTY_STATE_VARIANT: GridEmptyStateVariant =
   GRID_EMPTY_STATE_VARIANT_OPTIONS[0].value;
 
-function FilterChip() {
+function FilterChip({ filter }: { filter: TableEditorActiveFilter }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-md border border-default bg-surface-200 px-2 py-1 text-xs text-foreground">
-      <span className="text-foreground-light">{MOCK_ACTIVE_FILTER.column}</span>
-      <span className="text-foreground-lighter">{MOCK_ACTIVE_FILTER.operator}</span>
-      <span className="font-medium">{MOCK_ACTIVE_FILTER.value}</span>
+      <span className="text-foreground-light">{filter.column}</span>
+      <span className="text-foreground-lighter">{filter.operator}</span>
+      <span className="font-medium">{filter.value}</span>
     </span>
   );
 }
@@ -111,6 +110,7 @@ function FilterChip() {
 type GridEmptyStateBlockProps = {
   variant: GridEmptyStateVariant;
   dataMode: TableEditorDataMode;
+  activeFilter?: TableEditorActiveFilter | null;
   onRemoveFilters: () => void;
   onImportData: () => void;
   className?: string;
@@ -119,6 +119,7 @@ type GridEmptyStateBlockProps = {
 export function GridEmptyStateBlock({
   variant,
   dataMode,
+  activeFilter = null,
   onRemoveFilters,
   onImportData,
   className,
@@ -129,6 +130,7 @@ export function GridEmptyStateBlock({
   const content = renderGridEmptyStateContent({
     variant,
     isFiltered,
+    activeFilter,
     copy,
     className,
     onRemoveFilters,
@@ -145,6 +147,7 @@ export function GridEmptyStateBlock({
 function renderGridEmptyStateContent({
   variant,
   isFiltered,
+  activeFilter,
   copy,
   className,
   onRemoveFilters,
@@ -152,6 +155,7 @@ function renderGridEmptyStateContent({
 }: {
   variant: GridEmptyStateVariant;
   isFiltered: boolean;
+  activeFilter: TableEditorActiveFilter | null;
   copy: (typeof GRID_EMPTY_STATE_COPY)[keyof typeof GRID_EMPTY_STATE_COPY];
   className?: string;
   onRemoveFilters: () => void;
@@ -262,7 +266,7 @@ function renderGridEmptyStateContent({
     if (isFiltered) {
       return (
         <div className={cn("pointer-events-auto flex max-w-md flex-col items-center gap-4 text-center", className)}>
-          <FilterChip />
+          {activeFilter ? <FilterChip filter={activeFilter} /> : null}
           <div>
             <p className="text-sm font-medium text-foreground">{copy.title}</p>
             <p className="mt-1 text-sm text-light">{copy.body}</p>
@@ -347,13 +351,6 @@ function renderGridEmptyStateContent({
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-          <Button
-            type="button"
-            variant="default"
-            onClick={isFiltered ? onRemoveFilters : onImportData}
-          >
-            {copy.primaryLabel}
-          </Button>
           {!isFiltered ? (
             <Button type="button" variant="outline" onClick={onImportData}>
               Insert row
@@ -363,6 +360,13 @@ function renderGridEmptyStateContent({
               Clear filters
             </Button>
           )}
+          <Button
+            type="button"
+            variant="default"
+            onClick={isFiltered ? onRemoveFilters : onImportData}
+          >
+            {copy.primaryLabel}
+          </Button>
         </div>
       </div>
     );

@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  buildPrAgentPrompt,
   PROTOTYPE_PAGE_CLASS,
   PROTOTYPE_SCROLL_CONTAINER_CLASS,
   PrototypeComponent,
+  PrototypeSpecPanelContent,
   usePrototypeComments,
   useRegisterPrototypeReferenceDocs,
   usePrototypeReviewOptional,
@@ -31,10 +33,24 @@ import {
 import {
   createLiveStateForPreview,
   DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE,
+  normalizeTableEditorFiltersLiveState,
   withInferredPreviewState,
 } from "./_components/table-editor-filters-preview-states";
+import { MOCK_EMPLOYEES } from "./_components/table-editor-filters-mock-data";
+import { filterEmployeesByQuery } from "./_components/table-editor-filters-utils";
 import { useRegisterTableEditorFiltersVariantSets } from "./_components/table-editor-filters-variant-sets";
 import { TableEditorFiltersPreviewStateSelect } from "./_components/table-editor-filters-preview-state-select";
+import {
+  findPrSplitEntry,
+  PR_SPLIT_CONFIG,
+  PR_SPLIT_ENTRIES,
+  readEmptyStateVariantFromSearchParams,
+  readErrorStateVariantFromSearchParams,
+  readInsertColumnVariantFromSearchParams,
+  readLiveStateFromSearchParams,
+  type TableEditorFiltersPrSplitEntry,
+} from "./_components/pr-split-config";
+import { PrSplitWireframe } from "./_components/pr-split-wireframes";
 import { buildTableEditorFiltersStateCanvasConfig } from "./_components/table-editor-filters-state-canvas-config";
 import type {
   TableEditorFiltersLiveState,
@@ -61,12 +77,15 @@ export default function TableEditorFiltersPage() {
   const [insertColumnVariant, setInsertColumnVariant] = useState<InsertColumnVariant>(
     DEFAULT_INSERT_COLUMN_VARIANT,
   );
+  const [selectedPrOrder, setSelectedPrOrder] = useState<number | null>(null);
   const review = usePrototypeReviewOptional();
+  const setSpecContent = review?.setSpecContent;
+  const focusShareTarget = review?.focusShareTarget;
   const refreshReturnModeRef = useRef<TableEditorDataMode>("populated");
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const onRestore = useCallback((restored: TableEditorFiltersLiveState) => {
-    setLiveState(restored);
+    setLiveState(normalizeTableEditorFiltersLiveState(restored));
   }, []);
 
   usePrototypeComments(liveState, onRestore);
@@ -152,13 +171,48 @@ export default function TableEditorFiltersPage() {
     );
   }, []);
 
-  const handleApplyFilter = useCallback(() => {
-    setDataMode("filtered-empty");
-  }, [setDataMode]);
+  const handleApplyFilter = useCallback((filterText: string) => {
+    const trimmed = filterText.trim();
+    if (!trimmed) {
+      setLiveState((current) =>
+        withInferredPreviewState(current, {
+          filterInput: "",
+          activeFilter: null,
+          dataMode: "populated",
+          sidePanel: "none",
+          expandedRowId: null,
+        }),
+      );
+      return;
+    }
+
+    const activeFilter = { column: "name", operator: "~~*", value: trimmed };
+    const matchingRows = filterEmployeesByQuery(MOCK_EMPLOYEES, trimmed);
+
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        filterInput: trimmed,
+        activeFilter,
+        dataMode: matchingRows.length === 0 ? "filtered-empty" : "populated",
+        sidePanel: "none",
+        expandedRowId: null,
+      }),
+    );
+  }, []);
+
+  const handleFilterInputChange = useCallback((filterInput: string) => {
+    setLiveState((current) => ({ ...current, filterInput }));
+  }, []);
 
   const handleRemoveFilters = useCallback(() => {
-    setDataMode("populated");
-  }, [setDataMode]);
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        filterInput: "",
+        activeFilter: null,
+        dataMode: "populated",
+      }),
+    );
+  }, []);
 
   const handleTruncateTable = useCallback(() => {
     setDataMode("empty-table");
@@ -210,6 +264,96 @@ export default function TableEditorFiltersPage() {
     return () => setStateCanvasConfig(null);
   }, [setPreviewState, setStateCanvasConfig]);
 
+  const applyPrSplitEntry = useCallback((entry: TableEditorFiltersPrSplitEntry) => {
+    setLiveState(entry.liveState);
+    setEmptyStateVariant(entry.emptyStateVariant);
+    setErrorStateVariant(entry.errorStateVariant);
+    setInsertColumnVariant(entry.insertColumnVariant);
+  }, []);
+
+  const syncPrSplitToUrl = useCallback((entry: TableEditorFiltersPrSplitEntry | null) => {
+    const url = new URL(window.location.href);
+    if (!entry) {
+      url.searchParams.delete("prSplit");
+      url.searchParams.delete("prEmptyState");
+      url.searchParams.delete("prErrorState");
+      url.searchParams.delete("prInsertColumn");
+      url.searchParams.delete("shareState");
+    } else {
+      PR_SPLIT_CONFIG.writeEntryToSearchParams(url.searchParams, entry);
+      url.searchParams.set("prSplit", String(entry.order));
+    }
+    window.history.replaceState(null, "", url);
+  }, []);
+
+  const handlePrNavigate = useCallback(
+    (entry: TableEditorFiltersPrSplitEntry) => {
+      setSelectedPrOrder(entry.order);
+      applyPrSplitEntry(entry);
+      syncPrSplitToUrl(entry);
+      focusShareTarget?.(entry.targetId);
+    },
+    [applyPrSplitEntry, focusShareTarget, syncPrSplitToUrl],
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prSplit = params.get("prSplit");
+    if (!prSplit) return;
+
+    const order = Number(prSplit);
+    const entry = findPrSplitEntry(order);
+    if (!entry) return;
+
+    setSelectedPrOrder(order);
+    applyPrSplitEntry(entry);
+
+    const restoredLiveState = readLiveStateFromSearchParams(params);
+    if (restoredLiveState) {
+      setLiveState(restoredLiveState);
+    }
+
+    const emptyStateVariant = readEmptyStateVariantFromSearchParams(params);
+    if (emptyStateVariant) {
+      setEmptyStateVariant(emptyStateVariant);
+    }
+
+    const errorStateVariant = readErrorStateVariantFromSearchParams(params);
+    if (errorStateVariant) {
+      setErrorStateVariant(errorStateVariant);
+    }
+
+    const insertColumnVariant = readInsertColumnVariantFromSearchParams(params);
+    if (insertColumnVariant) {
+      setInsertColumnVariant(insertColumnVariant);
+    }
+
+    const timer = window.setTimeout(() => {
+      focusShareTarget?.(entry.targetId);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [applyPrSplitEntry, focusShareTarget]);
+
+  useEffect(() => {
+    if (!setSpecContent) return;
+
+    setSpecContent(
+      <PrototypeSpecPanelContent
+        entries={PR_SPLIT_ENTRIES}
+        renderWireframe={(id) => <PrSplitWireframe id={id} embedded />}
+        buildAgentPrompt={(entry, origin) =>
+          buildPrAgentPrompt(entry, PR_SPLIT_ENTRIES, PR_SPLIT_CONFIG, origin)
+        }
+        onPrNavigate={handlePrNavigate}
+        selectedPrOrder={selectedPrOrder}
+        defaultPreviewPath={PR_SPLIT_CONFIG.defaultPreviewPath}
+        vercelProjectName={PR_SPLIT_CONFIG.vercelProjectName}
+      />,
+    );
+
+    return () => setSpecContent(null);
+  }, [handlePrNavigate, selectedPrOrder, setSpecContent]);
+
   return (
     <PrototypeComponent
       id="scroll-container"
@@ -226,6 +370,7 @@ export default function TableEditorFiltersPage() {
           onOpenInsertColumn={handleOpenInsertColumn}
           onOpenEditRow={handleOpenEditRow}
           onApplyFilter={handleApplyFilter}
+          onFilterInputChange={handleFilterInputChange}
           onRemoveFilters={handleRemoveFilters}
           onTruncateTable={handleTruncateTable}
           onImportData={handleImportData}

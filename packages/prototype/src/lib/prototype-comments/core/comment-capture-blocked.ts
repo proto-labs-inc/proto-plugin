@@ -11,6 +11,8 @@ export const COMMENT_CAPTURE_BLOCKED_SELECTORS = [
   "[data-prototype-review-panel]",
   "[data-comments-sidebar]",
   "#prototype-comments-sidebar-root",
+  "#prototype-chrome-root",
+  "[data-prototype-tool-overlay-root]",
   "[data-annotation-popup]",
   "[data-annotation-marker]",
   "[data-prototype-share-hint]",
@@ -20,6 +22,16 @@ export function isCommentCaptureBlockedTarget(target: HTMLElement): boolean {
   return COMMENT_CAPTURE_BLOCKED_SELECTORS.some(
     (selector) => closestCrossingShadow(target, selector) != null,
   );
+}
+
+/** Radix outside-dismiss events that land on plugin chrome must not close viewport-scoped product overlays. */
+export function preventDismissOnPrototypePluginChrome(event: {
+  preventDefault: () => void;
+  target: EventTarget | null;
+}): void {
+  if (event.target instanceof HTMLElement && isCommentCaptureBlockedTarget(event.target)) {
+    event.preventDefault();
+  }
 }
 
 /** Plugin chrome where interacting should exit comment mode (not the prototype canvas). */

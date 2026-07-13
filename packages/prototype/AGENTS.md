@@ -4,21 +4,19 @@ Instructions for AI agents working with `prototype` and host-app prototypes.
 
 ## Scope in host repos
 
-Unless `DEVELOPER=true` is set in `.env.local`, agent work scope in a **host app** (e.g. `your-host-app`) is `**src/prototypes/<slug>/` only**. Do not modify prototype package code (`packages/prototype/`), app routing, or shared UI unless explicitly developing the prototype package.
+Unless `DEVELOPER=true` is set in `.env.local`, agent work scope in a **host app** (e.g. `your-host-app`) is `**src/prototypes/<slug>/` only\*\*. Do not modify prototype package code (`packages/prototype/`), app routing, or shared UI unless explicitly developing the prototype package.
 
 ---
 
 ## Architecture
 
-
 | Layer                  | Location                                                                | Notes                                                            |
 | ---------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Prototype**   | `packages/prototype/`                                            | Shell, comments, variant explorer, gallery client, verify script |
+| **Prototype**          | `packages/prototype/`                                                   | Shell, comments, variant explorer, gallery client, verify script |
 | **Host prototypes**    | `src/prototypes/<slug>/`                                                | Feature UI, mock data, `component-ids.ts`                        |
 | **Host manifest**      | `prototype.config.ts`                                                   | Registers all prototypes                                         |
 | **Host design system** | `src/app/globals.css`, `@/components/ui`                                | Synced from source; host prototypes only                         |
 | **Tool design system** | Host `globals.css`, `src/components/ui/`, `src/components/platform-ui/` | Uses host tokens; shadcn primitives + tool chrome composites     |
-
 
 Host prototypes import framework from `prototype` and UI from `@/components/ui`.
 
@@ -73,14 +71,12 @@ Host apps replicate product UI from the **source application** (linked read-only
 
 ### What is synced vs replicated
 
-
-| Layer                   | Source                                                   | Runtime import from source? |
-| ----------------------- | -------------------------------------------------------- | --------------------------- |
-| Design tokens + base UI | Synced → `@/components/ui`, `globals.css`                | No                          |
-| Feature/page UI         | Replicated → `src/prototypes/<slug>/_components/`        | No                          |
-| Data / auth / routing   | Mock constants + local state                             | No                          |
+| Layer                   | Source                                                 | Runtime import from source? |
+| ----------------------- | ------------------------------------------------------ | --------------------------- |
+| Design tokens + base UI | Synced → `@/components/ui`, `globals.css`              | No                          |
+| Feature/page UI         | Replicated → `src/prototypes/<slug>/_components/`      | No                          |
+| Data / auth / routing   | Mock constants + local state                           | No                          |
 | Source reference        | `source/` symlink (`SOURCE_PATH` + `pnpm link-source`) | Read-only                   |
-
 
 **Synced** via `pnpm sync-from-source`: `globals.css` (host only), fonts, `src/components/ui/`, shared utils.
 
@@ -98,7 +94,7 @@ The sync/link scripts are host-agnostic — package code names nothing host-spec
 
 1. Link source: `SOURCE_PATH` in `.env.local`, run `pnpm link-source`. (First-time setup: create `prototype.sync.config.sh` from `scripts/lib/host-config.example.sh`.)
 2. Find the real page in source and read it fully.
-3. Trace imports; classify as base UI (`@/components/ui`), shared util, context-bound (mock), or layout chrome (`Mock`*).
+3. Trace imports; classify as base UI (`@/components/ui`), shared util, context-bound (mock), or layout chrome (`Mock`\*).
 4. Copy render logic, not infrastructure — preserve class names, layout, semantic tokens.
 5. Mock data as typed constants matching screenshots/source fixtures.
 6. Look up dimensions from source — do not guess.
@@ -126,9 +122,11 @@ Shareable UI at `/prototypes/[slug]`. Registered in `prototype.config.ts`.
 5. **On-page prototype controls** (state pickers, variant tabs, preview toggles) must use `PrototypeControl` or `PrototypeControlGroup`, not plain `PrototypeComponent`.
 6. **Use ids from the registry only** — dev mode logs an error for unregistered ids.
 7. **Id naming:**
-  - File's main export: kebab-case filename (`settings-section.tsx` → `settings-section`; `index.tsx` → `page`).
-  - Other functions in the same file: `{filename}.{function-kebab}`.
-  - Dynamic list items: add a prefix to `dynamicPrefixes` in `component-ids.ts`.
+
+- File's main export: kebab-case filename (`settings-section.tsx` → `settings-section`; `index.tsx` → `page`).
+- Other functions in the same file: `{filename}.{function-kebab}`.
+- Dynamic list items: add a prefix to `dynamicPrefixes` in `component-ids.ts`.
+
 8. **Scroll container:** `PrototypeComponent` with `id="scroll-container"` — see **Prototype viewport fill** below.
 9. **Do not** use `data-testid` for comment anchoring.
 
@@ -136,10 +134,10 @@ Shareable UI at `/prototypes/[slug]`. Registered in `prototype.config.ts`.
 
 There are **two** common offset bugs — do not confuse them:
 
-| Symptom | Cause | Fix |
-|--------|--------|-----|
-| Prototype preview pinned to top-left; empty space + clipping on right/bottom | Missing `h-full` fill chain inside `#prototype-viewport` | Use layout constants below on every nested wrapper |
-| Gallery / sidebar with black gaps + white bar at bottom of window | Site shell height mismatch (`h-full` parent + `h-svh` child, or body bg showing through) | Do **not** change gallery shell height classes ad hoc — parent route wrapper owns `h-svh`; `[data-prototype-root]` fills with `h-full flex-1` |
+| Symptom                                                                      | Cause                                                                                    | Fix                                                                                                                                           |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prototype preview pinned to top-left; empty space + clipping on right/bottom | Missing `h-full` fill chain inside `#prototype-viewport`                                 | Use layout constants below on every nested wrapper                                                                                            |
+| Gallery / sidebar with black gaps + white bar at bottom of window            | Site shell height mismatch (`h-full` parent + `h-svh` child, or body bg showing through) | Do **not** change gallery shell height classes ad hoc — parent route wrapper owns `h-svh`; `[data-prototype-root]` fills with `h-full flex-1` |
 
 The preview shell (`#prototype-viewport`) only auto-sizes **direct** children of `.viewportPage` (`width/height: 100%`, column flex). Every nested layer must repeat the fill chain or content shrinks to the top-left and clips on the opposite edge.
 
@@ -188,10 +186,12 @@ Product **shelves, sheets, drawers, and modal overlays** (e.g. Supabase `SidePan
 **Required pattern:**
 
 1. **Portal to the preview viewport** — pass `portalContainer` from `usePrototypeProductOverlayPortal()` (or `getPrototypeDialogPortalContainer()` in client-only render paths) to `SidePanel`, `SheetContent`, and any custom `Dialog.Portal` / `Sheet.Portal`.
-2. **Mount panels inside the page layout** — place shelf components as siblings of the main content inside a `relative overflow-hidden` wrapper (see `table-editor-filters/_components/table-editor-page.tsx`). Do not hoist shelves to the gallery shell or outside `[data-prototype-screenshot]`.
-3. **Height** — scoped panels use `h-full` / `inset-y-0`, not `h-screen` / `100vh` (viewport units ignore the preview frame height).
-4. **Preview states** — each open shelf is a distinct preview mode in `*-preview-states.ts` (see **Live state & preview states**).
-5. **Post-build check** — open a shelf state; confirm the review sidebar and black review footer remain visible and clickable.
+2. **Non-modal when scoped** — Radix `Dialog`/`Sheet` with `modal={true}` (the default) sets `pointer-events: none` on `document.body`, which blocks the **review sidebar** and **proto footer** even when the portal target is `#prototype-viewport`. `SidePanel` sets `modal={false}` automatically when `portalContainer` is passed. For raw `Sheet` / `Dialog.Root`, pass `modal={false}` whenever `portalContainer` is set.
+3. **Ignore plugin chrome for outside dismiss** — viewport-scoped `SidePanel`, `SheetContent`, and `@prototype/components/ui/dialog` call `preventDefault` on Radix outside events (`onPointerDownOutside`, `onInteractOutside`, `onFocusOutside`) when the target is proto-plugin chrome (review footer, sidebar, toolbar panels, comment UI). Clicks on plugin chrome must **not** close an open product shelf. Selectors live in `comment-capture-blocked.ts` (prototype) and `prevent-prototype-plugin-chrome-dismiss.ts` (ui) — keep them in sync.
+4. **Mount panels inside the page layout** — place shelf components as siblings of the main content inside a `relative overflow-hidden` wrapper (see `table-editor-filters/_components/table-editor-page.tsx`). Do not hoist shelves to the gallery shell or outside `[data-prototype-screenshot]`.
+5. **Height** — scoped panels use `h-full` / `inset-y-0`, not `h-screen` / `100vh` (viewport units ignore the preview frame height). Scoped overlay/content use `absolute` (not `fixed`) inside the portal container.
+6. **Preview states** — each open shelf is a distinct preview mode in `*-preview-states.ts` (see **Live state & preview states**).
+7. **Post-build check** — open a shelf state; confirm the review sidebar and proto footer remain visible, clickable, and **do not dismiss** the open shelf.
 
 ```tsx
 import { usePrototypeProductOverlayPortal } from "prototype";
@@ -238,7 +238,11 @@ import { ControlsPanelSelect } from "@prototype/components/platform-ui/controls-
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 import { useLayoutEffect } from "react";
 
-export function PrototypePreviewStateSelect({ stateId, onStateChange, options }) {
+export function PrototypePreviewStateSelect({
+  stateId,
+  onStateChange,
+  options,
+}) {
   const setTweaksContent = usePrototypeReviewOptional()?.setTweaksContent;
 
   useLayoutEffect(() => {
@@ -299,16 +303,14 @@ Optional: `usePersistPrototypeLiveState(slug, liveState)` keeps reviewer positio
 
 ### Architecture
 
-
-| Piece | Location | Purpose |
-| ----- | -------- | ------- |
-| `TLiveState` + `liveState` | page `index.tsx` | Single snapshot of all preview-relevant UI |
-| `usePrototypeComments` | page | Freeze/restore `liveState` for comments & share links |
-| `useSyncPrototypePreviewStateToUrl` | page | Keep `?state=<id>` in the URL on every preview mode change; hydrate on load |
-| `*-preview-states.ts` | `_components/` | `definePreviewStateRegistry` — picker, map nodes, `edges`, sections |
-| `*-preview-state-select.tsx` | `_components/` | On-page / sidebar step picker (`PrototypeControl`) |
-| `*-state-canvas-config.tsx` | `_components/` | Wireframes + registry data for the review **State** panel |
-
+| Piece                               | Location         | Purpose                                                                     |
+| ----------------------------------- | ---------------- | --------------------------------------------------------------------------- |
+| `TLiveState` + `liveState`          | page `index.tsx` | Single snapshot of all preview-relevant UI                                  |
+| `usePrototypeComments`              | page             | Freeze/restore `liveState` for comments & share links                       |
+| `useSyncPrototypePreviewStateToUrl` | page             | Keep `?state=<id>` in the URL on every preview mode change; hydrate on load |
+| `*-preview-states.ts`               | `_components/`   | `definePreviewStateRegistry` — picker, map nodes, `edges`, sections         |
+| `*-preview-state-select.tsx`        | `_components/`   | On-page / sidebar step picker (`PrototypeControl`)                          |
+| `*-state-canvas-config.tsx`         | `_components/`   | Wireframes + registry data for the review **State** panel                   |
 
 Reference: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.tsx`, `*-preview-states.ts`).
 
@@ -318,11 +320,11 @@ Reference: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.
 
 Use the plain query param **`?state=<registry-id>`** (kebab-case id from `definePreviewStateRegistry`). Do **not** use encoded blobs, `shareState`, or custom param names (`?step=`, `?view=`, `?mode=`, etc.) for preview navigation.
 
-| Param | Purpose |
-| ----- | ------- |
-| `state` | Preview mode navigation — **always sync this** |
-| `shareState` | Annotation share links only (full frozen snapshot) — do not use for preview navigation |
-| `shareTarget` | Annotation share links only — do not use for preview navigation |
+| Param         | Purpose                                                                                |
+| ------------- | -------------------------------------------------------------------------------------- |
+| `state`       | Preview mode navigation — **always sync this**                                         |
+| `shareState`  | Annotation share links only (full frozen snapshot) — do not use for preview navigation |
+| `shareTarget` | Annotation share links only — do not use for preview navigation                        |
 
 **Page (`index.tsx`):**
 
@@ -343,6 +345,7 @@ useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
 ```
 
 Requirements:
+
 - Pass `liveState.previewStateId` (or equivalent registry id field) — the hook syncs that id to `?state=`.
 - Pass the same `setPreviewState` handler used by the state picker and state map.
 - Pass `validStateIds` from the same const array that defines your preview state union (e.g. `MY_PREVIEW_STATE_IDS`).
@@ -355,11 +358,14 @@ When a map node is clicked, navigate back to the prototype with `?state=` set �
 ```tsx
 import { PREVIEW_STATE_PARAM } from "proto-plugin";
 
-const handleStateSelect = useCallback((previewStateId: MyPreviewStateId) => {
-  const url = new URL(backHref, window.location.origin);
-  url.searchParams.set(PREVIEW_STATE_PARAM, previewStateId);
-  router.push(`${url.pathname}${url.search}`);
-}, [backHref, router]);
+const handleStateSelect = useCallback(
+  (previewStateId: MyPreviewStateId) => {
+    const url = new URL(backHref, window.location.origin);
+    url.searchParams.set(PREVIEW_STATE_PARAM, previewStateId);
+    router.push(`${url.pathname}${url.search}`);
+  },
+  [backHref, router],
+);
 ```
 
 **Before finishing:** open the prototype, switch states via the States menu and via in-prototype interactions, and confirm the URL updates each time (e.g. `/prototypes/my-slug?state=filtered-empty`). Reload that URL and confirm the same mode renders.
@@ -385,9 +391,7 @@ useSyncPrototypePreviewStateToUrl(liveState.previewStateId, setPreviewState, {
 const setStateCanvasConfig = review?.setStateCanvasConfig;
 useEffect(() => {
   if (!setStateCanvasConfig) return;
-  setStateCanvasConfig(
-    buildMyStateCanvasConfig(setPreviewState),
-  );
+  setStateCanvasConfig(buildMyStateCanvasConfig(setPreviewState));
   return () => setStateCanvasConfig(null);
 }, [setStateCanvasConfig, setPreviewState]);
 ```
@@ -453,12 +457,10 @@ Reference: `src/prototypes/booking-flow/_components/booking-flow-preview-states.
 
 Use when comparing **2+ UI directions** for the same user problem.
 
-
-| Layer         | Location                                               | Owns                                                                                         |
-| ------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Layer         | Location                                       | Owns                                                                      |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------- |
 | **Tool**      | `prototype` (`PrototypeVariantExplorer`, etc.) | Modal chrome, variant tabs, Mobbin gallery, localStorage for brief fields |
-| **Prototype** | `src/prototypes/<slug>/_components/`                   | Variant renderers, context JSON, Mobbin references, `component-ids.ts`      |
-
+| **Prototype** | `src/prototypes/<slug>/_components/`           | Variant renderers, context JSON, Mobbin references, `component-ids.ts`    |
 
 Reference: `src/prototypes/proto-partner-page/_components/invite-copy-design-exploration-config.tsx` + `invite-copy-variant-toggle.tsx`.
 
@@ -528,12 +530,10 @@ When asked to **modify an existing option**, add a **new variant** (do not repla
 
 In review mode, each exploration sidebar includes a brief field and **Copy prompt** button below the header. It copies `buildMoreDesignExplorationVariantsCopyText` with the typed brief, existing variants, and config path — use that to request more layout directions from an agent.
 
-
 | Prompt intent         | Action                                          |
 | --------------------- | ----------------------------------------------- |
 | Targeted modification | One new derivative variant; keep prior variants |
 | Broad regeneration    | New full set of variants                        |
-
 
 ---
 
@@ -541,12 +541,10 @@ In review mode, each exploration sidebar includes a brief field and **Copy promp
 
 Use when a prototype ships as a **sequence of small source PRs** rather than one monolith. The review sidebar **Spec** panel lists each PR, previews its slice, and generates agent prompts.
 
-
 | Layer         | Location                             | Owns                                                                                                                                             |
 | ------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Tool**      | `prototype`                  | `PrototypeSpecPanelContent`, `buildPrSplitPrototypeUrl`, `buildPrAgentPrompt`, Vercel preview fetch (`/api/pr-vercel-preview`), highlight tokens |
+| **Tool**      | `prototype`                          | `PrototypeSpecPanelContent`, `buildPrSplitPrototypeUrl`, `buildPrAgentPrompt`, Vercel preview fetch (`/api/pr-vercel-preview`), highlight tokens |
 | **Prototype** | `src/prototypes/<slug>/_components/` | `PR_SPLIT_ENTRIES` data, `PR_SPLIT_CONFIG`, wireframe renderers, live-state URL wiring                                                           |
-
 
 Reference: `booking-flow/_components/pr-split-config.ts` + `pr-split-wireframes.tsx` (when present) or any prototype with a spec panel.
 
@@ -606,7 +604,6 @@ export const PR_SPLIT_ENTRIES: MyPrSplitEntry[] = [
 
 **Entry fields:**
 
-
 | Field                          | Required       | Purpose                                                                        |
 | ------------------------------ | -------------- | ------------------------------------------------------------------------------ |
 | `order`                        | yes            | Merge sequence (1, 2, 3…)                                                      |
@@ -615,12 +612,11 @@ export const PR_SPLIT_ENTRIES: MyPrSplitEntry[] = [
 | `liveState`                    | yes            | Prototype state restored when the card is selected                             |
 | `wireframeId`                  | yes            | Key into prototype wireframe registry                                          |
 | `prUrl`, `branch`              | after PR opens | Sidebar links + dependency chain in prompts                                    |
-| `linearUrl`                    | optional       | Linear issue link shown in the PR split sidebar                                  |
+| `linearUrl`                    | optional       | Linear issue link shown in the PR split sidebar                                |
 | `previewPath`                  | optional       | Path on Vercel preview host (default from config)                              |
 | `vercelPreviewHost`            | optional       | Fallback when GitHub comment lookup fails                                      |
 | `analyticsNotes`               | optional       | Product analytics events for the agent prompt                                  |
 | `approved`                     | optional       | Shows approved vs in-review badge                                              |
-
 
 ### Wireframes (`pr-split-wireframes.tsx`)
 
@@ -642,10 +638,7 @@ Highlighted areas must match what `targetId` points to on the real prototype; su
 3. Mount spec panel via review context:
 
 ```tsx
-import {
-  PrototypeSpecPanelContent,
-  buildPrAgentPrompt,
-} from "prototype";
+import { PrototypeSpecPanelContent, buildPrAgentPrompt } from "prototype";
 
 setSpecContent(
   <PrototypeSpecPanelContent
@@ -728,4 +721,5 @@ Before finishing, confirm side-by-side with source or a screenshot:
 - **`scroll-container` with `overflow-y-auto` and no `h-full` fill chain** — causes top-left offset and clipped content in the preview frame (see **Prototype viewport fill**)
 - **Page-level motion with `translateX` on wrappers missing `w-full flex-1`** — same offset bug; use opacity-only or fill classes first
 - **Product shelves/sheets/dialogs without `portalContainer`** — default body portals cover review sidebar and proto footer; use `usePrototypeProductOverlayPortal()` (see **Prototype overlays & side shelves**)
-
+- **Custom Radix overlays that dismiss on plugin chrome clicks** — viewport-scoped dialogs must call `preventDismissOnPrototypePluginChrome` on outside events (or use `SidePanel` / tool `Dialog` which do this automatically)
+- **Viewport-scoped Radix dialogs with default `modal={true}`** — sets `pointer-events: none` on `body`, blocking review sidebar and proto footer; use `portalContainer` on `SidePanel` (auto `modal={false}`) or pass `modal={false}` on `Sheet` / `Dialog.Root`

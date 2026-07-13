@@ -55,7 +55,9 @@ function FullPageShell({
   showSecretBadges = false,
 }: FullPageShellProps) {
   return (
-    <div className={PR_SPLIT_WIREFRAME_FRAME_CLASS + " bg-[var(--cal-bg,#fff)]"}>
+    <div
+      className={PR_SPLIT_WIREFRAME_FRAME_CLASS + " bg-[var(--cal-bg,#fff)]"}
+    >
       <div className="flex h-full">
         <aside className="flex w-[22%] shrink-0 flex-col gap-1 border-r border-[var(--border-subtle,#e5e7eb)] p-1.5">
           <WireBlock className="h-2 w-full rounded-sm" />
@@ -86,7 +88,10 @@ function FullPageShell({
           {showChipRow ? (
             highlightChipRow ? (
               <div className="mb-1 flex gap-1">
-                <WireBlock className="h-3 w-[22%] min-w-[3rem] rounded-sm" highlight />
+                <WireBlock
+                  className="h-3 w-[22%] min-w-[3rem] rounded-sm"
+                  highlight
+                />
                 <WireBlock className="h-3 w-[14%] min-w-[2rem] rounded-sm opacity-40" />
               </div>
             ) : (
@@ -103,7 +108,10 @@ function FullPageShell({
                   <WireBlock className="h-2 w-full rounded-sm opacity-60" />
                   <WireBlock className="h-2 w-full rounded-sm opacity-60" />
                   <WireBlock className="h-2 w-[70%] rounded-sm opacity-60" />
-                  <WireBlock className="mt-auto h-2.5 w-full rounded-sm" highlight />
+                  <WireBlock
+                    className="mt-auto h-2.5 w-full rounded-sm"
+                    highlight
+                  />
                 </div>
               </div>
             </>
@@ -138,7 +146,10 @@ function FullPageShell({
                     <div className="flex gap-0.5">
                       <WireBlock className="h-1 w-[18%] rounded-sm opacity-60" />
                       {showSecretBadges && index < 2 ? (
-                        <WireBlock className="h-1 w-[14%] rounded-sm" highlight />
+                        <WireBlock
+                          className="h-1 w-[14%] rounded-sm"
+                          highlight
+                        />
                       ) : (
                         <WireBlock className="h-1 w-[14%] rounded-sm opacity-40" />
                       )}
@@ -155,7 +166,10 @@ function FullPageShell({
   );
 }
 
-const WIREFRAME_RENDERERS: Record<EventTypesPrSplitWireframeId, () => ReactNode> = {
+const WIREFRAME_RENDERERS: Record<
+  EventTypesPrSplitWireframeId,
+  () => ReactNode
+> = {
   "secret-filter-list": () => (
     <FullPageShell highlightMain="list" showSecretBadges showChipRow={false} />
   ),
@@ -168,9 +182,7 @@ const WIREFRAME_RENDERERS: Record<EventTypesPrSplitWireframeId, () => ReactNode>
   "empty-search": () => (
     <FullPageShell highlightMain="empty" highlightChipRow />
   ),
-  "create-modal": () => (
-    <FullPageShell highlightMain="grid" highlightModal />
-  ),
+  "create-modal": () => <FullPageShell highlightMain="grid" highlightModal />,
 };
 
 type PrSplitWireframeProps = {
@@ -186,7 +198,10 @@ export function PrSplitWireframe({ id, embedded }: PrSplitWireframeProps) {
   }
 
   return (
-    <PrototypeComponent id="pr-split-wireframes.pr-split-wireframe" className="w-full">
+    <PrototypeComponent
+      id="pr-split-wireframes.pr-split-wireframe"
+      className="w-full"
+    >
       {content}
     </PrototypeComponent>
   );

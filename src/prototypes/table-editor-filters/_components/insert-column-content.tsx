@@ -106,7 +106,7 @@ export const INSERT_COLUMN_BASELINE = {
 };
 
 export const DEFAULT_INSERT_COLUMN_VARIANT: InsertColumnVariant =
-  INSERT_COLUMN_VARIANT_OPTIONS[0].value;
+  INSERT_COLUMN_BASELINE.value;
 
 const QUICK_TYPE_CHIPS = ["text", "int8", "bool", "timestamptz", "uuid"] as const;
 
