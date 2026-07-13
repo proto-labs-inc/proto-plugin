@@ -62,6 +62,8 @@ const MINI_NODE_LABEL_MAX_WIDTH_RATIO = 0.22;
 const MINI_CALLOUT_MIN_HEIGHT_PX = 36;
 const MINI_CALLOUT_MAX_WIDTH_RATIO = 0.18;
 
+const MINI_CLICK_MOVE_THRESHOLD_PX = 5;
+
 function normalizeWheelDeltaY(
   event: WheelEvent,
   viewport: HTMLElement,
@@ -448,6 +450,14 @@ export function PrototypeStateCanvasView<T extends string>({
   const hoverDismissTimerRef = useRef<number | null>(null);
   const hasFitRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+    moved: boolean;
+  } | null>(null);
 
   const clearAnnotationFadeTimers = useCallback(() => {
     if (annotationFadeFrameRef.current != null) {
@@ -733,8 +743,6 @@ export function PrototypeStateCanvasView<T extends string>({
     if (!viewport) return;
 
     const handleWheel = (event: WheelEvent) => {
-      if (isMiniLayout) return;
-
       if (isZoomWheelEvent(event)) {
         event.preventDefault();
         hasUserInteractedRef.current = true;
@@ -767,12 +775,67 @@ export function PrototypeStateCanvasView<T extends string>({
       viewport.removeEventListener("wheel", handleWheel);
       stopZoomMomentum();
     };
-  }, [addZoomImpulse, applyTransform, isMiniLayout, stopZoomMomentum]);
+  }, [addZoomImpulse, applyTransform, stopZoomMomentum]);
 
-  const handleMiniViewportClick = useCallback(() => {
-    if (!isMiniLayout) return;
-    onMiniBackgroundClick?.();
-  }, [isMiniLayout, onMiniBackgroundClick]);
+  const handleMiniViewportPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!isMiniLayout || event.button !== 0) return;
+      stopZoomMomentum();
+      hasUserInteractedRef.current = true;
+      dragRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startPanX: transformRef.current.panX,
+        startPanY: transformRef.current.panY,
+        moved: false,
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [isMiniLayout, stopZoomMomentum],
+  );
+
+  const handleMiniViewportPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      const deltaX = event.clientX - drag.startX;
+      const deltaY = event.clientY - drag.startY;
+      if (
+        !drag.moved &&
+        deltaX * deltaX + deltaY * deltaY >
+          MINI_CLICK_MOVE_THRESHOLD_PX * MINI_CLICK_MOVE_THRESHOLD_PX
+      ) {
+        drag.moved = true;
+      }
+
+      applyTransform({
+        ...transformRef.current,
+        panX: drag.startPanX + deltaX,
+        panY: drag.startPanY + deltaY,
+      });
+    },
+    [applyTransform],
+  );
+
+  const handleMiniViewportPointerUp = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      const wasClick = !drag.moved;
+      dragRef.current = null;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      if (wasClick) {
+        onMiniBackgroundClick?.();
+      }
+    },
+    [onMiniBackgroundClick],
+  );
 
   useEffect(() => {
     if (!isMiniLayout) return;
@@ -841,8 +904,13 @@ export function PrototypeStateCanvasView<T extends string>({
       <div
         ref={viewportRef}
         className={isMiniLayout ? styles.miniViewport : styles.canvasViewport}
-        {...(isMiniLayout && onMiniBackgroundClick
-          ? { onClick: handleMiniViewportClick }
+        {...(isMiniLayout
+          ? {
+              onPointerDown: handleMiniViewportPointerDown,
+              onPointerMove: handleMiniViewportPointerMove,
+              onPointerUp: handleMiniViewportPointerUp,
+              onPointerCancel: handleMiniViewportPointerUp,
+            }
           : {})}
       >
         <div
