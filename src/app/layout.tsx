@@ -36,8 +36,13 @@ const sourceCodePro = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Prototypes",
-  description: "UI experiments and concept explorations.",
+  title: "Proto",
+  description: "A very ver good prototyping tool.",
+  icons: {
+    icon: "/proto-logo.png",
+    shortcut: "/proto-logo.png",
+    apple: "/proto-logo.png",
+  },
 };
 
 export default function RootLayout({
