@@ -10,6 +10,7 @@ import {
   useRegisterPrototypeReferenceDocs,
   usePrototypeReviewOptional,
   useSyncPrototypePreviewStateToUrl,
+  type PrSplitEntry,
 } from "proto-plugin";
 import { cn } from "ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -49,6 +50,7 @@ import {
   readInsertColumnVariantFromSearchParams,
   readLiveStateFromSearchParams,
   type TableEditorFiltersPrSplitEntry,
+  type TableEditorFiltersPrSplitWireframeId,
 } from "./_components/pr-split-config";
 import { PrSplitWireframe } from "./_components/pr-split-wireframes";
 import { buildTableEditorFiltersStateCanvasConfig } from "./_components/table-editor-filters-state-canvas-config";
@@ -287,11 +289,12 @@ export default function TableEditorFiltersPage() {
   }, []);
 
   const handlePrNavigate = useCallback(
-    (entry: TableEditorFiltersPrSplitEntry) => {
-      setSelectedPrOrder(entry.order);
-      applyPrSplitEntry(entry);
-      syncPrSplitToUrl(entry);
-      focusShareTarget?.(entry.targetId);
+    (entry: PrSplitEntry<TableEditorFiltersPrSplitWireframeId, TableEditorFiltersLiveState>) => {
+      const tableEditorEntry = entry as TableEditorFiltersPrSplitEntry;
+      setSelectedPrOrder(tableEditorEntry.order);
+      applyPrSplitEntry(tableEditorEntry);
+      syncPrSplitToUrl(tableEditorEntry);
+      focusShareTarget?.(tableEditorEntry.targetId);
     },
     [applyPrSplitEntry, focusShareTarget, syncPrSplitToUrl],
   );

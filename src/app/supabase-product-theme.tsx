@@ -8,6 +8,10 @@ import { SUPABASE_PRODUCT_THEME } from "./supabase-product-theme.constants";
 export { SUPABASE_PRODUCT_THEME } from "./supabase-product-theme.constants";
 
 function applyLightTheme(element: Element) {
+  // Respect surfaces that declare their own theme (e.g. the component-library
+  // light/dark toggle) — only pin light on surfaces with no explicit theme.
+  if (element.hasAttribute("data-theme")) return;
+
   element.classList.add(SUPABASE_PRODUCT_THEME);
   element.setAttribute("data-theme", SUPABASE_PRODUCT_THEME);
 }

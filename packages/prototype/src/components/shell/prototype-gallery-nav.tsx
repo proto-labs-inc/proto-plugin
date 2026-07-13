@@ -98,9 +98,9 @@ export function PrototypeGalleryNav({
               className={cn("size-9 shrink-0", GALLERY_FOOTER_BUTTON_CLASS)}
             >
               {theme === "light" ? (
-                <Moon size={16} strokeWidth={2} aria-hidden />
-              ) : (
                 <Sun size={16} strokeWidth={2} aria-hidden />
+              ) : (
+                <Moon size={16} strokeWidth={2} aria-hidden />
               )}
             </IconButton>
           )}

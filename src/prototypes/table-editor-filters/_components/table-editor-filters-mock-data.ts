@@ -65,8 +65,10 @@ export const MOCK_EMPLOYEES: EmployeeRow[] = [
   },
 ];
 
+export type MockColumnName = "id" | "name" | "email" | "created_at" | "department";
+
 export type MockColumn = {
-  name: string;
+  name: MockColumnName;
   format: string;
   isNullable: boolean;
   isPrimaryKey?: boolean;

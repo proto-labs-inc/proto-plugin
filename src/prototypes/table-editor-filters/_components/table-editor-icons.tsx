@@ -10,7 +10,7 @@ export function SqlEditorIcon({
   strokeWidth?: number;
 }) {
   return (
-    <PrototypeComponent id="table-editor-icons.sql-editor-icon" asChild>
+    <PrototypeComponent id="table-editor-icons.sql-editor-icon">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width={size}

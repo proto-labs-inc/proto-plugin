@@ -2,6 +2,8 @@ import { definePreviewStateRegistry } from "proto-plugin";
 
 import type { BookingsLiveState, BookingsPagePreviewStateId } from "./bookings-page-types";
 
+export type { BookingsPagePreviewStateId };
+
 export const DEFAULT_BOOKINGS_PAGE_PREVIEW_STATE: BookingsPagePreviewStateId = "upcoming-list";
 
 export function createLiveStateForPreview(

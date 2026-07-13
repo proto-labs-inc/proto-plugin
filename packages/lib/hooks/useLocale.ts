@@ -5,6 +5,9 @@ export function useLocale() {
   return {
     t,
     isLocaleReady: true,
-    i18n: { language: "en" },
+    i18n: {
+      language: "en",
+      exists: (_key: string) => false,
+    },
   };
 }

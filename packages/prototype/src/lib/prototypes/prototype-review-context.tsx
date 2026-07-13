@@ -80,7 +80,9 @@ type PrototypeReviewContextValue = {
   stateCanvasConfigRef: MutableRefObject<PrototypeStateCanvasConfig | null>;
   /** Whether a state canvas is registered (drives Canvas toolbar button). */
   hasStateCanvas: boolean;
-  setStateCanvasConfig: (config: PrototypeStateCanvasConfig | null) => void;
+  setStateCanvasConfig: <T extends string>(
+    config: PrototypeStateCanvasConfig<T> | null,
+  ) => void;
   stateCanvasPagePath: string | null;
   setStateCanvasPagePath: (path: string | null) => void;
   /** Preview states from the controls panel select (read via ref for New state modal). */
@@ -291,8 +293,8 @@ export function PrototypeReviewProvider({
   }, []);
 
   const setStateCanvasConfig = useCallback(
-    (config: PrototypeStateCanvasConfig | null) => {
-      stateCanvasConfigRef.current = config;
+    <T extends string>(config: PrototypeStateCanvasConfig<T> | null) => {
+      stateCanvasConfigRef.current = config as PrototypeStateCanvasConfig | null;
       const nextHasCanvas = config != null;
       setHasStateCanvas((current) =>
         current === nextHasCanvas ? current : nextHasCanvas,

@@ -67,7 +67,6 @@ const SonnerToaster = ({ toastOptions, ...props }: ToasterProps) => {
         closeButton: true,
         ...toastOptions,
       }}
-      cn={cn}
       {...props}
     />
   )

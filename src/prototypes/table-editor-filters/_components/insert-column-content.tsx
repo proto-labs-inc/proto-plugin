@@ -236,7 +236,7 @@ function TypePickerField({ emphasized = false }: { emphasized?: boolean }) {
       <Button
         type="button"
         variant="default"
-        size={emphasized ? "default" : "small"}
+        size={emphasized ? "medium" : "small"}
         className={cn(
           "w-full justify-between text-foreground-lighter font-regular",
           emphasized && "min-h-10 border-strong",
@@ -416,7 +416,7 @@ function EssentialFirstLayout() {
         <CollapsibleTrigger asChild>
           <Button
             type="button"
-            variant="ghost"
+            variant="text"
             className="group w-full justify-between px-0 hover:bg-transparent"
             iconRight={
               <ChevronDown className="h-4 w-4 text-foreground-lighter transition-transform group-data-[state=open]:rotate-180" />

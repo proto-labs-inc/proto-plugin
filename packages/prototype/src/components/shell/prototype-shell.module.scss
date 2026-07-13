@@ -36,7 +36,6 @@
 
 .previewStageSidebarOpen .viewportFrame {
   border-right: none;
-  border-top: none;
 }
 
 .previewStageBody {
@@ -77,6 +76,7 @@
   flex-direction: column;
   background: var(--bg-main);
   border: 1px solid var(--border-faint);
+  border-top: none;
 }
 
 .viewportFrameMobile {

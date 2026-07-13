@@ -5,6 +5,8 @@ import type {
   AutomatWorkflowsPagePreviewStateId,
 } from "./automat-workflows-page-types";
 
+export type { AutomatWorkflowsPagePreviewStateId };
+
 export const DEFAULT_AUTOMAT_WORKFLOWS_PAGE_PREVIEW_STATE: AutomatWorkflowsPagePreviewStateId =
   "overview-default";
 

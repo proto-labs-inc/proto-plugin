@@ -23,7 +23,7 @@ const MAIN_NAV: NavItem[] = [
   { id: "apps", label: "Apps", icon: "grid-3x3", hasChevron: true },
   { id: "routing", label: "Routing", icon: "split" },
   { id: "workflows", label: "Workflows", icon: "zap" },
-  { id: "insights", label: "Insights", icon: "bar-chart", hasChevron: true },
+  { id: "insights", label: "Insights", icon: "chart-bar", hasChevron: true },
 ];
 
 const BOTTOM_NAV: NavItem[] = [

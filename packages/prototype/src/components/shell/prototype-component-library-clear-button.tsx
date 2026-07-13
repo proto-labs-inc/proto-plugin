@@ -29,7 +29,7 @@ export function PrototypeComponentLibraryClearButton({
   };
 
   return (
-    <div className="mt-16 border-t border-[var(--tool-chrome-border)] pt-10">
+    <div className="border-default mt-16 border-t pt-10">
       <Button
         type="button"
         variant="destructive"
@@ -39,7 +39,7 @@ export function PrototypeComponentLibraryClearButton({
       >
         {isCopied ? "Copied clear prompt" : "Clear library"}
       </Button>
-      <p className="mt-3 max-w-xl text-sm text-[var(--tool-chrome-text-muted)]">
+      <p className="text-foreground-light mt-3 max-w-xl text-sm">
         Copies a prompt to reset this page to the empty state.
       </p>
     </div>

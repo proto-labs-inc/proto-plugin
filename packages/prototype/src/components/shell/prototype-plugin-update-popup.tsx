@@ -25,12 +25,15 @@ export function PrototypePluginUpdatePopup() {
     return null;
   }
 
+  const installed = status.installed;
+  const latest = status.latest;
+
   const handleCopyPrompt = async () => {
     try {
       await copy(
         buildUpgradeProtoPluginCopyText({
-          installed: status.installed,
-          latest: status.latest,
+          installed,
+          latest,
         }),
       );
     } catch {

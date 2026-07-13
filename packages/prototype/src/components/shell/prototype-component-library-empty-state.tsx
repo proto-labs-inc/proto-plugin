@@ -32,8 +32,8 @@ export function PrototypeComponentLibraryEmptyState({
   };
 
   return (
-    <div className="max-w-2xl rounded-xl border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface-muted)] px-6 py-8 text-[var(--tool-chrome-text-muted)]">
-      <p className="text-sm font-medium text-[var(--tool-chrome-text-heading)]">
+    <div className="border-default bg-surface-100 text-foreground-light max-w-2xl rounded-xl border border-dashed px-6 py-8">
+      <p className="text-foreground text-sm font-medium">
         No components yet
       </p>
       <p className="mt-2 text-sm leading-relaxed">
@@ -46,7 +46,7 @@ export function PrototypeComponentLibraryEmptyState({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 border-[var(--tool-chrome-border-strong)] text-[var(--tool-chrome-text-heading)] hover:text-[var(--tool-chrome-text-heading)]"
+          className="border-default text-foreground hover:text-foreground h-8 gap-1.5"
           onClick={handleCopy}
           aria-label="Copy component library population prompt"
         >

@@ -13,7 +13,9 @@ const sizeToRadius = {
 
 export function ButtonGroup({ children, combined = false, containerProps }: Props) {
   // Get the size from the first button child if it exists
-  const firstButton = React.Children.toArray(children)[0] as React.ReactElement;
+  const firstButton = React.Children.toArray(children)[0] as
+    | React.ReactElement<{ size?: keyof typeof sizeToRadius }>
+    | undefined;
   const size = firstButton?.props?.size || "base";
   const radius = sizeToRadius[size as keyof typeof sizeToRadius];
 

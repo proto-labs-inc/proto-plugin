@@ -22,7 +22,7 @@ export function UserAvatarGroupWithOrg(props: UserAvatarProps) {
       href: isEmbed || disableHref ? null : "/",
       image: getPlaceholderAvatar(organization.logoUrl, organization.name),
       alt: organization.name || undefined,
-      title: organization.name,
+      title: organization.name ?? undefined,
     },
   ].concat(
     users.map((user) => {

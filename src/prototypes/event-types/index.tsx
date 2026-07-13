@@ -7,6 +7,7 @@ import {
   usePrototypeComments,
   usePrototypeReviewOptional,
   useSyncPrototypePreviewStateToUrl,
+  type PrSplitEntry,
 } from "proto-plugin";
 import { useCallback, useEffect, useState } from "react";
 
@@ -35,6 +36,7 @@ import {
   readPageLayoutFromSearchParams,
   readSecretTransitionFromSearchParams,
   type EventTypesPrSplitEntry,
+  type EventTypesPrSplitWireframeId,
 } from "./_components/pr-split-config";
 import { PrSplitWireframe } from "./_components/pr-split-wireframes";
 import { buildEventTypesStateCanvasConfig } from "./_components/event-types-state-canvas-config";
@@ -169,11 +171,12 @@ export default function EventTypesPage() {
   }, []);
 
   const handlePrNavigate = useCallback(
-    (entry: EventTypesPrSplitEntry) => {
-      setSelectedPrOrder(entry.order);
-      applyPrSplitEntry(entry);
-      syncPrSplitToUrl(entry);
-      focusShareTarget?.(entry.targetId);
+    (entry: PrSplitEntry<EventTypesPrSplitWireframeId, EventTypesLiveState>) => {
+      const eventTypesEntry = entry as EventTypesPrSplitEntry;
+      setSelectedPrOrder(eventTypesEntry.order);
+      applyPrSplitEntry(eventTypesEntry);
+      syncPrSplitToUrl(eventTypesEntry);
+      focusShareTarget?.(eventTypesEntry.targetId);
     },
     [applyPrSplitEntry, focusShareTarget, syncPrSplitToUrl],
   );

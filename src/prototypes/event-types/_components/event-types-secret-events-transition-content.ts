@@ -1,6 +1,7 @@
 import type { DesignExplorationRationale } from "proto-plugin";
 
 export type EventTypesSecretEventsTransitionVariant =
+  | "no-entry"
   | "filter-chip-row"
   | "header-tabs"
   | "filter-dropdown"

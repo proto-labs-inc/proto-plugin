@@ -10,6 +10,7 @@ import {
   useRegisterPrototypeReferenceDocs,
   usePrototypeReviewOptional,
   useSyncPrototypePreviewStateToUrl,
+  type PrSplitEntry,
 } from "proto-plugin";
 import { cn } from "@coss/ui/lib/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -37,6 +38,7 @@ import {
   readAnalyticsVariantFromSearchParams,
   readLiveStateFromSearchParams,
   type AutomatPrSplitEntry,
+  type AutomatPrSplitWireframeId,
 } from "./_components/pr-split-config";
 import { PrSplitWireframe } from "./_components/pr-split-wireframes";
 import type {
@@ -130,11 +132,12 @@ export default function AutomatWorkflowsPage() {
   }, []);
 
   const handlePrNavigate = useCallback(
-    (entry: AutomatPrSplitEntry) => {
-      setSelectedPrOrder(entry.order);
-      applyPrSplitEntry(entry);
-      syncPrSplitToUrl(entry);
-      focusShareTarget?.(entry.targetId);
+    (entry: PrSplitEntry<AutomatPrSplitWireframeId, AutomatLiveState>) => {
+      const automatEntry = entry as AutomatPrSplitEntry;
+      setSelectedPrOrder(automatEntry.order);
+      applyPrSplitEntry(automatEntry);
+      syncPrSplitToUrl(automatEntry);
+      focusShareTarget?.(automatEntry.targetId);
     },
     [applyPrSplitEntry, focusShareTarget, syncPrSplitToUrl],
   );

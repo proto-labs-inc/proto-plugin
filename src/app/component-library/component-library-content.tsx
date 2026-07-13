@@ -48,13 +48,13 @@ function LibrarySection({
   children: ReactNode;
 }) {
   return (
-    <section className="mb-16 border-b border-[var(--tool-chrome-border)] pb-16 last:mb-0 last:border-b-0 last:pb-0">
+    <section className="border-default mb-16 border-b pb-16 last:mb-0 last:border-b-0 last:pb-0">
       <div className="mb-8">
-        <h2 className="text-xl font-semibold tracking-tight text-[var(--tool-chrome-text-heading)]">
+        <h2 className="text-foreground text-xl font-semibold tracking-tight">
           {title}
         </h2>
         {description ? (
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
+          <p className="text-foreground-light mt-2 max-w-3xl text-sm leading-relaxed">
             {description}
           </p>
         ) : null}
@@ -106,8 +106,8 @@ export function ComponentLibraryContent() {
   return (
     <div className="pb-20">
       <LibrarySection
-        title="ui — Base primitives (Supabase Light)"
-        description="Synced from packages/ui. Previews use the Supabase Light theme — the default for all prototypes in this host."
+        title="ui — Base primitives"
+        description="Synced from packages/ui. Toggle the header light/dark control to preview components in each Supabase product theme."
       >
         <PreviewGrid>
           <PreviewBlock title="Button variants">
@@ -300,7 +300,7 @@ export function ComponentLibraryContent() {
 
       <LibrarySection
         title="Design tokens"
-        description="Semantic colors from packages/config and packages/ui/build (Supabase Light)."
+        description="Semantic colors from packages/config and packages/ui/build."
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[

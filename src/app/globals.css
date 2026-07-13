@@ -32,6 +32,16 @@
   --font-heading: var(--font-manrope, "Manrope", system-ui, sans-serif);
 }
 
+[data-prototype-root] [data-prototype-source-surface].dark,
+[data-prototype-root] [data-prototype-source-surface][data-theme="dark"],
+[data-prototype-source-surface].dark,
+[data-prototype-source-surface][data-theme="dark"] {
+  color-scheme: dark;
+  font-family: var(--font-inter, var(--font-sans));
+  --font-sans: var(--font-inter, "Inter", system-ui, sans-serif);
+  --font-heading: var(--font-manrope, "Manrope", system-ui, sans-serif);
+}
+
 [data-prototype-root] [data-prototype-source-surface],
 [data-prototype-root] [data-prototype-source-surface] *,
 [data-prototype-root] [data-prototype-screenshot],
@@ -39,7 +49,11 @@
 [data-prototype-source-surface].light,
 [data-prototype-source-surface].light *,
 [data-prototype-source-surface][data-theme="light"],
-[data-prototype-source-surface][data-theme="light"] * {
+[data-prototype-source-surface][data-theme="light"] *,
+[data-prototype-source-surface].dark,
+[data-prototype-source-surface].dark *,
+[data-prototype-source-surface][data-theme="dark"],
+[data-prototype-source-surface][data-theme="dark"] * {
   font-family: inherit;
 }
 

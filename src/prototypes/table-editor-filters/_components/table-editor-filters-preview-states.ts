@@ -6,6 +6,8 @@ import type {
   TableEditorFiltersPreviewStateId,
 } from "./table-editor-filters-types";
 
+export type { TableEditorFiltersPreviewStateId };
+
 export const DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE: TableEditorFiltersPreviewStateId =
   "populated";
 

@@ -1,6 +1,17 @@
 import { useId } from "@radix-ui/react-id";
 import * as React from "react";
-import type { GroupBase, SingleValue, MultiValue } from "react-select";
+import type {
+  ActionMeta,
+  CSSObjectWithLabel,
+  ControlProps,
+  GroupBase,
+  IndicatorsContainerProps,
+  MultiValue,
+  OnChangeValue,
+  OptionProps,
+  PlaceholderProps,
+  SingleValue,
+} from "react-select";
 import ReactSelect from "react-select";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -50,7 +61,7 @@ export const Select = <
       {...reactSelectProps}
       menuPlacement={menuPlacement}
       styles={{
-        control: (base, _props) =>
+        control: (base: CSSObjectWithLabel, _props: ControlProps<Option, IsMulti, Group>) =>
           Object.assign({}, base, {
             minHeight: size === "sm" ? "28px" : "32px",
             height: grow ? "auto" : size === "sm" ? "28px" : "32px",
@@ -58,7 +69,7 @@ export const Select = <
       }}
       classNames={{
         input: () => cx("text-emphasis", innerClassNames?.input),
-        option: (state) =>
+        option: (state: OptionProps<Option, IsMulti, Group>) =>
           cx(
             "bg-default flex cursor-pointer justify-between py-2 px-3 rounded-md text-default items-center",
             state.isFocused && "bg-subtle",
@@ -66,9 +77,10 @@ export const Select = <
             state.isSelected && "bg-emphasis text-default",
             innerClassNames?.option
           ),
-        placeholder: (state) => cx("text-muted", state.isFocused && variant !== "checkbox" && "hidden"),
+        placeholder: (state: PlaceholderProps<Option, IsMulti, Group>) =>
+          cx("text-muted", state.isFocused && variant !== "checkbox" && "hidden"),
         dropdownIndicator: () => cx("text-default", "w-4 h-4", "flex items-center justify-center "),
-        control: (state) =>
+        control: (state: ControlProps<Option, IsMulti, Group>) =>
           cx(
             inputStyles({ size }),
             state.isMulti
@@ -104,7 +116,7 @@ export const Select = <
             "scroll-bar scrollbar-track-w-20 rounded-md flex flex-col space-y-1",
             innerClassNames?.menuList
           ),
-        indicatorsContainer: (state) =>
+        indicatorsContainer: (state: IndicatorsContainerProps<Option, IsMulti, Group>) =>
           cx(
             "flex items-start! justify-center mt-1 h-full",
             state.selectProps.menuIsOpen
@@ -201,10 +213,10 @@ export function SelectWithValidation<
       <Select
         value={value}
         {...remainingProps}
-        onChange={(value, ...remainingArgs) => {
+        onChange={(value: OnChangeValue<Option, IsMulti>, actionMeta: ActionMeta<Option>) => {
           setHiddenInputValue(value);
           if (onChange) {
-            onChange(value, ...remainingArgs);
+            onChange(value, actionMeta);
           }
         }}
       />
