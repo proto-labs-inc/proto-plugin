@@ -33,7 +33,6 @@ export function createPrototypeComponentLibraryPage(
       <PrototypeComponentLibraryShell
         title={COMPONENT_LIBRARY_HEADER_TITLE}
         description={COMPONENT_LIBRARY_HEADER_DESCRIPTION}
-        enableThemeToggle={!isEmpty}
       >
         {isEmpty ? (
           <PrototypeComponentLibraryEmptyState

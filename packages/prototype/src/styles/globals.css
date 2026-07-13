@@ -713,6 +713,7 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   background: var(--tool-dialog-separator);
 }
 
+/* Tool chrome tabs — scoped away from product preview surfaces. */
 [data-prototype-root] [role="tablist"] {
   border: 1px solid var(--tool-chrome-border);
   background: var(--tool-chrome-surface-muted);
@@ -729,6 +730,20 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
     var(--shadow-xs),
     inset 0 0 0 1px color-mix(in srgb, var(--tool-chrome-blue) 35%, transparent);
   font-weight: 600;
+}
+
+[data-prototype-root] :is([data-prototype-source-surface], [data-prototype-screenshot]) [role="tablist"],
+:is([data-prototype-source-surface], [data-prototype-screenshot]) [role="tablist"] {
+  border: unset;
+  background: unset;
+}
+
+[data-prototype-root] :is([data-prototype-source-surface], [data-prototype-screenshot]) [role="tab"][data-state="active"],
+:is([data-prototype-source-surface], [data-prototype-screenshot]) [role="tab"][data-state="active"] {
+  color: unset;
+  background: unset;
+  box-shadow: unset;
+  font-weight: unset;
 }
 
 /* Section labels — compact nav chip scale */
