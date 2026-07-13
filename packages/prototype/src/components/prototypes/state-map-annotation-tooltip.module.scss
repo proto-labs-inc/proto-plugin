@@ -1,49 +1,32 @@
+$wireframe-subtle: var(--prototype-state-map-node-preview-bg, var(--tool-chrome-surface-muted));
+$wireframe-footer-border: var(--prototype-state-map-node-footer-border, var(--tool-chrome-border-strong));
 $wireframe-bg: var(--tool-chrome-surface);
-$wireframe-border: var(--tool-chrome-border);
 $enter-duration: 0.12s;
 $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
 
-.tooltip {
-  position: absolute;
-  z-index: 2;
-  width: 220px;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid $wireframe-border;
-  border-radius: 0.5rem;
-  background-color: $wireframe-bg;
+.panel {
+  width: 100%;
+  border-top: 1px solid $wireframe-footer-border;
+  background: $wireframe-subtle;
   pointer-events: none;
   opacity: 0;
-  transform: translateX(-4px);
-  transition:
-    opacity $enter-duration $enter-ease,
-    transform $enter-duration $enter-ease;
-
-  @media (prefers-reduced-motion: reduce) {
-    transform: none;
-    transition: opacity 0.08s ease;
-  }
+  transition: opacity $enter-duration $enter-ease;
 }
 
-.tooltipVisible {
+.panelVisible {
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
-
-  @media (prefers-reduced-motion: reduce) {
-    transform: none;
-  }
 }
 
 .lead {
   margin: 0;
-  font-size: 0.6875rem;
   line-height: 1.45;
   color: var(--tool-chrome-text-muted);
   white-space: pre-wrap;
 }
 
 .bulletList {
-  margin: 0.4375rem 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -51,8 +34,6 @@ $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
 .bulletItem {
   position: relative;
   margin: 0;
-  padding: 0.1875rem 0 0.1875rem 0.875rem;
-  font-size: 0.6875rem;
   line-height: 1.45;
   color: var(--tool-chrome-text-muted);
 
@@ -62,16 +43,9 @@ $enter-ease: cubic-bezier(0.215, 0.61, 0.355, 1);
     left: 0;
     color: var(--tool-chrome-icon);
   }
-
-  & + & {
-    margin-top: 0.0625rem;
-  }
 }
 
 .bulletItemInteractive {
-  margin-left: -0.375rem;
-  padding-left: 1.25rem;
-  border-radius: 0.25rem;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 

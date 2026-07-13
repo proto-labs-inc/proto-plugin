@@ -26,7 +26,7 @@ async function readClientScreenshotManifest(): Promise<ScreenshotManifest> {
 export function usePrototypeStateScreenshotSrc(
   slug: string,
   stateId: string,
-): string | null {
+): string {
   const manifestKey = stateScreenshotManifestKey(slug, stateId);
   const [version, setVersion] = useState<number | undefined>(undefined);
 
@@ -66,6 +66,5 @@ export function usePrototypeStateScreenshotSrc(
     };
   }, [slug, stateId, syncVersion]);
 
-  if (version == null) return null;
   return stateScreenshotSrc(slug, stateId, version);
 }

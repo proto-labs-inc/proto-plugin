@@ -5,6 +5,7 @@ export { createPrototypeStarterScreensPage } from "./config/create-prototype-sta
 
 export {
   readScreenshotManifest,
+  syncScreenshotManifestFromDisk,
   touchScreenshotManifest,
   touchScreenshotManifestKey,
 } from "./lib/prototypes/screenshot-manifest";

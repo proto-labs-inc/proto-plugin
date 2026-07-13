@@ -33,6 +33,7 @@ export function PrototypeStateMapModal({
         <PrototypeStateCanvasView
           config={config}
           layout="page"
+          activeStateId={review.activePreviewStateId}
           onClose={() => onOpenChange(false)}
         />
       </DialogContent>

@@ -966,3 +966,7 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   color: var(--text-primary);
   background-color: var(--bg-subtle);
 }
+
+[data-prototype-wireframe-preview] > * {
+  background-color: var(--bg-subtle, #f4f4f5);
+}

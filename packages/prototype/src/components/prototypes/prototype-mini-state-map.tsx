@@ -9,7 +9,7 @@ import {
   getPrototypeToolOverlayRoot,
 } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
-import { Maximize2, Minus } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   forwardRef,
@@ -17,7 +17,6 @@ import {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -30,8 +29,6 @@ import styles from "./prototype-mini-state-map.module.scss";
 
 const FLY_DURATION_MS = 320;
 const FLY_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
-const SNAP_DURATION_MS = 280;
-const SNAP_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
 /** Below portaled review menus (prototype-floating-pill.module.scss z-index: 1051). */
 const MINI_STATE_MAP_Z_INDEX = 1;
 const MINI_MAP_WIDTH_PX = 280;
@@ -136,32 +133,6 @@ function getMiniMapCornerRect(
   return new DOMRect(left, top, width, height);
 }
 
-function getNearestMiniMapCorner(
-  centerX: number,
-  centerY: number,
-  tabElement: HTMLElement | null,
-): MiniMapCorner {
-  let nearest: MiniMapCorner = "bottom-left";
-  let minDistance = Number.POSITIVE_INFINITY;
-
-  for (const corner of MINI_MAP_CORNERS) {
-    const rect = getMiniMapCornerRect(corner, tabElement);
-    if (!rect) continue;
-
-    const cornerCenterX = rect.left + rect.width / 2;
-    const cornerCenterY = rect.top + rect.height / 2;
-    const distance =
-      (centerX - cornerCenterX) ** 2 + (centerY - cornerCenterY) ** 2;
-
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearest = corner;
-    }
-  }
-
-  return nearest;
-}
-
 function getAnchorTransform(anchor: DOMRect, target: DOMRect): string {
   const scaleX = target.width / anchor.width;
   const scaleY = target.height / anchor.height;
@@ -199,7 +170,7 @@ export const PrototypeMiniStateMap = forwardRef<
   const review = usePrototypeReview();
   const { commentTheme } = usePrototypeToolTheme();
   const onStateMapPage = useOnStateMapPage(review.stateCanvasPagePath);
-  const { value: storedCorner, updateValue: updateStoredCorner } =
+  const { value: storedCorner } =
     usePersistedLocalString(MINI_MAP_CORNER_STORAGE_KEY, "bottom-left");
   const corner: MiniMapCorner = isMiniMapCorner(storedCorner)
     ? storedCorner
@@ -208,20 +179,8 @@ export const PrototypeMiniStateMap = forwardRef<
   const [restRect, setRestRect] = useState<DOMRect | null>(null);
   const [flyState, setFlyState] = useState<FlyState | null>(null);
   const [flyActive, setFlyActive] = useState(false);
-  const [dragPosition, setDragPosition] = useState<{
-    left: number;
-    top: number;
-  } | null>(null);
-  const [isSnapping, setIsSnapping] = useState(false);
   const shellRef = useRef<HTMLDivElement>(null);
   const restoreStartedRef = useRef(false);
-  const repositionDragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    originLeft: number;
-    originTop: number;
-  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -241,7 +200,7 @@ export const PrototypeMiniStateMap = forwardRef<
     if (!stage || typeof ResizeObserver === "undefined") return;
 
     const observer = new ResizeObserver(() => {
-      if (flyState || dragPosition || isSnapping) return;
+      if (flyState) return;
       syncRestRect();
     });
 
@@ -254,150 +213,7 @@ export const PrototypeMiniStateMap = forwardRef<
       observer.disconnect();
       window.removeEventListener("resize", syncRestRect);
     };
-  }, [dragPosition, flyState, isSnapping, minimizeTargetRef, syncRestRect]);
-
-  const finishSnap = useCallback(() => {
-    setIsSnapping(false);
-    setDragPosition(null);
-    syncRestRect();
-  }, [syncRestRect]);
-
-  useEffect(() => {
-    if (!isSnapping) return;
-
-    const shellNode = shellRef.current;
-    if (!shellNode) {
-      finishSnap();
-      return;
-    }
-
-    const handleTransitionEnd = (event: TransitionEvent) => {
-      if (event.target !== shellNode || event.propertyName !== "left") {
-        return;
-      }
-      cleanup();
-      finishSnap();
-    };
-
-    const cleanup = () => {
-      shellNode.removeEventListener("transitionend", handleTransitionEnd);
-      window.clearTimeout(fallbackTimer);
-    };
-
-    shellNode.addEventListener("transitionend", handleTransitionEnd);
-    const fallbackTimer = window.setTimeout(() => {
-      cleanup();
-      finishSnap();
-    }, SNAP_DURATION_MS + 80);
-
-    return cleanup;
-  }, [finishSnap, isSnapping]);
-
-  const handleRepositionPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 || flyState || minimized || isSnapping) return;
-
-      const currentRect =
-        dragPosition != null && restRect
-          ? new DOMRect(
-              dragPosition.left,
-              dragPosition.top,
-              restRect.width,
-              restRect.height,
-            )
-          : restRect;
-      if (!currentRect) return;
-
-      repositionDragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        originLeft: currentRect.left,
-        originTop: currentRect.top,
-      };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [dragPosition, flyState, isSnapping, minimized, restRect],
-  );
-
-  const handleRepositionPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = repositionDragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId || !restRect) return;
-
-      setDragPosition({
-        left: drag.originLeft + (event.clientX - drag.startX),
-        top: drag.originTop + (event.clientY - drag.startY),
-      });
-    },
-    [restRect],
-  );
-
-  const finishRepositionDrag = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = repositionDragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId || !restRect) return;
-
-      repositionDragRef.current = null;
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-
-      const currentLeft = drag.originLeft + (event.clientX - drag.startX);
-      const currentTop = drag.originTop + (event.clientY - drag.startY);
-      const centerX = currentLeft + restRect.width / 2;
-      const centerY = currentTop + restRect.height / 2;
-      const nearestCorner = getNearestMiniMapCorner(
-        centerX,
-        centerY,
-        minimizeTargetRef.current,
-      );
-      const snappedRect = getMiniMapCornerRect(
-        nearestCorner,
-        minimizeTargetRef.current,
-      );
-
-      updateStoredCorner(nearestCorner);
-
-      if (prefersReducedMotion() || !snappedRect) {
-        setRestRect(snappedRect);
-        setDragPosition(null);
-        return;
-      }
-
-      setDragPosition({ left: currentLeft, top: currentTop });
-      setIsSnapping(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setDragPosition({
-            left: snappedRect.left,
-            top: snappedRect.top,
-          });
-        });
-      });
-    },
-    [minimizeTargetRef, restRect, syncRestRect, updateStoredCorner],
-  );
-
-  const handleRepositionPointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      finishRepositionDrag(event);
-    },
-    [finishRepositionDrag],
-  );
-
-  const miniRepositionHandlers = useMemo(
-    () => ({
-      onPointerDown: handleRepositionPointerDown,
-      onPointerMove: handleRepositionPointerMove,
-      onPointerUp: handleRepositionPointerUp,
-    }),
-    [
-      handleRepositionPointerDown,
-      handleRepositionPointerMove,
-      handleRepositionPointerUp,
-    ],
-  );
+  }, [flyState, minimizeTargetRef, syncRestRect]);
 
   const finishFly = useCallback(
     (direction: FlyDirection) => {
@@ -506,8 +322,8 @@ export const PrototypeMiniStateMap = forwardRef<
     opacity = 0;
   }
 
-  const shellLeft = dragPosition?.left ?? restRect.left;
-  const shellTop = dragPosition?.top ?? restRect.top;
+  const shellLeft = restRect.left;
+  const shellTop = restRect.top;
 
   const shellStyle: CSSProperties = {
     position: "fixed",
@@ -523,9 +339,7 @@ export const PrototypeMiniStateMap = forwardRef<
     pointerEvents: minimized && !isFlying ? "none" : "auto",
     transition: isFlying
       ? `transform ${FLY_DURATION_MS}ms ${FLY_EASE}, opacity ${FLY_DURATION_MS}ms ${FLY_EASE}`
-      : isSnapping
-        ? `left ${SNAP_DURATION_MS}ms ${SNAP_EASE}, top ${SNAP_DURATION_MS}ms ${SNAP_EASE}`
-        : "none",
+      : "none",
   };
 
   const mapContent = (
@@ -533,7 +347,7 @@ export const PrototypeMiniStateMap = forwardRef<
       config={config}
       layout="mini"
       activeStateId={review.activePreviewStateId}
-      miniRepositionHandlers={miniRepositionHandlers}
+      onMiniBackgroundClick={onExpand}
     />
   );
 
@@ -549,7 +363,6 @@ export const PrototypeMiniStateMap = forwardRef<
         className={cn(
           styles.rootShell,
           isFlying && styles.rootShellFlying,
-          (dragPosition != null || isSnapping) && styles.rootShellDragging,
         )}
         data-prototype-mini-state-map
         style={shellStyle}
@@ -558,14 +371,6 @@ export const PrototypeMiniStateMap = forwardRef<
         {mapContent}
         {!isFlying && !minimized ? (
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.actionButton}
-              aria-label="Minimize state map"
-              onClick={handleMinimize}
-            >
-              <Minus size={11} strokeWidth={2} aria-hidden />
-            </button>
             <button
               type="button"
               className={styles.actionButton}

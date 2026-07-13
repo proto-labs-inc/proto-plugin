@@ -4,7 +4,6 @@ $canvas-border: var(--tool-chrome-border);
 $canvas-border-strong: var(--tool-chrome-border-strong);
 $canvas-text: var(--tool-chrome-text);
 $canvas-text-muted: var(--tool-chrome-text-muted);
-$canvas-text-tertiary: var(--tool-chrome-icon-hover, rgba(0, 0, 0, 0.45));
 $canvas-edge-base: var(--prototype-state-canvas-edge, rgba(0, 0, 0, 0.22));
 // Pre-blend to canvas bg so edges stay subtle without semi-transparent layering at corners/arrowheads.
 $canvas-edge-color: color-mix(in srgb, $canvas-edge-base 50%, $canvas-chrome-bg);
@@ -43,10 +42,6 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   min-height: 0;
   overflow: visible;
   background: transparent;
-
-  .sectionLabel {
-    display: none;
-  }
 
   .nodeGroup {
     box-sizing: border-box;
@@ -147,13 +142,7 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   backdrop-filter: blur(4px);
   border: 1px solid var(--tool-chrome-border);
   border-radius: 0.75rem;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-
-  &:active {
-    cursor: grabbing;
-  }
+  cursor: pointer;
 }
 
 .miniNodeLabel {
@@ -301,15 +290,6 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   fill: $canvas-edge-color;
 }
 
-.sectionLabel {
-  position: absolute;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: $canvas-text-tertiary;
-}
-
 .nodeGroup {
   position: absolute;
   display: flex;
@@ -319,17 +299,25 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   border-radius: 0.5rem;
   background: $wireframe-bg;
   transition: border-color 0.2s ease;
+}
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: color-mix(in srgb, var(--tool-chrome-blue) 45%, transparent);
-    }
-  }
+[data-prototype-state-canvas-layout="page"] .nodeGroup,
+[data-prototype-state-canvas-layout="overlay"] .nodeGroup {
+  overflow: visible;
+}
+
+[data-prototype-state-canvas-layout="page"] .node,
+[data-prototype-state-canvas-layout="overlay"] .node {
+  overflow: visible;
 }
 
 .nodeGroupSelected {
   z-index: 2;
   border: 2px solid var(--tool-chrome-blue);
+}
+
+.nodeGroupHovered {
+  z-index: 3;
 }
 
 .node {
@@ -342,12 +330,6 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   text-align: left;
   cursor: pointer;
   transition: background-color 0.2s ease;
-
-  @media (hover: hover) and (pointer: fine) {
-    .nodeGroup:hover & {
-      background: color-mix(in srgb, var(--tool-chrome-blue) 4%, $wireframe-bg);
-    }
-  }
 
   &:focus:not(:focus-visible) {
     outline: none;
@@ -364,6 +346,10 @@ $wireframe-footer-text: var(--prototype-state-map-node-footer-text, var(--tool-c
   overflow: hidden;
   background: $wireframe-subtle;
   pointer-events: none;
+
+  &:has([data-prototype-wireframe-preview]) {
+    background: #f4f4f5;
+  }
 }
 
 .nodePreviewContent {

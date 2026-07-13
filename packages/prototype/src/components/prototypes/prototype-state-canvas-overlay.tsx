@@ -28,8 +28,7 @@ import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-
 import { PrototypeStateScreenshotPreview } from "./prototype-state-screenshot-preview";
 import { PrototypeStateMapAddStateButton } from "./prototype-state-map-add-state-button";
 import {
-  StateMapAnnotationTooltip,
-  getStateMapAnnotationAnchor,
+  StateMapAnnotationPanel,
   type StateMapAnnotationTarget,
 } from "./state-map-annotation-tooltip";
 import {
@@ -49,6 +48,9 @@ const ZOOM_MOMENTUM_DECAY = 5.5;
 const ZOOM_MOMENTUM_STOP_VELOCITY = 0.02;
 const MAX_ZOOM_VELOCITY = 5;
 const ANNOTATION_FADE_MS = 120;
+const NODE_LABEL_FONT_SCREEN_PX = 12;
+const NODE_LABEL_ROW_SCREEN_PX = 40;
+const NODE_LABEL_PADDING_X_SCREEN_PX = 12;
 const MINI_NODE_LABEL_SCREEN_PX = 13;
 const MINI_NODE_SELECTED_BORDER_SCREEN_PX = 2.5;
 const MINI_CALLOUT_LABEL_SCREEN_PX = 10;
@@ -385,12 +387,6 @@ function resolveHoverAnnotationSource<T extends string>(
   };
 }
 
-type MiniViewportRepositionHandlers = {
-  onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
-  onPointerUp: (event: React.PointerEvent<HTMLDivElement>) => void;
-};
-
 type PrototypeStateCanvasViewProps<T extends string> = {
   config: PrototypeStateCanvasConfig<T>;
   layout?: "page" | "overlay" | "mini";
@@ -398,8 +394,8 @@ type PrototypeStateCanvasViewProps<T extends string> = {
   onClose?: () => void;
   /** Highlights the node matching the currently previewed state. */
   activeStateId?: string | null;
-  /** When set, mini viewport drag repositions the shell instead of panning the canvas. */
-  miniRepositionHandlers?: MiniViewportRepositionHandlers;
+  /** Mini layout: click on empty canvas area (not a state node). */
+  onMiniBackgroundClick?: () => void;
 };
 
 export function PrototypeStateCanvasView<T extends string>({
@@ -408,7 +404,7 @@ export function PrototypeStateCanvasView<T extends string>({
   backHref,
   onClose,
   activeStateId = null,
-  miniRepositionHandlers,
+  onMiniBackgroundClick,
 }: PrototypeStateCanvasViewProps<T>) {
   const isMiniLayout = layout === "mini";
   const review = usePrototypeReviewOptional();
@@ -418,7 +414,6 @@ export function PrototypeStateCanvasView<T extends string>({
     onStateSelect,
     nodes,
     edges,
-    sections,
     renderWireframe,
     getHighlightRegions,
     canvasWidth,
@@ -453,13 +448,6 @@ export function PrototypeStateCanvasView<T extends string>({
   const hoverDismissTimerRef = useRef<number | null>(null);
   const hasFitRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    startPanX: number;
-    startPanY: number;
-  } | null>(null);
 
   const clearAnnotationFadeTimers = useCallback(() => {
     if (annotationFadeFrameRef.current != null) {
@@ -614,19 +602,6 @@ export function PrototypeStateCanvasView<T extends string>({
     );
   }, [hoverTarget, nodes]);
 
-  const displayedAnnotationNode = useMemo(() => {
-    if (!displayedAnnotation) return null;
-    return nodeMap.get(displayedAnnotation.nodeId as T) ?? null;
-  }, [displayedAnnotation, nodeMap]);
-
-  const displayedAnnotationAnchor = useMemo(() => {
-    if (!displayedAnnotationNode || !displayedAnnotation) return null;
-    return getStateMapAnnotationAnchor(
-      displayedAnnotationNode,
-      displayedAnnotation.target.id,
-    );
-  }, [displayedAnnotation, displayedAnnotationNode]);
-
   useEffect(() => {
     if (hoverTarget && hoverAnnotationNode) {
       const nextNodeId = hoverAnnotationNode.id;
@@ -758,6 +733,8 @@ export function PrototypeStateCanvasView<T extends string>({
     if (!viewport) return;
 
     const handleWheel = (event: WheelEvent) => {
+      if (isMiniLayout) return;
+
       if (isZoomWheelEvent(event)) {
         event.preventDefault();
         hasUserInteractedRef.current = true;
@@ -790,50 +767,12 @@ export function PrototypeStateCanvasView<T extends string>({
       viewport.removeEventListener("wheel", handleWheel);
       stopZoomMomentum();
     };
-  }, [addZoomImpulse, applyTransform, stopZoomMomentum]);
+  }, [addZoomImpulse, applyTransform, isMiniLayout, stopZoomMomentum]);
 
-  const handleMiniViewportPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!isMiniLayout || event.button !== 0) return;
-      stopZoomMomentum();
-      hasUserInteractedRef.current = true;
-      dragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        startPanX: transformRef.current.panX,
-        startPanY: transformRef.current.panY,
-      };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [isMiniLayout, stopZoomMomentum],
-  );
-
-  const handleMiniViewportPointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
-
-      applyTransform({
-        ...transformRef.current,
-        panX: drag.startPanX + (event.clientX - drag.startX),
-        panY: drag.startPanY + (event.clientY - drag.startY),
-      });
-    },
-    [applyTransform],
-  );
-
-  const handleMiniViewportPointerUp = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
-      dragRef.current = null;
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-    },
-    [],
-  );
+  const handleMiniViewportClick = useCallback(() => {
+    if (!isMiniLayout) return;
+    onMiniBackgroundClick?.();
+  }, [isMiniLayout, onMiniBackgroundClick]);
 
   useEffect(() => {
     if (!isMiniLayout) return;
@@ -902,18 +841,8 @@ export function PrototypeStateCanvasView<T extends string>({
       <div
         ref={viewportRef}
         className={isMiniLayout ? styles.miniViewport : styles.canvasViewport}
-        {...(isMiniLayout
-          ? miniRepositionHandlers
-            ? {
-                ...miniRepositionHandlers,
-                onPointerCancel: miniRepositionHandlers.onPointerUp,
-              }
-            : {
-                onPointerDown: handleMiniViewportPointerDown,
-                onPointerMove: handleMiniViewportPointerMove,
-                onPointerUp: handleMiniViewportPointerUp,
-                onPointerCancel: handleMiniViewportPointerUp,
-              }
+        {...(isMiniLayout && onMiniBackgroundClick
+          ? { onClick: handleMiniViewportClick }
           : {})}
       >
         <div
@@ -945,18 +874,6 @@ export function PrototypeStateCanvasView<T extends string>({
             })}
           </svg>
 
-          {!isMiniLayout
-            ? sections?.map((section) => (
-                <div
-                  key={section.label}
-                  className={styles.sectionLabel}
-                  style={{ top: section.y, left: 24 }}
-                >
-                  {section.label}
-                </div>
-              ))
-            : null}
-
           {nodes.map((node) => {
             const hoverSource = resolveHoverAnnotationSource(node, hoverTarget);
             const previewNodeId = resolveNodePreviewId(node, hoverTarget);
@@ -985,6 +902,11 @@ export function PrototypeStateCanvasView<T extends string>({
                   )
                 : null;
 
+            const showInlineAnnotation =
+              !isMiniLayout &&
+              displayedAnnotation?.nodeId === node.id &&
+              displayedAnnotation.target.annotation.trim().length > 0;
+
             return (
               <div
                 key={node.id}
@@ -993,6 +915,9 @@ export function PrototypeStateCanvasView<T extends string>({
                   miniNodeHighlighted &&
                     !isNodeSelected &&
                     styles.nodeGroupHighlighted,
+                  !isMiniLayout &&
+                    nodeHighlightActive &&
+                    styles.nodeGroupHovered,
                   isNodeSelected && styles.nodeGroupSelected,
                 )}
                 style={{
@@ -1005,13 +930,19 @@ export function PrototypeStateCanvasView<T extends string>({
                       }
                     : {}),
                 }}
+                {...(!isMiniLayout
+                  ? { onMouseLeave: scheduleHoverDismiss }
+                  : {})}
               >
                 <button
                   type="button"
                   className={styles.node}
                   aria-current={isNodeSelected ? "true" : undefined}
                   onPointerDown={(event) => event.stopPropagation()}
-                  onClick={() => handleNodeSelect(node.id)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleNodeSelect(node.id);
+                  }}
                   {...(isMiniLayout
                     ? {
                         onMouseEnter: () => setMiniHighlightedId(node.id),
@@ -1034,7 +965,6 @@ export function PrototypeStateCanvasView<T extends string>({
                             highlightRegions: node.highlightRegions,
                           });
                         },
-                        onMouseLeave: scheduleHoverDismiss,
                       })}
                 >
                   <div className={styles.nodePreview}>
@@ -1081,9 +1011,52 @@ export function PrototypeStateCanvasView<T extends string>({
                     )}
                   </div>
                   {!isMiniLayout ? (
-                    <div className={styles.nodeLabel}>
-                      <span className={styles.nodeLabelText}>{node.label}</span>
-                    </div>
+                    <>
+                      <div
+                        className={styles.nodeLabel}
+                        style={{
+                          minHeight: `${getConstantScreenCanvasPx(
+                            transform.scale,
+                            NODE_LABEL_ROW_SCREEN_PX,
+                          )}px`,
+                          paddingLeft: `${getConstantScreenCanvasPx(
+                            transform.scale,
+                            NODE_LABEL_PADDING_X_SCREEN_PX,
+                          )}px`,
+                          paddingRight: `${getConstantScreenCanvasPx(
+                            transform.scale,
+                            NODE_LABEL_PADDING_X_SCREEN_PX,
+                          )}px`,
+                        }}
+                      >
+                        <span
+                          className={styles.nodeLabelText}
+                          style={{
+                            fontSize: getConstantScreenLabelFontSize(
+                              transform.scale,
+                              NODE_LABEL_FONT_SCREEN_PX,
+                              getConstantScreenCanvasPx(
+                                transform.scale,
+                                NODE_LABEL_ROW_SCREEN_PX * 0.75,
+                              ),
+                            ),
+                          }}
+                        >
+                          {node.label}
+                        </span>
+                      </div>
+                      {showInlineAnnotation ? (
+                        <StateMapAnnotationPanel
+                          target={displayedAnnotation.target}
+                          canvasScale={transform.scale}
+                          visible={annotationVisible}
+                          activeHighlightId={activeHighlightId}
+                          onHighlightChange={setActiveHighlightId}
+                          onDismiss={scheduleHoverDismiss}
+                          onKeepOpen={clearHoverDismissTimer}
+                        />
+                      ) : null}
+                    </>
                   ) : null}
                 </button>
 
@@ -1096,7 +1069,10 @@ export function PrototypeStateCanvasView<T extends string>({
                           type="button"
                           className={styles.callout}
                           onPointerDown={(event) => event.stopPropagation()}
-                          onClick={() => handleNodeSelect(callout.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleNodeSelect(callout.id);
+                          }}
                           {...(isMiniLayout
                             ? {
                                 onMouseEnter: () => setMiniHighlightedId(callout.id),
@@ -1122,7 +1098,6 @@ export function PrototypeStateCanvasView<T extends string>({
                                     node.label,
                                   );
                                 },
-                                onMouseLeave: scheduleHoverDismiss,
                               })}
                         >
                           <span
@@ -1164,17 +1139,6 @@ export function PrototypeStateCanvasView<T extends string>({
             );
           })}
 
-          {!isMiniLayout && displayedAnnotation && displayedAnnotationAnchor ? (
-            <StateMapAnnotationTooltip
-              target={displayedAnnotation.target}
-              anchor={displayedAnnotationAnchor}
-              visible={annotationVisible}
-              activeHighlightId={activeHighlightId}
-              onHighlightChange={setActiveHighlightId}
-              onDismiss={scheduleHoverDismiss}
-              onKeepOpen={clearHoverDismissTimer}
-            />
-          ) : null}
         </div>
       </div>
     </div>
