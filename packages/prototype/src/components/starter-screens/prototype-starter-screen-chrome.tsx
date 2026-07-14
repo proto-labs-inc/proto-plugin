@@ -1,5 +1,6 @@
 "use client";
 
+import { ProtoLogoMark } from "@prototype/components/brand/proto-logo-mark";
 import Link from "next/link";
 
 import styles from "../prototypes/prototype-review-chrome.module.scss";
@@ -17,13 +18,7 @@ export function PrototypeStarterScreenChrome() {
           className={styles.footerBrand}
           aria-label="Back to starter screens"
         >
-          <img
-            src="/proto-logo.png"
-            alt=""
-            width={14}
-            height={14}
-            className={styles.footerBrandLogo}
-          />
+          <ProtoLogoMark className={styles.footerBrandLogo} />
           <span className={styles.footerBrandName}>Proto</span>
         </Link>
       </div>

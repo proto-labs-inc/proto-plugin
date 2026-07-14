@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../../src/prototypes/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui-patterns/src/**/*.{js,ts,jsx,tsx}";

@@ -1,6 +1,6 @@
 {
   "name": "proto-plugin",
-  "version": "0.1.13",
+  "version": "0.1.16",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -11,6 +11,7 @@
     "directory": "packages/prototype"
   },
   "files": [
+    "assets",
     "src",
     "scripts",
     "README.md",

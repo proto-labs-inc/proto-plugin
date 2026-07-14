@@ -61,7 +61,7 @@ function GridHeaderCell({
   isPrimaryKey?: boolean;
 }) {
   return (
-    <div className="flex items-center h-[35px] px-2 border-r border-b border-secondary bg-dash-canvas text-grid min-w-0">
+    <div className="flex items-center h-[35px] px-2 border-r border-b border-secondary bg-dash-canvas min-w-0">
       <div className="flex items-center gap-1 min-w-0 flex-1">
         {isPrimaryKey ? (
           <Key
@@ -100,8 +100,11 @@ function GridRow({
   onCheckedChange: (checked: boolean) => void;
   onExpand: () => void;
 }) {
+  const cellClass =
+    "flex items-center px-2 border-r border-secondary shrink-0 text-xs text-foreground";
+
   return (
-    <div className="group flex items-stretch border-b border-secondary text-grid min-h-[35px] bg-dash-sidebar hover:bg-surface-200 transition-colors">
+    <div className="group flex items-stretch border-b border-secondary text-xs min-h-[35px] bg-dash-sidebar hover:bg-surface-200 transition-colors">
       <div className="flex items-center gap-1 px-2 border-r border-secondary w-[65px] shrink-0 sticky left-0 bg-inherit z-[1]">
         <Checkbox
           aria-label={`Select row ${row.id}`}
@@ -119,21 +122,13 @@ function GridRow({
           <Maximize2 size={14} />
         </Button>
       </div>
-      <div className="flex items-center px-2 border-r border-secondary w-[120px] shrink-0 text-foreground">
-        {row.id}
-      </div>
-      <div className="flex items-center px-2 border-r border-secondary w-[250px] shrink-0 text-foreground">
-        {row.name}
-      </div>
-      <div className="flex items-center px-2 border-r border-secondary w-[250px] shrink-0">
+      <div className={cn(cellClass, "w-[120px]")}>{row.id}</div>
+      <div className={cn(cellClass, "w-[250px]")}>{row.name}</div>
+      <div className={cn(cellClass, "w-[250px]")}>
         <span className="text-foreground-lighter italic">NULL</span>
       </div>
-      <div className="flex items-center px-2 border-r border-secondary w-[189px] shrink-0 text-foreground">
-        {row.created_at}
-      </div>
-      <div className="flex items-center px-2 border-r border-secondary w-[250px] shrink-0 text-foreground">
-        {row.department}
-      </div>
+      <div className={cn(cellClass, "w-[189px]")}>{row.created_at}</div>
+      <div className={cn(cellClass, "w-[250px]")}>{row.department}</div>
       <div className="w-[100px] shrink-0" />
     </div>
   );

@@ -77,6 +77,10 @@ html[data-theme="light"]
   --color-border: initial;
   --color-input: initial;
   --color-ring: initial;
+  --padding-x-sm: 1rem;
+  --padding-x-md: 1.5rem;
+  --card-padding-x: var(--padding-x-sm);
+  --card-padding-x-md: var(--padding-x-md);
   color: inherit;
   background-color: inherit;
 }

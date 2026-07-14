@@ -36,6 +36,11 @@
   @apply text-xs;
 }
 
+/* Table editor grid cells — matches Supabase Studio `.rdg-cell` (13px). */
+@utility text-grid {
+  font-size: 13px;
+}
+
 /* Link */
 @utility text-link {
   @apply text-foreground-light underline underline-offset-4 decoration-inherit hover:decoration-foreground transition-colors hover:text-foreground;

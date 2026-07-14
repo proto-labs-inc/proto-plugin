@@ -1,5 +1,6 @@
 "use client";
 
+import { ProtoLogoMark } from "@prototype/components/brand/proto-logo-mark";
 import { IconButton } from "@prototype/components/platform-ui/icon-button";
 import { Button } from "@prototype/components/ui/button";
 import { PrototypeLinkSourceModal } from "@prototype/components/shell/prototype-link-source-modal";
@@ -43,13 +44,7 @@ export function PrototypeGalleryNav({
     <aside className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] flex h-full min-h-0 w-56 shrink-0 flex-col self-stretch overflow-hidden border-r">
       <nav aria-label="Gallery" className="flex flex-col gap-1 p-3">
         <div className="mb-2 flex items-center gap-2 px-3">
-          <img
-            src="/proto-logo.png"
-            alt=""
-            width={14}
-            height={14}
-            className="size-3.5 shrink-0 object-contain"
-          />
+          <ProtoLogoMark className="size-3.5" />
           <span className="text-lg font-bold text-[var(--tool-chrome-text-heading)]">
             Proto
           </span>

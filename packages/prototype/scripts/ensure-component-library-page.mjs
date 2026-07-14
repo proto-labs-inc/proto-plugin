@@ -69,6 +69,25 @@ export function ensureComponentLibraryPage(hostRoot) {
   return { created: true, pagePath };
 }
 
+export function ensureProtoLogo(hostRoot, toolRoot) {
+  if (!isPrototypeHost(hostRoot)) {
+    return { copied: false, reason: "not-a-prototype-host" };
+  }
+
+  const sourceLogo = path.join(toolRoot, "assets", "proto-logo.png");
+  if (!fs.existsSync(sourceLogo)) {
+    return { copied: false, reason: "missing-package-logo" };
+  }
+
+  const publicDir = path.join(hostRoot, "public");
+  fs.mkdirSync(publicDir, { recursive: true });
+
+  const destLogo = path.join(publicDir, "proto-logo.png");
+  fs.copyFileSync(sourceLogo, destLogo);
+
+  return { copied: true, destLogo };
+}
+
 function main() {
   const toolRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -80,6 +99,13 @@ function main() {
   if (result.created) {
     console.log(
       `proto-plugin: created component library route at ${path.relative(hostRoot, result.pagePath)}`,
+    );
+  }
+
+  const logoResult = ensureProtoLogo(hostRoot, toolRoot);
+  if (logoResult.copied) {
+    console.log(
+      `proto-plugin: synced brand logo to ${path.relative(hostRoot, logoResult.destLogo)}`,
     );
   }
 }

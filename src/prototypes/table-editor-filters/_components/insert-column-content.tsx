@@ -14,7 +14,6 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-  DialogSectionSeparator,
   InputGroup,
   InputGroupInput,
   SidePanel,
@@ -144,10 +143,12 @@ function FormSection({
   header: React.ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-12 gap-6 px-card py-4 md:py-8 opacity-100">
-      {header}
-      {children}
-    </div>
+    <SidePanel.Content>
+      <div className="grid grid-cols-12 gap-6 py-4 md:py-8 opacity-100">
+        {header}
+        {children}
+      </div>
+    </SidePanel.Content>
   );
 }
 
@@ -349,7 +350,7 @@ function SectionedSidebarLayout() {
         </FormSectionContent>
       </FormSection>
 
-      <DialogSectionSeparator />
+      <SidePanel.Separator />
 
       <FormSection
         header={
@@ -390,7 +391,7 @@ function SectionedSidebarLayout() {
 
 function EssentialFirstLayout() {
   return (
-    <div className="flex flex-col gap-6 px-card py-6">
+    <SidePanel.Content className="flex flex-col gap-6 py-6">
       <div className="rounded-lg border border-default bg-surface-100 p-4 space-y-6">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-foreground-lighter">
@@ -439,13 +440,13 @@ function EssentialFirstLayout() {
           <PrivacyFields />
         </CollapsibleContent>
       </Collapsible>
-    </div>
+    </SidePanel.Content>
   );
 }
 
 function TabbedWorkflowLayout() {
   return (
-    <div className="px-card py-4">
+    <SidePanel.Content className="py-4">
       <Tabs defaultValue="basics" className="w-full">
         <TabsList className="mb-6 w-full justify-start gap-4 px-0">
           <TabsTrigger value="basics">Basics</TabsTrigger>
@@ -471,13 +472,13 @@ function TabbedWorkflowLayout() {
           <PrivacyFields />
         </TabsContent>
       </Tabs>
-    </div>
+    </SidePanel.Content>
   );
 }
 
 function TypeHeroLayout() {
   return (
-    <div className="flex flex-col gap-6 px-card py-6">
+    <SidePanel.Content className="flex flex-col gap-6 py-6">
       <FormItemLayout
         isReactForm={false}
         id="name-hero"
@@ -572,13 +573,13 @@ function TypeHeroLayout() {
           <PrivacyFields />
         </CollapsibleContent>
       </Collapsible>
-    </div>
+    </SidePanel.Content>
   );
 }
 
 function AccordionSectionsLayout() {
   return (
-    <div className="px-card py-2">
+    <SidePanel.Content className="py-2">
       <Accordion type="multiple" defaultValue={["general", "data-type"]} className="w-full">
         <AccordionItem value="general">
           <AccordionTrigger className="text-sm font-medium">General</AccordionTrigger>
@@ -612,30 +613,30 @@ function AccordionSectionsLayout() {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-    </div>
+    </SidePanel.Content>
   );
 }
 
 function StackedCompactLayout() {
   return (
-    <div className="flex flex-col gap-8 px-card py-6">
+    <SidePanel.Content className="flex flex-col gap-8 py-6">
       <div className="space-y-6">
         <IdentityFields />
       </div>
-      <DialogSectionSeparator />
+      <div className="w-full h-px bg-border" />
       <div className="space-y-6">
         <DataTypeLinks />
         <SchemaFields showTypeLinks={false} />
       </div>
-      <DialogSectionSeparator />
+      <div className="w-full h-px bg-border" />
       <ForeignKeyFields />
-      <DialogSectionSeparator />
+      <div className="w-full h-px bg-border" />
       <div className="space-y-6">
         <ConstraintFields />
       </div>
-      <DialogSectionSeparator />
+      <div className="w-full h-px bg-border" />
       <PrivacyFields />
-    </div>
+    </SidePanel.Content>
   );
 }
 

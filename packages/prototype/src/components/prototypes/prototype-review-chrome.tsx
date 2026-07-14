@@ -21,6 +21,7 @@ import {
   useToolbarHoverPanel,
 } from "@prototype/lib/prototypes/use-toolbar-hover-panel";
 import { cn } from "@prototype/lib/utils";
+import { ProtoLogoMark } from "@prototype/components/brand/proto-logo-mark";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -717,13 +718,7 @@ export function PrototypeReviewChrome({
     >
       <div className={styles.footerBar}>
         <Link href="/" className={styles.footerBrand} aria-label="Back to gallery">
-          <img
-            src="/proto-logo.png"
-            alt=""
-            width={14}
-            height={14}
-            className={styles.footerBrandLogo}
-          />
+          <ProtoLogoMark className={styles.footerBrandLogo} />
           <span className={styles.footerBrandName}>Proto</span>
         </Link>
 
