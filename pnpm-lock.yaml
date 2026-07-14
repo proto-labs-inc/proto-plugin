@@ -635,6 +635,9 @@ importers:
       next:
         specifier: '>=15'
         version: 16.2.9(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.101.0)
+      next-themes:
+        specifier: '>=0.4'
+        version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: '>=19'
         version: 19.2.4
