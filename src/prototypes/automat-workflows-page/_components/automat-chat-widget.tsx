@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { Avatar, AvatarFallback, AvatarImage } from "@coss/ui/components/avatar";
 import { Button } from "@coss/ui/components/button";
 import { Input } from "@coss/ui/components/input";

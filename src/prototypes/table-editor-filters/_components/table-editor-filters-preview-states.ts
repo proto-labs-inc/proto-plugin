@@ -1,4 +1,4 @@
-import { definePreviewStateRegistry } from "proto";
+import { definePreviewStateRegistry } from "proto-plugin";
 
 import { MOCK_ACTIVE_FILTER } from "./table-editor-filters-mock-data";
 import type {

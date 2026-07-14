@@ -5,7 +5,7 @@ import {
   DesignExplorationVariantPreviewShell,
   type DesignExplorationConfig,
   type MobbinReference,
-} from "proto";
+} from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { GridEmptyStateBlock } from "./grid-empty-state-content";

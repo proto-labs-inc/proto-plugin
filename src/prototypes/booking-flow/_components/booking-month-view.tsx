@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { AnimatePresence } from "motion/react";
 
 import { BookingColumnTransition } from "./booking-motion";

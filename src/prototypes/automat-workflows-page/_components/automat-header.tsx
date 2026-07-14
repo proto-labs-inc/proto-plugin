@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { Badge } from "@coss/ui/components/badge";
 import { Button } from "@coss/ui/components/button";
 import {

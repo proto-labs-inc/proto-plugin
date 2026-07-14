@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { cn } from "@/lib/cn";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";

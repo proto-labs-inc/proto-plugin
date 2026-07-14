@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { Button } from "@coss/ui/components/button";
 import { Plus } from "lucide-react";
 

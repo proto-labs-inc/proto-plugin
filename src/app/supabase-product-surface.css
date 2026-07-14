@@ -1,7 +1,7 @@
 /*
- * Clear proto's generic gray-scale token pin on product surfaces.
+ * Clear proto-plugin's generic gray-scale token pin on product surfaces.
  *
- * proto sets --text-primary: var(--color-gray-900) etc., but Supabase
+ * proto-plugin sets --text-primary: var(--color-gray-900) etc., but Supabase
  * unsets --color-gray-*, which breaks --foreground and makes text invisible.
  * Reset those overrides so tokens inherit from html.light (Supabase semantic).
  */
@@ -82,9 +82,9 @@ html[data-theme="light"]
 }
 
 /*
- * Full-page Supabase product surfaces rendered inside proto tool chrome
+ * Full-page Supabase product surfaces rendered inside proto-plugin tool chrome
  * (e.g. starter-screen previews before layout bypass). Re-bridge shadcn tokens
- * from the local .light theme inputs — proto's [data-prototype-root] pins
+ * from the local .light theme inputs — proto-plugin's [data-prototype-root] pins
  * --foreground to tool-chrome heading gray (#f0f0f0), which washes out text.
  */
 html.light [data-prototype-root] :is(.light, [data-theme="light"]) {

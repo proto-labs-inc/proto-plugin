@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "proto";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const EVENT_TYPES_COMPONENT_IDS = [
   "page",

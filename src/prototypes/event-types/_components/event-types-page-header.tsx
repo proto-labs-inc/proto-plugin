@@ -3,7 +3,7 @@
 import classNames from "@calcom/ui/classNames";
 import { Input } from "@calcom/ui/components/form/inputs/TextField";
 import { SearchIcon } from "@coss/ui/icons";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 import { Button } from "@calcom/ui/components/button";
 

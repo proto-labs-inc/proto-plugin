@@ -3,7 +3,7 @@
 import { Badge } from "@calcom/ui/components/badge";
 import classNames from "@calcom/ui/classNames";
 import Icon from "@calcom/ui/components/icon/Icon";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 import { SECRET_EVENTS_FILTER_LABEL } from "./event-types-mock-data";
 

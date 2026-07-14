@@ -2,7 +2,7 @@
 
 import Icon from "@calcom/ui/components/icon/Icon";
 import { Badge } from "@calcom/ui/components/badge";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { ArrowLeft, Check, ExternalLink, Flag } from "lucide-react";
 
 import {

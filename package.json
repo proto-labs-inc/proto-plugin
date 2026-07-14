@@ -8,12 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "link-source": "pnpm --dir node_modules/proto link-source",
-    "sync-from-source": "pnpm --dir node_modules/proto sync-from-source",
-    "link-source-db": "pnpm --dir node_modules/proto link-source-db",
-    "verify:prototype-ids": "pnpm --dir node_modules/proto verify:prototype-ids",
-    "verify:prototype-preview-states": "pnpm --dir node_modules/proto verify:prototype-preview-states",
-    "share-prototype": "pnpm --dir node_modules/proto share-prototype"
+    "link-source": "pnpm --dir node_modules/proto-plugin link-source",
+    "sync-from-source": "pnpm --dir node_modules/proto-plugin sync-from-source",
+    "link-source-db": "pnpm --dir node_modules/proto-plugin link-source-db",
+    "verify:prototype-ids": "pnpm --dir node_modules/proto-plugin verify:prototype-ids",
+    "verify:prototype-preview-states": "pnpm --dir node_modules/proto-plugin verify:prototype-preview-states",
+    "share-prototype": "pnpm --dir node_modules/proto-plugin share-prototype"
   },
   "dependencies": {
     "@calcom/lib": "workspace:*",
@@ -28,7 +28,7 @@
     "motion": "^12.42.0",
     "next": "16.2.9",
     "next-themes": "^0.4.6",
-    "proto": "workspace:*",
+    "proto-plugin": "workspace:*",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "recharts": "^3.9.2",

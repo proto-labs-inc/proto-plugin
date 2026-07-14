@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "proto";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const AUTOMAT_WORKFLOWS_PAGE_COMPONENT_IDS = [
   "page",

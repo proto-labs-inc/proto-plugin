@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 import { emptyStateCopy } from "./bookings-page-mock-data";
 import { BookingsListItem } from "./bookings-list-item";

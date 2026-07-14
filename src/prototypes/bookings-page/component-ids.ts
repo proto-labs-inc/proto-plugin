@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "proto";
+import { definePrototypeComponentRegistry } from "proto-plugin";
 
 export const BOOKINGS_PAGE_COMPONENT_IDS = [
   "page",

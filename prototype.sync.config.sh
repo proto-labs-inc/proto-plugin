@@ -26,7 +26,7 @@ SYNC_GLOBS=(
 
 SYNC_LOCAL_EXTENSIONS=(
   "src/app/layout.tsx (html.light + Supabase fonts)"
-  "src/app/supabase-product-surface.css (clear proto gray pin; inherit html.light tokens)"
+  "src/app/supabase-product-surface.css (clear proto-plugin gray pin; inherit html.light tokens)"
   "src/app/supabase-product-theme.tsx (pins data-theme=light on prototype viewport)"
   "src/app/layout.tsx (host fonts from apps/studio/fonts via next/font)"
   "src/app/providers.tsx (TooltipProvider from synced ui package)"

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrototypeReviewOptional } from "proto";
+import { usePrototypeReviewOptional } from "proto-plugin";
 import { useLayoutEffect } from "react";
 
 export const EVENT_TYPES_PAGE_LAYOUT_VARIANT_SET = {

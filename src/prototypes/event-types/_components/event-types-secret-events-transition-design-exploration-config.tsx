@@ -4,7 +4,7 @@ import {
   buildDesignExplorationRenderers,
   type DesignExplorationConfig,
   type MobbinReference,
-} from "proto";
+} from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { EventTypesSecretEventsTransitionBlock } from "./event-types-secret-events-transition-block";

@@ -1,5 +1,5 @@
-import type { DesignExplorationRationale } from "proto";
-import { PrototypeComponent } from "proto";
+import type { DesignExplorationRationale } from "proto-plugin";
+import { PrototypeComponent } from "proto-plugin";
 import { AlertTriangle, LifeBuoy, RefreshCw } from "lucide-react";
 import { Button, cn } from "ui";
 import { Admonition } from "ui-patterns/admonition";

@@ -1,4 +1,4 @@
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 export function SqlEditorIcon({
   className,

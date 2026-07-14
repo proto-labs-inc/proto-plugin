@@ -1,4 +1,3 @@
-import { PrototypeComponent } from "proto";
 import { Edit } from "lucide-react";
 import { FormItemLayout } from "ui-patterns/form/FormItemLayout/FormItemLayout";
 import {
@@ -56,95 +55,6 @@ export function RowFieldInput({
 
   if (isIdentity) {
     return (
-      <PrototypeComponent id="row-editor-fields.row-field-input">
-        <FormItemLayout
-          isReactForm={false}
-          layout="horizontal"
-          label={name}
-          labelOptional={format}
-        >
-          <InputGroup>
-            <InputGroupInput
-              data-testid={`${name}-input`}
-              placeholder="Automatically generated as identity"
-              value={fieldValue ?? ""}
-              readOnly
-            />
-          </InputGroup>
-        </FormItemLayout>
-      </PrototypeComponent>
-    );
-  }
-
-  if (DATETIME_TYPES.includes(format)) {
-    return (
-      <PrototypeComponent id="row-editor-fields.row-field-input">
-        <FormItemLayout
-          isReactForm={false}
-          layout="horizontal"
-          label={name}
-          labelOptional={format}
-          description={
-            <div className="space-y-1">
-              <p>{textPlaceholder(defaultValue)}</p>
-              {format.includes("tz") && (
-                <p>Your local timezone will be automatically applied (-0400)</p>
-              )}
-            </div>
-          }
-        >
-          <InputGroup>
-            <InputGroupInput
-              data-testid={`${name}-input`}
-              size="small"
-              type="datetime-local"
-              step="1"
-              value={fieldValue ?? ""}
-              readOnly
-            />
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton variant="default" icon={<Edit />} className="px-1.5" />
-            </InputGroupAddon>
-          </InputGroup>
-        </FormItemLayout>
-      </PrototypeComponent>
-    );
-  }
-
-  if (TEXT_TYPES.includes(format)) {
-    return (
-      <PrototypeComponent id="row-editor-fields.row-field-input">
-        <FormItemLayout
-          isReactForm={false}
-          layout="horizontal"
-          label={name}
-          labelOptional={format}
-        >
-          <InputGroup>
-            <InputGroupTextarea
-              data-testid={`${name}-input`}
-              className="text-sm"
-              rows={5}
-              placeholder={textPlaceholder(defaultValue)}
-              value={fieldValue ?? ""}
-              readOnly
-            />
-            <InputGroupAddon align="block-end">
-              <InputGroupButton
-                data-testid={`${name}-field-actions`}
-                variant="default"
-                icon={<Edit />}
-                className="ml-auto px-1.5"
-              />
-            </InputGroupAddon>
-          </InputGroup>
-        </FormItemLayout>
-      </PrototypeComponent>
-    );
-  }
-
-  return (
-    <PrototypeComponent id="row-editor-fields.row-field-input">
       <FormItemLayout
         isReactForm={false}
         layout="horizontal"
@@ -154,12 +64,93 @@ export function RowFieldInput({
         <InputGroup>
           <InputGroupInput
             data-testid={`${name}-input`}
-            placeholder={textPlaceholder(defaultValue)}
+            placeholder="Automatically generated as identity"
             value={fieldValue ?? ""}
             readOnly
           />
         </InputGroup>
       </FormItemLayout>
-    </PrototypeComponent>
+    );
+  }
+
+  if (DATETIME_TYPES.includes(format)) {
+    return (
+      <FormItemLayout
+        isReactForm={false}
+        layout="horizontal"
+        label={name}
+        labelOptional={format}
+        description={
+          <div className="space-y-1">
+            <p>{textPlaceholder(defaultValue)}</p>
+            {format.includes("tz") && (
+              <p>Your local timezone will be automatically applied (-0400)</p>
+            )}
+          </div>
+        }
+      >
+        <InputGroup>
+          <InputGroupInput
+            data-testid={`${name}-input`}
+            size="small"
+            type="datetime-local"
+            step="1"
+            value={fieldValue ?? ""}
+            readOnly
+          />
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton variant="default" icon={<Edit />} className="px-1.5" />
+          </InputGroupAddon>
+        </InputGroup>
+      </FormItemLayout>
+    );
+  }
+
+  if (TEXT_TYPES.includes(format)) {
+    return (
+      <FormItemLayout
+        isReactForm={false}
+        layout="horizontal"
+        label={name}
+        labelOptional={format}
+      >
+        <InputGroup>
+          <InputGroupTextarea
+            data-testid={`${name}-input`}
+            className="text-sm"
+            rows={5}
+            placeholder={textPlaceholder(defaultValue)}
+            value={fieldValue ?? ""}
+            readOnly
+          />
+          <InputGroupAddon align="block-end">
+            <InputGroupButton
+              data-testid={`${name}-field-actions`}
+              variant="default"
+              icon={<Edit />}
+              className="ml-auto px-1.5"
+            />
+          </InputGroupAddon>
+        </InputGroup>
+      </FormItemLayout>
+    );
+  }
+
+  return (
+    <FormItemLayout
+      isReactForm={false}
+      layout="horizontal"
+      label={name}
+      labelOptional={format}
+    >
+      <InputGroup>
+        <InputGroupInput
+          data-testid={`${name}-input`}
+          placeholder={textPlaceholder(defaultValue)}
+          value={fieldValue ?? ""}
+          readOnly
+        />
+      </InputGroup>
+    </FormItemLayout>
   );
 }

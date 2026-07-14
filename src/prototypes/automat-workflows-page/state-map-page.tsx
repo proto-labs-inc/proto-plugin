@@ -2,12 +2,11 @@
 
 import {
   PREVIEW_STATE_PARAM,
-  PrototypeComponent,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
-} from "proto";
+} from "proto-plugin";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
@@ -42,13 +41,13 @@ export default function AutomatWorkflowsPageStateMapPage() {
   );
 
   return (
-    <PrototypeComponent id="page">
+    <>
       <PrototypeStateCanvasRegistrar pagePath={pagePath} />
       <PrototypeStateCanvasView
         config={config}
         layout="page"
         backHref={backHref}
       />
-    </PrototypeComponent>
+    </>
   );
 }

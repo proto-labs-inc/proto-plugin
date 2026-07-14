@@ -153,7 +153,7 @@ export interface DialogContentProps
     VariantProps<typeof sheetVariants> {
   showClose?: boolean
   hasOverlay?: boolean
-  /** Portal target — pass `#prototype-viewport` in proto previews so sheets stay inside the product frame. */
+  /** Portal target — pass `#prototype-viewport` in proto-plugin previews so sheets stay inside the product frame. */
   portalContainer?: HTMLElement | null
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 import { MobilePickerLayoutControls } from "./mobile-picker-layout-block";
 import {

@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent, PrototypeVariantExplorer } from "proto";
+import { PrototypeComponent, PrototypeVariantExplorer } from "proto-plugin";
 
 import {
   buildGridEmptyStateDesignExplorationConfig,

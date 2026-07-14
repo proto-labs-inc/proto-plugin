@@ -3,8 +3,8 @@
 import type {
   DesignExplorationConfig,
   MobbinReference,
-} from "proto";
-import { buildDesignExplorationRenderers } from "proto";
+} from "proto-plugin";
+import { buildDesignExplorationRenderers } from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { InviteAnimationsBlock } from "./invite-animations-block";

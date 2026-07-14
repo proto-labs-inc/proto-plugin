@@ -1,4 +1,4 @@
-import { definePrototypeConfig } from "proto";
+import { definePrototypeConfig } from "proto-plugin";
 
 import BookingFlow from "./src/prototypes/booking-flow";
 import { bookingFlowComponentRegistry } from "./src/prototypes/booking-flow/component-ids";

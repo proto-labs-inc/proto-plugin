@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrototypeReviewOptional } from "proto";
+import { usePrototypeReviewOptional } from "proto-plugin";
 import { useLayoutEffect } from "react";
 
 export const AUTOMAT_ANALYTICS_VARIANT_SET = {

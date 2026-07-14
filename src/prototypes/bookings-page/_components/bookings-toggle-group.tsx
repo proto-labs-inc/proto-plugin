@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import classNames from "@calcom/ui/classNames";
 import type { ReactNode } from "react";
 

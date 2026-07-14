@@ -1,7 +1,7 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
-import { PrototypeVariantExplorer } from "proto";
+import { PrototypeComponent } from "proto-plugin";
+import { PrototypeVariantExplorer } from "proto-plugin";
 
 import {
   buildMobilePickerLayoutDesignExplorationConfig,

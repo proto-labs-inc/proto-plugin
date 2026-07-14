@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent, usePrototypeProductOverlayPortal } from "proto";
+import { PrototypeComponent, usePrototypeProductOverlayPortal } from "proto-plugin";
 import { Button, KeyboardShortcut, Label, SidePanel, Switch } from "ui";
 
 import {

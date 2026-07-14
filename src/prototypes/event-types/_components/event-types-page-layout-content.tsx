@@ -1,4 +1,4 @@
-import type { DesignExplorationRationale } from "proto";
+import type { DesignExplorationRationale } from "proto-plugin";
 
 export type EventTypesPageLayoutVariant =
   | "card-grid"

@@ -1,4 +1,4 @@
-import { createPrototypePage, createPrototypeStateMapPage } from "proto";
+import { createPrototypePage, createPrototypeStateMapPage } from "proto-plugin";
 import { notFound } from "next/navigation";
 
 import prototypeConfig from "../../../../../prototype.config";

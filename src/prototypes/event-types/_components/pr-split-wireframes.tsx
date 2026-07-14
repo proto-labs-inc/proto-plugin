@@ -5,7 +5,7 @@ import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
   PrototypeComponent,
-} from "proto";
+} from "proto-plugin";
 import type { ReactNode } from "react";
 
 import type { EventTypesPrSplitWireframeId } from "./pr-split-config";

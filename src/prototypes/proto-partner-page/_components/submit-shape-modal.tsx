@@ -4,8 +4,8 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-} from "proto/ui/dialog";
-import { PrototypeComponent } from "proto";
+} from "proto-plugin/ui/dialog";
+import { PrototypeComponent } from "proto-plugin";
 import { cn } from "@/lib/cn";
 import { motion, useReducedMotion } from "motion/react";
 

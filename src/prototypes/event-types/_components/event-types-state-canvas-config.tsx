@@ -4,7 +4,7 @@ import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
   type PrototypeStateCanvasConfig,
-} from "proto";
+} from "proto-plugin";
 
 import type { EventTypesPreviewStateId } from "./event-types-types";
 import { EVENT_TYPES_PREVIEW_STATE_REGISTRY } from "./event-types-preview-states";

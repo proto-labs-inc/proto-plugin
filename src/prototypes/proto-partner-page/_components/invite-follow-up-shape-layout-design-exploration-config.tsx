@@ -1,8 +1,8 @@
 "use client";
 
-import { DesignExplorationVariantPreviewShell } from "proto";
-import type { DesignExplorationConfig } from "proto";
-import { buildDesignExplorationRenderers } from "proto";
+import { DesignExplorationVariantPreviewShell } from "proto-plugin";
+import type { DesignExplorationConfig } from "proto-plugin";
+import { buildDesignExplorationRenderers } from "proto-plugin";
 import type { ReactNode } from "react";
 
 import { InviteFollowUpShapeExamples } from "./invite-follow-up-shape-examples";

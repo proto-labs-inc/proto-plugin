@@ -6,7 +6,7 @@ import { Button } from "@calcom/ui/components/button";
 import { ButtonGroup } from "@calcom/ui/components/buttonGroup";
 import Icon from "@calcom/ui/components/icon/Icon";
 import { showToast } from "@calcom/ui/components/toast";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 
 import {
   EVENT_TYPES_PROFILE_SLUG,

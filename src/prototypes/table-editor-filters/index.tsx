@@ -11,7 +11,7 @@ import {
   usePrototypeReviewOptional,
   useSyncPrototypePreviewStateToUrl,
   type PrSplitEntry,
-} from "proto";
+} from "proto-plugin";
 import { cn } from "ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 

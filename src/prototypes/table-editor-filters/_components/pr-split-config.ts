@@ -5,7 +5,7 @@ import {
   SHARE_STATE_PARAM,
   type PrSplitConfig,
   type PrSplitEntry as PrSplitEntryBase,
-} from "proto";
+} from "proto-plugin";
 
 import {
   DEFAULT_GRID_EMPTY_STATE_VARIANT,

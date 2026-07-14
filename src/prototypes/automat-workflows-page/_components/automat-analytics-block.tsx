@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import { Card, CardContent, CardHeader, CardTitle } from "@coss/ui/components/card";
 import {
   Bar,

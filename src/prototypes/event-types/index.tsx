@@ -8,7 +8,7 @@ import {
   usePrototypeReviewOptional,
   useSyncPrototypePreviewStateToUrl,
   type PrSplitEntry,
-} from "proto";
+} from "proto-plugin";
 import { useCallback, useEffect, useState } from "react";
 
 import { EventTypesMainContent } from "./_components/event-types-main-content";

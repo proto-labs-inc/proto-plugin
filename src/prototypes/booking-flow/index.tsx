@@ -1,9 +1,9 @@
 "use client";
 
-import { PrototypeComponent } from "proto";
-import { usePrototypeComments } from "proto";
-import { usePrototypeReviewOptional } from "proto";
-import { useSyncPrototypePreviewStateToUrl } from "proto";
+import { PrototypeComponent } from "proto-plugin";
+import { usePrototypeComments } from "proto-plugin";
+import { usePrototypeReviewOptional } from "proto-plugin";
+import { useSyncPrototypePreviewStateToUrl } from "proto-plugin";
 import { AnimatePresence } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

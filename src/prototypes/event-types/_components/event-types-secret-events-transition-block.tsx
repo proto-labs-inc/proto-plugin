@@ -4,13 +4,13 @@ import { Badge } from "@calcom/ui/components/badge";
 import classNames from "@calcom/ui/classNames";
 import Icon from "@calcom/ui/components/icon/Icon";
 import { SegmentedControl } from "@calcom/ui/components/segmented-control";
-import { PrototypeComponent } from "proto";
+import { PrototypeComponent } from "proto-plugin";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "proto/ui/dropdown-menu";
+} from "proto-plugin/ui/dropdown-menu";
 import { PlusIcon } from "@coss/ui/icons";
 import { useState } from "react";
 

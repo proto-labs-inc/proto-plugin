@@ -1,6 +1,6 @@
 # proto-prototypes
 
-Next.js host app for [**proto**](packages/proto/) — shareable UI prototypes that match the real product.
+Next.js host app for [**proto-plugin**](packages/prototype/) — shareable UI prototypes that match the real product.
 
 ## Getting started
 
@@ -15,8 +15,8 @@ The dev server runs on port **1985** (see `"dev": "next dev -p 1985"` in `packag
 
 | Path | Description |
 | --- | --- |
-| [`packages/proto/README.md`](packages/proto/README.md) | Host setup, API, and scripts |
-| [`packages/proto/AGENTS.md`](packages/proto/AGENTS.md) | Building prototypes |
+| [`packages/prototype/README.md`](packages/prototype/README.md) | Host setup, API, and scripts |
+| [`packages/prototype/AGENTS.md`](packages/prototype/AGENTS.md) | Building prototypes |
 
 ## Source app
 
