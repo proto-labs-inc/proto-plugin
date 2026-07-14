@@ -391,23 +391,61 @@
 }
 
 [data-prototype-root][data-prototype-comment-theme="light"]
-  [data-prototype-review-sidebar] {
+  :is(
+    [data-prototype-review-sidebar],
+    [data-comments-sidebar],
+    [data-platform-sidebar]
+  ) {
   --tool-chrome-icon: rgba(0, 0, 0, 0.45);
   --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
+  --tool-chrome-gray-highlight: rgba(0, 0, 0, 0.05);
+  --tool-chrome-border: rgba(0, 0, 0, 0.08);
+  --tool-chrome-border-strong: rgba(0, 0, 0, 0.12);
+  --tool-chrome-input-surface: rgba(0, 0, 0, 0.03);
   --tool-chrome-text: var(--tool-chrome-icon-hover);
   --tool-chrome-text-heading: var(--tool-chrome-icon-hover);
   --tool-chrome-text-muted: rgba(0, 0, 0, 0.55);
   --bg-layered: #f0f0f0;
-  --border-faint: rgba(0, 0, 0, 0.08);
-  --border-solid: rgba(0, 0, 0, 0.12);
-  --border-medium: rgba(0, 0, 0, 0.18);
+  --border-faint: rgba(0, 0, 0, 0.05);
+  --border-solid: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.12);
+  --border: var(--tool-chrome-border);
+  --input: var(--tool-chrome-border-strong);
   --text-tertiary: rgba(0, 0, 0, 0.45);
-  --color-border: rgba(0, 0, 0, 0.12);
-  --color-border-faint: rgba(0, 0, 0, 0.08);
-  --color-border-solid: rgba(0, 0, 0, 0.12);
-  --color-border-medium: rgba(0, 0, 0, 0.18);
+  --color-border: var(--tool-chrome-border);
+  --color-border-faint: var(--border-faint);
+  --color-border-solid: var(--border-solid);
+  --color-border-medium: var(--border-medium);
+  --color-input: var(--tool-chrome-border-strong);
+  --color-bg-layered: #f0f0f0;
   --color-muted-foreground: rgba(0, 0, 0, 0.55);
   --color-text-tertiary: rgba(0, 0, 0, 0.45);
+}
+
+/*
+ * Tailwind v4 defaults bare border utilities to currentColor (near-black on
+ * light sidebar surfaces). Pin the semantic border token on tool sidebars.
+ */
+@layer base {
+  :is(
+      [data-prototype-review-sidebar],
+      [data-comments-sidebar],
+      [data-platform-sidebar]
+    ),
+  :is(
+      [data-prototype-review-sidebar],
+      [data-comments-sidebar],
+      [data-platform-sidebar]
+    )
+    ::before,
+  :is(
+      [data-prototype-review-sidebar],
+      [data-comments-sidebar],
+      [data-platform-sidebar]
+    )
+    ::after {
+    border-color: var(--border-solid, var(--tool-chrome-border, currentColor));
+  }
 }
 
 html.prototype-theme-transition-disable :is(*, *::before, *::after) {
@@ -621,16 +659,20 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   outline: none;
 }
 
+[data-prototype-root] .tool-dialog-overlay {
+  background: color-mix(in srgb, var(--tool-chrome-ground) 15%, rgba(0, 0, 0, 0.55));
+}
+
+[data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-overlay {
+  background: color-mix(in srgb, var(--tool-chrome-ground) 55%, rgba(0, 0, 0, 0.22));
+}
+
 [data-prototype-root] .tool-dialog-surface {
   overflow: hidden;
   border-radius: calc(var(--radius) + 4px);
   border: 1px solid var(--tool-chrome-border);
-  background: var(--tool-chrome-bg);
+  background-color: var(--tool-chrome-bg);
   color: var(--tool-chrome-text);
-  color-scheme: dark;
-  box-shadow:
-    var(--shadow-lg),
-    0 0 0 1px #2a2a2a;
 
   /*
    * Product preview surfaces reset shadcn tokens to light values. Re-bridge the
@@ -701,12 +743,31 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --color-text-secondary: var(--tool-chrome-text-muted);
 }
 
-[data-prototype-root][data-prototype-comment-theme="light"]
-  .tool-dialog-surface {
+[data-prototype-root][data-prototype-comment-theme="dark"] .tool-dialog-surface {
+  color-scheme: dark;
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px #2a2a2a;
+}
+
+[data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {
   color-scheme: light;
   box-shadow:
     var(--shadow-lg),
     0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+[data-prototype-root] .tool-dialog-surface :is(input, textarea) {
+  background-color: var(--tool-chrome-input-surface, transparent);
+  color: var(--tool-chrome-text);
+}
+
+[data-prototype-root][data-prototype-comment-theme="dark"] .tool-dialog-surface {
+  --tool-chrome-input-surface: rgba(255, 255, 255, 0.035);
+}
+
+[data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {
+  --tool-chrome-input-surface: #ffffff;
 }
 
 [data-prototype-root] .tool-dialog-separator {
@@ -796,11 +857,13 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 /* Restore host prototype preview theme inside screenshot capture and source
    surfaces (component library). Fixed product values — must not inherit tool
-   theme from [data-prototype-root]. Host apps extend with --product-* tokens. */
+   theme from [data-prototype-root]. Host apps extend with --product-* tokens.
+   Theme-managed source surfaces (component-library Light/Dark toggle) are
+   excluded — the host supplies full Supabase semantic tokens per mode. */
 [data-prototype-root] [data-prototype-screenshot],
 [data-prototype-screenshot],
-[data-prototype-root] [data-prototype-source-surface],
-[data-prototype-source-surface] {
+[data-prototype-root] [data-prototype-source-surface]:not([data-prototype-product-theme-managed]),
+[data-prototype-source-surface]:not([data-prototype-product-theme-managed]) {
   color-scheme: light;
 
   --font-sans:
@@ -899,12 +962,9 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   background-color: var(--bg-main);
 }
 
-/* Source surfaces (component-library preview cards) pin light product tokens but
-   do NOT force a background — each card supplies its own via bg utilities
-   (bg-default → white, bg-brand, etc.) so they read as light components on the
-   dark page. */
-[data-prototype-root] [data-prototype-source-surface],
-[data-prototype-source-surface] {
+/* Source surfaces pin light product text; theme-managed surfaces use host tokens. */
+[data-prototype-root] [data-prototype-source-surface]:not([data-prototype-product-theme-managed]),
+[data-prototype-source-surface]:not([data-prototype-product-theme-managed]) {
   color: var(--text-primary);
 }
 
@@ -923,31 +983,36 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   font-family: inherit;
 }
 
-/* Light schematic previews (state map + PR split wireframes). */
+/* Dark schematic previews (state map + PR split wireframes).
+   Always dark — independent of tool light/dark mode and prototype product theme. */
 [data-prototype-wireframe-preview] {
-  --prototype-wireframe-block: #e4e6ea;
-  --prototype-wireframe-block-subtle: #eceef1;
-  --bg-bedrock: var(--color-gray-100);
-  --bg-main: #ffffff;
-  --bg-top: #ffffff;
-  --bg-subtle: var(--color-gray-50);
-  --bg-layered: color-mix(in srgb, var(--color-gray-900) 6%, transparent);
-  --bg-invert: var(--color-gray-900);
-  --bg-white: #ffffff;
-  --text-primary: var(--color-gray-900);
-  --text-secondary: var(--color-gray-500);
-  --text-tertiary: var(--color-gray-400);
-  --border-faint: color-mix(in srgb, var(--color-gray-900) 7%, transparent);
-  --border-solid: var(--color-gray-200);
-  --border-medium: var(--color-gray-300);
-  --border-subtle: var(--color-gray-200);
+  color-scheme: dark;
+
+  --prototype-wireframe-preview-bg: #181818;
+  --prototype-wireframe-block: #3a3a3a;
+  --prototype-wireframe-block-subtle: #2e2e2e;
+  --prototype-wireframe-block-pulse-mid: #454545;
+  --bg-bedrock: #121212;
+  --bg-main: #151515;
+  --bg-top: #1c1c1c;
+  --bg-subtle: var(--prototype-wireframe-preview-bg);
+  --bg-layered: #222222;
+  --bg-invert: #f0f0f0;
+  --bg-white: #151515;
+  --text-primary: #d0d0d0;
+  --text-secondary: #9c9c9c;
+  --text-tertiary: #8a8a8a;
+  --border-faint: #333333;
+  --border-solid: #333333;
+  --border-medium: #454545;
+  --border-subtle: #333333;
   --muted: var(--prototype-wireframe-block-subtle);
   --color-muted: var(--prototype-wireframe-block);
-  --color-muted-foreground: var(--color-gray-400);
-  --cal-bg: #ffffff;
+  --color-muted-foreground: #8a8a8a;
+  --cal-bg: #151515;
   --cal-bg-emphasis: var(--prototype-wireframe-block);
-  --color-background: #ffffff;
-  --color-foreground: var(--color-gray-900);
+  --color-background: #151515;
+  --color-foreground: #d0d0d0;
   --color-border: var(--border-solid);
   --color-border-faint: var(--border-faint);
   --color-border-solid: var(--border-solid);
@@ -958,15 +1023,15 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --color-bg-subtle: var(--bg-subtle);
   --color-bg-layered: var(--bg-layered);
   --color-bg-invert: var(--bg-invert);
-  --color-bg-white: #ffffff;
+  --color-bg-white: var(--bg-white);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
 
   color: var(--text-primary);
-  background-color: var(--bg-subtle);
+  background-color: var(--prototype-wireframe-preview-bg);
 }
 
 [data-prototype-wireframe-preview] > * {
-  background-color: var(--bg-subtle, #f4f4f5);
+  background-color: var(--prototype-wireframe-preview-bg);
 }

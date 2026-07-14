@@ -1,5 +1,9 @@
 .overlay {
-  background: color-mix(in srgb, var(--tool-chrome-bg) 35%, rgba(0, 0, 0, 0.55));
+  background: color-mix(in srgb, var(--tool-chrome-ground) 15%, rgba(0, 0, 0, 0.55));
+}
+
+:global([data-prototype-root][data-prototype-comment-theme="light"]) .overlay {
+  background: color-mix(in srgb, var(--tool-chrome-ground) 55%, rgba(0, 0, 0, 0.22));
 }
 
 .content {
@@ -14,7 +18,19 @@
   border: 1px solid var(--tool-chrome-border);
   border-radius: 0.75rem;
   background: var(--tool-chrome-bg);
+  color: var(--tool-chrome-text);
   box-shadow:
     0 24px 48px rgba(0, 0, 0, 0.28),
     0 8px 16px rgba(0, 0, 0, 0.16);
+}
+
+:global([data-prototype-root][data-prototype-comment-theme="dark"]) .content {
+  color-scheme: dark;
+}
+
+:global([data-prototype-root][data-prototype-comment-theme="light"]) .content {
+  color-scheme: light;
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.04);
 }

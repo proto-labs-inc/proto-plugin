@@ -153,7 +153,7 @@ export function ComponentLibraryContent() {
     <div className="pb-20">
       <LibrarySection
         title="ui — Base primitives"
-        description="Synced from packages/ui. Previews use the Supabase Light theme — the default for all prototypes in this host."
+        description="Synced from packages/ui. Use the header toggle to preview components in Supabase Light or Dark."
       >
         <PreviewGrid>
           <PreviewBlock title="Button variants">

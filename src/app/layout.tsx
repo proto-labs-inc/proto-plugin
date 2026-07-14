@@ -53,6 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${SUPABASE_PRODUCT_THEME} ${inter.variable} ${manrope.variable} ${sourceCodePro.variable} h-full overflow-hidden antialiased`}
       data-theme={SUPABASE_PRODUCT_THEME}
       style={

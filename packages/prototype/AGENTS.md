@@ -437,6 +437,7 @@ The state map is a **stateless picker** — it must **not** reflect, highlight, 
 
 - **No active-state association** — Do not pass the current preview mode, `liveState`, or any `activeStateId` into `PrototypeStateCanvasConfig` or `build…StateCanvasConfig`. Clicking a node navigates to that state; there is no checkmark, selected border, or `aria-current` on the map.
 - **Follows tool theme** — The state map canvas (background, chrome, edges, section labels, node cards) uses `--tool-chrome-*` tokens and matches the gallery/review light/dark mode toggle.
+- **Wireframe previews are always dark** — Node schematic previews inside `[data-prototype-wireframe-preview]` use the dark schematic palette regardless of tool theme.
 - **`build…StateCanvasConfig(onStateSelect)`** — The builder takes only the select handler. Wire it once in `index.tsx` and `state-map-page.tsx`; do not re-build when `liveState` changes.
 
 Reference: `src/prototypes/booking-flow/_components/booking-flow-state-canvas-config.tsx`, `table-editor-filters/state-map-page.tsx`.
@@ -628,6 +629,8 @@ Prototype-specific **full-page** schematic previews for each `wireframeId`. Each
 4. Fill the card preview: wrap the wireframe root in `PR_SPLIT_WIREFRAME_FRAME_CLASS` from `prototype` (`aspect-video w-full overflow-hidden`) so the schematic reads as a full screen, not a short strip.
 5. Register one renderer per `wireframeId` in a `Record<WireframeId, () => ReactNode>`.
 6. Export `PrSplitWireframe` wrapped in `PrototypeComponent` (register id in `component-ids.ts`).
+
+**Dark schematic palette (mandatory):** PR split and state-map wireframes always render on a **dark** schematic surface — even when the tool is in light mode or the prototype product theme is light. The tool wraps previews in `[data-prototype-wireframe-preview]`, which scopes dark tokens (`--prototype-wireframe-block`, `--cal-bg`, `--border-subtle`, etc.). Use those CSS variables for fills and borders; do **not** hardcode light grays (`#e4e6ea`, `#fff`, `#f4f4f5`) or product light tokens inside wireframe renderers.
 
 Highlighted areas must match what `targetId` points to on the real prototype; surrounding chrome provides context for where the change sits on the page.
 

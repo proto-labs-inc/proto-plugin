@@ -74,9 +74,10 @@
   min-height: 0;
   align-self: stretch;
   flex-direction: column;
-  background: var(--bg-main);
-  border: 1px solid var(--border-faint);
-  border-top: none;
+  // Product preview fills edge-to-edge — tool chrome frame tokens read as white
+  // side gutters when the inverted product theme is dark (tool light mode).
+  background: transparent;
+  border: none;
 }
 
 .viewportFrameMobile {

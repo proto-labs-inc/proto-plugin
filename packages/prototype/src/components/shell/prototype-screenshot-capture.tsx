@@ -1,6 +1,7 @@
 "use client";
 
 import { capturePrototypeViewportPng } from "@prototype/lib/prototypes/capture-prototype-viewport";
+import { runAfterQuietPeriod } from "@prototype/lib/prototypes/run-when-idle";
 import { useEffect } from "react";
 
 type PrototypeScreenshotCaptureProps = {
@@ -32,10 +33,13 @@ export function PrototypeScreenshotCapture({
       }
     };
 
-    void capture();
+    const cancelSchedule = runAfterQuietPeriod(() => {
+      void capture();
+    });
 
     return () => {
       cancelled = true;
+      cancelSchedule();
     };
   }, [slug]);
 

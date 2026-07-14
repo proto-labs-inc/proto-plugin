@@ -38,7 +38,7 @@ function WireBlock({
             : pulse
               ? {
                   background:
-                    "linear-gradient(90deg, var(--prototype-wireframe-block, #e4e6ea) 25%, #f0f1f3 50%, var(--prototype-wireframe-block, #e4e6ea) 75%)",
+                    "linear-gradient(90deg, var(--prototype-wireframe-block, #3a3a3a) 25%, var(--prototype-wireframe-block-pulse-mid, #454545) 50%, var(--prototype-wireframe-block, #3a3a3a) 75%)",
                   backgroundSize: "200% 100%",
                 }
               : { background: "var(--prototype-wireframe-block, #e4e6ea)" }

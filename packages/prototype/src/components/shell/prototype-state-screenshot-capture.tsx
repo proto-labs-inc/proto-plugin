@@ -6,6 +6,7 @@ import { capturePrototypeViewportPng } from "@prototype/lib/prototypes/capture-p
 import { createStateScreenshotThumbnail } from "@prototype/lib/prototypes/create-state-screenshot-thumbnail";
 import { getStateScreenshotThumbSize } from "@prototype/lib/prototypes/prototype-state-canvas-constants";
 import { dispatchPrototypeStateScreenshotCaptured } from "@prototype/lib/prototypes/prototype-state-screenshot";
+import { runAfterQuietPeriod } from "@prototype/lib/prototypes/run-when-idle";
 
 const CAPTURE_DELAY_MS = 700;
 
@@ -57,10 +58,13 @@ export function PrototypeStateScreenshotCapture({
       }
     };
 
-    void capture();
+    const cancelSchedule = runAfterQuietPeriod(() => {
+      void capture();
+    });
 
     return () => {
       cancelled = true;
+      cancelSchedule();
     };
   }, [enabled, slug, stateId]);
 

@@ -22,13 +22,32 @@ When building or modifying prototypes, follow **Live state & preview states (man
 
 Reference implementation: `src/prototypes/table-editor-filters/` (`index.tsx`, `state-map-page.tsx`).
 
-## Prototype product theme (Supabase Light)
+## Prototype product theme (Supabase Light / Dark)
 
-This host syncs **Supabase Studio** and pins **Light** on `<html class="light" data-theme="light">` (see `layout.tsx` and `SUPABASE_PRODUCT_THEME`). Host `supabase-product-surface.css` clears proto-plugin gray-scale token overrides on product surfaces so Supabase semantic tokens inherit correctly.
+This host syncs **Supabase Studio** and loads both **Light** and **Dark** product tokens (`SUPABASE_PRODUCT_THEMES` in `supabase-product-theme.constants.ts`). `<html>` stays pinned to Light for font and base setup.
 
-When building or reviewing prototypes under `src/prototypes/`, match **Supabase Light** tokens and screenshots. Do not use `classic-dark`, `dark`, or dark-only utilities unless the prototype explicitly compares themes.
+**Prototype previews invert the tool chrome theme** when both modes are configured: tool dark → product light, tool light → product dark. `SupabaseProductTheme` applies the resolved mode on `#prototype-viewport` and other non-managed product surfaces. The component library keeps its own header toggle (`data-prototype-product-theme-managed`).
 
-The gallery/review **tool theme toggle** still only affects tool chrome — not prototype preview content.
+When building or reviewing prototypes under `src/prototypes/`, still match **Supabase Light** tokens and screenshots — that is the shipped product target. Dark preview is for review contrast only.
+
+The gallery/review **tool theme toggle** only affects tool chrome directly — prototype preview content follows the inverse rule above, not the tool tokens themselves.
+
+### Detect source theming and load both modes (mandatory)
+
+When **setting up product theming or (re)syncing from a source app**, first investigate the source's theming mechanism and configure product theme modes to match what the source actually ships. Do **not** assume light-only.
+
+1. **Find the source's theming source of truth** — check, in order, whichever applies:
+   - App-level theme provider config (e.g. `next-themes` `themes={[...]}` in a `Providers`/layout file, `singleThemes`, MUI `createTheme`, Chakra, styled-components `ThemeProvider`).
+   - Design-token sets with paired light/dark values (e.g. `themes/light.css` + `themes/dark.css`, token JSON with both modes).
+   - CSS conventions: `.dark` / `[data-theme="dark"]` blocks, `@media (prefers-color-scheme: dark)`, Tailwind `dark:` variants.
+2. **Decide from the discriminating signal, not the design system.** The app-level theme config (what themes the app actually enables) is authoritative. The mere presence of light/dark CSS in a shared UI package is **not** — those often ship for every consumer regardless of whether the app offers dark mode.
+3. **If the source defines both a light and dark theme, load both.** Configure both product token sets (e.g. list both in `SUPABASE_PRODUCT_THEMES` / the host's product-theme constants) so the component library toggle and the prototype preview theme inversion both work. If the source ships only one mode, configure only that one and do not expose a toggle.
+4. **Non-binary theme sets** (e.g. `system` / `dark` / `classic-dark`): pick the canonical light and dark variants the product actually uses; do not treat extra brand/system themes as separate product modes unless the prototype explicitly compares them.
+5. **Detection is expected to be reliable; completeness is not.** Finding whether both themes are *defined* is a normal investigation task — do it. But "both defined" does not prove "both render correctly." Before finishing, open `/component-library` and toggle both modes to confirm previews actually theme (no washed-out text, no unstyled surfaces); fix or scope down if a mode is incomplete.
+
+## Prototype wireframes (dark schematic)
+
+PR split and state-map wireframe previews always render on a **dark** schematic surface — even in tool light mode or when the prototype product theme is light. Use CSS variables from the `[data-prototype-wireframe-preview]` scope (`--prototype-wireframe-block`, `--cal-bg`, `--border-subtle`, …); do not hardcode light grays or `#fff`. See **Wireframes** in `packages/prototype/AGENTS.md`.
 
 ## Prototype overlays & side shelves
 

@@ -88,6 +88,7 @@ export function buildPrSplitPlanPrompt({
     "- Scaffold every wireframe from the prototype's real page layout (match the shell layout component)",
     "- Use low-fidelity `Wire` blocks; apply `PR_TARGET_HIGHLIGHT_BORDER` / `PR_TARGET_HIGHLIGHT_FILL` only on the PR target",
     "- Fill the card preview area: wrap the wireframe root in `PR_SPLIT_WIREFRAME_FRAME_CLASS` (`aspect-video w-full overflow-hidden`) so the schematic reads as a full screen, not a tiny excerpt",
+    "- Wireframes always use the dark schematic palette scoped by `[data-prototype-wireframe-preview]` — use `--prototype-wireframe-block`, `--cal-bg`, `--border-subtle`, etc.; never hardcode light grays or white backgrounds",
     "- The highlight shows where the slice lands on the page; surrounding chrome provides context",
     "",
     "Prototype preview: " + previewUrl,

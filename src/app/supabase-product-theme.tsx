@@ -1,32 +1,84 @@
 "use client";
 
-import { PROTOTYPE_VIEWPORT_ID } from "proto-plugin";
-import { useEffect } from "react";
+import {
+  PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR,
+  PROTOTYPE_VIEWPORT_ID,
+} from "proto-plugin";
+import { useEffect, useState } from "react";
 
-import { SUPABASE_PRODUCT_THEME } from "./supabase-product-theme.constants";
+import {
+  resolveSupabaseProductTheme,
+  type SupabaseProductTheme,
+} from "./supabase-product-theme.constants";
 
-export { SUPABASE_PRODUCT_THEME } from "./supabase-product-theme.constants";
+export {
+  SUPABASE_PRODUCT_THEME,
+  SUPABASE_PRODUCT_THEMES,
+} from "./supabase-product-theme.constants";
 
-function applyLightTheme(element: Element) {
-  element.classList.add(SUPABASE_PRODUCT_THEME);
-  element.setAttribute("data-theme", SUPABASE_PRODUCT_THEME);
+function readToolTheme(): SupabaseProductTheme {
+  const roots = document.querySelectorAll<HTMLElement>("[data-prototype-root]");
+  const activeRoot = roots[roots.length - 1] ?? roots[0];
+  return activeRoot?.getAttribute("data-prototype-comment-theme") === "light"
+    ? "light"
+    : "dark";
+}
+
+function applyProductTheme(element: Element, theme: SupabaseProductTheme) {
+  element.classList.remove("light", "dark");
+  element.classList.add(theme);
+  element.setAttribute("data-theme", theme);
+}
+
+function useToolThemeForProductSync(): SupabaseProductTheme {
+  const [toolTheme, setToolTheme] = useState<SupabaseProductTheme>("dark");
+
+  useEffect(() => {
+    const syncToolTheme = () => {
+      setToolTheme(readToolTheme());
+    };
+
+    syncToolTheme();
+
+    const observer = new MutationObserver(syncToolTheme);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-prototype-comment-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return toolTheme;
 }
 
 /**
- * Pins Supabase Light on product preview surfaces regardless of tool chrome theme.
- * Covers #prototype-viewport (screenshot root) and component-library source surfaces.
+ * Applies Supabase product theme on prototype preview surfaces.
+ * When both light and dark tokens are configured, inverts the tool chrome theme
+ * so prototypes stay visually distinct from the review shell.
+ * Skips component-library surfaces that manage their own toggle.
  */
 export function SupabaseProductTheme() {
+  const toolTheme = useToolThemeForProductSync();
+  const productTheme = resolveSupabaseProductTheme(toolTheme);
+
   useEffect(() => {
     const applyToProductSurfaces = () => {
       const viewport = document.getElementById(PROTOTYPE_VIEWPORT_ID);
       if (viewport?.hasAttribute("data-prototype-screenshot")) {
-        applyLightTheme(viewport);
+        applyProductTheme(viewport, productTheme);
       }
 
       document
         .querySelectorAll("[data-prototype-source-surface]")
-        .forEach(applyLightTheme);
+        .forEach((element) => {
+          if (element.hasAttribute(PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR)) {
+            return;
+          }
+          applyProductTheme(element, productTheme);
+        });
     };
 
     applyToProductSurfaces();
@@ -44,7 +96,7 @@ export function SupabaseProductTheme() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [productTheme]);
 
   return null;
 }

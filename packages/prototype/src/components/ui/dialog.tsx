@@ -26,7 +26,7 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       styles.overlay,
-      "fixed inset-0 z-50 bg-black/50",
+      "tool-dialog-overlay fixed inset-0 z-50",
       className,
     )}
     {...props}

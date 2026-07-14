@@ -3,7 +3,7 @@
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
 import { PrototypeGalleryNav } from "@prototype/components/shell/prototype-gallery-nav";
 import { cn } from "@prototype/lib/utils";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, ReactNode, RefObject } from "react";
 
 /** Uniform gallery gutter — tile gaps match content inset on every side. */
 export const PROTOTYPE_GALLERY_GRID_GAP_CLASS = "gap-6";
@@ -56,6 +56,8 @@ type PrototypeGalleryPageLayoutProps = {
   scrollClassName?: string;
   scrollContainerProps?: HTMLAttributes<HTMLDivElement> &
     Record<`data-${string}`, string>;
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
+  scrollOverlay?: ReactNode;
 };
 
 /** Gallery pages: header stays fixed; only body scrolls. */
@@ -64,17 +66,25 @@ export function PrototypeGalleryPageLayout({
   children,
   scrollClassName,
   scrollContainerProps,
+  scrollContainerRef,
+  scrollOverlay,
 }: PrototypeGalleryPageLayoutProps) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {header}
       <div
+        ref={scrollContainerRef}
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
+          "relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
           scrollClassName ?? "bg-[var(--bg-ground)]",
         )}
         {...scrollContainerProps}
       >
+        {scrollOverlay ? (
+          <div className="pointer-events-none absolute right-6 top-6 z-10">
+            <div className="pointer-events-auto">{scrollOverlay}</div>
+          </div>
+        ) : null}
         <div className={cn("h-fit w-full", PROTOTYPE_GALLERY_CONTENT_INSET_CLASS)}>
           {children}
         </div>

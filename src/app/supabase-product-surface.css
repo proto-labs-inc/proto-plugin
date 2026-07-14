@@ -20,7 +20,11 @@ html[data-theme="light"]
 :is(
   [data-prototype-source-surface],
   [data-prototype-screenshot]
-)[data-theme="dark"] {
+)[data-theme="dark"],
+:is([data-component-library-portal]).light,
+:is([data-component-library-portal])[data-theme="light"],
+:is([data-component-library-portal]).dark,
+:is([data-component-library-portal])[data-theme="dark"] {
   --bg-bedrock: initial;
   --bg-main: initial;
   --bg-top: initial;
@@ -86,41 +90,119 @@ html[data-theme="light"]
 }
 
 /*
- * Full-page Supabase product surfaces rendered inside proto-plugin tool chrome
- * (e.g. starter-screen previews before layout bypass). Re-bridge shadcn tokens
- * from the local .light theme inputs — proto-plugin's [data-prototype-root] pins
- * --foreground to tool-chrome heading gray (#f0f0f0), which washes out text.
+ * Product preview surfaces inside proto-plugin tool chrome. Host html may stay
+ * Supabase Light while managed surfaces toggle locally — do not require html.light.
  */
-html.light [data-prototype-root] :is(.light, [data-theme="light"]) {
+[data-prototype-root]
+  :is(
+    [data-prototype-screenshot],
+    [data-prototype-source-surface]:not([data-prototype-product-theme-managed]),
+    [data-prototype-source-surface][data-prototype-product-theme-managed]
+  ):is(
+    .light,
+    [data-theme="light"]
+  ),
+[data-component-library-portal]:is(.light, [data-theme="light"]) {
+  --hue: 159;
+  --surface-hue: 34;
+  --primary-hue: 159;
+  --chroma: 0;
+  --surface: 0.995;
+  --elevation-step: 0.024;
+  --contrast: 0.53;
+  --foreground-lightness: 0.1;
+  --muted-foreground-level: 0.65;
+  --tertiary-foreground-level: 0.5;
+  --warning-lightness: 0.68;
+  --destructive-lightness: 0.52;
+  --info-lightness: 0.54;
+
+  --contrast-delta: calc((var(--contrast) - 0.5) / 0.5);
+  --contrast-up: max(0, var(--contrast-delta));
+  --contrast-down: max(0, calc(var(--contrast-delta) * -1));
+  --contrast-text-floor: 0.9;
+  --contrast-border-floor: 0.05;
+  --contrast-text: calc(1 - (1 - var(--contrast-text-floor)) * var(--contrast-down));
+  --contrast-border-linear: calc(
+    var(--contrast-border-floor) + (1 - var(--contrast-border-floor)) * var(--contrast)
+  );
+  --contrast-border: calc(var(--contrast-border-linear) * var(--contrast-border-linear));
+  --tone-span: calc(var(--foreground-lightness) - var(--surface));
+  --surface-overlay-unit: calc(var(--elevation-step) / abs(var(--tone-span)));
+  --muted-alpha: calc(var(--surface-overlay-unit) * 1);
+  --accent-alpha: calc(var(--surface-overlay-unit) * 1.5);
+  --tertiary-alpha: calc(var(--surface-overlay-unit) * 2);
+  --brand-hue-reference: 159;
+  --status-hue-pull: 0.15;
+  --warning-hue: clamp(
+    65,
+    calc(75 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    95
+  );
+  --destructive-hue: clamp(
+    12,
+    calc(25 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    42
+  );
+  --info-hue: clamp(
+    272,
+    calc(288 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    302
+  );
+  --expressive-chroma: 0.14;
+
   --background: oklch(var(--surface) calc(var(--chroma) * 0.5) var(--surface-hue));
   --foreground: oklch(
     calc(var(--surface) + var(--tone-span) * var(--contrast-text)) calc(var(--chroma) * 0.55)
       var(--surface-hue)
   );
-  --card: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-1)) c h);
+  --card: oklch(from var(--background) calc(l + var(--elevation-step) * 1) c h);
   --card-foreground: var(--foreground);
-  --popover: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-2)) c h);
+  --popover: oklch(from var(--background) calc(l + var(--elevation-step) * 1.5) c h);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.76 0.15 var(--primary-hue));
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness)) calc(var(--chroma) * 0.45) var(--primary-hue)
   );
-  --secondary: oklch(
-    from var(--background) calc(l + var(--elevation-step) * var(--elevation-3)) c h
-  );
+  --secondary: oklch(from var(--background) calc(l + var(--elevation-step) * 2) c h);
   --secondary-foreground: var(--foreground);
+  --tertiary-foreground-mix: calc(
+    var(--tertiary-foreground-level) + (1 - var(--tertiary-foreground-level)) * var(--contrast-up) -
+      var(--tertiary-foreground-level) * 0.5 * var(--contrast-down)
+  );
+  --tertiary: oklch(from var(--foreground) l c h / var(--tertiary-alpha));
+  --tertiary-foreground: oklch(
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * var(--tertiary-foreground-mix))
+      c h
+  );
   --muted: oklch(from var(--foreground) l c h / var(--muted-alpha));
+  --muted-foreground-mix: calc(
+    var(--muted-foreground-level) + (1 - var(--muted-foreground-level)) * var(--contrast-up) -
+      var(--muted-foreground-level) * 0.5 * var(--contrast-down)
+  );
   --muted-foreground: oklch(
     from var(--foreground) calc(var(--surface) + var(--tone-span) * var(--muted-foreground-mix)) c h
   );
   --accent: oklch(from var(--foreground) l c h / var(--accent-alpha));
   --accent-foreground: var(--foreground);
+  --warning: oklch(var(--warning-lightness) var(--expressive-chroma) var(--warning-hue));
   --destructive: oklch(
     var(--destructive-lightness) var(--expressive-chroma) var(--destructive-hue)
+  );
+  --warning-foreground: oklch(
+    from var(--warning) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
   );
   --destructive-foreground: oklch(
     from var(--destructive) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
   );
+  --info: oklch(var(--info-lightness) var(--expressive-chroma) var(--info-hue));
+  --info-foreground: oklch(
+    from var(--info) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --border-destructive: oklch(from var(--destructive) l c h / 30%);
+  --border-warning: oklch(from var(--warning) l c h / 30%);
+  --border-info: oklch(from var(--info) l c h / 30%);
+  --border-brand: oklch(from var(--primary) l c h / 30%);
   --border: oklch(
     from var(--foreground) l calc(c * 0.54) h / calc(2% + 20% * var(--contrast-border))
   );
@@ -128,6 +210,43 @@ html.light [data-prototype-root] :is(.light, [data-theme="light"]) {
     from var(--foreground) l calc(c * 0.5) h / calc(3% + 38% * var(--contrast-border))
   );
   --ring: oklch(from var(--primary) l c h / 55%);
+
+  --foreground-light: var(--muted-foreground);
+  --foreground-lighter: var(--tertiary-foreground);
+  --foreground-muted: var(--tertiary-foreground);
+  --foreground-contrast: var(--primary-foreground);
+  --background-default: var(--background);
+  --background-200: var(--card);
+  --background-alternative-default: var(--background);
+  --background-alternative-200: var(--card);
+  --background-selection: var(--accent);
+  --background-control: var(--accent);
+  --background-surface-75: var(--card);
+  --background-surface-100: var(--card);
+  --background-surface-200: var(--muted);
+  --background-surface-300: var(--secondary);
+  --background-surface-400: var(--tertiary);
+  --background-overlay-default: var(--secondary);
+  --background-overlay-hover: var(--accent);
+  --background-muted: var(--muted);
+  --background-button-default: var(--secondary);
+  --background-dialog-default: var(--popover);
+  --background-dash-sidebar: var(--background);
+  --background-dash-canvas: var(--background);
+  --border-default: var(--border);
+  --border-muted: var(--border);
+  --border-secondary: var(--border-muted);
+  --border-overlay: oklch(
+    from var(--foreground) l calc(c * 0.5) h / calc(4% + 34% * var(--contrast-border))
+  );
+  --border-control: var(--input);
+  --border-alternative: var(--border);
+  --border-strong: var(--input);
+  --border-stronger: oklch(
+    from var(--foreground) l calc(c * 0.5) h / calc(5% + 45% * var(--contrast-border))
+  );
+  --border-button-default: var(--border);
+  --border-button-hover: var(--border-stronger);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -150,38 +269,123 @@ html.light [data-prototype-root] :is(.light, [data-theme="light"]) {
   --color-ring: var(--ring);
 
   color: var(--foreground);
+  background-color: var(--background);
 }
 
-html.light [data-prototype-root] :is(.dark, [data-theme="dark"]) {
+/*
+ * Dark product preview: inherited html.light intermediates (--tone-span, compat
+ * aliases, etc.) are light values. Re-derive every token locally on dark surfaces.
+ */
+[data-prototype-root]
+  :is(
+    [data-prototype-screenshot],
+    [data-prototype-source-surface]:not([data-prototype-product-theme-managed]),
+    [data-prototype-source-surface][data-prototype-product-theme-managed]
+  ):is(
+    .dark,
+    [data-theme="dark"]
+  ),
+[data-component-library-portal]:is(.dark, [data-theme="dark"]) {
+  --hue: 159;
+  --surface-hue: 159;
+  --primary-hue: 159;
+  --chroma: 0.005;
+  --surface: 0.19;
+  --elevation-step: 0.025;
+  --contrast: 0.5;
+  --foreground-lightness: 0.95;
+  --muted-foreground-level: 0.8;
+  --tertiary-foreground-level: 0.65;
+  --warning-lightness: 0.8;
+  --destructive-lightness: 0.75;
+  --info-lightness: 0.7;
+
+  --contrast-delta: calc((var(--contrast) - 0.5) / 0.5);
+  --contrast-up: max(0, var(--contrast-delta));
+  --contrast-down: max(0, calc(var(--contrast-delta) * -1));
+  --contrast-text-floor: 0.9;
+  --contrast-border-floor: 0.05;
+  --contrast-text: calc(1 - (1 - var(--contrast-text-floor)) * var(--contrast-down));
+  --contrast-border-linear: calc(
+    var(--contrast-border-floor) + (1 - var(--contrast-border-floor)) * var(--contrast)
+  );
+  --contrast-border: calc(var(--contrast-border-linear) * var(--contrast-border-linear));
+  --tone-span: calc(var(--foreground-lightness) - var(--surface));
+  --surface-overlay-unit: calc(var(--elevation-step) / abs(var(--tone-span)));
+  --muted-alpha: calc(var(--surface-overlay-unit) * 1);
+  --accent-alpha: calc(var(--surface-overlay-unit) * 1.5);
+  --tertiary-alpha: calc(var(--surface-overlay-unit) * 2);
+  --brand-hue-reference: 159;
+  --status-hue-pull: 0.15;
+  --warning-hue: clamp(
+    65,
+    calc(75 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    95
+  );
+  --destructive-hue: clamp(
+    12,
+    calc(25 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    42
+  );
+  --info-hue: clamp(
+    272,
+    calc(288 + (var(--primary-hue) - var(--brand-hue-reference)) * var(--status-hue-pull)),
+    302
+  );
+  --expressive-chroma: 0.14;
+
   --background: oklch(var(--surface) calc(var(--chroma) * 0.5) var(--surface-hue));
   --foreground: oklch(
     calc(var(--surface) + var(--tone-span) * var(--contrast-text)) calc(var(--chroma) * 0.55)
       var(--surface-hue)
   );
-  --card: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-1)) c h);
+  --card: oklch(from var(--background) calc(l + var(--elevation-step) * 1) c h);
   --card-foreground: var(--foreground);
-  --popover: oklch(from var(--background) calc(l + var(--elevation-step) * var(--elevation-2)) c h);
+  --popover: oklch(from var(--background) calc(l + var(--elevation-step) * 1.5) c h);
   --popover-foreground: var(--foreground);
   --primary: oklch(0.76 0.15 var(--primary-hue));
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness)) calc(var(--chroma) * 0.45) var(--primary-hue)
   );
-  --secondary: oklch(
-    from var(--background) calc(l + var(--elevation-step) * var(--elevation-3)) c h
-  );
+  --secondary: oklch(from var(--background) calc(l + var(--elevation-step) * 2) c h);
   --secondary-foreground: var(--foreground);
+  --tertiary-foreground-mix: calc(
+    var(--tertiary-foreground-level) + (1 - var(--tertiary-foreground-level)) * var(--contrast-up) -
+      var(--tertiary-foreground-level) * 0.5 * var(--contrast-down)
+  );
+  --tertiary: oklch(from var(--foreground) l c h / var(--tertiary-alpha));
+  --tertiary-foreground: oklch(
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * var(--tertiary-foreground-mix))
+      c h
+  );
   --muted: oklch(from var(--foreground) l c h / var(--muted-alpha));
+  --muted-foreground-mix: calc(
+    var(--muted-foreground-level) + (1 - var(--muted-foreground-level)) * var(--contrast-up) -
+      var(--muted-foreground-level) * 0.5 * var(--contrast-down)
+  );
   --muted-foreground: oklch(
     from var(--foreground) calc(var(--surface) + var(--tone-span) * var(--muted-foreground-mix)) c h
   );
   --accent: oklch(from var(--foreground) l c h / var(--accent-alpha));
   --accent-foreground: var(--foreground);
+  --warning: oklch(var(--warning-lightness) var(--expressive-chroma) var(--warning-hue));
   --destructive: oklch(
     var(--destructive-lightness) var(--expressive-chroma) var(--destructive-hue)
+  );
+  --warning-foreground: oklch(
+    from var(--warning) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
   );
   --destructive-foreground: oklch(
     from var(--destructive) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
   );
+  --info: oklch(var(--info-lightness) var(--expressive-chroma) var(--info-hue));
+  --info-foreground: oklch(
+    from var(--info) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --border-destructive: oklch(from var(--destructive) l c h / 30%);
+  --border-warning: oklch(from var(--warning) l c h / 30%);
+  --border-info: oklch(from var(--info) l c h / 30%);
+  --border-brand: oklch(from var(--primary) l c h / 30%);
   --border: oklch(
     from var(--foreground) l calc(c * 0.54) h / calc(2% + 20% * var(--contrast-border))
   );
@@ -189,6 +393,43 @@ html.light [data-prototype-root] :is(.dark, [data-theme="dark"]) {
     from var(--foreground) l calc(c * 0.5) h / calc(3% + 38% * var(--contrast-border))
   );
   --ring: oklch(from var(--primary) l c h / 55%);
+
+  --foreground-light: var(--muted-foreground);
+  --foreground-lighter: var(--tertiary-foreground);
+  --foreground-muted: var(--tertiary-foreground);
+  --foreground-contrast: var(--primary-foreground);
+  --background-default: var(--background);
+  --background-200: var(--card);
+  --background-alternative-default: var(--background);
+  --background-alternative-200: var(--card);
+  --background-selection: var(--accent);
+  --background-control: var(--accent);
+  --background-surface-75: var(--card);
+  --background-surface-100: var(--card);
+  --background-surface-200: var(--muted);
+  --background-surface-300: var(--secondary);
+  --background-surface-400: var(--tertiary);
+  --background-overlay-default: var(--secondary);
+  --background-overlay-hover: var(--accent);
+  --background-muted: var(--muted);
+  --background-button-default: var(--secondary);
+  --background-dialog-default: var(--popover);
+  --background-dash-sidebar: var(--background);
+  --background-dash-canvas: var(--background);
+  --border-default: var(--border);
+  --border-muted: var(--border);
+  --border-secondary: var(--border-muted);
+  --border-overlay: oklch(
+    from var(--foreground) l calc(c * 0.5) h / calc(4% + 34% * var(--contrast-border))
+  );
+  --border-control: var(--input);
+  --border-alternative: var(--border);
+  --border-strong: var(--input);
+  --border-stronger: oklch(
+    from var(--foreground) l calc(c * 0.5) h / calc(5% + 45% * var(--contrast-border))
+  );
+  --border-button-default: var(--border);
+  --border-button-hover: var(--border-stronger);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -211,4 +452,5 @@ html.light [data-prototype-root] :is(.dark, [data-theme="dark"]) {
   --color-ring: var(--ring);
 
   color: var(--foreground);
+  background-color: var(--background);
 }
