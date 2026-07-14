@@ -7,7 +7,7 @@ import {
   Search,
   Table2,
 } from "lucide-react";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { Badge, Button, cn, Input } from "ui";
 
 import { MOCK_TABLES } from "./table-editor-filters-mock-data";

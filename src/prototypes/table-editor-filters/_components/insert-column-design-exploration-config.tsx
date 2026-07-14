@@ -5,7 +5,7 @@ import {
   DesignExplorationVariantPreviewShell,
   type DesignExplorationConfig,
   type MobbinReference,
-} from "proto-plugin";
+} from "proto";
 import type { ReactNode } from "react";
 
 import {

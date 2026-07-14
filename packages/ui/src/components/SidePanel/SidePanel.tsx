@@ -42,7 +42,7 @@ interface CustomProps {
   confirmText?: String
   triggerElement?: React.ReactNode
   tooltip?: string
-  /** Portal target — pass `#prototype-viewport` in proto-plugin previews so shelves stay inside the product frame. */
+  /** Portal target — pass `#prototype-viewport` in proto previews so shelves stay inside the product frame. */
   portalContainer?: HTMLElement | null
 }
 

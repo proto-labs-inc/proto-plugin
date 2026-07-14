@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 import { BookingEventSidebar } from "./booking-event-details";
 import { BookingMainToolbar } from "./booking-header-controls";

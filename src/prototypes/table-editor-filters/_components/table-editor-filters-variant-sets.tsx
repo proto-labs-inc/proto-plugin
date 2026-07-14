@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrototypeReviewOptional } from "proto-plugin";
+import { usePrototypeReviewOptional } from "proto";
 import { useLayoutEffect } from "react";
 
 export const GRID_ERROR_STATE_LAYOUT_VARIANT_SET = {

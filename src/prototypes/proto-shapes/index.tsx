@@ -1,7 +1,7 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
-import { usePrototypeComments } from "proto-plugin";
+import { PrototypeComponent } from "proto";
+import { usePrototypeComments } from "proto";
 import { useCallback } from "react";
 
 import { SpringsShapesCanvas } from "./springs-shapes-canvas";

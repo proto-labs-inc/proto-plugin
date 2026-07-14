@@ -13,7 +13,7 @@ import {
   Table2,
   User,
 } from "lucide-react";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { Button, cn } from "ui";
 
 import { SqlEditorIcon } from "./table-editor-icons";

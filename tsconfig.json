@@ -29,12 +29,11 @@
       "@calcom/dayjs": ["./packages/lib/dayjs.ts"],
       "@coss/ui/*": ["./packages/coss-ui/src/*"],
       "@ui/*": ["./packages/ui/src/*"],
-      "@prototype/*": ["./packages/prototype/src/*"],
-      "prototype": ["./packages/prototype/src/index.ts"],
-      "proto-plugin": ["./packages/prototype/src/index.ts"],
-      "proto-plugin/server": ["./packages/prototype/src/server.ts"],
-      "proto-plugin/ui/*": ["./packages/prototype/src/components/ui/*"],
-      "proto-plugin/with-prototype": ["./packages/prototype/src/config/with-prototype.ts"]
+      "@prototype/*": ["./packages/proto/src/*"],
+      "proto": ["./packages/proto/src/index.ts"],
+      "proto/server": ["./packages/proto/src/server.ts"],
+      "proto/ui/*": ["./packages/proto/src/components/ui/*"],
+      "proto/with-prototype": ["./packages/proto/src/config/with-prototype.ts"]
     }
   },
   "include": [

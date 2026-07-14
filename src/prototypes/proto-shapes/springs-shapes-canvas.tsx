@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { useEffect, useRef } from "react";
 
 import { bindSpringsCanvasPointerHandlers } from "./springs-canvas-pointer";

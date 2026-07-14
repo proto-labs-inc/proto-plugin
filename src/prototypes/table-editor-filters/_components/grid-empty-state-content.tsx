@@ -1,5 +1,5 @@
-import type { DesignExplorationRationale } from "proto-plugin";
-import { PrototypeComponent } from "proto-plugin";
+import type { DesignExplorationRationale } from "proto";
+import { PrototypeComponent } from "proto";
 import {
   FilterX,
   Table2,

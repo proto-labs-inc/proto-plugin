@@ -2,7 +2,7 @@
 
 import { Button } from "@calcom/ui/components/button";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 type EventTypesEmptyStateProps = {
   searchTerm: string;

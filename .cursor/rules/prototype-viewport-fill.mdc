@@ -2,8 +2,8 @@
 description: Prevent prototype/gallery layout offset and clipping bugs
 globs:
   - src/prototypes/**/*
-  - packages/prototype/src/components/shell/**/*
-  - packages/prototype/src/config/prototype-site-layout-client.tsx
+  - packages/proto/src/components/shell/**/*
+  - packages/proto/src/config/prototype-site-layout-client.tsx
 ---
 
 # Prototype layout fill (avoid offset / clipping)
@@ -22,7 +22,7 @@ import {
   PROTOTYPE_PAGE_CLASS,
   PROTOTYPE_SCROLL_CONTAINER_CLASS,
   PROTOTYPE_VIEW_SHELL_CLASS,
-} from "prototype";
+} from "proto";
 ```
 
 - `scroll-container` → `PROTOTYPE_SCROLL_CONTAINER_CLASS`
@@ -45,4 +45,4 @@ Page-level motion: **opacity only** — no horizontal `translateX` on wrappers m
 2. Prototype at desktop width — fills preview frame.
 3. Mobile preview — tall pages scroll; no `justify-center` hiding overflow.
 
-Full detail: `packages/prototype/AGENTS.md` → **Prototype viewport fill**.
+Full detail: `packages/proto/AGENTS.md` → **Prototype viewport fill**.

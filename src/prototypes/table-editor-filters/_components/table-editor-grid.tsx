@@ -14,7 +14,7 @@ import {
   Table2,
   X,
 } from "lucide-react";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   Button,

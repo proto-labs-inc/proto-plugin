@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { cn } from "@/lib/cn";
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";

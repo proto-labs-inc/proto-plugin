@@ -1,7 +1,7 @@
 "use client";
 
-import type { DesignExplorationRationale } from "proto-plugin";
-import { PrototypeComponent } from "proto-plugin";
+import type { DesignExplorationRationale } from "proto";
+import { PrototypeComponent } from "proto";
 import { FormItemLayout } from "ui-patterns/form/FormItemLayout/FormItemLayout";
 import { ChevronsUpDown, ChevronDown, ExternalLink, Plus } from "lucide-react";
 import {

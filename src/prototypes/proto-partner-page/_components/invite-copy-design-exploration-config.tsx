@@ -3,8 +3,8 @@
 import type {
   DesignExplorationConfig,
   MobbinReference,
-} from "proto-plugin";
-import { buildDesignExplorationRenderers } from "proto-plugin";
+} from "proto";
+import { buildDesignExplorationRenderers } from "proto";
 import type { ReactNode } from "react";
 
 import { INVITE_COPY, type InviteCopyVariant } from "./invite-copy-content";

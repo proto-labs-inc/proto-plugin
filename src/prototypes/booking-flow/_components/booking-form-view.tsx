@@ -5,7 +5,7 @@ import Icon from "@calcom/ui/components/icon/Icon";
 import { Input } from "@coss/ui/components/input";
 import { Label } from "@coss/ui/components/label";
 import { Textarea } from "@coss/ui/components/textarea";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { UserPlus } from "lucide-react";
 
 import { BookingCalLogo, BookingEventDetails } from "./booking-event-details";

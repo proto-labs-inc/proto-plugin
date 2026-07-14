@@ -1,6 +1,6 @@
 "use client";
 
-import { PROTOTYPE_VIEWPORT_ID } from "proto-plugin";
+import { PROTOTYPE_VIEWPORT_ID } from "proto";
 import { useEffect } from "react";
 
 import { SUPABASE_PRODUCT_THEME } from "./supabase-product-theme.constants";

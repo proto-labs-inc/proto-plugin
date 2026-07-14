@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { AutomatAnalyticsBlock } from "./automat-analytics-block";
 import { AutomatWorkflowsOverview } from "./automat-workflows-overview";
 import { AutomatWorkflowsTable } from "./automat-workflows-table";

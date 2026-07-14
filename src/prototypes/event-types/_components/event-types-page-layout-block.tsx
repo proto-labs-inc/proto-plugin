@@ -5,7 +5,7 @@ import { Button } from "@calcom/ui/components/button";
 import { ArrowButton } from "@calcom/ui/components/arrow-button";
 import Icon from "@calcom/ui/components/icon/Icon";
 import { showToast } from "@calcom/ui/components/toast";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import classNames from "@calcom/ui/classNames";
 
 import { EventTypesEmptyState } from "./event-types-empty-state";

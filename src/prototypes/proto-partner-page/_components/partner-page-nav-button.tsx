@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { cn } from "@/lib/cn";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";

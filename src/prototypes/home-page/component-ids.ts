@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "proto-plugin";
+import { definePrototypeComponentRegistry } from "proto";
 
 export const HOME_PAGE_COMPONENT_IDS = [
   "page",

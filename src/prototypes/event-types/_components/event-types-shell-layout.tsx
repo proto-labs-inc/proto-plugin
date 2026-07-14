@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 import { EventTypesShellSidebar } from "./event-types-shell-sidebar";
 import type { EventTypesSecretEventsTransitionChoice } from "./event-types-secret-events-transition-content";

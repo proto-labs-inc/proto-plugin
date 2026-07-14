@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@calcom/ui/components/button";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 import {
   EVENT_TYPES_PROFILE_SLUG,

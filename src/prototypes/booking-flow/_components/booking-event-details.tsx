@@ -2,7 +2,7 @@
 
 import Icon from "@calcom/ui/components/icon/Icon";
 import { Avatar } from "@calcom/ui/components/avatar";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { ChevronDown } from "lucide-react";
 
 import {

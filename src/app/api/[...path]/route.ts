@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 
 import prototypeConfig from "../../../../prototype.config";
-import { createPrototypeApiRoute } from "proto-plugin/server";
+import { createPrototypeApiRoute } from "proto/server";
 
 const { dispatch } = createPrototypeApiRoute(prototypeConfig);
 

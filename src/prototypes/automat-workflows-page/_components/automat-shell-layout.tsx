@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { SidebarInset, SidebarProvider } from "@coss/ui/components/sidebar";
 import { useEffect, useRef, useState } from "react";
 

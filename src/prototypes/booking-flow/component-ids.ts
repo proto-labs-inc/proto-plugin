@@ -1,4 +1,4 @@
-import { definePrototypeComponentRegistry } from "proto-plugin";
+import { definePrototypeComponentRegistry } from "proto";
 
 export const BOOKING_FLOW_COMPONENT_IDS = [
   "page",

@@ -5,7 +5,7 @@ import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
   PrototypeComponent,
-} from "proto-plugin";
+} from "proto";
 import type { ReactNode } from "react";
 
 import type { TableEditorFiltersPrSplitWireframeId } from "./pr-split-config";

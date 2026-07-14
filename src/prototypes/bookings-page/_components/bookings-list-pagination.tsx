@@ -2,7 +2,7 @@
 
 import { Button } from "@calcom/ui/components/button";
 import { ButtonGroup } from "@calcom/ui/components/buttonGroup";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 type BookingsListPaginationProps = {
   totalItems: number;

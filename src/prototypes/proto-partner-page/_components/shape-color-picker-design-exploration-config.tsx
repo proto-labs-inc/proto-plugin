@@ -1,11 +1,11 @@
 "use client";
 
-import { DesignExplorationVariantPreviewShell } from "proto-plugin";
+import { DesignExplorationVariantPreviewShell } from "proto";
 import type {
   DesignExplorationConfig,
   MobbinReference,
-} from "proto-plugin";
-import { buildDesignExplorationRenderers } from "proto-plugin";
+} from "proto";
+import { buildDesignExplorationRenderers } from "proto";
 
 import type { ProtoShapeSelection } from "./proto-shape-customizer-block";
 import {

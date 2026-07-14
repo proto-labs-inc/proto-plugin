@@ -4,7 +4,7 @@ import {
   SHARE_STATE_PARAM,
   type PrSplitConfig,
   type PrSplitEntry as PrSplitEntryBase,
-} from "proto-plugin";
+} from "proto";
 
 import {
   createLiveStateForPreview,

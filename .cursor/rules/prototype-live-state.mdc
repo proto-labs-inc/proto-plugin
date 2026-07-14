@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Prototype live state (mandatory)
 
-Full spec: `packages/prototype/AGENTS.md` → **Live state & preview states (mandatory)** and **URL state sync (mandatory)**.
+Full spec: `packages/proto/AGENTS.md` → **Live state & preview states (mandatory)** and **URL state sync (mandatory)**.
 
 ## Before changing UI
 
@@ -53,7 +53,7 @@ Missing URL sync fails `pnpm verify:prototype-preview-states`.
 
 ## State map
 
-Stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Follows tool light/dark theme. See `packages/prototype/AGENTS.md` → **State map behavior**.
+Stateless picker only — no `activeStateId`, checkmarks, or mirroring `liveState`. Follows tool light/dark theme. See `packages/proto/AGENTS.md` → **State map behavior**.
 
 ## Do not
 

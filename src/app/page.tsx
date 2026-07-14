@@ -1,4 +1,4 @@
-import { createPrototypeGalleryPage } from "proto-plugin/server";
+import { createPrototypeGalleryPage } from "proto/server";
 
 import prototypeConfig from "../../prototype.config";
 

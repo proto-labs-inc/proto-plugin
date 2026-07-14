@@ -1,4 +1,4 @@
-import { definePreviewStateRegistry } from "proto-plugin";
+import { definePreviewStateRegistry } from "proto";
 
 import {
   DEFAULT_EVENT_TYPES,

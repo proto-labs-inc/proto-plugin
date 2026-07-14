@@ -1,4 +1,4 @@
-import { PrototypeComponent, PROTOTYPE_VIEW_SHELL_CLASS } from "proto-plugin";
+import { PrototypeComponent, PROTOTYPE_VIEW_SHELL_CLASS } from "proto";
 import { cn } from "ui";
 
 import { EditRowPanel } from "./edit-row-panel";

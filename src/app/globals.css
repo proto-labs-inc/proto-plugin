@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
+@source "../../packages/proto/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui-patterns/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/coss-ui/src/**/*.{js,ts,jsx,tsx}";
@@ -19,7 +19,7 @@
 /*
   Supabase Light is pinned on <html> (see layout.tsx). Product surfaces inside
   [data-prototype-source-surface] / [data-prototype-screenshot] inherit tokens
-  after proto-plugin gray-scale pins are cleared in supabase-product-surface.css.
+  after proto gray-scale pins are cleared in supabase-product-surface.css.
 */
 [data-prototype-root] [data-prototype-source-surface],
 [data-prototype-root] [data-prototype-screenshot],

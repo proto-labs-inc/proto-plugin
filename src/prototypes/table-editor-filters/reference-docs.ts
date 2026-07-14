@@ -1,4 +1,4 @@
-import type { PrototypeReferenceDoc } from "proto-plugin";
+import type { PrototypeReferenceDoc } from "proto";
 
 export const REFERENCE_DOCS: PrototypeReferenceDoc[] = [
   {

@@ -2,11 +2,12 @@
 
 import {
   PREVIEW_STATE_PARAM,
+  PrototypeComponent,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
-} from "proto-plugin";
+} from "proto";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
@@ -41,9 +42,9 @@ export default function TableEditorFiltersStateMapPage() {
   );
 
   return (
-    <>
+    <PrototypeComponent id="page">
       <PrototypeStateCanvasRegistrar pagePath={pagePath} />
       <PrototypeStateCanvasView config={config} layout="page" backHref={backHref} />
-    </>
+    </PrototypeComponent>
   );
 }

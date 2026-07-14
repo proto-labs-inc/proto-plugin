@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 

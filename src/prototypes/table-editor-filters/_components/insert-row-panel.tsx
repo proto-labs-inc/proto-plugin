@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent, usePrototypeProductOverlayPortal } from "proto-plugin";
+import { PrototypeComponent, usePrototypeProductOverlayPortal } from "proto";
 import { Button, KeyboardShortcut, Label, SidePanel, Switch } from "ui";
 
 import { MOCK_COLUMNS } from "./table-editor-filters-mock-data";

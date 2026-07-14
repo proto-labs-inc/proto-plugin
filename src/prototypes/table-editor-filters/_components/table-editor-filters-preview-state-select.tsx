@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeControl, ControlsPanelSelect, usePrototypeReviewOptional } from "proto-plugin";
+import { PrototypeControl, ControlsPanelSelect, usePrototypeReviewOptional } from "proto";
 import { useLayoutEffect } from "react";
 
 import {

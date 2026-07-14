@@ -1,10 +1,10 @@
 "use client";
 
-import type { PrototypeStateCanvasConfig } from "proto-plugin";
+import type { PrototypeStateCanvasConfig } from "proto";
 import {
   PR_TARGET_HIGHLIGHT_BORDER,
   PR_TARGET_HIGHLIGHT_FILL,
-} from "proto-plugin";
+} from "proto";
 
 import type { TableEditorFiltersPreviewStateId } from "./table-editor-filters-types";
 import { TABLE_EDITOR_FILTERS_PREVIEW_STATE_REGISTRY } from "./table-editor-filters-preview-states";

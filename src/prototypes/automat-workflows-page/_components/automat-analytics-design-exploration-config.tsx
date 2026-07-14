@@ -4,7 +4,7 @@ import {
   buildDesignExplorationRenderers,
   type DesignExplorationConfig,
   type MobbinReference,
-} from "proto-plugin";
+} from "proto";
 import type { ReactNode } from "react";
 
 import { AutomatAnalyticsBlock } from "./automat-analytics-block";

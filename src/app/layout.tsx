@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
-import { createPrototypeSiteLayout } from "proto-plugin";
-import "proto-plugin/styles/globals.css";
+import { createPrototypeSiteLayout } from "proto";
+import "proto/styles/globals.css";
 
 import "./globals.css";
 import {

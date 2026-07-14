@@ -4,7 +4,7 @@ import {
   ControlsPanelSelect,
   PrototypeControl,
   usePrototypeReviewOptional,
-} from "proto-plugin";
+} from "proto";
 import { useLayoutEffect } from "react";
 
 import {

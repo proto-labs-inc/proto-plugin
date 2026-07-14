@@ -1,6 +1,6 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 
 import { EVENT_TYPES_PROFILE_SLUG, filterEventTypes } from "./event-types-mock-data";
 import { EventTypesEmptyState } from "./event-types-empty-state";

@@ -3,7 +3,7 @@
 import { Avatar } from "@calcom/ui/components/avatar";
 import Icon from "@calcom/ui/components/icon/Icon";
 import classNames from "@calcom/ui/classNames";
-import { PrototypeComponent } from "proto-plugin";
+import { PrototypeComponent } from "proto";
 import { ChevronDownIcon } from "@coss/ui/icons";
 
 import { EVENT_TYPES_USER, SECRET_EVENTS_FILTER_LABEL } from "./event-types-mock-data";

@@ -1,7 +1,7 @@
 /**
  * Keep selectors in sync with
- * `packages/prototype/src/lib/prototype-comments/core/comment-capture-blocked.ts`.
- * Used by viewport-scoped SidePanel/Sheet so proto-plugin chrome clicks do not dismiss product overlays.
+ * `packages/proto/src/lib/prototype-comments/core/comment-capture-blocked.ts`.
+ * Used by viewport-scoped SidePanel/Sheet so proto chrome clicks do not dismiss product overlays.
  */
 const PROTOTYPE_PLUGIN_CHROME_SELECTORS = [
   '[data-feedback-toolbar]',

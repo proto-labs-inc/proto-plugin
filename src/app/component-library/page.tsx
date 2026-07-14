@@ -1,4 +1,4 @@
-import { createPrototypeComponentLibraryPage } from "proto-plugin";
+import { createPrototypeComponentLibraryPage } from "proto";
 
 import { ComponentLibraryContent } from "./component-library-content";
 
