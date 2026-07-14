@@ -2,6 +2,7 @@
 
 import {
   PREVIEW_STATE_PARAM,
+  PrototypeComponent,
   getDefaultPrototypeStateMapPath,
   parseStateMapReturnTo,
   PrototypeStateCanvasRegistrar,
@@ -41,9 +42,9 @@ export default function EventTypesStateMapPage() {
   );
 
   return (
-    <>
+    <PrototypeComponent id="page">
       <PrototypeStateCanvasRegistrar pagePath={pagePath} />
       <PrototypeStateCanvasView config={config} layout="page" backHref={backHref} />
-    </>
+    </PrototypeComponent>
   );
 }

@@ -29,6 +29,7 @@ export const TABLE_EDITOR_FILTERS_COMPONENT_IDS = [
   "mobbin-inspiration-gallery",
   "insert-row-panel",
   "edit-row-panel",
+  "row-editor-fields.row-field-input",
   "insert-column-panel",
   "insert-column-content.insert-column-form-content",
   "insert-column-variant-toggle",

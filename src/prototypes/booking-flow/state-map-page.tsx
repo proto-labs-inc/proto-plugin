@@ -2,6 +2,7 @@
 
 import {
   PREVIEW_STATE_PARAM,
+  PrototypeComponent,
   PrototypeStateCanvasRegistrar,
   PrototypeStateCanvasView,
   getDefaultPrototypeStateMapPath,
@@ -41,13 +42,13 @@ export default function BookingFlowStateMapPage() {
   );
 
   return (
-    <>
+    <PrototypeComponent id="page">
       <PrototypeStateCanvasRegistrar pagePath={pagePath} />
       <PrototypeStateCanvasView
         config={config}
         layout="page"
         backHref={backHref}
       />
-    </>
+    </PrototypeComponent>
   );
 }
