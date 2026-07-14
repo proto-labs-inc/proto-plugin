@@ -5,10 +5,7 @@ export default withPrototype({
   nextConfig: {
     transpilePackages: ["@calcom/ui", "@coss/ui", "@calcom/lib"],
     images: {
-      localPatterns: [
-        { pathname: "/prototypes/screenshots/**" },
-        { pathname: "/starter-screens/screenshots/**" },
-      ],
+      localPatterns: [{ pathname: "/prototypes/screenshots/**" }],
     },
   },
 });

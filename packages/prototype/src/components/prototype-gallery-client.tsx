@@ -3,7 +3,6 @@
 import { PrototypeCreatePrototypeModal } from "@prototype/components/prototypes/prototype-create-prototype-modal";
 import { PROTOTYPE_GALLERY_GRID_GAP_CLASS } from "@prototype/components/shell/prototype-gallery-shell";
 import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
-import type { StarterScreenMetadata } from "@prototype/lib/prototypes/starter-screen-config-types";
 import { screenshotSrc } from "@prototype/lib/prototypes/screenshot-src";
 import { cn } from "@prototype/lib/utils";
 import { Plus } from "lucide-react";
@@ -14,7 +13,7 @@ import { useState } from "react";
 type PrototypeGalleryClientProps = {
   prototypes: PrototypeMetadata[];
   screenshotVersions: Record<string, number>;
-  starterScreens?: StarterScreenMetadata[];
+  sourcePath?: string;
 };
 
 const prototypeGalleryTitleClassName =
@@ -50,7 +49,7 @@ function PrototypeGalleryAddCard({ onClick }: { onClick: () => void }) {
 export function PrototypeGalleryClient({
   prototypes,
   screenshotVersions,
-  starterScreens = [],
+  sourcePath,
 }: PrototypeGalleryClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
@@ -102,8 +101,7 @@ export function PrototypeGalleryClient({
       <PrototypeCreatePrototypeModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
-        starterScreens={starterScreens}
-        screenshotVersions={screenshotVersions}
+        sourcePath={sourcePath}
       />
     </>
   );

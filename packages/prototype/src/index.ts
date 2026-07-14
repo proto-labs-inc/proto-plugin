@@ -127,9 +127,10 @@ export {
 export {
   buildCreatePrototypeCopyText,
   buildCreatePrototypePrompt,
+  normalizeCreatePrototypeReferenceDocs,
   normalizeCreatePrototypeDocLinks,
   suggestPrototypeSlug,
-  type CreatePrototypeStarterScreen,
+  type CreatePrototypeReferenceDocInput,
 } from "./lib/prototypes/create-prototype-prompt";
 
 export {

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @source "../../packages/prototype/src/**/*.{js,ts,jsx,tsx}";
-@source "../starter-screens/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/ui-patterns/src/**/*.{js,ts,jsx,tsx}";
 @source "../../packages/coss-ui/src/**/*.{js,ts,jsx,tsx}";

@@ -7,8 +7,7 @@ import {
 } from "@prototype/components/shell/prototype-gallery-shell";
 import { createPrototypeRegistry } from "@prototype/lib/prototypes/create-prototype-registry";
 import type { PrototypeConfig } from "@prototype/lib/prototypes/prototype-config-types";
-import { createStarterScreenRegistry } from "@prototype/lib/prototypes/create-starter-screen-registry";
-import type { StarterScreenConfig } from "@prototype/lib/prototypes/starter-screen-config-types";
+import { formatSourceDirectoryName } from "@prototype/lib/format-source-directory-name";
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
 import { sortPrototypesByCreationDate } from "../lib/prototypes/sort-prototypes-by-creation-date";
@@ -17,7 +16,7 @@ type PrototypeGalleryPageOptions = {
   title?: string;
   description?: string;
   eyebrow?: string;
-  starterScreensConfig?: StarterScreenConfig;
+  sourcePath?: string;
 };
 
 export function createPrototypeGalleryPage(
@@ -29,17 +28,14 @@ export function createPrototypeGalleryPage(
     title = "Prototypes",
     description = "UI experiments and concept explorations. Select a prototype to open it.",
     eyebrow,
-    starterScreensConfig,
+    sourcePath = process.env.SOURCE_PATH,
   } = options;
-  const starterScreenRegistry = starterScreensConfig
-    ? createStarterScreenRegistry(starterScreensConfig)
-    : null;
+  const sourceDirectoryName = formatSourceDirectoryName(sourcePath);
 
   async function PrototypeGallery() {
-    const [prototypes, screenshotManifest, starterScreens] = await Promise.all([
+    const [prototypes, screenshotManifest] = await Promise.all([
       Promise.resolve(registry.getAllPrototypes()),
       readScreenshotManifest(),
-      Promise.resolve(starterScreenRegistry?.getAllStarterScreens() ?? []),
     ]);
     const sortedPrototypes = await sortPrototypesByCreationDate(prototypes);
     const screenshotVersions =
@@ -49,7 +45,7 @@ export function createPrototypeGalleryPage(
       <PrototypeGalleryClient
         prototypes={sortedPrototypes}
         screenshotVersions={screenshotVersions}
-        starterScreens={starterScreens}
+        sourcePath={sourceDirectoryName ?? sourcePath}
       />
     );
   }

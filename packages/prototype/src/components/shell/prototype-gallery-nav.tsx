@@ -5,7 +5,7 @@ import { Button } from "@prototype/components/ui/button";
 import { PrototypeLinkSourceModal } from "@prototype/components/shell/prototype-link-source-modal";
 import { cn } from "@prototype/lib/utils";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
-import { LayoutGrid, LayoutTemplate, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
+import { LayoutGrid, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -15,11 +15,6 @@ const GALLERY_NAV_ITEMS = [
     href: "/",
     label: "Prototypes",
     icon: LayoutGrid,
-  },
-  {
-    href: "/starter-screens",
-    label: "Starter Screens",
-    icon: LayoutTemplate,
   },
   {
     href: "/component-library",

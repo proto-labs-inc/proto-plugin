@@ -11,12 +11,10 @@ import type {
 } from "@prototype/lib/prototypes/prototype-config-types";
 
 import { createPrototypeComponentLibraryPage } from "./create-prototype-component-library-page";
-import { createPrototypeStarterScreensPage } from "./create-prototype-starter-screens-page";
 import { createPrototypePage } from "./create-prototype-page";
 import { createPrototypeStateMapPage } from "./create-prototype-state-map-page";
 
 const ComponentLibraryPage = createPrototypeComponentLibraryPage();
-const StarterScreensPage = createPrototypeStarterScreensPage();
 
 function matchExtraRoute(
   path: string[],
@@ -68,7 +66,6 @@ export function createPrototypeCatchAllPage(config: PrototypeConfig) {
 
     return [
       { path: ["component-library"] },
-      { path: ["starter-screens"] },
       ...prototypePaths,
       ...stateMapPaths,
     ];
@@ -83,10 +80,6 @@ export function createPrototypeCatchAllPage(config: PrototypeConfig) {
 
     if (path.length === 1 && path[0] === "component-library") {
       return <ComponentLibraryPage />;
-    }
-
-    if (path.length === 1 && path[0] === "starter-screens") {
-      return <StarterScreensPage />;
     }
 
     if (path.length === 2 && path[0] === "prototypes") {

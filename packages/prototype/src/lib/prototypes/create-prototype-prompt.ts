@@ -1,8 +1,9 @@
 import { normalizeReferenceDocLink } from "./reference-docs";
 
-export type CreatePrototypeStarterScreen = {
-  slug: string;
-  title: string;
+export type CreatePrototypeReferenceDocInput = {
+  name: string;
+  content: string;
+  link?: string;
 };
 
 export function suggestPrototypeSlug(title: string): string {
@@ -13,84 +14,103 @@ export function suggestPrototypeSlug(title: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function normalizeCreatePrototypeDocLinks(links: string[] = []): string[] {
-  return links
-    .map((link) => normalizeReferenceDocLink(link.trim()))
-    .filter((link) => link.length > 0);
+export function normalizeCreatePrototypeReferenceDocs(
+  docs: CreatePrototypeReferenceDocInput[] = [],
+): CreatePrototypeReferenceDocInput[] {
+  return docs
+    .map((doc) => ({
+      name: doc.name.trim(),
+      content: doc.content.trim(),
+      link: doc.link?.trim() ? normalizeReferenceDocLink(doc.link.trim()) : "",
+    }))
+    .filter((doc) => doc.content.length > 0);
 }
 
 export function buildCreatePrototypePrompt({
   title,
-  description,
+  route,
+  referenceHtml,
   origin = "http://localhost:3003",
-  docLinks = [],
+  referenceDocs = [],
   useRealData = false,
-  starterScreen,
+  sourcePath,
 }: {
   title: string;
-  description: string;
+  route: string;
+  referenceHtml: string;
   origin?: string;
-  docLinks?: string[];
+  referenceDocs?: CreatePrototypeReferenceDocInput[];
   useRealData?: boolean;
-  starterScreen?: CreatePrototypeStarterScreen;
+  sourcePath?: string;
 }): string {
   const trimmedTitle = title.trim();
-  const trimmedDescription = description.trim();
+  const trimmedRoute = route.trim();
+  const trimmedHtml = referenceHtml.trim();
   const suggestedSlug = suggestPrototypeSlug(trimmedTitle);
   const galleryUrl = `${origin}/`;
-  const normalizedDocLinks = normalizeCreatePrototypeDocLinks(docLinks);
+  const componentLibraryUrl = `${origin}/component-library`;
+  const normalizedReferenceDocs =
+    normalizeCreatePrototypeReferenceDocs(referenceDocs);
+  const trimmedSourcePath = sourcePath?.trim();
+  const sourceLine = trimmedSourcePath
+    ? `- Linked source: \`${trimmedSourcePath}\` (readable via the \`source/\` symlink after \`pnpm link-source\`)`
+    : "- Linked source: set `SOURCE_PATH` in `.env.local` and run `pnpm link-source`";
 
   const lines = [
     `Create a new prototype: "${trimmedTitle}".`,
     "",
     "## Brief",
     `- Title: ${trimmedTitle}`,
-    `- Description: ${trimmedDescription}`,
+    `- Source route: \`${trimmedRoute}\``,
     `- Suggested slug: \`${suggestedSlug || "my-prototype"}\` (pick a unique kebab-case slug if taken)`,
     `- Data: ${useRealData ? "Use real data from the linked source app (see **Real data** below)" : "Mock data only (default — typed constants, no live API calls)"}`,
-  ];
-
-  if (starterScreen) {
-    lines.push(
-      `- Starter screen: \`${starterScreen.slug}\` (${starterScreen.title}) — use as the initial page shell when scaffolding`,
-    );
-  }
-
-  lines.push(
+    "",
+    "## Source page",
+    sourceLine,
+    `Find this page in the linked source app at route \`${trimmedRoute}\`. Read the page component and its imports to understand structure and behavior before building the prototype.`,
+    "",
+    "## Reference HTML",
+    "The user captured this rendered HTML as the visual target. Match layout, spacing, typography, hierarchy, and component structure — rebuild it as React components using the synced component library below. Do **not** paste or dangerously set this HTML at runtime.",
+    "",
+    "```html",
+    trimmedHtml,
+    "```",
+    "",
+    "## Component library",
+    "Build UI from the **cached component library** already synced in this host — not from ad-hoc markup.",
+    "",
+    `- Component library gallery: ${componentLibraryUrl}`,
+    "- UI primitives: `@/components/ui/`",
+    "- Design tokens and global styles: host `globals.css`",
+    "",
+    "Before writing UI, open `/component-library` and map each region in the reference HTML to existing synced primitives (buttons, inputs, cards, badges, tables, dialogs, etc.). Reuse them directly; do not re-sync from source or invent parallel primitives when an equivalent already exists.",
     "",
     "## Source app",
     "Draw from the **source application** (linked via `SOURCE_PATH` / `pnpm link-source`) — not from other prototypes in this gallery. Replicate the page or feature named in the brief **exactly**: layout, spacing, typography, components, empty/loading/error states, and interactions. Match the source side-by-side; do not approximate or invent alternate UI.",
     "",
     "## Gallery",
     galleryUrl,
-  );
+  ];
 
-  if (normalizedDocLinks.length > 0) {
+  if (normalizedReferenceDocs.length > 0) {
     lines.push(
       "",
       "## Reference docs",
       "Read these docs before scaffolding and wire them into the prototype:",
     );
 
-    for (const link of normalizedDocLinks) {
-      lines.push(`- ${link}`);
+    for (const doc of normalizedReferenceDocs) {
+      const heading = doc.name || "Reference doc";
+      lines.push("", `### ${heading}`);
+      if (doc.link) {
+        lines.push(`Link: ${doc.link}`);
+      }
+      lines.push("", "Content:", doc.content);
     }
 
     lines.push(
       "",
-      `Create \`src/prototypes/${suggestedSlug || "<slug>"}/reference-docs.ts\` exporting \`REFERENCE_DOCS\` as a \`PrototypeReferenceDoc[]\` array with \`name\`, \`link\`, and \`content\` for each doc above. Derive a short \`name\` from each URL when needed and summarize relevant requirements in \`content\`. Wire the docs on the page with \`useRegisterPrototypeReferenceDocs(REFERENCE_DOCS)\` from \`prototype\`.`,
-    );
-  }
-
-  if (starterScreen) {
-    lines.push(
-      "",
-      "## Starter screen",
-      `- Slug: \`${starterScreen.slug}\``,
-      `- Title: ${starterScreen.title}`,
-      `- Preview: ${origin}/starter-screens/${starterScreen.slug}`,
-      "",
-      `Use \`src/starter-screens/${starterScreen.slug}/\` as the starting layout shell. Adapt its structure and synced \`@/components/ui\` usage into the new prototype page instead of rebuilding chrome from scratch.`,
+      `Create \`src/prototypes/${suggestedSlug || "<slug>"}/reference-docs.ts\` exporting \`REFERENCE_DOCS\` as a \`PrototypeReferenceDoc[]\` array with \`content\`, optional \`name\`, and optional \`link\` for each doc above. Use the provided content verbatim; include \`name\` and \`link\` only when supplied. Wire the docs on the page with \`useRegisterPrototypeReferenceDocs(REFERENCE_DOCS)\` from \`prototype\`.`,
     );
   }
 
@@ -140,23 +160,25 @@ export function buildCreatePrototypePrompt({
     "## Instructions",
     "Follow AGENTS.md → New prototype checklist, **Live state & preview states (mandatory)**, and **Prototype overlays & side shelves (mandatory)** when the UI has shelves or overlays.",
     "",
-    "1. Find the source page/feature in the linked source app, read it fully, and confirm side-by-side visual parity before finishing.",
-    "2. Create `src/prototypes/<slug>/` with a default export page component.",
-    "3. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.",
-    "4. Register in `prototype.config.ts` with `componentRegistry`.",
-    "5. Wrap every UI component in `PrototypeComponent` / `PrototypeControl`.",
-    "6. Define typed `liveState`, wire `usePrototypeComments(liveState, onRestore)`, **`useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })`**, and derive all preview-relevant UI from `liveState`. Every state change must update `?state=<registry-id>` — copy-pasting the browser URL must reproduce the exact preview mode.",
-    "7. Wire interactive state flow in the same change — UI controls must update `liveState` so reviewers can move between preview modes by using the prototype (not only the State picker). Use `inferPreviewStateId` / `withInferredPreviewState` to keep `previewStateId` in sync when interactions change underlying fields (data mode, open shelf, filters, etc.). Map controls to registry `edges`: toolbar buttons open shelves, close/cancel returns to base state, apply/clear filters, loading → ready transitions, empty → populated actions.",
-    "8. Add preview states in the same change (mandatory for feature pages — see **Preview states** above):",
+    `1. Open the source page at \`${trimmedRoute}\` and read its component tree alongside the reference HTML above.`,
+    "2. Inspect `/component-library` and map synced components to each region in the reference HTML.",
+    "3. Create `src/prototypes/<slug>/` with a default export page component that reproduces the reference HTML using `@/components/ui` and host tokens.",
+    "4. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.",
+    "5. Register in `prototype.config.ts` with `componentRegistry`.",
+    "6. Wrap every UI component in `PrototypeComponent` / `PrototypeControl`.",
+    "7. Define typed `liveState`, wire `usePrototypeComments(liveState, onRestore)`, **`useSyncPrototypePreviewStateToUrl(previewStateId, setPreviewState, { validStateIds })`**, and derive all preview-relevant UI from `liveState`. Every state change must update `?state=<registry-id>` — copy-pasting the browser URL must reproduce the exact preview mode.",
+    "8. Wire interactive state flow in the same change — UI controls must update `liveState` so reviewers can move between preview modes by using the prototype (not only the State picker). Use `inferPreviewStateId` / `withInferredPreviewState` to keep `previewStateId` in sync when interactions change underlying fields (data mode, open shelf, filters, etc.). Map controls to registry `edges`: toolbar buttons open shelves, close/cancel returns to base state, apply/clear filters, loading → ready transitions, empty → populated actions.",
+    "9. Add preview states in the same change (mandatory for feature pages — see **Preview states** above):",
     "   - `src/prototypes/<slug>/_components/<slug>-preview-states.ts` — `definePreviewStateRegistry`, `createLiveStateForPreview`, one entry per mode",
     '   - `src/prototypes/<slug>/_components/<slug>-preview-state-select.tsx` — wire `ControlsPanelSelect` with `appearance="menuList"` into the review toolbar via `setTweaksContent` (no floating mini-pill on the page)',
     "   - `src/prototypes/<slug>/_components/<slug>-state-canvas-config.tsx` — wireframes from the same registry",
     "   - `src/prototypes/<slug>/state-map-page.tsx` — full-page state map at `/prototypes/<slug>/states`; node clicks navigate to prototype with `?state=<id>`",
     "   - `stateMapComponent` on the prototype entry in `prototype.config.ts`",
     "   - In `index.tsx`: `review.setStateCanvasConfig(build…StateCanvasConfig(onStateSelect))` in an effect — pass only the select handler, not `liveState` or the current preview mode (state map is stateless; always light mode)",
-    "9. Run `pnpm verify:prototype-ids` and `pnpm verify:prototype-preview-states`.",
-    "10. Confirm URL sync: switch states and verify the URL updates (`?state=<id>`); reload and confirm the same mode renders.",
-    "11. Capture a screenshot under `public/prototypes/screenshots/`; share via `pnpm share-prototype <slug>`.",
+    "10. Run `pnpm verify:prototype-ids` and `pnpm verify:prototype-preview-states`.",
+    "11. Confirm URL sync: switch states and verify the URL updates (`?state=<id>`); reload and confirm the same mode renders.",
+    "12. Confirm side-by-side visual parity with the reference HTML and source page before finishing.",
+    "13. Capture a screenshot under `public/prototypes/screenshots/`; share via `pnpm share-prototype <slug>`.",
     "",
     "Reference: `src/prototypes/table-editor-filters/` (`index.tsx` URL sync, side panels) and `src/prototypes/booking-flow/` (`index.tsx`, `*-preview-states.ts`, `*-preview-state-select.tsx`, `*-state-canvas-config.tsx`, `state-map-page.tsx`, `prototype.config.ts` → `stateMapComponent`).",
   );
@@ -166,46 +188,54 @@ export function buildCreatePrototypePrompt({
 
 export function buildCreatePrototypeCopyText({
   title,
-  description,
+  route,
+  referenceHtml,
   origin = "http://localhost:3003",
-  docLinks = [],
+  referenceDocs = [],
   useRealData = false,
-  starterScreen,
+  sourcePath,
 }: {
   title: string;
-  description: string;
+  route: string;
+  referenceHtml: string;
   origin?: string;
-  docLinks?: string[];
+  referenceDocs?: CreatePrototypeReferenceDocInput[];
   useRealData?: boolean;
-  starterScreen?: CreatePrototypeStarterScreen;
+  sourcePath?: string;
 }): string {
   const trimmedTitle = title.trim();
-  const trimmedDescription = description.trim();
-  const normalizedDocLinks = normalizeCreatePrototypeDocLinks(docLinks);
+  const trimmedRoute = route.trim();
+  const normalizedReferenceDocs =
+    normalizeCreatePrototypeReferenceDocs(referenceDocs);
   const briefLines = [
     `Title: ${trimmedTitle}`,
-    `Description: ${trimmedDescription}`,
+    `Route: ${trimmedRoute}`,
     `Data: ${useRealData ? "Real data" : "Mock data only"}`,
   ];
 
-  if (starterScreen) {
-    briefLines.push(
-      `Starter screen: ${starterScreen.title} (${starterScreen.slug})`,
-    );
-  }
-
-  if (normalizedDocLinks.length > 0) {
-    briefLines.push("Reference docs:", ...normalizedDocLinks.map((link) => `- ${link}`));
+  if (normalizedReferenceDocs.length > 0) {
+    briefLines.push("Reference docs:");
+    for (const doc of normalizedReferenceDocs) {
+      briefLines.push(`- ${doc.name || "Reference doc"}`);
+    }
   }
 
   const prompt = buildCreatePrototypePrompt({
     title: trimmedTitle,
-    description: trimmedDescription,
+    route: trimmedRoute,
+    referenceHtml: referenceHtml.trim(),
     origin,
-    docLinks: normalizedDocLinks,
+    referenceDocs: normalizedReferenceDocs,
     useRealData,
-    starterScreen,
+    sourcePath,
   });
 
   return `${briefLines.join("\n")}\n\n---\n\n${prompt}`;
+}
+
+/** @deprecated Use normalizeCreatePrototypeReferenceDocs */
+export function normalizeCreatePrototypeDocLinks(links: string[] = []): string[] {
+  return links
+    .map((link) => normalizeReferenceDocLink(link.trim()))
+    .filter((link) => link.length > 0);
 }
