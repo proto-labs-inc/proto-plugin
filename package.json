@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "link-source": "pnpm --dir node_modules/proto-plugin link-source",
+    "apply-component-library-export": "pnpm --dir node_modules/proto-plugin apply-component-library-export",
     "sync-from-source": "pnpm --dir node_modules/proto-plugin sync-from-source",
     "link-source-db": "pnpm --dir node_modules/proto-plugin link-source-db",
     "verify:prototype-ids": "pnpm --dir node_modules/proto-plugin verify:prototype-ids",

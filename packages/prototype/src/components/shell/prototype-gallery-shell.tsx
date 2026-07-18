@@ -4,7 +4,11 @@ import { PrototypeProvider } from "@prototype/components/prototype-provider";
 import { PrototypeBootstrapOnboardingModal } from "@prototype/components/shell/prototype-bootstrap-onboarding-modal";
 import { PrototypeBootstrapPreviewFloatingStepper } from "@prototype/components/shell/prototype-bootstrap-preview-floating-stepper";
 import { PrototypeGalleryNav } from "@prototype/components/shell/prototype-gallery-nav";
-import { useBootstrapPreview } from "@prototype/lib/prototypes/use-bootstrap-preview";
+import {
+  BootstrapPreviewProvider,
+  useBootstrapPreview,
+} from "@prototype/lib/prototypes/use-bootstrap-preview";
+import { GalleryHostConfigProvider } from "@prototype/lib/prototypes/use-gallery-host-config";
 import { cn } from "@prototype/lib/utils";
 import type { HTMLAttributes, ReactNode, RefObject } from "react";
 
@@ -41,12 +45,48 @@ export function PrototypeGalleryShell({
   syncConfigPath,
   componentLibraryPagePath,
 }: PrototypeGalleryShellProps) {
+  return (
+    <BootstrapPreviewProvider>
+      <GalleryHostConfigProvider
+        value={{
+          currentSourcePath: sourcePath,
+          syncConfigPath,
+          componentLibraryPagePath,
+        }}
+      >
+        <PrototypeGalleryShellContent
+          footer={footer}
+          sourceDirectoryName={sourceDirectoryName}
+          sourcePath={sourcePath}
+          syncConfigPath={syncConfigPath}
+          componentLibraryPagePath={componentLibraryPagePath}
+        >
+          {children}
+        </PrototypeGalleryShellContent>
+      </GalleryHostConfigProvider>
+    </BootstrapPreviewProvider>
+  );
+}
+
+function PrototypeGalleryShellContent({
+  children,
+  footer,
+  sourceDirectoryName,
+  sourcePath,
+  syncConfigPath,
+  componentLibraryPagePath,
+}: PrototypeGalleryShellProps) {
   const {
     bootstrapStep,
     openModalForStep,
     isOnboardingBackdropActive,
+    isOnboardingInProgress,
+    isOnboardingMinimized,
     isDevelopmentToggleVisible,
   } = useBootstrapPreview();
+
+  const showResumeOnboardingPill =
+    isOnboardingInProgress && isOnboardingMinimized;
 
   return (
     <PrototypeProvider className="bg-[var(--bg-main)] flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -79,11 +119,25 @@ export function PrototypeGalleryShell({
         )}
 
         <PrototypeBootstrapOnboardingModal
-          sourcePath={sourceDirectoryName ?? sourcePath}
           currentSourcePath={sourcePath}
           syncConfigPath={syncConfigPath}
           componentLibraryPagePath={componentLibraryPagePath}
         />
+
+        {showResumeOnboardingPill ? (
+          <button
+            type="button"
+            onClick={() => openModalForStep(bootstrapStep)}
+            className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] text-[var(--tool-chrome-text-heading)] absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-lg transition-colors hover:bg-[var(--tool-chrome-ground)]"
+            data-prototype-bootstrap-resume=""
+          >
+            <span
+              className="size-2 animate-pulse rounded-full bg-[var(--tool-chrome-accent,#6366f1)]"
+              aria-hidden
+            />
+            Finish workspace setup
+          </button>
+        ) : null}
 
         {isDevelopmentToggleVisible ? (
           <PrototypeBootstrapPreviewFloatingStepper

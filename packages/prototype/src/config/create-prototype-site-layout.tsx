@@ -19,6 +19,7 @@ export function createPrototypeSiteLayout(
   const sourceDirectoryName =
     options.sourceDirectoryName ?? formatSourceDirectoryName(sourcePath);
   const workspaceProfile = readWorkspaceProfileFromEnv();
+  const debug = process.env.DEBUG === "true";
 
   return function PrototypeSiteLayout({
     children,
@@ -31,9 +32,11 @@ export function createPrototypeSiteLayout(
           children: ReactNode;
           sourceDirectoryName?: string;
           sourcePath?: string;
+          debug?: boolean;
         }>}
         sourceDirectoryName={sourceDirectoryName}
         sourcePath={sourcePath}
+        debug={debug}
         workspaceProfile={workspaceProfile}
         toaster={options.toaster}
       >

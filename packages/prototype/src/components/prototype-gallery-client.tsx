@@ -1,10 +1,12 @@
 "use client";
 
 import { PrototypeCreatePrototypeModal } from "@prototype/components/prototypes/prototype-create-prototype-modal";
+import { PrototypeLibraryLoadingModal } from "@prototype/components/shell/prototype-library-loading-modal";
 import { PROTOTYPE_GALLERY_GRID_GAP_CLASS } from "@prototype/components/shell/prototype-gallery-shell";
 import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
 import { screenshotSrc } from "@prototype/lib/prototypes/screenshot-src";
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
+import { useBootstrapPreview } from "@prototype/lib/prototypes/use-bootstrap-preview";
 import { cn } from "@prototype/lib/utils";
 import { Plus } from "lucide-react";
 import Image from "next/image";
@@ -53,7 +55,21 @@ export function PrototypeGalleryClient({
   sourcePath,
 }: PrototypeGalleryClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [libraryLoadingModalOpen, setLibraryLoadingModalOpen] = useState(false);
   const track = useTrackEvent();
+  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
+  const isNewPrototypeBlocked = isComponentLibraryLoadingPanelVisible;
+
+  const handleNewPrototypeClick = () => {
+    track("prototype.new_clicked", { surface: "gallery" });
+
+    if (isNewPrototypeBlocked) {
+      setLibraryLoadingModalOpen(true);
+      return;
+    }
+
+    setCreateModalOpen(true);
+  };
 
   return (
     <>
@@ -64,12 +80,7 @@ export function PrototypeGalleryClient({
             PROTOTYPE_GALLERY_GRID_GAP_CLASS,
           )}
         >
-        <PrototypeGalleryAddCard
-          onClick={() => {
-            track("prototype.new_clicked", { surface: "gallery" });
-            setCreateModalOpen(true);
-          }}
-        />
+        <PrototypeGalleryAddCard onClick={handleNewPrototypeClick} />
         {prototypes.map((prototype) => (
           <Link
             key={prototype.slug}
@@ -116,6 +127,11 @@ export function PrototypeGalleryClient({
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
         sourcePath={sourcePath}
+      />
+
+      <PrototypeLibraryLoadingModal
+        open={libraryLoadingModalOpen}
+        onOpenChange={setLibraryLoadingModalOpen}
       />
     </>
   );

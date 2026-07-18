@@ -12,7 +12,5 @@ export function PrototypeBootstrapOnboardingSourceStep({
   value,
   onChange,
 }: PrototypeBootstrapOnboardingSourceStepProps) {
-  return (
-    <PrototypeSourceDirectoryPicker value={value} onChange={onChange} />
-  );
+  return <PrototypeSourceDirectoryPicker value={value} onChange={onChange} />;
 }

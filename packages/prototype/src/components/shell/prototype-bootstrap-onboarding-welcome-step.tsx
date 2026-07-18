@@ -12,7 +12,7 @@ export function PrototypeBootstrapOnboardingWelcomeStep({
   description,
 }: PrototypeBootstrapOnboardingWelcomeStepProps) {
   return (
-    <div className="flex w-full flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="flex w-full flex-col items-center justify-center px-6 pb-10 pt-24 text-center">
       <ProtoLogoMark className="mb-8 size-16" size={64} />
       <h2 className="text-3xl font-semibold tracking-tight text-foreground">
         {title}

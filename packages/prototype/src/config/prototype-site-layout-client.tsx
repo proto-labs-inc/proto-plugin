@@ -13,9 +13,11 @@ type PrototypeSiteLayoutClientProps = {
     children: ReactNode;
     sourceDirectoryName?: string;
     sourcePath?: string;
+    debug?: boolean;
   }>;
   sourceDirectoryName?: string;
   sourcePath?: string;
+  debug?: boolean;
   workspaceProfile: WorkspaceProfile;
   toaster?: ReactNode;
 };
@@ -25,6 +27,7 @@ export function PrototypeSiteLayoutClient({
   galleryShell: GalleryShell,
   sourceDirectoryName,
   sourcePath,
+  debug,
   workspaceProfile,
   toaster,
 }: PrototypeSiteLayoutClientProps) {
@@ -43,6 +46,7 @@ export function PrototypeSiteLayoutClient({
             <GalleryShell
               sourceDirectoryName={sourceDirectoryName}
               sourcePath={sourcePath}
+              debug={debug}
             >
               {children}
             </GalleryShell>

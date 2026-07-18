@@ -8,6 +8,7 @@ import { PrototypeSettingsProfileModal } from "@prototype/components/shell/proto
 import { PrototypeSettingsSourceModal } from "@prototype/components/shell/prototype-settings-source-modal";
 import { Button } from "@prototype/components/ui/button";
 import { Label } from "@prototype/components/ui/label";
+import { formatSourceDirectoryName } from "@prototype/lib/format-source-directory-name";
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
 import { cn } from "@prototype/lib/utils";
 import { useEffect, useState, type ReactNode } from "react";
@@ -115,16 +116,20 @@ export function PrototypeSettingsPage({
   const [sourceModalOpen, setSourceModalOpen] = useState(false);
   const [userName, setUserName] = useState(initialUserName);
 
-  const hasSource = Boolean(sourceDirectoryName?.trim());
   const resolvedPath = sourcePath?.trim() ?? "";
-  const defaultSourceName = sourceDirectoryName?.trim() ?? "";
+  const linkedSourceName =
+    sourceDirectoryName?.trim() ??
+    formatSourceDirectoryName(resolvedPath) ??
+    "";
+  const hasSource = Boolean(resolvedPath);
 
   useEffect(() => {
     setUserName(initialUserName);
   }, [initialUserName]);
 
-  const { value: sourceName, updateValue: setSourceName } =
-    usePersistedLocalString(PROFILE_STORAGE_KEYS.sourceName, defaultSourceName);
+  const { value: persistedSourceName, updateValue: setSourceName } =
+    usePersistedLocalString(PROFILE_STORAGE_KEYS.sourceName, linkedSourceName);
+  const displayedSourceName = hasSource ? linkedSourceName : persistedSourceName;
   const { value: sourceDescription, updateValue: setSourceDescription } =
     usePersistedLocalString(
       PROFILE_STORAGE_KEYS.sourceDescription,
@@ -163,7 +168,7 @@ export function PrototypeSettingsPage({
               id="settings-source-name"
               label="Source directory name"
               description="The name of the source code directory on your machine that Proto will reference to make prototypes"
-              value={sourceName}
+              value={displayedSourceName}
               placeholder="Not set"
             />
             {hasSource ? (
@@ -200,7 +205,7 @@ export function PrototypeSettingsPage({
       <PrototypeSettingsSourceModal
         open={sourceModalOpen}
         onOpenChange={setSourceModalOpen}
-        sourceName={sourceName}
+        sourceName={displayedSourceName}
         sourceDescription={sourceDescription}
         currentSourcePath={hasSource ? resolvedPath : undefined}
         onSave={({

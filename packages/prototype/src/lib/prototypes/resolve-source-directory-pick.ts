@@ -1,3 +1,9 @@
+import {
+  looksLikeAbsolutePath,
+  resolveAbsoluteFilePath,
+  resolveSourceRootFromAbsoluteFilePath,
+} from "@prototype/lib/prototypes/resolve-file-path";
+
 export type SourceDirectoryPick = {
   name: string;
   path?: string;
@@ -13,10 +19,20 @@ type DataTransferItemWithHandle = DataTransferItem & {
   getAsFileSystemHandle?: () => Promise<FileSystemHandle | null>;
 };
 
-function basenameFromPath(path: string): string {
-  const normalized = path.replace(/[/\\]+$/, "");
+function basenameFromPath(filePath: string): string {
+  const normalized = filePath.replace(/[/\\]+$/, "");
   const segments = normalized.split(/[/\\]/);
-  return segments.at(-1) ?? path;
+  return segments.at(-1) ?? filePath;
+}
+
+function resolveRootPathFromFirstFile(first: FileWithPath): string | undefined {
+  const electronPath = first.path?.trim();
+  if (electronPath) {
+    const absoluteFilePath = resolveAbsoluteFilePath(first) ?? electronPath;
+    return resolveSourceRootFromAbsoluteFilePath(absoluteFilePath);
+  }
+
+  return undefined;
 }
 
 function resolveFromFileList(files: FileList | File[]): SourceDirectoryPick | null {
@@ -24,12 +40,12 @@ function resolveFromFileList(files: FileList | File[]): SourceDirectoryPick | nu
   if (list.length === 0) return null;
 
   const first = list[0] as FileWithPath;
-  const electronPath = first.path?.trim();
+  const rootPath = resolveRootPathFromFirstFile(first);
 
-  if (electronPath) {
+  if (rootPath) {
     return {
-      name: basenameFromPath(electronPath),
-      path: electronPath,
+      name: basenameFromPath(rootPath),
+      path: rootPath,
     };
   }
 
@@ -42,6 +58,12 @@ function resolveFromFileList(files: FileList | File[]): SourceDirectoryPick | nu
   }
 
   return null;
+}
+
+function resolveFromDirectoryHandle(
+  handle: FileSystemDirectoryHandle,
+): SourceDirectoryPick {
+  return { name: handle.name };
 }
 
 async function resolveFromDataTransferItems(
@@ -57,7 +79,7 @@ async function resolveFromDataTransferItems(
       try {
         const handle = await itemWithHandle.getAsFileSystemHandle();
         if (handle?.kind === "directory") {
-          return { name: handle.name };
+          return resolveFromDirectoryHandle(handle as FileSystemDirectoryHandle);
         }
       } catch {
         // Fall through to file-list resolution below.
@@ -66,6 +88,14 @@ async function resolveFromDataTransferItems(
   }
 
   return resolveFromFileList(dataTransfer.files);
+}
+
+export function resolveSourceDirectoryAbsolutePath(
+  pick: SourceDirectoryPick | null | undefined,
+): string | undefined {
+  const trimmedPath = pick?.path?.trim();
+  if (!trimmedPath || !looksLikeAbsolutePath(trimmedPath)) return undefined;
+  return trimmedPath;
 }
 
 export async function resolveSourceDirectoryFromDataTransfer(
@@ -79,7 +109,7 @@ export async function pickSourceDirectory(): Promise<SourceDirectoryPick | null>
   if (typeof pickerWindow.showDirectoryPicker === "function") {
     try {
       const handle = await pickerWindow.showDirectoryPicker();
-      return { name: handle.name };
+      return resolveFromDirectoryHandle(handle);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return null;

@@ -7,10 +7,14 @@ import {
   type ComponentLibraryProductTheme,
 } from "@prototype/lib/use-component-library-product-theme";
 import { useSyncComponentLibraryPortalTheme } from "@prototype/lib/use-sync-component-library-portal-theme";
+import { useComponentLibraryThemeGuard } from "@prototype/lib/use-component-library-theme-guard";
+import { useComponentLibraryThemeRescope } from "@prototype/lib/use-component-library-theme-rescope";
 import {
   PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR,
   PROTOTYPE_SOURCE_SURFACE_ATTR,
 } from "@prototype/lib/tool-portal";
+import { useBootstrapPreview } from "@prototype/lib/prototypes/use-bootstrap-preview";
+import { cn } from "@prototype/lib/utils";
 import type { ReactNode } from "react";
 
 import {
@@ -33,22 +37,23 @@ function PrototypeComponentLibraryShellContent({
   isEmpty = false,
   productThemes,
 }: PrototypeComponentLibraryShellProps) {
-  const showEmptyState = isEmpty;
+  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
+  const showPreSyncSurface = isEmpty || isComponentLibraryLoadingPanelVisible;
   const themes = productThemes ?? (["light", "dark"] as const);
   const libraryTheme = resolveComponentLibraryDefaultTheme(themes);
-  const forcedTheme = showEmptyState ? "dark" : libraryTheme;
 
   return (
     <ComponentLibraryProductThemeProvider
-      key={forcedTheme}
-      forcedTheme={forcedTheme}
+      key={showPreSyncSurface ? "empty" : "populated"}
+      forcedTheme={showPreSyncSurface ? "dark" : undefined}
       themes={themes}
       defaultTheme={libraryTheme}
     >
       <PrototypeComponentLibraryShellLayout
         title={title}
         description={description}
-        surfaceTheme={forcedTheme}
+        themes={themes}
+        guardTheme={!showPreSyncSurface}
       >
         {children}
       </PrototypeComponentLibraryShellLayout>
@@ -60,16 +65,20 @@ function PrototypeComponentLibraryShellLayout({
   title,
   description,
   children,
-  surfaceTheme,
+  themes,
+  guardTheme,
 }: {
   title: string;
   description: string;
   children: ReactNode;
-  surfaceTheme: ComponentLibraryProductTheme;
+  themes: readonly ComponentLibraryProductTheme[];
+  guardTheme: boolean;
 }) {
-  const { surfaceRef } = useComponentLibraryProductTheme();
+  const { surfaceRef, theme } = useComponentLibraryProductTheme();
 
-  useSyncComponentLibraryPortalTheme(surfaceTheme, true, surfaceRef);
+  useComponentLibraryThemeRescope(themes, theme);
+  useSyncComponentLibraryPortalTheme(theme, guardTheme, surfaceRef);
+  useComponentLibraryThemeGuard(surfaceRef, theme, { enabled: guardTheme });
 
   return (
     <PrototypeGalleryPageLayout
@@ -80,17 +89,21 @@ function PrototypeComponentLibraryShellLayout({
           className="mb-0"
         />
       }
-      scrollClassName={surfaceTheme}
-      scrollContainerRef={surfaceRef}
-      scrollContainerProps={{
-        "data-theme": surfaceTheme,
-        [PROTOTYPE_SOURCE_SURFACE_ATTR]: "",
-        [PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR]: "",
-        style: {
-          backgroundColor: "var(--color-background)",
-          color: "var(--color-foreground)",
-        },
-      }}
+      scrollClassName={
+        guardTheme
+          ? cn(theme, "bg-[var(--bg-main)]")
+          : "bg-[var(--bg-ground)]"
+      }
+      scrollContainerRef={guardTheme ? surfaceRef : undefined}
+      scrollContainerProps={
+        guardTheme
+          ? {
+              "data-theme": theme,
+              [PROTOTYPE_SOURCE_SURFACE_ATTR]: "",
+              [PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR]: "",
+            }
+          : undefined
+      }
     >
       {children}
     </PrototypeGalleryPageLayout>

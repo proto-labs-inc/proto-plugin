@@ -66,6 +66,14 @@ export default createPrototypeComponentLibraryPage();
 
 Pass `children` once you've synced UI from source. Until then, the page shows an empty state with a copyable agent prompt.
 
+**Populating from source:** the design system is pulled **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, then run:
+
+```bash
+pnpm sync-from-source
+```
+
+Copy the source's `:root` / theme-class token declarations **verbatim** into the synced CSS. The plugin re-scopes those tokens onto the nested component-library preview surfaces at runtime (light and dark), so **no hand-authored token bridge is needed**. After syncing, wire the previews in host `component-library-content.tsx`. The final onboarding **Copy setup prompt** includes the component-library population prompt (`buildPopulateComponentLibraryPrompt`).
+
 5. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
 
 ```ts
@@ -126,7 +134,7 @@ Open [http://localhost:1985](http://localhost:1985) when developing.
 
 **Auto bootstrap onboarding:** on gallery routes the shell calls `GET /api/prototypes/bootstrap-status` and opens the first incomplete setup step (source linked → user name → design tokens → ui primitives → shared blocks). When all requirements pass, the normal gallery UI renders automatically. Configure check paths and order in `prototype.config.ts` under `bootstrap`.
 
-**Bootstrap preview (dev only):** set `NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG=true` to show the floating stepper above Settings and override auto resolution via localStorage or `?bootstrapPreview=source-directory` (also `name`, `components`, `normal`; legacy `1` → welcome, `0` → normal).
+**Bootstrap preview (dev only):** the floating stepper appears automatically in local development (bottom-right on gallery routes). Set `NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG=true` to also override auto resolution from bootstrap status, or deep-link with `?bootstrapPreview=source-directory` (also `welcome`, `name`, `agent-context`, `setup-complete`, `normal`; legacy `1` → welcome, `0` → normal).
 
 ## Public API
 

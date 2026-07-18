@@ -150,6 +150,8 @@ Host apps replicate product UI from the **source application** (linked read-only
 | Source reference        | `source/` symlink (`SOURCE_PATH` + `pnpm link-source`) | Read-only                   |
 
 
+**Initial onboarding** pulls the design system **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, run `pnpm sync-from-source`, then build the Component Library previews (see `buildPopulateComponentLibraryPrompt`). Copy the source's `:root` / theme-class token declarations **verbatim** — the plugin re-scopes those tokens onto the nested preview surfaces at runtime, so no hand-authored token bridge is needed. The host keeps `page.tsx` and `component-library-content.tsx`.
+
 **Synced** via `pnpm sync-from-source`: `globals.css` (host only), fonts, `src/components/ui/`, shared utils.
 
 **Replicated per prototype**: page components, layout shells, form/section layout, mock data.
@@ -193,14 +195,28 @@ Organize **all** extracted design-system previews on one scrollable page as **th
 2. `**composite-components`** — title **Composite components** — synced patterns/composites (page headers, empty states, admonitions, metric cards, modals, multi-selects, …); one preview per export unless skipped with reason.
 3. `**tokens`** — title **Design tokens** — semantic color/surface token swatches from `globals.css` / source tokens.
 
-Use the host's `component-library-content.tsx` as the canonical layout reference (`LibraryAccordionSection`, `PreviewGrid`, `PreviewBlock`, `PreviewStack`).
+Use **proto-plugin** layout components from `proto-plugin` — **not** synced source accordions (`@/components/ui`, `@coss/ui`, etc.):
+
+- `ComponentLibraryAccordion` — page wrapper (`type="multiple"`, `defaultValue={[]}`)
+- `LibraryAccordionSection` — section trigger + product preview surface
+- `PreviewGrid` / `PreviewBlock` / `PreviewStack` — preview layout helpers
+
+Accordion chrome uses proto tool tokens; synced source components render inside `ComponentLibraryPreviewSurface` (light by default).
 
 ### Accordion UX (mandatory)
 
 ```tsx
-<Accordion type="multiple" defaultValue={[]} className="-mx-6 pb-20">
+import {
+  ComponentLibraryAccordion,
+  LibraryAccordionSection,
+  PreviewGrid,
+  PreviewBlock,
+  PreviewStack,
+} from "proto-plugin";
+
+<ComponentLibraryAccordion>
   {/* three LibraryAccordionSection items */}
-</Accordion>
+</ComponentLibraryAccordion>
 ```
 
 - **All sections collapsed on first load** (`defaultValue={[]}`).
@@ -228,11 +244,20 @@ When populating from source (see `buildPopulateComponentLibraryPrompt`):
 - Preserve semantic tokens from `globals.css`; no hardcoded hex in previews.
 - Do **not** add a "Clear library" footer or duplicate section headers above the first preview grid.
 
+### Product theme on preview surfaces (BLOCKING — do not skip)
+
+The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-*`, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations **never recompute** on a nested element — so copying source tokens and leaving the bridge as a stub renders the whole library in the `:root` fallback (usually dark), even though the app compiles and returns HTTP 200.
+
+1. **The host token bridge is REQUIRED** whenever the source derives tokens on `:root`. Re-declare the **full** token system — theme **inputs AND the derivations** — scoped to `[data-prototype-source-surface][data-prototype-product-theme-managed]`, once per configured mode (`[data-theme="light"]`, `[data-theme="dark"]`, …). A `color-scheme`-only stub is **not acceptable**; it is the #1 cause of dark/unstyled previews. Register the bridge file in `SYNC_LOCAL_EXTENSIONS` so `sync-from-source` never overwrites it.
+2. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes you have bridged and verified. Default to `["light"]` unless the source ships more.
+3. Do **not** rely on proto-plugin's generic light/dark fallbacks for real previews — they cover only a token subset.
+
 ### Before finishing
 
 1. Run through all three sections expanded on `/component-library`.
-2. Toggle product light/dark on the component library if the host configures both themes.
-3. Confirm composite coverage is complete (list exports vs previews).
+2. **Verify theming per mode — HTTP 200 / "sections render" / "no TS errors" is NOT verification.** For **each** configured `productThemes` mode, confirm the source token system applied. The test is *"did source tokens apply"*, not *"is it light"* — a dark preview is correct for a dark-only source. Dark-safe signal: a **chromatic** token (`--color-brand` / `--primary` / a status color) resolves to the **source** hue (e.g. brand green), not proto tool-chrome **blue/pink** or neutral grey. Blue/pink or all-grey = the bridge is a stub/incomplete → fix it before finishing.
+3. Toggle product light/dark on the component library if the host configures both themes.
+4. Confirm composite coverage is complete (list exports vs previews).
 
 ---
 

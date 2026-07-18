@@ -39,3 +39,38 @@ export function buildAgentContextCopyText(
 ): string {
   return buildAgentContextPrompt(options);
 }
+
+export function buildAgentContextFromPathPrompt({
+  contextFilePath,
+  destinationFilePath = CUSTOM_AGENT_CONTEXT_PATH,
+}: {
+  contextFilePath: string;
+  destinationFilePath?: string;
+}): string {
+  const trimmedSourcePath = contextFilePath.trim();
+
+  return [
+    "Update custom agent context for this prototype workspace.",
+    "",
+    "## Goal",
+    "Persist agent instructions so future agents read them before building prototypes.",
+    "",
+    "## Source file",
+    `Read the agent context at \`${trimmedSourcePath}\`.`,
+    "",
+    "## Target file",
+    `Create \`.proto/agent/\` if it does not exist, then write \`${destinationFilePath}\` at the host repo root with that content.`,
+    "",
+    "## Steps",
+    "1. Read the source file at the absolute path above.",
+    `2. Write its contents to \`${destinationFilePath}\` in this host repo (replace any existing file unless the user asks to merge).`,
+    "3. Confirm the target file exists and is readable.",
+    "4. Do not modify unrelated paths.",
+  ].join("\n");
+}
+
+export function buildAgentContextFromPathCopyText(
+  options: Parameters<typeof buildAgentContextFromPathPrompt>[0],
+): string {
+  return buildAgentContextFromPathPrompt(options);
+}

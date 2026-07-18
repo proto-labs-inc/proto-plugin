@@ -1,3 +1,4 @@
+import type { BootstrapSyncPaths } from "@prototype/lib/prototypes/host-sync-config";
 import type { BootstrapPreviewStep } from "@prototype/lib/prototypes/use-bootstrap-preview";
 import type { PrototypeBootstrapConfig } from "@prototype/lib/prototypes/prototype-config-types";
 import {
@@ -58,6 +59,8 @@ export type BootstrapRequirement = {
 export type PrototypeBootstrapStatus = {
   requirements: BootstrapRequirement[];
   complete: boolean;
+  /** Synced design tokens + ui primitives exist on disk. */
+  componentLibraryReady: boolean;
   firstIncompleteId: BootstrapRequirementId | null;
   resolvedStep: BootstrapPreviewStep;
 };
@@ -75,7 +78,7 @@ export function requirementToModalStep(
     case "designTokens":
     case "uiPrimitives":
     case "sharedBlocks":
-      return "components";
+      return "component-library";
   }
 }
 
@@ -109,18 +112,46 @@ export function pathGroupSatisfied(
 
 export function resolveBootstrapPaths(
   bootstrap?: PrototypeBootstrapConfig,
+  syncPaths?: BootstrapSyncPaths | null,
 ): Record<
   Exclude<BootstrapRequirementId, "sourceLinked" | "userName">,
   string[]
 > {
+  const hasSyncConfig = syncPaths != null;
+
   return {
     designTokens:
-      bootstrap?.paths?.designTokens ?? DEFAULT_BOOTSTRAP_PATHS.designTokens,
+      bootstrap?.paths?.designTokens ??
+      (hasSyncConfig
+        ? syncPaths.designTokens
+        : DEFAULT_BOOTSTRAP_PATHS.designTokens),
     uiPrimitives:
-      bootstrap?.paths?.uiPrimitives ?? DEFAULT_BOOTSTRAP_PATHS.uiPrimitives,
+      bootstrap?.paths?.uiPrimitives ??
+      (hasSyncConfig
+        ? syncPaths.uiPrimitives
+        : DEFAULT_BOOTSTRAP_PATHS.uiPrimitives),
     sharedBlocks:
-      bootstrap?.paths?.sharedBlocks ?? DEFAULT_BOOTSTRAP_PATHS.sharedBlocks,
+      bootstrap?.paths?.sharedBlocks ??
+      (hasSyncConfig
+        ? syncPaths.sharedBlocks
+        : DEFAULT_BOOTSTRAP_PATHS.sharedBlocks),
   };
+}
+
+export function isSyncBootstrapRequirement(
+  id: BootstrapRequirementId,
+): id is Exclude<BootstrapRequirementId, "sourceLinked" | "userName"> {
+  return (
+    id === "designTokens" || id === "uiPrimitives" || id === "sharedBlocks"
+  );
+}
+
+export function isSyncBootstrapRequirementSatisfied(
+  paths: string[],
+  checkExists: PathExistenceChecker,
+): boolean {
+  if (paths.length === 0) return false;
+  return pathGroupSatisfied(paths, checkExists);
 }
 
 export function resolveBootstrapRequirementOrder(
@@ -151,18 +182,20 @@ export function evaluateBootstrapRequirement(
     bootstrap?: PrototypeBootstrapConfig;
     env?: NodeJS.ProcessEnv;
     checkExists: PathExistenceChecker;
+    syncPaths?: BootstrapSyncPaths | null;
   },
 ): BootstrapRequirement {
   const env = options.env ?? process.env;
-  const paths = resolveBootstrapPaths(options.bootstrap);
+  const paths = resolveBootstrapPaths(options.bootstrap, options.syncPaths);
   const profile = readWorkspaceProfileFromEnv(env);
+  const sourceLinked = isSourceLinked(env, options.checkExists);
 
   switch (id) {
     case "sourceLinked":
       return {
         id,
         label: BOOTSTRAP_REQUIREMENT_LABELS.sourceLinked,
-        satisfied: isSourceLinked(env, options.checkExists),
+        satisfied: sourceLinked,
       };
     case "userName":
       return {
@@ -174,21 +207,36 @@ export function evaluateBootstrapRequirement(
       return {
         id,
         label: BOOTSTRAP_REQUIREMENT_LABELS.designTokens,
-        satisfied: pathGroupSatisfied(paths.designTokens, options.checkExists),
+        satisfied:
+          sourceLinked &&
+          isSyncBootstrapRequirementSatisfied(
+            paths.designTokens,
+            options.checkExists,
+          ),
         checkedPaths: paths.designTokens,
       };
     case "uiPrimitives":
       return {
         id,
         label: BOOTSTRAP_REQUIREMENT_LABELS.uiPrimitives,
-        satisfied: pathGroupSatisfied(paths.uiPrimitives, options.checkExists),
+        satisfied:
+          sourceLinked &&
+          isSyncBootstrapRequirementSatisfied(
+            paths.uiPrimitives,
+            options.checkExists,
+          ),
         checkedPaths: paths.uiPrimitives,
       };
     case "sharedBlocks":
       return {
         id,
         label: BOOTSTRAP_REQUIREMENT_LABELS.sharedBlocks,
-        satisfied: pathGroupSatisfied(paths.sharedBlocks, options.checkExists),
+        satisfied:
+          sourceLinked &&
+          isSyncBootstrapRequirementSatisfied(
+            paths.sharedBlocks,
+            options.checkExists,
+          ),
         checkedPaths: paths.sharedBlocks,
       };
   }
@@ -198,6 +246,8 @@ export function evaluateBootstrapRequirements(options: {
   bootstrap?: PrototypeBootstrapConfig;
   env?: NodeJS.ProcessEnv;
   checkExists: PathExistenceChecker;
+  syncPaths?: BootstrapSyncPaths | null;
+  componentLibraryReady?: boolean;
 }): PrototypeBootstrapStatus {
   const order = resolveBootstrapRequirementOrder(options.bootstrap);
   const requirements = order.map((id) =>
@@ -205,12 +255,59 @@ export function evaluateBootstrapRequirements(options: {
   );
   const firstIncomplete =
     requirements.find((requirement) => !requirement.satisfied) ?? null;
+  const designTokens = requirements.find(
+    (requirement) => requirement.id === "designTokens",
+  );
+  const uiPrimitives = requirements.find(
+    (requirement) => requirement.id === "uiPrimitives",
+  );
+  const componentLibraryReady =
+    options.componentLibraryReady ??
+    Boolean(designTokens?.satisfied && uiPrimitives?.satisfied);
 
   return {
     requirements,
     complete: firstIncomplete == null,
+    componentLibraryReady,
     firstIncompleteId: firstIncomplete?.id ?? null,
     resolvedStep: resolveBootstrapStep(requirements),
+  };
+}
+
+export function createCompletedBootstrapStatus(): PrototypeBootstrapStatus {
+  const requirements = DEFAULT_BOOTSTRAP_REQUIREMENT_ORDER.map((id) => ({
+    id,
+    label: BOOTSTRAP_REQUIREMENT_LABELS[id],
+    satisfied: true,
+  }));
+
+  return {
+    requirements,
+    complete: true,
+    componentLibraryReady: true,
+    firstIncompleteId: null,
+    resolvedStep: "normal",
+  };
+}
+
+/**
+ * Status returned when the workspace is not yet onboarded. Onboarding is gated
+ * solely by the `.proto/onboarded` flag — no path heuristics — so this always
+ * reports incomplete and starts the modal from the beginning.
+ */
+export function createOnboardingRequiredBootstrapStatus(): PrototypeBootstrapStatus {
+  const requirements = DEFAULT_BOOTSTRAP_REQUIREMENT_ORDER.map((id) => ({
+    id,
+    label: BOOTSTRAP_REQUIREMENT_LABELS[id],
+    satisfied: false,
+  }));
+
+  return {
+    requirements,
+    complete: false,
+    componentLibraryReady: false,
+    firstIncompleteId: requirements[0]?.id ?? null,
+    resolvedStep: "welcome",
   };
 }
 

@@ -11,7 +11,7 @@ export const PROTOTYPE_SCREENSHOT_ATTR = "data-prototype-screenshot";
 /** Synced source-app previews (component library, etc.) — fixed product tokens, not tool theme. */
 export const PROTOTYPE_SOURCE_SURFACE_ATTR = "data-prototype-source-surface";
 
-/** Source surfaces that manage their own Supabase Light/Dark preview theme (component library). */
+/** Source surfaces that manage their own product Light/Dark preview theme (component library). */
 export const PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR =
   "data-prototype-product-theme-managed";
 

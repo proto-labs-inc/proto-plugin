@@ -4,6 +4,14 @@ export { defineStarterScreenConfig } from "./config/define-starter-screen-config
 // from disk) and lives in `proto-plugin/server`. Keeping it out of this barrel is
 // what lets client prototype components import from `proto-plugin` safely.
 export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
+export {
+  ComponentLibraryAccordion,
+  ComponentLibraryPreviewSurface,
+  LibraryAccordionSection,
+  PreviewBlock,
+  PreviewGrid,
+  PreviewStack,
+} from "./components/component-library/component-library-layout";
 export { createPrototypeSettingsPage } from "./config/create-prototype-settings-page";
 export { createPrototypeAgentInstructionsPage } from "./config/create-prototype-agent-instructions-page";
 export { createPrototypeStarterScreenPage } from "./config/create-prototype-starter-screen-page";
@@ -163,6 +171,8 @@ export {
   CUSTOM_AGENT_CONTEXT_PATH,
   HOST_AGENT_CONTEXT_PATH,
   buildAgentContextCopyText,
+  buildAgentContextFromPathCopyText,
+  buildAgentContextFromPathPrompt,
   buildAgentContextPrompt,
 } from "./lib/prototypes/agent-context-prompt";
 export {

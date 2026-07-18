@@ -98,8 +98,9 @@ export function PrototypeSourceDirectoryPicker({
 
   const hasSelection = Boolean(value?.name.trim());
   const emptyHintText =
-    "Select the product codebase folder Proto should reference when building prototypes.";
-  const selectedHintText = "Drop another folder or click to change the selection.";
+    "Drop your product repo folder. Proto links it and pulls the design system directly from source.";
+  const selectedHintText =
+    "Drop another folder or click to change the selection.";
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -134,10 +135,10 @@ export function PrototypeSourceDirectoryPicker({
             : emptyHintText
         }
         className={cn(
-          "group flex min-h-[8.5rem] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-5 py-7 text-center outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
+          "group flex min-h-[8.5rem] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border px-5 py-7 text-center outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
           hasSelection
-            ? "border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface-muted)]/35 hover:bg-[var(--tool-chrome-surface-muted)]/55"
-            : "border-[var(--tool-chrome-border)]/80 bg-[var(--tool-chrome-surface-muted)]/25 hover:border-[var(--tool-chrome-border)] hover:bg-[var(--tool-chrome-surface-muted)]/45",
+            ? "border-solid border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface-muted)]/35 hover:bg-[var(--tool-chrome-surface-muted)]/55"
+            : "border-dashed border-[var(--tool-chrome-border)]/80 bg-[var(--tool-chrome-surface-muted)]/25 hover:border-[var(--tool-chrome-border)] hover:bg-[var(--tool-chrome-surface-muted)]/45",
           "focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-0",
           isDragging &&
             "scale-[1.005] border-[var(--tool-chrome-blue)]/60 bg-[var(--tool-chrome-blue-highlight)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--tool-chrome-blue)_35%,transparent)]",

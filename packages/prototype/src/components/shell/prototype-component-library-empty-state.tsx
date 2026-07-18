@@ -36,9 +36,7 @@ export function PrototypeComponentLibraryEmptyState({
 
   return (
     <div className="border-default bg-surface-100 text-foreground-light max-w-2xl rounded-xl border border-dashed px-6 py-8">
-      <p className="text-foreground text-sm font-medium">
-        No components yet
-      </p>
+      <p className="text-foreground text-sm font-medium">No components yet</p>
       <p className="mt-2 text-sm leading-relaxed">
         Copy the prompt below into your agent. It will inspect the linked source
         app and port over base styles, UI primitives, and shared building
