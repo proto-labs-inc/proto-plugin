@@ -1,7 +1,9 @@
 "use client";
 
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
-import { PrototypePluginUpdatePopup } from "@prototype/components/shell/prototype-plugin-update-popup";
+import { PrototypeTelemetryProvider } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
+import { PrototypeWorkspaceProfileProvider } from "@prototype/lib/prototypes/use-workspace-profile";
+import type { WorkspaceProfile } from "@prototype/lib/prototypes/workspace-profile";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode } from "react";
 
@@ -14,7 +16,8 @@ type PrototypeSiteLayoutClientProps = {
   }>;
   sourceDirectoryName?: string;
   sourcePath?: string;
-  toaster: ReactNode;
+  workspaceProfile: WorkspaceProfile;
+  toaster?: ReactNode;
 };
 
 export function PrototypeSiteLayoutClient({
@@ -22,32 +25,42 @@ export function PrototypeSiteLayoutClient({
   galleryShell: GalleryShell,
   sourceDirectoryName,
   sourcePath,
+  workspaceProfile,
   toaster,
 }: PrototypeSiteLayoutClientProps) {
   const pathname = usePathname();
   const isGalleryRoute =
-    pathname === "/" || pathname.startsWith("/component-library");
+    pathname === "/" ||
+    pathname.startsWith("/component-library") ||
+    pathname.startsWith("/agent-instructions") ||
+    pathname.startsWith("/settings");
 
   if (isGalleryRoute) {
     return (
-      <PrototypeProvider className="bg-[var(--bg-main)] flex h-svh min-h-svh w-full flex-col overflow-hidden">
-        <GalleryShell
-          sourceDirectoryName={sourceDirectoryName}
-          sourcePath={sourcePath}
-        >
-          {children}
-        </GalleryShell>
-        <PrototypePluginUpdatePopup />
-        {toaster}
-      </PrototypeProvider>
+      <PrototypeWorkspaceProfileProvider profile={workspaceProfile}>
+        <PrototypeTelemetryProvider>
+          <PrototypeProvider className="bg-[var(--bg-main)] flex h-svh min-h-svh w-full flex-col overflow-hidden">
+            <GalleryShell
+              sourceDirectoryName={sourceDirectoryName}
+              sourcePath={sourcePath}
+            >
+              {children}
+            </GalleryShell>
+            {toaster}
+          </PrototypeProvider>
+        </PrototypeTelemetryProvider>
+      </PrototypeWorkspaceProfileProvider>
     );
   }
 
   return (
-    <PrototypeProvider className="bg-[var(--bg-ground)] flex h-svh overflow-hidden">
-      {children}
-      <PrototypePluginUpdatePopup />
-      {toaster}
-    </PrototypeProvider>
+    <PrototypeWorkspaceProfileProvider profile={workspaceProfile}>
+      <PrototypeTelemetryProvider>
+        <PrototypeProvider className="bg-[var(--bg-ground)] flex h-svh overflow-hidden">
+          {children}
+          {toaster}
+        </PrototypeProvider>
+      </PrototypeTelemetryProvider>
+    </PrototypeWorkspaceProfileProvider>
   );
 }

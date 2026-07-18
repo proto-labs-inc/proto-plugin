@@ -1,8 +1,14 @@
+import {
+  buildWorkspaceProfilePromptLines,
+  type WorkspaceProfile,
+} from "../prototypes/workspace-profile";
+
 export type PrSplitPlanPromptOptions = {
   slug: string;
   origin?: string;
   sourceRepo?: string;
   sourceWorkPath?: string;
+  workspaceProfile?: WorkspaceProfile;
 };
 
 export function buildPrSplitPlanPrompt({
@@ -10,6 +16,7 @@ export function buildPrSplitPlanPrompt({
   origin = "http://localhost:1985",
   sourceRepo = "calcom/cal.diy",
   sourceWorkPath = "apps/web",
+  workspaceProfile,
 }: PrSplitPlanPromptOptions): string {
   const prototypePath = `src/prototypes/${slug}/`;
   const configPath = `${prototypePath}_components/pr-split-config.ts`;
@@ -18,6 +25,7 @@ export function buildPrSplitPlanPrompt({
 
   return [
     `Create a PR split spec for the \`${slug}\` prototype. **First identify everything that changed**, then propose a merge-ordered PR plan and implement the spec in this repo.`,
+    ...buildWorkspaceProfilePromptLines(workspaceProfile ?? { userName: "", companyName: "" }),
     "",
     "## Phase 1 — Audit what changed",
     "",
@@ -88,7 +96,7 @@ export function buildPrSplitPlanPrompt({
     "- Scaffold every wireframe from the prototype's real page layout (match the shell layout component)",
     "- Use low-fidelity `Wire` blocks; apply `PR_TARGET_HIGHLIGHT_BORDER` / `PR_TARGET_HIGHLIGHT_FILL` only on the PR target",
     "- Fill the card preview area: wrap the wireframe root in `PR_SPLIT_WIREFRAME_FRAME_CLASS` (`aspect-video w-full overflow-hidden`) so the schematic reads as a full screen, not a tiny excerpt",
-    "- Wireframes always use the dark schematic palette scoped by `[data-prototype-wireframe-preview]` — use `--prototype-wireframe-block`, `--cal-bg`, `--border-subtle`, etc.; never hardcode light grays or white backgrounds",
+    "- Wireframes invert the tool theme inside `[data-prototype-wireframe-preview]` (dark tool → light schematic, light tool → dark schematic) — use `--prototype-wireframe-block`, `--cal-bg`, `--border-subtle`, etc.; never hardcode fixed light/dark hex fills",
     "- The highlight shows where the slice lands on the page; surrounding chrome provides context",
     "",
     "Prototype preview: " + previewUrl,

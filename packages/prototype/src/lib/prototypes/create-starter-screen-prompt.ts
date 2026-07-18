@@ -1,4 +1,8 @@
 import { suggestPrototypeSlug } from "./create-prototype-prompt";
+import {
+  buildWorkspaceProfilePromptLines,
+  type WorkspaceProfile,
+} from "./workspace-profile";
 
 export function buildCreateStarterScreenPrompt({
   title,
@@ -7,6 +11,7 @@ export function buildCreateStarterScreenPrompt({
   sourcePath,
   origin = "http://localhost:3003",
   starterScreensPagePath = "src/app/starter-screens/page.tsx",
+  workspaceProfile,
 }: {
   title: string;
   route: string;
@@ -14,6 +19,7 @@ export function buildCreateStarterScreenPrompt({
   sourcePath?: string;
   origin?: string;
   starterScreensPagePath?: string;
+  workspaceProfile?: WorkspaceProfile;
 }): string {
   const trimmedTitle = title.trim();
   const trimmedRoute = route.trim();
@@ -33,6 +39,7 @@ export function buildCreateStarterScreenPrompt({
     `- Title: ${trimmedTitle}`,
     `- Source route: \`${trimmedRoute}\``,
     `- Suggested slug: \`${suggestedSlug || "my-starter-screen"}\` (pick a unique kebab-case slug if taken)`,
+    ...buildWorkspaceProfilePromptLines(workspaceProfile ?? { userName: "", companyName: "" }),
     "",
     "## Source page",
     sourceLine,
@@ -52,7 +59,7 @@ export function buildCreateStarterScreenPrompt({
     "- UI primitives: `@/components/ui/`",
     "- Design tokens and global styles: host `globals.css`",
     "",
-    "Before writing UI, open `/component-library` and map each region in the reference HTML to existing synced primitives (buttons, inputs, cards, badges, tables, dialogs, etc.). Reuse them directly; do not re-sync from source or invent parallel primitives when an equivalent already exists.",
+    "Before writing UI, open `/component-library` — expand **UI primitives** and **Composite components** — and map each region in the reference HTML to existing synced components. Reuse them directly; do not re-sync from source or invent parallel primitives when an equivalent already exists.",
     "",
     "## Starter Screens gallery",
     starterScreensUrl,
@@ -61,7 +68,7 @@ export function buildCreateStarterScreenPrompt({
     "Follow AGENTS.md for host prototype conventions (semantic tokens, no runtime `source/` imports).",
     "",
     `1. Open the source page at \`${trimmedRoute}\` and read its component tree alongside the reference HTML below.`,
-    "2. Inspect `/component-library` and list which synced components you will compose for this screen.",
+    "2. Inspect `/component-library` (UI primitives + Composite components sections) and list which synced components you will compose for this screen.",
     "3. Create `src/starter-screens/<slug>/` with a default-export React component that reproduces the reference HTML using `@/components/ui` and host tokens.",
     "4. Capture a screenshot under `public/starter-screens/screenshots/<slug>.png` (or equivalent) for the gallery card.",
     `5. Register the starter screen on \`${starterScreensPagePath}\` so it appears on \`/starter-screens\` alongside existing entries.`,
@@ -78,6 +85,7 @@ export function buildCreateStarterScreenCopyText({
   sourcePath,
   origin = "http://localhost:3003",
   starterScreensPagePath = "src/app/starter-screens/page.tsx",
+  workspaceProfile,
 }: {
   title: string;
   route: string;
@@ -85,6 +93,7 @@ export function buildCreateStarterScreenCopyText({
   sourcePath?: string;
   origin?: string;
   starterScreensPagePath?: string;
+  workspaceProfile?: WorkspaceProfile;
 }): string {
   const trimmedTitle = title.trim();
   const trimmedRoute = route.trim();
@@ -96,6 +105,7 @@ export function buildCreateStarterScreenCopyText({
     sourcePath,
     origin,
     starterScreensPagePath,
+    workspaceProfile,
   });
 
   return `${brief}\n\n---\n\n${prompt}`;

@@ -1,4 +1,8 @@
 import { normalizeReferenceDocLink } from "./reference-docs";
+import {
+  buildWorkspaceProfilePromptLines,
+  type WorkspaceProfile,
+} from "./workspace-profile";
 
 export type CreatePrototypeReferenceDocInput = {
   name: string;
@@ -28,22 +32,27 @@ export function normalizeCreatePrototypeReferenceDocs(
 
 export function buildCreatePrototypePrompt({
   title,
+  description = "",
   route,
   referenceHtml,
   origin = "http://localhost:3003",
   referenceDocs = [],
   useRealData = false,
   sourcePath,
+  workspaceProfile,
 }: {
   title: string;
+  description?: string;
   route: string;
   referenceHtml: string;
   origin?: string;
   referenceDocs?: CreatePrototypeReferenceDocInput[];
   useRealData?: boolean;
   sourcePath?: string;
+  workspaceProfile?: WorkspaceProfile;
 }): string {
   const trimmedTitle = title.trim();
+  const trimmedDescription = description.trim();
   const trimmedRoute = route.trim();
   const trimmedHtml = referenceHtml.trim();
   const suggestedSlug = suggestPrototypeSlug(trimmedTitle);
@@ -61,9 +70,13 @@ export function buildCreatePrototypePrompt({
     "",
     "## Brief",
     `- Title: ${trimmedTitle}`,
+    ...(trimmedDescription
+      ? [`- Description: ${trimmedDescription}`]
+      : []),
     `- Source route: \`${trimmedRoute}\``,
     `- Suggested slug: \`${suggestedSlug || "my-prototype"}\` (pick a unique kebab-case slug if taken)`,
     `- Data: ${useRealData ? "Use real data from the linked source app (see **Real data** below)" : "Mock data only (default — typed constants, no live API calls)"}`,
+    ...buildWorkspaceProfilePromptLines(workspaceProfile ?? { userName: "", companyName: "" }),
     "",
     "## Source page",
     sourceLine,
@@ -83,7 +96,7 @@ export function buildCreatePrototypePrompt({
     "- UI primitives: `@/components/ui/`",
     "- Design tokens and global styles: host `globals.css`",
     "",
-    "Before writing UI, open `/component-library` and map each region in the reference HTML to existing synced primitives (buttons, inputs, cards, badges, tables, dialogs, etc.). Reuse them directly; do not re-sync from source or invent parallel primitives when an equivalent already exists.",
+    "Before writing UI, open `/component-library` — expand **UI primitives** and **Composite components** — and map each region in the reference HTML to existing synced components. Reuse them directly; do not re-sync from source or invent parallel primitives when an equivalent already exists.",
     "",
     "## Source app",
     "Draw from the **source application** (linked via `SOURCE_PATH` / `pnpm link-source`) — not from other prototypes in this gallery. Replicate the page or feature named in the brief **exactly**: layout, spacing, typography, components, empty/loading/error states, and interactions. Match the source side-by-side; do not approximate or invent alternate UI.",
@@ -161,7 +174,7 @@ export function buildCreatePrototypePrompt({
     "Follow AGENTS.md → New prototype checklist, **Live state & preview states (mandatory)**, and **Prototype overlays & side shelves (mandatory)** when the UI has shelves or overlays.",
     "",
     `1. Open the source page at \`${trimmedRoute}\` and read its component tree alongside the reference HTML above.`,
-    "2. Inspect `/component-library` and map synced components to each region in the reference HTML.",
+    "2. Inspect `/component-library` (UI primitives + Composite components sections) and map synced components to each region in the reference HTML.",
     "3. Create `src/prototypes/<slug>/` with a default export page component that reproduces the reference HTML using `@/components/ui` and host tokens.",
     "4. Add `component-ids.ts` — exhaustive static id list + `dynamicPrefixes`.",
     "5. Register in `prototype.config.ts` with `componentRegistry`.",
@@ -188,27 +201,33 @@ export function buildCreatePrototypePrompt({
 
 export function buildCreatePrototypeCopyText({
   title,
+  description = "",
   route,
   referenceHtml,
   origin = "http://localhost:3003",
   referenceDocs = [],
   useRealData = false,
   sourcePath,
+  workspaceProfile,
 }: {
   title: string;
+  description?: string;
   route: string;
   referenceHtml: string;
   origin?: string;
   referenceDocs?: CreatePrototypeReferenceDocInput[];
   useRealData?: boolean;
   sourcePath?: string;
+  workspaceProfile?: WorkspaceProfile;
 }): string {
   const trimmedTitle = title.trim();
+  const trimmedDescription = description.trim();
   const trimmedRoute = route.trim();
   const normalizedReferenceDocs =
     normalizeCreatePrototypeReferenceDocs(referenceDocs);
   const briefLines = [
     `Title: ${trimmedTitle}`,
+    ...(trimmedDescription ? [`Description: ${trimmedDescription}`] : []),
     `Route: ${trimmedRoute}`,
     `Data: ${useRealData ? "Real data" : "Mock data only"}`,
   ];
@@ -222,12 +241,14 @@ export function buildCreatePrototypeCopyText({
 
   const prompt = buildCreatePrototypePrompt({
     title: trimmedTitle,
+    description: trimmedDescription,
     route: trimmedRoute,
     referenceHtml: referenceHtml.trim(),
     origin,
     referenceDocs: normalizedReferenceDocs,
     useRealData,
     sourcePath,
+    workspaceProfile,
   });
 
   return `${briefLines.join("\n")}\n\n---\n\n${prompt}`;

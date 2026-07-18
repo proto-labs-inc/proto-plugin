@@ -3,6 +3,7 @@ import type { ComponentType, ReactNode } from "react";
 import { PrototypeGalleryShell } from "@prototype/components/shell/prototype-gallery-shell";
 
 import { formatSourceDirectoryName } from "@prototype/lib/format-source-directory-name";
+import { readWorkspaceProfileFromEnv } from "@prototype/lib/prototypes/workspace-profile";
 
 import { PrototypeSiteLayoutClient } from "./prototype-site-layout-client";
 
@@ -17,6 +18,7 @@ export function createPrototypeSiteLayout(
   const sourcePath = process.env.SOURCE_PATH;
   const sourceDirectoryName =
     options.sourceDirectoryName ?? formatSourceDirectoryName(sourcePath);
+  const workspaceProfile = readWorkspaceProfileFromEnv();
 
   return function PrototypeSiteLayout({
     children,
@@ -32,6 +34,7 @@ export function createPrototypeSiteLayout(
         }>}
         sourceDirectoryName={sourceDirectoryName}
         sourcePath={sourcePath}
+        workspaceProfile={workspaceProfile}
         toaster={options.toaster}
       >
         {children}

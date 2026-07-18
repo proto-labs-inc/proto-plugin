@@ -1,15 +1,11 @@
 "use client";
 
 import { ProtoLogoMark } from "@prototype/components/brand/proto-logo-mark";
-import { IconButton } from "@prototype/components/platform-ui/icon-button";
-import { Button } from "@prototype/components/ui/button";
-import { PrototypeLinkSourceModal } from "@prototype/components/shell/prototype-link-source-modal";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { cn } from "@prototype/lib/utils";
-import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
-import { LayoutGrid, LibraryBig, Moon, Pencil, Sun } from "lucide-react";
+import { LayoutGrid, LibraryBig, ScrollText, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 const GALLERY_NAV_ITEMS = [
   {
@@ -22,23 +18,26 @@ const GALLERY_NAV_ITEMS = [
     label: "Component Library",
     icon: LibraryBig,
   },
+  {
+    href: "/agent-instructions",
+    label: "Agent instructions",
+    icon: ScrollText,
+  },
 ] as const;
 
-const GALLERY_FOOTER_BUTTON_CLASS =
-  "rounded-lg border-[var(--tool-chrome-border-strong)] bg-transparent text-[var(--tool-chrome-text-heading)] shadow-none hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-text-heading)]";
+const GALLERY_NAV_ITEM_CLASS =
+  "flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors text-[var(--tool-chrome-text-muted)] hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-text-heading)]";
 
 type PrototypeGalleryNavProps = {
   sourceDirectoryName?: string;
   sourcePath?: string;
 };
 
-export function PrototypeGalleryNav({
-  sourceDirectoryName,
-  sourcePath,
-}: PrototypeGalleryNavProps) {
+export function PrototypeGalleryNav(_props: PrototypeGalleryNavProps = {}) {
   const pathname = usePathname();
-  const { theme, toggleTheme, isThemeLocked } = usePrototypeToolTheme();
-  const [linkSourceOpen, setLinkSourceOpen] = useState(false);
+  const track = useTrackEvent();
+  const isSettingsActive =
+    pathname === "/settings" || pathname.startsWith("/settings/");
 
   return (
     <aside className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] flex h-full min-h-0 w-56 shrink-0 flex-col self-stretch overflow-hidden border-r">
@@ -60,6 +59,7 @@ export function PrototypeGalleryNav({
               key={href}
               href={href}
               aria-current={isActive ? "page" : undefined}
+              onClick={() => track("nav.clicked", { target: href, label })}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
@@ -75,61 +75,21 @@ export function PrototypeGalleryNav({
       </nav>
 
       <div className="border-[var(--tool-chrome-border)] mt-auto border-t p-3">
-        <div className="flex min-w-0 items-center gap-2">
-          {isThemeLocked ? null : (
-            <IconButton
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              aria-label={
-                theme === "light" ? "Switch to dark mode" : "Switch to light mode"
-              }
-              className={cn("size-9 shrink-0", GALLERY_FOOTER_BUTTON_CLASS)}
-            >
-              {theme === "light" ? (
-                <Sun size={16} strokeWidth={2} aria-hidden />
-              ) : (
-                <Moon size={16} strokeWidth={2} aria-hidden />
-              )}
-            </IconButton>
+        <Link
+          href="/settings"
+          aria-current={isSettingsActive ? "page" : undefined}
+          onClick={() => track("nav.clicked", { target: "/settings", label: "Settings" })}
+          className={cn(
+            GALLERY_NAV_ITEM_CLASS,
+            "w-full min-w-0",
+            isSettingsActive &&
+              "bg-[var(--tool-chrome-gray-highlight)] text-[var(--tool-chrome-text-heading)]",
           )}
-          {sourceDirectoryName ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLinkSourceOpen(true)}
-              aria-label={`Change linked source app (${sourceDirectoryName})`}
-              title={sourcePath ?? sourceDirectoryName}
-              className={cn(
-                "h-9 min-w-0 flex-1 justify-between gap-2 px-3 text-xs font-medium",
-                GALLERY_FOOTER_BUTTON_CLASS,
-              )}
-            >
-              <span className="min-w-0 truncate">{sourceDirectoryName}</span>
-              <Pencil size={14} strokeWidth={2} aria-hidden className="size-3.5 shrink-0 opacity-70" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setLinkSourceOpen(true)}
-              className={cn(
-                "h-9 min-w-0 flex-1 justify-center text-sm font-medium",
-                GALLERY_FOOTER_BUTTON_CLASS,
-              )}
-            >
-              Link source
-            </Button>
-          )}
-        </div>
+        >
+          <Settings className="size-4 shrink-0" aria-hidden />
+          Settings
+        </Link>
       </div>
-
-      <PrototypeLinkSourceModal
-        open={linkSourceOpen}
-        onOpenChange={setLinkSourceOpen}
-        currentSourcePath={sourcePath}
-      />
     </aside>
   );
 }

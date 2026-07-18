@@ -26,7 +26,7 @@ import {
   PARTNER_FADE_UP_DURATION,
   PARTNER_SHAPE_REVEAL_DELAY_EXTRA,
 } from "../../proto-partner-page/_components/partner-page-motion";
-import { HOME_PAGE_BODY_ENTRANCE_DELAY } from "./home-page-copy-block";
+import { HOME_PAGE_BODY_ENTRANCE_DELAY } from "./home-page-shapes-constants";
 import { pickUniqueCreatorNames } from "./home-page-shape-creator-names";
 import { readSubmittedContributorShapes } from "../../proto-partner-page/_components/submitted-proto-shapes";
 import { bindSpringsCanvasPointerHandlers } from "../../proto-shapes/springs-canvas-pointer";

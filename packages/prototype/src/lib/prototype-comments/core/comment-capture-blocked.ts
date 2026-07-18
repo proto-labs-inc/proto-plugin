@@ -16,6 +16,7 @@ export const COMMENT_CAPTURE_BLOCKED_SELECTORS = [
   "[data-annotation-popup]",
   "[data-annotation-marker]",
   "[data-prototype-share-hint]",
+  "[data-prototype-bootstrap-floating-stepper]",
 ] as const;
 
 export function isCommentCaptureBlockedTarget(target: HTMLElement): boolean {

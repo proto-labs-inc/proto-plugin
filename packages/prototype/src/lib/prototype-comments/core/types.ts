@@ -51,6 +51,10 @@ export type CommentAnnotationFields = {
   deleted?: boolean;
   /** Review comments vs change log notes. Defaults to `"comment"`. */
   channel?: "comment" | "changelog";
+  /** Display name of the person who wrote this comment or reply. */
+  authorName?: string;
+  /** Team name from the workspace profile when the comment was saved. */
+  teamName?: string;
 };
 
 /** The stored interaction state: prototype live state + package-added metadata */

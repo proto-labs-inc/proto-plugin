@@ -58,6 +58,7 @@ import {
 } from "react";
 
 import { VariantSetLucideIcon } from "@prototype/lib/prototypes/variant-set-lucide-icon";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { miniPillTextFromLabel } from "./mini-pill-label";
 import { PrototypeCreateExplorationModal } from "./prototype-create-exploration-modal";
 import { PrototypeCreateStateModal } from "./prototype-create-state-modal";
@@ -446,6 +447,7 @@ export function PrototypeReviewChrome({
 }: PrototypeReviewChromeProps) {
   const review = usePrototypeReview();
   const { commentTheme } = usePrototypeToolTheme();
+  const track = useTrackEvent();
   const chromeRef = useRef<HTMLDivElement>(null);
   const stateMapTabRef = useRef<HTMLButtonElement>(null);
   const stateMapHoverSuppressedRef = useRef(false);
@@ -500,7 +502,8 @@ export function PrototypeReviewChrome({
 
   const handleStateMapTabClick = useCallback(() => {
     setStateMapModalOpen(true);
-  }, []);
+    track("state_map.opened", { surface: "toolbar-tab" });
+  }, [track]);
 
   const closeToolbarMenus = useCallback(() => {
     setExplorationsMenuOpen(false);
@@ -572,7 +575,8 @@ export function PrototypeReviewChrome({
   const openCreateStateModal = useCallback(() => {
     blurToolbarFocus();
     setCreateStateModalOpen(true);
-  }, [blurToolbarFocus]);
+    track("modal.opened", { modal: "create-state" });
+  }, [blurToolbarFocus, track]);
 
   const registerOpenCreateStateModal = review.registerOpenCreateStateModal;
   useEffect(() => {
@@ -925,6 +929,7 @@ export function PrototypeReviewChrome({
                       closeToolbarMenus();
                       closeShareMenu();
                       review.openSidebar("change-log");
+                      track("nav.clicked", { target: "handoff-overview-writeup" });
                     }
                   }}
                 >
@@ -948,6 +953,7 @@ export function PrototypeReviewChrome({
                       closeToolbarMenus();
                       closeShareMenu();
                       review.openSidebar("spec");
+                      track("nav.clicked", { target: "handoff-pr-plan" });
                     }
                   }}
                 >
@@ -1023,7 +1029,10 @@ export function PrototypeReviewChrome({
             label="Layout"
             tooltip="Layout"
             value={review.viewportLayout}
-            onValueChange={review.setViewportLayout}
+            onValueChange={(layout) => {
+              review.setViewportLayout(layout);
+              track("layout.toggled", { layout });
+            }}
             options={VIEWPORT_LAYOUT_OPTIONS}
             open={viewportMenuOpen}
             onOpenChange={(open) => {

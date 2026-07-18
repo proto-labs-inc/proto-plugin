@@ -4,6 +4,8 @@ export { defineStarterScreenConfig } from "./config/define-starter-screen-config
 // from disk) and lives in `proto-plugin/server`. Keeping it out of this barrel is
 // what lets client prototype components import from `proto-plugin` safely.
 export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
+export { createPrototypeSettingsPage } from "./config/create-prototype-settings-page";
+export { createPrototypeAgentInstructionsPage } from "./config/create-prototype-agent-instructions-page";
 export { createPrototypeStarterScreenPage } from "./config/create-prototype-starter-screen-page";
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
@@ -23,6 +25,7 @@ export {
 
 export type {
   PrototypeConfig,
+  PrototypeBootstrapConfig,
   PrototypeDefinition,
   PrototypeExtraRoute,
   PrototypeMetadata,
@@ -150,6 +153,66 @@ export {
   buildLinkSourceCopyText,
   buildLinkSourcePrompt,
 } from "./lib/prototypes/link-source-prompt";
+export {
+  buildProfileCopyText,
+  buildProfilePrompt,
+  buildWorkspaceProfileCopyText,
+  buildWorkspaceProfilePrompt,
+} from "./lib/prototypes/profile-prompt";
+export {
+  CUSTOM_AGENT_CONTEXT_PATH,
+  HOST_AGENT_CONTEXT_PATH,
+  buildAgentContextCopyText,
+  buildAgentContextPrompt,
+} from "./lib/prototypes/agent-context-prompt";
+export {
+  WORKSPACE_PROFILE_ENV_KEYS,
+  buildWorkspaceProfilePromptLines,
+  hasWorkspaceProfile,
+  readWorkspaceProfileFromEnv,
+  type WorkspaceProfile,
+} from "./lib/prototypes/workspace-profile";
+export {
+  BOOTSTRAP_REQUIREMENT_IDS,
+  BOOTSTRAP_REQUIREMENT_LABELS,
+  DEFAULT_BOOTSTRAP_PATHS,
+  DEFAULT_BOOTSTRAP_REQUIREMENT_ORDER,
+  PROTOTYPE_BOOTSTRAP_STATUS_PATH,
+  evaluateBootstrapRequirement,
+  evaluateBootstrapRequirements,
+  fetchPrototypeBootstrapStatus,
+  isSourceLinked,
+  isUserNameSet,
+  pathGroupSatisfied,
+  requirementToModalStep,
+  resolveBootstrapPaths,
+  resolveBootstrapRequirementOrder,
+  resolveBootstrapStep,
+  type BootstrapRequirement,
+  type BootstrapRequirementId,
+  type PathExistenceChecker,
+  type PrototypeBootstrapStatus,
+} from "./lib/prototypes/prototype-bootstrap-status";
+export {
+  PrototypeWorkspaceProfileProvider,
+  useWorkspaceProfile,
+} from "./lib/prototypes/use-workspace-profile";
+export {
+  PrototypeTelemetryProvider,
+  useTrackEvent,
+  type TrackEventFn,
+  type TrackEventOptions,
+} from "./lib/prototypes/telemetry/prototype-telemetry-context";
+export {
+  PROTOTYPE_TELEMETRY_ENDPOINT,
+  PROTOTYPE_TELEMETRY_EVENTS,
+  type PrototypeTelemetryEvent,
+  type PrototypeTelemetryEventName,
+} from "./lib/prototypes/telemetry/prototype-telemetry-types";
+export {
+  enqueuePrototypeTelemetryEvent,
+  flushPrototypeTelemetry,
+} from "./lib/prototypes/telemetry/prototype-telemetry-client";
 export type { PrototypePreviewState } from "./lib/prototypes/prototype-preview-state-types";
 
 export {

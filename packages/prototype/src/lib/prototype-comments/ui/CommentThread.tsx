@@ -9,18 +9,16 @@ import {
 
 import { getRepliesForParent } from "../core/comment-threads";
 import type { CommentAnnotation } from "../core/types";
+import { Button } from "@prototype/components/ui/button";
 import { useCommentStore } from "../react/CommentProvider";
+import { CommentAuthorAvatar } from "./comment-author-avatar";
 import threadStyles from "./comment-thread.module.scss";
 import { cn } from "@prototype/lib/utils";
 
-function formatReplyTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+const THREAD_CANCEL_BUTTON_CLASS =
+  "h-7 border-[var(--tool-chrome-border)] bg-transparent px-2.5 text-xs text-[var(--tool-chrome-text-muted)] shadow-none hover:bg-[var(--tool-chrome-gray-highlight)] hover:text-[var(--tool-chrome-text)]";
+
+const THREAD_PRIMARY_BUTTON_CLASS = "h-7 px-2.5 text-xs";
 
 function PencilIcon() {
   return (
@@ -108,14 +106,14 @@ function ThreadReplyRow<TState>({
       onMouseEnter={() => setActionsVisible(true)}
       onMouseLeave={() => setActionsVisible(false)}
     >
-      <div
-        className={cn(threadStyles.replyMeta, dark && threadStyles.replyMetaDark)}
-      >
-        <span>{formatReplyTime(reply.timestamp)}</span>
-      </div>
+      <CommentAuthorAvatar
+        name={reply.authorName}
+        size="sm"
+        className={threadStyles.replyAvatar}
+      />
 
       {editing ? (
-        <>
+        <div className={threadStyles.replyContent}>
           <textarea
             autoFocus
             value={draft}
@@ -127,26 +125,30 @@ function ThreadReplyRow<TState>({
             onClick={(event) => event.stopPropagation()}
           />
           <div className={threadStyles.rowComposerActions}>
-            <button
+            <Button
               type="button"
-              className={threadStyles.secondaryBtn}
+              variant="outline"
+              size="sm"
+              className={THREAD_CANCEL_BUTTON_CLASS}
               onClick={() => {
                 setDraft(reply.comment);
                 setEditing(false);
               }}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className={threadStyles.primaryBtn}
+              variant="chrome"
+              size="sm"
+              className={THREAD_PRIMARY_BUTTON_CLASS}
               disabled={!draft.trim()}
               onClick={handleSave}
             >
               Save
-            </button>
+            </Button>
           </div>
-        </>
+        </div>
       ) : (
         <p
           className={cn(threadStyles.replyText, dark && threadStyles.replyTextDark)}
@@ -291,24 +293,28 @@ export function CommentThread<TState>({
                 aria-label="Reply to comment"
               />
               <div className={threadStyles.composerActions}>
-                <button
+                <Button
                   type="button"
-                  className={threadStyles.secondaryBtn}
+                  variant="outline"
+                  size="sm"
+                  className={THREAD_CANCEL_BUTTON_CLASS}
                   onClick={() => {
                     setDraft("");
                     setShowComposer(false);
                   }}
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className={threadStyles.primaryBtn}
+                  variant="chrome"
+                  size="sm"
+                  className={THREAD_PRIMARY_BUTTON_CLASS}
                   disabled={!draft.trim()}
                   onClick={handleSubmit}
                 >
                   Reply
-                </button>
+                </Button>
               </div>
             </div>
           )}

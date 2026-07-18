@@ -13,8 +13,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { usePersistedLocalString } from "./use-persisted-local-state";
-
 export const PROTOTYPE_TOOL_THEME_STORAGE_KEY = "prototype-tool-theme";
 
 export type PrototypeToolTheme = "light" | "dark";
@@ -37,17 +35,6 @@ function normalizeTheme(value: string): PrototypeToolTheme {
   return value === "light" ? "light" : "dark";
 }
 
-function disableThemeTransitions() {
-  if (typeof document === "undefined") return;
-
-  const root = document.documentElement;
-  root.classList.add("prototype-theme-transition-disable");
-
-  window.setTimeout(() => {
-    root.classList.remove("prototype-theme-transition-disable");
-  }, 0);
-}
-
 type PrototypeToolThemeProviderProps = {
   children: ReactNode;
   className?: string;
@@ -57,35 +44,23 @@ export function PrototypeToolThemeProvider({
   children,
   className,
 }: PrototypeToolThemeProviderProps) {
-  const { value, updateValue } = usePersistedLocalString(
-    PROTOTYPE_TOOL_THEME_STORAGE_KEY,
-    DEFAULT_THEME,
-  );
-  const theme = normalizeTheme(value);
-  const useLightTheme = theme === "light";
+  const theme = DEFAULT_THEME;
+  const useLightTheme = false;
 
-  const setTheme = useCallback(
-    (next: PrototypeToolTheme) => {
-      disableThemeTransitions();
-      updateValue(next);
-    },
-    [updateValue],
-  );
+  const setTheme = useCallback((_next: PrototypeToolTheme) => {}, []);
 
-  const toggleTheme = useCallback(() => {
-    setTheme(useLightTheme ? "dark" : "light");
-  }, [setTheme, useLightTheme]);
+  const toggleTheme = useCallback(() => {}, []);
 
   const contextValue = useMemo<PrototypeToolThemeContextValue>(
     () => ({
       theme,
       useLightTheme,
       commentTheme: theme,
-      isThemeLocked: false,
+      isThemeLocked: true,
       setTheme,
       toggleTheme,
     }),
-    [setTheme, theme, toggleTheme, useLightTheme],
+    [setTheme, toggleTheme],
   );
 
   return (
@@ -110,7 +85,7 @@ export function usePrototypeToolTheme(): PrototypeToolThemeContextValue {
       theme: DEFAULT_THEME,
       useLightTheme: DEFAULT_THEME === "light",
       commentTheme: DEFAULT_THEME,
-      isThemeLocked: false,
+      isThemeLocked: true,
       setTheme: () => {},
       toggleTheme: () => {},
     };

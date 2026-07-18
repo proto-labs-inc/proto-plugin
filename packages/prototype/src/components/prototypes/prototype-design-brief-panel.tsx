@@ -390,7 +390,6 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
               checked={multipleVersions}
               onCheckedChange={updateMultipleVersions}
               aria-label="Multiple versions"
-              className="data-[state=checked]:bg-foreground"
             />
             <span className="text-sm text-[var(--text-secondary)]">Multiple versions</span>
           </label>

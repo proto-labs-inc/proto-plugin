@@ -1,4 +1,3 @@
-import protoLogo from "../../../assets/proto-logo.png";
 import { cn } from "@prototype/lib/utils";
 
 type ProtoLogoMarkProps = {
@@ -8,13 +7,20 @@ type ProtoLogoMarkProps = {
 
 export function ProtoLogoMark({ className, size = 14 }: ProtoLogoMarkProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- bundled brand mark, not a remote asset
-    <img
-      src={protoLogo.src}
-      alt=""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 105 107"
       width={size}
       height={size}
-      className={cn("shrink-0 object-contain", className)}
-    />
+      aria-hidden
+      className={cn("shrink-0", className)}
+    >
+      <path
+        fill="#FC388C"
+        d="M 50.844 2.443 Q 52.5 0 54.156 2.443 L 80.884 41.878 Q 83 45 79.228 45 L 25.772 45 Q 22 45 24.116 41.878 Z"
+      />
+      <rect fill="#10C4E2" x="0" y="63" width="44" height="43" rx="2" ry="2" />
+      <circle fill="#FCC028" cx="81.5" cy="83.5" r="21.5" />
+    </svg>
   );
 }

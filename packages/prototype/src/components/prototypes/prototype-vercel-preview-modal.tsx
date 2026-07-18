@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@prototype/components/ui/dialog";
 import { PROTOTYPE_TOOL_MODAL_CLOSE_CLASS } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { ExternalLink, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -32,12 +33,19 @@ export function PrototypeVercelPreviewModal({
   error = null,
 }: PrototypeVercelPreviewModalProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const track = useTrackEvent();
 
   useEffect(() => {
     if (!open) {
       setIframeLoaded(false);
     }
   }, [open, previewUrl]);
+
+  useEffect(() => {
+    if (open) {
+      track("vercel_preview.opened", { title });
+    }
+  }, [open, title, track]);
 
   const showIframe = Boolean(previewUrl) && !loading && !error;
 
@@ -48,7 +56,7 @@ export function PrototypeVercelPreviewModal({
         showCloseButton={false}
         className="tool-dialog-surface flex h-[min(92svh,calc(100%-2rem))] max-h-[min(92svh,calc(100%-2rem))] w-[min(96rem,calc(100vw-2rem))] max-w-[min(96rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden border-0 p-0 sm:max-w-[min(96rem,calc(100vw-2rem))]"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
           <DialogTitle className="min-w-0 truncate text-sm font-medium">
             {title}
           </DialogTitle>

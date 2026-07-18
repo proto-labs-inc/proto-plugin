@@ -16,7 +16,7 @@ The dev server runs on port **1985** (see `"dev": "next dev -p 1985"` in `packag
 | Path | Description |
 | --- | --- |
 | [`packages/prototype/README.md`](packages/prototype/README.md) | Host setup, API, and scripts |
-| [`packages/prototype/AGENTS.md`](packages/prototype/AGENTS.md) | Building prototypes |
+| [`AGENTS.md`](AGENTS.md) (symlink → [`packages/prototype/AGENTS.md`](packages/prototype/AGENTS.md)) | Building prototypes |
 
 ## Source app
 

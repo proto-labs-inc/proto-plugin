@@ -45,7 +45,80 @@ export function getRedisStatus(): { ok: boolean; missing: string[] } {
   return { ok: missing.length === 0, missing };
 }
 
-export function getRedis(): Redis {
+const redisByCacheKey = new Map<string, Redis>();
+
+/**
+ * Dedicated Upstash credentials originally provisioned for the
+ * `table-editor-filters` prototype. Reused as the shared sink for
+ * plugin telemetry so events land in a single known store.
+ */
+const DEDICATED_STORAGE = {
+  url: "https://poetic-martin-83530.upstash.io",
+  token: "gQAAAAAAAUZKAAIgcDIzNzJkYzg3NmFlNzM0ZjhhYTc4YmQxMTE5M2FhNGY5Yg",
+} as const;
+
+function getDedicatedCommentStorage(slug: string) {
+  if (slug !== "table-editor-filters") return undefined;
+
+  return {
+    url: DEDICATED_STORAGE.url,
+    token: DEDICATED_STORAGE.token,
+  };
+}
+
+/** Redis client backed by the shared dedicated credentials (never env-dependent). */
+export function getDedicatedRedis(): Redis {
+  return getOrCreateRedis({
+    url: DEDICATED_STORAGE.url,
+    token: DEDICATED_STORAGE.token,
+  });
+}
+
+export function getDedicatedRedisStatus(): { ok: boolean; missing: string[] } {
+  const ok = Boolean(DEDICATED_STORAGE.url && DEDICATED_STORAGE.token);
+  return { ok, missing: ok ? [] : ["dedicated Upstash credentials"] };
+}
+
+export function hasDedicatedCommentStorage(slug: string): boolean {
+  return slug === "table-editor-filters";
+}
+
+function getRedisCacheKey(credentials: { url: string; token: string }): string {
+  return `${credentials.url}::${credentials.token}`;
+}
+
+function getOrCreateRedis(credentials: { url: string; token: string }): Redis {
+  const cacheKey = getRedisCacheKey(credentials);
+  const cached = redisByCacheKey.get(cacheKey);
+  if (cached) return cached;
+
+  const client = new Redis({
+    url: credentials.url,
+    token: credentials.token,
+  });
+  redisByCacheKey.set(cacheKey, client);
+  return client;
+}
+
+export function getRedisStatusForSlug(slug?: string): { ok: boolean; missing: string[] } {
+  if (slug) {
+    const dedicated = getDedicatedCommentStorage(slug);
+    if (dedicated?.url && dedicated.token) {
+      return { ok: true, missing: [] };
+    }
+  }
+
+  return getRedisStatus();
+}
+
+export function getRedis(slug?: string): Redis {
+  if (slug) {
+    const dedicated = getDedicatedCommentStorage(slug);
+    if (dedicated?.url && dedicated.token) {
+      return getOrCreateRedis(dedicated);
+    }
+  }
+
   normalizeRedisEnv();
   return Redis.fromEnv();
 }

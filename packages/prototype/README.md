@@ -124,6 +124,10 @@ const PrototypeSiteLayout = createPrototypeSiteLayout();
 
 Open [http://localhost:1985](http://localhost:1985) when developing.
 
+**Auto bootstrap onboarding:** on gallery routes the shell calls `GET /api/prototypes/bootstrap-status` and opens the first incomplete setup step (source linked → user name → design tokens → ui primitives → shared blocks). When all requirements pass, the normal gallery UI renders automatically. Configure check paths and order in `prototype.config.ts` under `bootstrap`.
+
+**Bootstrap preview (dev only):** set `NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG=true` to show the floating stepper above Settings and override auto resolution via localStorage or `?bootstrapPreview=source-directory` (also `name`, `components`, `normal`; legacy `1` → welcome, `0` → normal).
+
 ## Public API
 
 | Export | Use |

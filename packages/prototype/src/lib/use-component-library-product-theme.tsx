@@ -37,8 +37,28 @@ function normalizeTheme(value: string | undefined): ComponentLibraryProductTheme
   return value === "dark" ? "dark" : "light";
 }
 
+const DEFAULT_COMPONENT_LIBRARY_THEMES = ["light", "dark"] as const;
+
+export function resolveComponentLibraryDefaultTheme(
+  themes: readonly ComponentLibraryProductTheme[],
+): ComponentLibraryProductTheme {
+  if (themes.includes("light")) {
+    return "light";
+  }
+
+  if (themes.includes("dark")) {
+    return "dark";
+  }
+
+  return "light";
+}
+
 type ComponentLibraryProductThemeProviderProps = {
   children: ReactNode;
+  /** When set, the scroll surface stays on this mode (e.g. dark before import). */
+  forcedTheme?: ComponentLibraryProductTheme;
+  themes?: readonly ComponentLibraryProductTheme[];
+  defaultTheme?: ComponentLibraryProductTheme;
 };
 
 /**
@@ -81,11 +101,15 @@ function ComponentLibraryProductThemeBridge({ children }: { children: ReactNode 
 
 export function ComponentLibraryProductThemeProvider({
   children,
+  forcedTheme,
+  themes = DEFAULT_COMPONENT_LIBRARY_THEMES,
+  defaultTheme = resolveComponentLibraryDefaultTheme(themes),
 }: ComponentLibraryProductThemeProviderProps) {
   return (
     <ThemeProvider
-      themes={["light", "dark"]}
-      defaultTheme="light"
+      themes={[...themes]}
+      defaultTheme={defaultTheme}
+      forcedTheme={forcedTheme}
       enableSystem={false}
       enableColorScheme={false}
       storageKey={COMPONENT_LIBRARY_PRODUCT_THEME_STORAGE_KEY}

@@ -19,7 +19,7 @@ import {
   touchScreenshotManifest,
   touchScreenshotManifestKey,
 } from "../lib/prototypes/screenshot-manifest";
-import { getRedisStatus } from "./redis/client";
+import { getRedisStatusForSlug } from "./redis/client";
 import {
   listPrototypeComments,
   mergePrototypeComments,
@@ -38,8 +38,8 @@ type CommentIdRouteContext = {
   params: Promise<{ slug: string; id: string }>;
 };
 
-function commentStorageUnavailableResponse() {
-  const status = getRedisStatus();
+function commentStorageUnavailableResponse(slug: string) {
+  const status = getRedisStatusForSlug(slug);
   return NextResponse.json(
     {
       error: "Comment storage is not configured.",
@@ -49,8 +49,8 @@ function commentStorageUnavailableResponse() {
   );
 }
 
-function changelogStorageUnavailableResponse() {
-  const status = getRedisStatus();
+function changelogStorageUnavailableResponse(slug: string) {
+  const status = getRedisStatusForSlug(slug);
   return NextResponse.json(
     {
       error: "Change log storage is not configured.",
@@ -71,9 +71,9 @@ export function createPrototypeCommentsRoute(config: PrototypeConfig) {
       return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
     }
 
-    const redisStatus = getRedisStatus();
+    const redisStatus = getRedisStatusForSlug(slug);
     if (!redisStatus.ok) {
-      return commentStorageUnavailableResponse();
+      return commentStorageUnavailableResponse(slug);
     }
 
     try {
@@ -93,9 +93,9 @@ export function createPrototypeCommentsRoute(config: PrototypeConfig) {
       return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
     }
 
-    const redisStatus = getRedisStatus();
+    const redisStatus = getRedisStatusForSlug(slug);
     if (!redisStatus.ok) {
-      return commentStorageUnavailableResponse();
+      return commentStorageUnavailableResponse(slug);
     }
 
     let body: unknown;
@@ -137,9 +137,9 @@ export function createPrototypeCommentIdRoute(config: PrototypeConfig) {
       return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
     }
 
-    const redisStatus = getRedisStatus();
+    const redisStatus = getRedisStatusForSlug(slug);
     if (!redisStatus.ok) {
-      return commentStorageUnavailableResponse();
+      return commentStorageUnavailableResponse(slug);
     }
 
     let body: unknown;
@@ -184,9 +184,9 @@ export function createPrototypeChangelogMetaRoute(config: PrototypeConfig) {
       return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
     }
 
-    const redisStatus = getRedisStatus();
+    const redisStatus = getRedisStatusForSlug(slug);
     if (!redisStatus.ok) {
-      return changelogStorageUnavailableResponse();
+      return changelogStorageUnavailableResponse(slug);
     }
 
     try {
@@ -209,9 +209,9 @@ export function createPrototypeChangelogMetaRoute(config: PrototypeConfig) {
       return NextResponse.json({ error: "Unknown prototype" }, { status: 404 });
     }
 
-    const redisStatus = getRedisStatus();
+    const redisStatus = getRedisStatusForSlug(slug);
     if (!redisStatus.ok) {
-      return changelogStorageUnavailableResponse();
+      return changelogStorageUnavailableResponse(slug);
     }
 
     let body: unknown;

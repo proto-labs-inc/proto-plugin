@@ -17,6 +17,7 @@ const PROTOTYPE_PLUGIN_CHROME_SELECTORS = [
   '[data-annotation-popup]',
   '[data-annotation-marker]',
   '[data-prototype-share-hint]',
+  '[data-prototype-bootstrap-floating-stepper]',
 ] as const
 
 function isPrototypePluginChromeTarget(target: EventTarget | null): boolean {

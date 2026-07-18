@@ -22,7 +22,7 @@ export function filterStoredAnnotations(
 export async function listPrototypeComments(
   slug: string,
 ): Promise<CommentAnnotationFields[]> {
-  const redis = getRedis();
+  const redis = getRedis(slug);
   const stored = (await redis.get<unknown[]>(prototypeCommentsRedisKey(slug))) ?? [];
   if (!Array.isArray(stored)) return [];
   return filterStoredAnnotations(stored);
@@ -37,7 +37,7 @@ export async function upsertPrototypeComment(
   }
 
   const incoming = comment as CommentAnnotationFields;
-  const redis = getRedis();
+  const redis = getRedis(slug);
   const key = prototypeCommentsRedisKey(slug);
   const stored = (await redis.get<unknown[]>(key)) ?? [];
   const annotations = Array.isArray(stored)
@@ -67,7 +67,7 @@ export async function mergePrototypeComments(
     throw new Error("Body must be an array.");
   }
 
-  const redis = getRedis();
+  const redis = getRedis(slug);
   const key = prototypeCommentsRedisKey(slug);
   const stored = (await redis.get<unknown[]>(key)) ?? [];
   const annotations = Array.isArray(stored)

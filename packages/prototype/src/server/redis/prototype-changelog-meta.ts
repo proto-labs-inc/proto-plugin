@@ -10,7 +10,7 @@ import { getRedis } from "./client";
 export async function getPrototypeChangelogMeta(
   slug: string,
 ): Promise<PrototypeChangelogMeta> {
-  const redis = getRedis();
+  const redis = getRedis(slug);
   const key = prototypeChangelogMetaRedisKey(slug);
   const stored = await redis.get<unknown>(key);
   return parseChangelogMeta(stored);
@@ -25,7 +25,7 @@ export async function setPrototypeChangelogMeta(
     throw new Error("Invalid change log meta.");
   }
 
-  const redis = getRedis();
+  const redis = getRedis(slug);
   const key = prototypeChangelogMetaRedisKey(slug);
   await redis.set(key, normalized);
 }

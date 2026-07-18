@@ -1,7 +1,19 @@
 import type { ComponentType } from "react";
 
 import type { GalleryConfig } from "@prototype/server/gallery/gallery-types";
+import type { BootstrapRequirementId } from "./prototype-bootstrap-status";
 import type { PrototypeComponentRegistry } from "./prototype-component-registry";
+
+export type PrototypeBootstrapConfig = {
+  /** Order requirements are evaluated for auto onboarding. */
+  requirementOrder?: BootstrapRequirementId[];
+  /** Filesystem paths per sync requirement (any path passing = requirement satisfied). */
+  paths?: {
+    designTokens?: string[];
+    uiPrimitives?: string[];
+    sharedBlocks?: string[];
+  };
+};
 
 export type PrototypeDefinition = {
   slug: string;
@@ -33,4 +45,6 @@ export type PrototypeConfig = {
   extraRoutes?: PrototypeExtraRoute[];
   /** KV + Blob gallery routes at `/api/gallery/*`. Set `false` to disable. */
   gallery?: GalleryConfig | false;
+  /** Workspace bootstrap checks for auto onboarding. */
+  bootstrap?: PrototypeBootstrapConfig;
 };

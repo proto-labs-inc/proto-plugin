@@ -6,6 +6,7 @@ import {
   buildPrSplitPlanCopyText,
   type PrSplitPlanPromptOptions,
 } from "@prototype/lib/pr-split/build-pr-split-plan-prompt";
+import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 
 type PrototypeSpecPanelEmptyStateProps = {
@@ -17,6 +18,7 @@ export function PrototypeSpecPanelEmptyState({
 }: PrototypeSpecPanelEmptyStateProps) {
   const slug = usePrototypeSlug();
   const { copy, icon, isCopied } = useCopyToClipboard();
+  const workspaceProfile = useWorkspaceProfile();
 
   const canCopy = Boolean(slug);
 
@@ -38,6 +40,7 @@ export function PrototypeSpecPanelEmptyState({
             copy(
               buildPrSplitPlanCopyText({
                 slug,
+                workspaceProfile,
                 ...promptOptions,
               }),
             );

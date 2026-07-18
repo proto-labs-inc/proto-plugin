@@ -1,0 +1,22 @@
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--tool-chrome-text) 18%, transparent);
+  color: var(--tool-chrome-text-heading, #f0f0f0);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.avatarSm {
+  width: 1.125rem;
+  height: 1.125rem;
+  font-size: 0.625rem;
+}

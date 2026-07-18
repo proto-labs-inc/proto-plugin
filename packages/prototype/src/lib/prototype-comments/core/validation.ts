@@ -12,6 +12,8 @@ export function isValidAnnotation(value: unknown): boolean {
     (a.parentId === undefined || typeof a.parentId === "string") &&
     (a.channel === undefined ||
       a.channel === "comment" ||
-      a.channel === "changelog")
+      a.channel === "changelog") &&
+    (a.authorName === undefined || typeof a.authorName === "string") &&
+    (a.teamName === undefined || typeof a.teamName === "string")
   );
 }

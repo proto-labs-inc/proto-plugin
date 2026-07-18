@@ -6,6 +6,13 @@ import { NextResponse } from "next/server";
 
 const PACKAGE_NAME = "proto-plugin";
 const NPM_LATEST_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
+const NPM_CACHE_TTL_MS = 60 * 60 * 1000;
+
+let npmLatestCache: {
+  version: string | null;
+  repositoryUrl?: string;
+  fetchedAt: number;
+} | null = null;
 
 export type ProtoPluginVersionStatus = {
   installed: string | null;
@@ -54,22 +61,41 @@ async function fetchLatestFromNpm(): Promise<{
   version: string | null;
   repositoryUrl?: string;
 }> {
+  const now = Date.now();
+  if (npmLatestCache && now - npmLatestCache.fetchedAt < NPM_CACHE_TTL_MS) {
+    return {
+      version: npmLatestCache.version,
+      repositoryUrl: npmLatestCache.repositoryUrl,
+    };
+  }
+
   try {
     const response = await fetch(NPM_LATEST_URL, {
       cache: "no-store",
     });
 
     if (!response.ok) {
-      return { version: null };
+      return npmLatestCache
+        ? {
+            version: npmLatestCache.version,
+            repositoryUrl: npmLatestCache.repositoryUrl,
+          }
+        : { version: null };
     }
 
     const data = (await response.json()) as NpmLatestResponse;
     const version = data.version ?? null;
     const repositoryUrl = data.repository?.url?.replace(/^git\+/, "").replace(/\.git$/, "");
 
+    npmLatestCache = { version, repositoryUrl, fetchedAt: now };
     return { version, repositoryUrl };
   } catch {
-    return { version: null };
+    return npmLatestCache
+      ? {
+          version: npmLatestCache.version,
+          repositoryUrl: npmLatestCache.repositoryUrl,
+        }
+      : { version: null };
   }
 }
 
@@ -105,6 +131,6 @@ export async function GET() {
   };
 
   return NextResponse.json(status, {
-    headers: { "Cache-Control": "no-store, max-age=0" },
+    headers: { "Cache-Control": "private, max-age=300" },
   });
 }

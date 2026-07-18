@@ -4,6 +4,7 @@ import { PrototypeCreatePrototypeModal } from "@prototype/components/prototypes/
 import { PROTOTYPE_GALLERY_GRID_GAP_CLASS } from "@prototype/components/shell/prototype-gallery-shell";
 import type { PrototypeMetadata } from "@prototype/lib/prototypes/prototype-config-types";
 import { screenshotSrc } from "@prototype/lib/prototypes/screenshot-src";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { cn } from "@prototype/lib/utils";
 import { Plus } from "lucide-react";
 import Image from "next/image";
@@ -52,6 +53,7 @@ export function PrototypeGalleryClient({
   sourcePath,
 }: PrototypeGalleryClientProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const track = useTrackEvent();
 
   return (
     <>
@@ -62,12 +64,24 @@ export function PrototypeGalleryClient({
             PROTOTYPE_GALLERY_GRID_GAP_CLASS,
           )}
         >
-        <PrototypeGalleryAddCard onClick={() => setCreateModalOpen(true)} />
+        <PrototypeGalleryAddCard
+          onClick={() => {
+            track("prototype.new_clicked", { surface: "gallery" });
+            setCreateModalOpen(true);
+          }}
+        />
         {prototypes.map((prototype) => (
           <Link
             key={prototype.slug}
             href={`/prototypes/${prototype.slug}`}
             className="group"
+            onClick={() =>
+              track(
+                "prototype.opened",
+                { title: prototype.title },
+                { slug: prototype.slug },
+              )
+            }
           >
             <div
               className={cn(

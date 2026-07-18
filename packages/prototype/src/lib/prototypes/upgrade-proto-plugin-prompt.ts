@@ -8,7 +8,7 @@ export function buildUpgradeProtoPluginPrompt({
   latest,
 }: UpgradeProtoPluginPromptOptions): string {
   return [
-    `Upgrade \`proto-plugin\` in this host app from \`${installed}\` to \`${latest}\`. **Do every step yourself** — the user should not run commands manually.`,
+    `Upgrade \`proto-plugin\` in this host app from \`${installed}\` to \`${latest}\`. **Do every step yourself** — the user should not run commands manually. **Do not ask the user for permission** before upgrading.`,
     "",
     "## Your job",
     `Update the dependency, restart the dev server if needed, and confirm the gallery and at least one prototype still work on \`${latest}\`.`,

@@ -28,11 +28,23 @@ export { type GalleryConfig, type GalleryItem } from "./server/gallery/gallery-t
 export { normalizeGalleryEnv } from "./server/gallery/gallery-env";
 
 export {
+  getDedicatedRedis,
+  getDedicatedRedisStatus,
   getRedis,
   getRedisStatus,
   normalizeRedisEnv,
   prototypeCommentsRedisKey,
 } from "./server/redis/client";
+
+export {
+  appendPrototypeTelemetryEvents,
+  getTelemetryRedis,
+  getTelemetryRedisStatus,
+  reconcilePrototypeRegistry,
+  PROTOTYPE_TELEMETRY_KEY,
+  PROTOTYPE_TELEMETRY_KNOWN_PROTOTYPES_KEY,
+  type PrototypeRegistrySnapshotEntry,
+} from "./server/redis/prototype-telemetry";
 
 export {
   filterStoredAnnotations,

@@ -25,6 +25,9 @@ import {
 import { usePrototypeCommentRegistry } from "@prototype/lib/prototypes/prototype-comment-registry";
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
+import { resolveCommentAuthorName } from "@prototype/lib/prototypes/workspace-profile";
+import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { getPrototypeSlugFromPathname } from "@prototype/lib/prototypes/share-command";
 import {
   clearPendingCommentRestore,
@@ -200,6 +203,7 @@ export function CommentCaptureToolbar<TState = unknown>({
   const review = usePrototypeReviewOptional();
   const integratedReview = review != null;
   const { useLightTheme, commentTheme } = usePrototypeToolTheme();
+  const workspaceProfile = useWorkspaceProfile();
   const router = useRouter();
   const currentPathname = usePathname() ?? "/";
   const prototypeSlug = getPrototypeSlugFromPathname(currentPathname);
@@ -226,6 +230,21 @@ export function CommentCaptureToolbar<TState = unknown>({
   >([]);
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [scrollY, setScrollY] = useState(0);
+
+  const track = useTrackEvent();
+  const prevCommentModeRef = useRef(false);
+  useEffect(() => {
+    if (isGiveAMomentMode === prevCommentModeRef.current) return;
+    prevCommentModeRef.current = isGiveAMomentMode;
+    const channel =
+      integratedReview && review?.captureChannel === "changelog"
+        ? "changelog"
+        : "comment";
+    track(
+      isGiveAMomentMode ? "comment.mode_entered" : "comment.mode_exited",
+      { channel },
+    );
+  }, [isGiveAMomentMode, integratedReview, review, track]);
 
   const isFeedbackActive = isGiveAMomentMode;
   const isChangelogModeActive =
@@ -533,6 +552,7 @@ export function CommentCaptureToolbar<TState = unknown>({
         positionAnchor: pendingAnnotation.positionAnchor ?? "element",
         targetId: pendingAnnotation.targetId,
         comment,
+        authorName: resolveCommentAuthorName(workspaceProfile),
         element: pendingAnnotation.element,
         elementPath: pendingAnnotation.elementPath,
         timestamp: Date.now(),
@@ -562,7 +582,7 @@ export function CommentCaptureToolbar<TState = unknown>({
 
       window.getSelection()?.removeAllRanges();
     },
-    [pendingAnnotation, store, integratedReview, review]
+    [pendingAnnotation, store, integratedReview, review, workspaceProfile]
   );
 
   const openAnnotationPanel = useCallback(

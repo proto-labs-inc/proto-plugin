@@ -2,6 +2,7 @@
 
 import { Button } from "@prototype/components/ui/button";
 import { buildPopulateComponentLibraryCopyText } from "@prototype/lib/prototypes/populate-component-library-prompt";
+import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 
 type PrototypeComponentLibraryEmptyStateProps = {
@@ -16,6 +17,7 @@ export function PrototypeComponentLibraryEmptyState({
   componentLibraryPagePath,
 }: PrototypeComponentLibraryEmptyStateProps) {
   const { copy, icon, isCopied } = useCopyToClipboard();
+  const workspaceProfile = useWorkspaceProfile();
 
   const handleCopy = () => {
     const origin =
@@ -27,6 +29,7 @@ export function PrototypeComponentLibraryEmptyState({
         syncConfigPath,
         componentLibraryPagePath,
         origin,
+        workspaceProfile,
       }),
     );
   };

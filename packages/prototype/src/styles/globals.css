@@ -58,8 +58,8 @@
   --tool-chrome-icon-hover: #d4d4d4;
   --tool-chrome-border: #333333;
   --tool-chrome-border-strong: #454545;
-  --tool-dialog-separator: #404040;
   --prototype-state-canvas-edge: var(--tool-chrome-icon-hover);
+  --prototype-wireframe-preview-bg: #fafafa;
 
   --prototype-ground: var(--tool-chrome-ground);
   --prototype-review-header-height: 3.25rem;
@@ -314,8 +314,8 @@
   --tool-chrome-icon-hover: rgba(0, 0, 0, 0.85);
   --tool-chrome-border: rgba(0, 0, 0, 0.1);
   --tool-chrome-border-strong: rgba(0, 0, 0, 0.16);
-  --tool-dialog-separator: rgba(0, 0, 0, 0.12);
   --prototype-state-canvas-edge: rgba(0, 0, 0, 0.22);
+  --prototype-wireframe-preview-bg: #181818;
 
   --bg-ground: var(--tool-chrome-ground);
   --bg-main: var(--tool-chrome-bg);
@@ -667,6 +667,10 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   background: color-mix(in srgb, var(--tool-chrome-ground) 55%, rgba(0, 0, 0, 0.22));
 }
 
+[data-prototype-root] .tool-dialog-overlay.tool-dialog-overlay-opaque {
+  background: var(--tool-chrome-ground);
+}
+
 [data-prototype-root] .tool-dialog-surface {
   overflow: hidden;
   border-radius: calc(var(--radius) + 4px);
@@ -764,14 +768,93 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
 
 [data-prototype-root][data-prototype-comment-theme="dark"] .tool-dialog-surface {
   --tool-chrome-input-surface: rgba(255, 255, 255, 0.035);
+  --tool-chrome-text-muted: #b4b4b4;
+  --text-secondary: #b4b4b4;
+  --muted-foreground: #b4b4b4;
+  --color-muted-foreground: #b4b4b4;
+  --color-text-secondary: #b4b4b4;
 }
 
 [data-prototype-root][data-prototype-comment-theme="light"] .tool-dialog-surface {
   --tool-chrome-input-surface: #ffffff;
+  --tool-chrome-text-muted: rgba(0, 0, 0, 0.62);
+  --text-secondary: rgba(0, 0, 0, 0.62);
+  --muted-foreground: rgba(0, 0, 0, 0.62);
+  --color-muted-foreground: rgba(0, 0, 0, 0.62);
+  --color-text-secondary: rgba(0, 0, 0, 0.62);
 }
 
-[data-prototype-root] .tool-dialog-separator {
-  background: var(--tool-dialog-separator);
+[data-prototype-root] .tool-dialog-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--tool-chrome-text);
+}
+
+[data-prototype-root] .tool-dialog-section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tool-chrome-text-heading);
+}
+
+[data-prototype-root] .tool-dialog-section-description {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--tool-chrome-text);
+}
+
+[data-prototype-root] .tool-dialog-field-hint {
+  font-weight: 400;
+  color: var(--tool-chrome-text-muted);
+}
+
+[data-prototype-root] .tool-dialog-xylophone-header {
+  background-color: var(--tool-chrome-surface);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-prototype-root] .tool-dialog-xylophone-header:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--tool-chrome-gray-highlight) 65%,
+      var(--tool-chrome-surface)
+    );
+  }
+}
+
+[data-prototype-root] .tool-dialog-xylophone-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--tool-chrome-text-heading);
+}
+
+[data-prototype-root] .tool-dialog-xylophone-step {
+  color: var(--tool-chrome-text-muted);
+}
+
+[data-prototype-root] .tool-dialog-xylophone-separator {
+  color: var(--tool-chrome-text-muted);
+  font-weight: 400;
+}
+
+[data-prototype-root] .tool-dialog-xylophone-title {
+  color: var(--tool-chrome-text-heading);
+}
+
+[data-prototype-root] .tool-dialog-surface
+  :is(
+    button:not(:disabled),
+    summary,
+    label:has([role="switch"]:not([data-disabled])),
+    label:has(input[type="checkbox"]:not(:disabled))
+  ) {
+  cursor: pointer;
 }
 
 /* Tool chrome tabs — scoped away from product preview surfaces. */
@@ -983,12 +1066,61 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   font-family: inherit;
 }
 
-/* Dark schematic previews (state map + PR split wireframes).
-   Always dark — independent of tool light/dark mode and prototype product theme. */
+/* Inverted schematic previews (state map + PR split wireframes).
+   Dark tool → light wireframes; light tool → dark wireframes. */
 [data-prototype-wireframe-preview] {
+  color-scheme: light;
+
+  --prototype-wireframe-block: #e4e6ea;
+  --prototype-wireframe-block-subtle: #eceef1;
+  --prototype-wireframe-block-pulse-mid: #d8dce2;
+  --bg-bedrock: #f4f4f5;
+  --bg-main: #ffffff;
+  --bg-top: #ffffff;
+  --bg-subtle: var(--prototype-wireframe-preview-bg);
+  --bg-layered: color-mix(in srgb, #18181b 6%, transparent);
+  --bg-invert: #18181b;
+  --bg-white: #ffffff;
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-tertiary: #a1a1aa;
+  --border-faint: color-mix(in srgb, #18181b 7%, transparent);
+  --border-solid: #e4e4e7;
+  --border-medium: #d4d4d8;
+  --border-subtle: #e4e4e7;
+  --muted: var(--prototype-wireframe-block-subtle);
+  --color-muted: var(--prototype-wireframe-block);
+  --color-muted-foreground: #a1a1aa;
+  --cal-bg: #ffffff;
+  --cal-bg-emphasis: var(--prototype-wireframe-block);
+  --color-background: #ffffff;
+  --color-foreground: #18181b;
+  --color-border: var(--border-solid);
+  --color-border-faint: var(--border-faint);
+  --color-border-solid: var(--border-solid);
+  --color-border-medium: var(--border-medium);
+  --color-bg-bedrock: var(--bg-bedrock);
+  --color-bg-main: var(--bg-main);
+  --color-bg-top: var(--bg-top);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-layered: var(--bg-layered);
+  --color-bg-invert: var(--bg-invert);
+  --color-bg-white: var(--bg-white);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  color: var(--text-primary);
+  background-color: var(--prototype-wireframe-preview-bg);
+}
+
+[data-prototype-wireframe-preview] > * {
+  background-color: var(--prototype-wireframe-preview-bg);
+}
+
+[data-prototype-root][data-prototype-comment-theme="light"] [data-prototype-wireframe-preview] {
   color-scheme: dark;
 
-  --prototype-wireframe-preview-bg: #181818;
   --prototype-wireframe-block: #3a3a3a;
   --prototype-wireframe-block-subtle: #2e2e2e;
   --prototype-wireframe-block-pulse-mid: #454545;
@@ -1027,11 +1159,4 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
-
-  color: var(--text-primary);
-  background-color: var(--prototype-wireframe-preview-bg);
-}
-
-[data-prototype-wireframe-preview] > * {
-  background-color: var(--prototype-wireframe-preview-bg);
 }

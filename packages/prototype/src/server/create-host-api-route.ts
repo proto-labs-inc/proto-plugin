@@ -9,9 +9,12 @@ import {
   createPrototypeScreenshotRoute,
 } from "./create-prototype-api-routes";
 import { createGalleryApi } from "./gallery/create-gallery-api";
+import { createPrototypeAgentContextRoute } from "./prototype-agent-context-route";
+import { createPrototypeBootstrapStatusRoute } from "./prototype-bootstrap-status-route";
 import { GET as getPrototypeStorageStatus } from "./prototype-storage-status-route";
 import { GET as getProtoPluginVersion } from "./proto-plugin-version-route";
 import { GET as getPrVercelPreview } from "./pr-vercel-preview-route";
+import { POST as postPrototypeTelemetry } from "./prototype-telemetry-route";
 
 type ApiRouteContext = {
   params: Promise<{ path: string[] }>;
@@ -24,6 +27,9 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
   const screenshotRoute = createPrototypeScreenshotRoute(_config);
   const galleryApi =
     _config.gallery === false ? null : createGalleryApi(_config.gallery);
+  const getPrototypeBootstrapStatus =
+    createPrototypeBootstrapStatusRoute(_config);
+  const agentContextRoute = createPrototypeAgentContextRoute();
 
   async function dispatch(
     request: NextRequest,
@@ -34,6 +40,15 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
 
     if (path[0] === "pr-vercel-preview" && path.length === 1 && method === "GET") {
       return getPrVercelPreview(request);
+    }
+
+    if (
+      path[0] === "telemetry" &&
+      path.length === 2 &&
+      path[1] === "events" &&
+      method === "POST"
+    ) {
+      return postPrototypeTelemetry(request);
     }
 
     if (galleryApi) {
@@ -51,7 +66,27 @@ export function createPrototypeApiRoute(_config: PrototypeConfig) {
 
     if (path[0] === "prototypes" && path.length === 2 && path[1] === "storage-status") {
       if (method === "GET") {
-        return getPrototypeStorageStatus();
+        return getPrototypeStorageStatus(request);
+      }
+    }
+
+    if (
+      path[0] === "prototypes" &&
+      path.length === 2 &&
+      path[1] === "bootstrap-status"
+    ) {
+      if (method === "GET") {
+        return getPrototypeBootstrapStatus();
+      }
+    }
+
+    if (
+      path[0] === "prototypes" &&
+      path.length === 2 &&
+      path[1] === "agent-context"
+    ) {
+      if (method === "GET") {
+        return agentContextRoute.GET();
       }
     }
 

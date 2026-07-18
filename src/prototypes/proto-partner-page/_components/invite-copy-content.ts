@@ -36,8 +36,6 @@ export function isInviteCopyOverlayVariant(
   ).includes(variant);
 }
 
-export const HOME_PAGE_PROTOTYPE_PATH = "/prototypes/home-page";
-
 export const INVITE_COPY = {
   headline: "Congrats Amelie!",
   invite:

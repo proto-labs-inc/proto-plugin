@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { PrototypeComponent } from "./prototype-target";
+import { useTrackEvent } from "../../lib/prototypes/telemetry/prototype-telemetry-context";
 import { resolveSourcePreviewUrl } from "../../lib/pr-split/resolve-source-preview-url";
 import { PR_TARGET_HIGHLIGHT_BORDER } from "../../lib/pr-split/pr-split-highlight";
 import type { PrSplitEntry } from "../../lib/pr-split/pr-split-types";
@@ -55,14 +56,20 @@ function CopyPrPrompt<TWireframeId extends string, TLiveState>({
   return (
     <button
       type="button"
-      aria-label="Copy PR prompt"
+      aria-label={copied ? "Copied PR prompt" : "Create PR"}
       onClick={handleCopy}
-      className="inline-flex size-[13px] shrink-0 cursor-pointer items-center justify-center text-muted-foreground/60 transition-colors duration-200 ease hover:text-muted-foreground"
+      className="inline-flex h-8 w-fit cursor-pointer items-center justify-center gap-1.5 rounded-md border border-[var(--border-medium)] bg-[var(--bg-subtle)] px-3 text-[12px] font-medium text-[var(--text-primary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)]"
     >
       {copied ? (
-        <Check className="size-3 text-[var(--text-primary)]" />
+        <>
+          Copied prompt
+          <Check className="size-3.5 shrink-0" aria-hidden />
+        </>
       ) : (
-        <Copy className="size-3" />
+        <>
+          Create PR
+          <Copy className="size-3.5 shrink-0" aria-hidden />
+        </>
       )}
     </button>
   );
@@ -369,9 +376,6 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
             <span className="text-[13px] font-medium text-[var(--text-primary)]">
               PR {entry.order} · {entry.title}
             </span>
-            {!entry.prUrl ? (
-              <CopyPrPrompt entry={entry} buildAgentPrompt={buildAgentPrompt} />
-            ) : null}
             {entry.merged && entry.prUrl ? (
               <PrStatusLink prUrl={entry.prUrl} status="merged" />
             ) : entry.approved && entry.prUrl ? (
@@ -420,6 +424,12 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
               <p className="text-[12px] leading-normal text-[var(--text-secondary)]">
                 {entry.description}
               </p>
+              {!entry.prUrl ? (
+                <CopyPrPrompt
+                  entry={entry}
+                  buildAgentPrompt={buildAgentPrompt}
+                />
+              ) : null}
               {entry.analyticsNotes && entry.analyticsNotes.length > 0 && (
                 <div className="border-l-2 border-[var(--border-faint)] pl-3">
                   <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-tertiary)]">
@@ -509,6 +519,8 @@ export function PrototypeSpecPanelContent<
     previewApiPath,
   );
 
+  const track = useTrackEvent();
+
   useEffect(() => {
     if (selectedPrOrder == null) return;
     const timer = window.setTimeout(() => {
@@ -534,7 +546,13 @@ export function PrototypeSpecPanelContent<
             key={entry.order}
             entry={entry}
             selected={entry.order === selectedPrOrder}
-            onSelect={(selected) => onPrNavigate?.(selected)}
+            onSelect={(selected) => {
+              track("pr.navigated", {
+                order: selected.order,
+                title: selected.title,
+              });
+              onPrNavigate?.(selected);
+            }}
             previewCache={previewCache}
             previewLoading={previewLoading}
             renderWireframe={renderWireframe}

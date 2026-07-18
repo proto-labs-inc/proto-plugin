@@ -305,12 +305,17 @@ $node-corner-radius: 0.5rem;
   border: 1px solid $wireframe-border;
   border-radius: $node-corner-radius;
   background: $wireframe-bg;
-  transition: border-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .nodeGroupSelected {
   z-index: 2;
-  border: 2px solid var(--tool-chrome-blue);
+  border-color: color-mix(in srgb, var(--tool-chrome-blue-deep) 72%, $wireframe-border);
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--tool-chrome-blue-deep) 55%, transparent),
+    0 0 12px color-mix(in srgb, var(--tool-chrome-blue-deep) 28%, transparent);
 }
 
 .nodeGroupHovered {
@@ -346,7 +351,7 @@ $node-corner-radius: 0.5rem;
   pointer-events: none;
 
   &:has([data-prototype-wireframe-preview]) {
-    background: #181818;
+    background: var(--prototype-wireframe-preview-bg);
   }
 }
 

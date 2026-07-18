@@ -13,19 +13,25 @@ import {
 const toolRoot = resolveToolRoot(import.meta.url);
 const repoRoot = resolveHostRoot(toolRoot);
 const prototypesDir = path.join(repoRoot, "src/prototypes");
+const prototypeConfigPath = path.join(repoRoot, "prototype.config.ts");
+
+function listRegisteredPrototypeSlugs() {
+  if (!fs.existsSync(prototypeConfigPath)) {
+    return fs
+      .readdirSync(prototypesDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !d.name.startsWith("."))
+      .map((d) => d.name);
+  }
+
+  const configSource = fs.readFileSync(prototypeConfigPath, "utf8");
+  return [...configSource.matchAll(/slug:\s*"([^"]+)"/g)].map((match) => match[1]);
+}
 
 function kebabCase(name) {
   return name
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
     .replace(/_/g, "-")
     .toLowerCase();
-}
-
-function listPrototypeSlugs() {
-  return fs
-    .readdirSync(prototypesDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !d.name.startsWith("."))
-    .map((d) => d.name);
 }
 
 function readRegistryIds(slug) {
@@ -104,7 +110,7 @@ function hasTargetWrapper(source) {
 
 let failed = false;
 
-for (const slug of listPrototypeSlugs()) {
+for (const slug of listRegisteredPrototypeSlugs()) {
   const registry = readRegistryIds(slug);
   if (!registry) {
     console.error(`[${slug}] Missing component-ids.ts`);

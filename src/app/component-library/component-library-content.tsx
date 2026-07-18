@@ -1,8 +1,12 @@
 "use client";
 
-import { Database } from "lucide-react";
+import { ChevronDown, Database } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Alert,
   AlertDescription,
   AlertTitle,
@@ -81,29 +85,35 @@ import { StatusCode } from "ui-patterns/StatusCode";
 import { TextLink } from "ui-patterns/TextLink";
 import { TimestampInfo } from "ui-patterns/TimestampInfo";
 
-function LibrarySection({
+function LibraryAccordionSection({
+  id,
   title,
-  description,
   children,
+  isFirst = false,
 }: {
+  id: string;
   title: string;
-  description?: string;
   children: ReactNode;
+  isFirst?: boolean;
 }) {
   return (
-    <section className="border-default mb-16 border-b pb-16 last:mb-0 last:border-b-0 last:pb-0">
-      <div className="mb-8">
-        <h2 className="text-foreground text-xl font-semibold tracking-tight">
-          {title}
-        </h2>
-        {description ? (
-          <p className="text-foreground-light mt-2 max-w-3xl text-sm leading-relaxed">
-            {description}
-          </p>
-        ) : null}
-      </div>
-      {children}
-    </section>
+    <AccordionItem
+      value={id}
+      id={id}
+      className="scroll-mt-8 border-b !border-stronger px-6 last:border-b-0"
+    >
+      <AccordionTrigger
+        hideIcon
+        className={`group text-foreground py-5 text-xl font-semibold tracking-tight hover:no-underline [&[data-state=open]>svg]:!rotate-0${isFirst ? " pt-0" : ""}`}
+      >
+        {title}
+        <ChevronDown
+          aria-hidden
+          className="text-foreground-light size-4 shrink-0 rotate-180 transition-transform duration-200 group-data-[state=open]:!rotate-0 motion-reduce:transition-none"
+        />
+      </AccordionTrigger>
+      <AccordionContent className="pb-10">{children}</AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -143,18 +153,11 @@ function PreviewStack({
   );
 }
 
-export function ComponentLibraryContent() {
+function UiPrimitivesSection() {
   const [tab, setTab] = useState<"tables" | "functions" | "replicas">("tables");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [textConfirmOpen, setTextConfirmOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>(["auth"]);
 
   return (
-    <div className="pb-20">
-      <LibrarySection
-        title="ui — Base primitives"
-        description="Synced from packages/ui. Use the header toggle to preview components in Supabase Light or Dark."
-      >
+    <LibraryAccordionSection id="ui-primitives" title="UI primitives" isFirst>
         <PreviewGrid>
           <PreviewBlock title="Button variants">
             <Button variant="primary">Primary</Button>
@@ -306,12 +309,17 @@ export function ComponentLibraryContent() {
             </div>
           </PreviewBlock>
         </PreviewGrid>
-      </LibrarySection>
+    </LibraryAccordionSection>
+  );
+}
 
-      <LibrarySection
-        title="ui-patterns — Composite components"
-        description="Synced from packages/ui-patterns. Reusable patterns used across Studio surfaces."
-      >
+function CompositeComponentsSection() {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [textConfirmOpen, setTextConfirmOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>(["auth"]);
+
+  return (
+    <LibraryAccordionSection id="composite-components" title="Composite components">
         <PreviewGrid>
           <PreviewStack title="Admonition">
             <Admonition
@@ -504,12 +512,13 @@ export function ComponentLibraryContent() {
             </span>
           </PreviewBlock>
         </PreviewGrid>
-      </LibrarySection>
+    </LibraryAccordionSection>
+  );
+}
 
-      <LibrarySection
-        title="Design tokens"
-        description="Semantic colors from packages/config and packages/ui/build."
-      >
+function TokensSection() {
+  return (
+    <LibraryAccordionSection id="tokens" title="Design tokens">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
@@ -555,7 +564,20 @@ export function ComponentLibraryContent() {
             </div>
           ))}
         </div>
-      </LibrarySection>
-    </div>
+    </LibraryAccordionSection>
+  );
+}
+
+export function ComponentLibraryContent() {
+  return (
+    <Accordion
+      type="multiple"
+      defaultValue={[]}
+      className="-mx-6 pb-20"
+    >
+      <UiPrimitivesSection />
+      <CompositeComponentsSection />
+      <TokensSection />
+    </Accordion>
   );
 }

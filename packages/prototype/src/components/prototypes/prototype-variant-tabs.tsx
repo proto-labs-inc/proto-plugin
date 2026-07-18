@@ -14,6 +14,7 @@ import {
   getAdjacentDesignExplorationVariant,
   type DesignExplorationVariantOption,
 } from "@prototype/lib/prototypes/design-exploration-types";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useCallback, useEffect, useState } from "react";
 
 type PrototypeVariantTabsProps<TVariant extends string> = {
@@ -61,6 +62,7 @@ export function PrototypeVariantTabs<TVariant extends string>({
   tabDisplay = "index",
 }: PrototypeVariantTabsProps<TVariant>) {
   const [keyboardNavEngaged, setKeyboardNavEngaged] = useState(false);
+  const track = useTrackEvent();
 
   const goPrev = useCallback(() => {
     onValueChange(getAdjacentDesignExplorationVariant(options, value, "prev"));
@@ -130,6 +132,7 @@ export function PrototypeVariantTabs<TVariant extends string>({
         onValueChange={(nextValue) => {
           engageKeyboardNav();
           onValueChange(nextValue as TVariant);
+          track("variant.selected", { variant: nextValue, idPrefix });
         }}
         className="min-w-0"
       >

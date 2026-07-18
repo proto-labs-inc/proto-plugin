@@ -11,6 +11,7 @@ import { formatSourceDirectoryName } from "@prototype/lib/format-source-director
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
 import { sortPrototypesByCreationDate } from "../lib/prototypes/sort-prototypes-by-creation-date";
+import { reconcilePrototypeRegistry } from "../server/redis/prototype-telemetry";
 
 type PrototypeGalleryPageOptions = {
   title?: string;
@@ -37,6 +38,20 @@ export function createPrototypeGalleryPage(
       Promise.resolve(registry.getAllPrototypes()),
       readScreenshotManifest(),
     ]);
+
+    // Detect prototypes added/removed since the last gallery load and emit
+    // server-origin creation/deletion telemetry. Never block or break the page.
+    try {
+      await reconcilePrototypeRegistry(
+        prototypes.map((prototype) => ({
+          slug: prototype.slug,
+          title: prototype.title,
+        })),
+      );
+    } catch (error) {
+      console.error("Prototype registry telemetry reconcile error:", error);
+    }
+
     const sortedPrototypes = await sortPrototypesByCreationDate(prototypes);
     const screenshotVersions =
       process.env.NODE_ENV === "development" ? screenshotManifest : {};

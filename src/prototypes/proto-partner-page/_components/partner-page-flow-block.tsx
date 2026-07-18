@@ -3,7 +3,6 @@
 import { PrototypeComponent } from "proto-plugin";
 import { cn } from "@/lib/cn";
 import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { INVITE_COPY } from "./invite-copy-content";
@@ -87,7 +86,6 @@ export function PartnerPageFlowBlock({
   onSubmitModalOpenChange,
   dragAttributionLabel,
 }: PartnerPageFlowBlockProps) {
-  const router = useRouter();
   const motionOn = usePartnerEntranceMotion(animateEntrance);
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
 
@@ -164,7 +162,6 @@ export function PartnerPageFlowBlock({
           onSeeOnHomepage={() => {
             saveSubmittedProtoShape(shapeSelection);
             handleSubmitModalOpenChange(false);
-            router.push("/prototypes/home-page");
           }}
           dragAttributionLabel={dragAttributionLabel}
         />

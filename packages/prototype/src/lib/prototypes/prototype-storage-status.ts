@@ -10,12 +10,19 @@ export type PrototypeStorageStatus = {
     storageConfigured: boolean;
     missing: string[];
   };
+  /** True when the requested prototype uses hardcoded comment storage instead of host env. */
+  dedicatedCommentStorage?: boolean;
 };
 
 export const PROTOTYPE_STORAGE_STATUS_PATH = "/api/prototypes/storage-status";
 
-export async function fetchPrototypeStorageStatus(): Promise<PrototypeStorageStatus> {
-  const response = await fetch(PROTOTYPE_STORAGE_STATUS_PATH);
+export async function fetchPrototypeStorageStatus(
+  slug?: string,
+): Promise<PrototypeStorageStatus> {
+  const url = slug
+    ? `${PROTOTYPE_STORAGE_STATUS_PATH}?slug=${encodeURIComponent(slug)}`
+    : PROTOTYPE_STORAGE_STATUS_PATH;
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error("Failed to check prototype storage status.");
@@ -27,5 +34,9 @@ export async function fetchPrototypeStorageStatus(): Promise<PrototypeStorageSta
 export function isPrototypeStorageFullyConfigured(
   status: PrototypeStorageStatus,
 ): boolean {
+  if (status.dedicatedCommentStorage) {
+    return status.comments.configured;
+  }
+
   return status.comments.configured && status.gallery.storageConfigured;
 }

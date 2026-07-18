@@ -1,3 +1,8 @@
+import {
+  buildWorkspaceProfilePromptLines,
+  type WorkspaceProfile,
+} from "./workspace-profile";
+
 const DEFAULT_SYNC_CONFIG_PATH = "prototype.sync.config.sh";
 const DEFAULT_COMPONENT_LIBRARY_PAGE_PATH = "src/app/component-library/page.tsx";
 
@@ -6,11 +11,13 @@ export function buildPopulateComponentLibraryPrompt({
   syncConfigPath = DEFAULT_SYNC_CONFIG_PATH,
   componentLibraryPagePath = DEFAULT_COMPONENT_LIBRARY_PAGE_PATH,
   origin = "http://localhost:3003",
+  workspaceProfile,
 }: {
   sourcePath?: string;
   syncConfigPath?: string;
   componentLibraryPagePath?: string;
   origin?: string;
+  workspaceProfile?: WorkspaceProfile;
 } = {}): string {
   const sourceLine = sourcePath?.trim()
     ? `- Source path: \`${sourcePath.trim()}\` (also readable via the \`source/\` symlink after \`pnpm link-source\`)`
@@ -23,6 +30,7 @@ export function buildPopulateComponentLibraryPrompt({
     "The Component Library page is empty. Inspect the linked source application and extract all base styles and UI building blocks into this host repo.",
     "",
     "**Be generous — when in doubt, port more rather than less.** Prefer syncing whole directories and shared primitives over cherry-picking a minimal subset.",
+    ...buildWorkspaceProfilePromptLines(workspaceProfile ?? { userName: "", companyName: "" }),
     "",
     "## Source",
     sourceLine,
@@ -47,7 +55,31 @@ export function buildPopulateComponentLibraryPrompt({
     "4. Re-apply any entries listed in `SYNC_LOCAL_EXTENSIONS` if this host customizes beyond source.",
     "",
     "## Component Library page",
-    `After syncing, wire live previews on \`${componentLibraryPagePath}\` via \`createPrototypeComponentLibraryPage\` so each primitive and composite is visible with common variants and states.`,
+    `Implement live previews in \`${componentLibraryPagePath}\` (content in \`src/app/component-library/component-library-content.tsx\`) via \`createPrototypeComponentLibraryPage\`. Follow AGENTS.md **Component Library** section exactly.`,
+    "",
+    "### Page structure (mandatory)",
+    "",
+    "Single page at `/component-library`. Three collapsible accordion sections — **all collapsed on first load** (`type=\"multiple\"`, `defaultValue={[]}`):",
+    "",
+    "| # | `id` / accordion value | Title | Content |",
+    "| - | ---------------------- | ----- | ------- |",
+    "| 1 | `ui-primitives` | UI primitives | Synced `ui` / shadcn primitives — buttons, inputs, badges, cards, dialogs, tabs, switches, etc. Use `PreviewGrid` / `PreviewBlock` / `PreviewStack` with variant/state examples. |",
+    "| 2 | `composite-components` | Composite components | Synced patterns/composites (`ui-patterns` or equivalent) — page headers, empty states, admonitions, metric cards, modals, multi-selects, etc. **One preview per export** unless server-only/non-visual (comment skips). Wire `useState` for stateful previews. |",
+    "| 3 | `tokens` | Design tokens | Semantic color/surface swatches from `globals.css` / source tokens. |",
+    "",
+    "### Layout & UX rules",
+    "",
+    "- Shell already shows \"Component Library\" / \"Base components from the source directory.\" — **do not** duplicate that header or add section subtitles/eyebrows.",
+    "- Accordion section triggers: **title only** (e.g. \"UI primitives\"). No \"Synced from packages/ui…\" paragraphs.",
+    "- Full-width dividers between sections: `border-b !border-stronger` on each `AccordionItem`, wrapper `-mx-6 pb-20`; first section trigger `pt-0`.",
+    "- Chevrons: up when collapsed, down when expanded (`ChevronDown`, `rotate-180` closed / `rotate-0` open; override default `AccordionTrigger` icon).",
+    "- Copy the `LibraryAccordionSection` + preview helper pattern from the reference host `component-library-content.tsx` if present; otherwise match this spec.",
+    "",
+    "### Coverage",
+    "",
+    "- List every composite export in the synced source; each appears in section 2 or has an explicit skip comment.",
+    "- Composite section should be roughly as long as the primitives section.",
+    "- Stateful composites still get interactive previews (local state + trigger).",
     "",
     `Gallery: ${origin}/component-library`,
     "",

@@ -1,9 +1,10 @@
 "use client";
 
-import { PrototypeComponentLibraryThemeToggle } from "@prototype/components/shell/prototype-component-library-theme-toggle";
 import {
   ComponentLibraryProductThemeProvider,
+  resolveComponentLibraryDefaultTheme,
   useComponentLibraryProductTheme,
+  type ComponentLibraryProductTheme,
 } from "@prototype/lib/use-component-library-product-theme";
 import { useSyncComponentLibraryPortalTheme } from "@prototype/lib/use-sync-component-library-portal-theme";
 import {
@@ -21,16 +22,54 @@ type PrototypeComponentLibraryShellProps = {
   title: string;
   description: string;
   children: ReactNode;
+  isEmpty?: boolean;
+  productThemes?: readonly ComponentLibraryProductTheme[];
 };
 
 function PrototypeComponentLibraryShellContent({
   title,
   description,
   children,
+  isEmpty = false,
+  productThemes,
 }: PrototypeComponentLibraryShellProps) {
-  const { theme, toggleTheme, surfaceRef } = useComponentLibraryProductTheme();
+  const showEmptyState = isEmpty;
+  const themes = productThemes ?? (["light", "dark"] as const);
+  const libraryTheme = resolveComponentLibraryDefaultTheme(themes);
+  const forcedTheme = showEmptyState ? "dark" : libraryTheme;
 
-  useSyncComponentLibraryPortalTheme(theme, true, surfaceRef);
+  return (
+    <ComponentLibraryProductThemeProvider
+      key={forcedTheme}
+      forcedTheme={forcedTheme}
+      themes={themes}
+      defaultTheme={libraryTheme}
+    >
+      <PrototypeComponentLibraryShellLayout
+        title={title}
+        description={description}
+        surfaceTheme={forcedTheme}
+      >
+        {children}
+      </PrototypeComponentLibraryShellLayout>
+    </ComponentLibraryProductThemeProvider>
+  );
+}
+
+function PrototypeComponentLibraryShellLayout({
+  title,
+  description,
+  children,
+  surfaceTheme,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+  surfaceTheme: ComponentLibraryProductTheme;
+}) {
+  const { surfaceRef } = useComponentLibraryProductTheme();
+
+  useSyncComponentLibraryPortalTheme(surfaceTheme, true, surfaceRef);
 
   return (
     <PrototypeGalleryPageLayout
@@ -41,16 +80,10 @@ function PrototypeComponentLibraryShellContent({
           className="mb-0"
         />
       }
-      scrollClassName={theme}
-      scrollOverlay={
-        <PrototypeComponentLibraryThemeToggle
-          theme={theme}
-          onToggle={toggleTheme}
-        />
-      }
+      scrollClassName={surfaceTheme}
       scrollContainerRef={surfaceRef}
       scrollContainerProps={{
-        "data-theme": theme,
+        "data-theme": surfaceTheme,
         [PROTOTYPE_SOURCE_SURFACE_ATTR]: "",
         [PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR]: "",
         style: {
@@ -64,20 +97,22 @@ function PrototypeComponentLibraryShellContent({
   );
 }
 
-/** Component library content area — Supabase Light/Dark product tokens via header toggle. */
+/** Component library content area — dark before import, then source product tokens. */
 export function PrototypeComponentLibraryShell({
   title,
   description,
   children,
+  isEmpty,
+  productThemes,
 }: PrototypeComponentLibraryShellProps) {
   return (
-    <ComponentLibraryProductThemeProvider>
-      <PrototypeComponentLibraryShellContent
-        title={title}
-        description={description}
-      >
-        {children}
-      </PrototypeComponentLibraryShellContent>
-    </ComponentLibraryProductThemeProvider>
+    <PrototypeComponentLibraryShellContent
+      title={title}
+      description={description}
+      isEmpty={isEmpty}
+      productThemes={productThemes}
+    >
+      {children}
+    </PrototypeComponentLibraryShellContent>
   );
 }

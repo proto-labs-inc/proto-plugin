@@ -1,6 +1,11 @@
 "use client";
 
 import { PrototypeStateCanvasView } from "@prototype/components/prototypes/prototype-state-canvas-overlay";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@prototype/components/ui/tooltip";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
@@ -9,7 +14,7 @@ import {
   getPrototypeToolOverlayRoot,
 } from "@prototype/lib/tool-portal";
 import { cn } from "@prototype/lib/utils";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   forwardRef,
@@ -19,6 +24,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ButtonHTMLAttributes,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -151,6 +157,41 @@ function startFlyAnimation(setFlyActive: (value: boolean) => void) {
     });
   });
 }
+
+type MiniStateMapActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  tooltip: string;
+  actionClassName: string;
+  tooltipClassName: string;
+};
+
+const MiniStateMapActionButton = forwardRef<
+  HTMLButtonElement,
+  MiniStateMapActionButtonProps
+>(function MiniStateMapActionButton(
+  { tooltip, actionClassName, tooltipClassName, className, ...props },
+  ref,
+) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          ref={ref}
+          type="button"
+          className={cn(actionClassName, className)}
+          aria-label={tooltip}
+          {...props}
+        />
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        className={tooltipClassName}
+      >
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  );
+});
 
 export const PrototypeMiniStateMap = forwardRef<
   PrototypeMiniStateMapHandle,
@@ -301,6 +342,8 @@ export const PrototypeMiniStateMap = forwardRef<
   const config = review.stateCanvasConfigRef.current;
   if (!config || !restRect) return null;
 
+  const showAddStateButton = Boolean(review.openCreateStateModal);
+
   const tabRect = minimizeTargetRef.current?.getBoundingClientRect() ?? null;
   const isFlying = flyState != null;
   const isMinimize = flyState?.direction === "minimize";
@@ -347,7 +390,6 @@ export const PrototypeMiniStateMap = forwardRef<
       config={config}
       layout="mini"
       activeStateId={review.activePreviewStateId}
-      onMiniBackgroundClick={onExpand}
     />
   );
 
@@ -371,14 +413,33 @@ export const PrototypeMiniStateMap = forwardRef<
         {mapContent}
         {!isFlying && !minimized ? (
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.actionButton}
-              aria-label="Expand state map"
-              onClick={onExpand}
+            {showAddStateButton ? (
+              <MiniStateMapActionButton
+                tooltip="Add state"
+                actionClassName={styles.actionButton}
+                tooltipClassName={styles.actionTooltip}
+                onClick={review.openCreateStateModal}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <Plus size={11} strokeWidth={2} aria-hidden />
+              </MiniStateMapActionButton>
+            ) : null}
+            <div
+              className={cn(
+                styles.actionSegment,
+                showAddStateButton && styles.actionSegmentWithDivider,
+              )}
             >
-              <Maximize2 size={11} strokeWidth={2} aria-hidden />
-            </button>
+              <MiniStateMapActionButton
+                tooltip="Expand state map"
+                actionClassName={styles.actionButton}
+                tooltipClassName={styles.actionTooltip}
+                onClick={onExpand}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <Maximize2 size={11} strokeWidth={2} aria-hidden />
+              </MiniStateMapActionButton>
+            </div>
           </div>
         ) : null}
       </div>

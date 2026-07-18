@@ -11,6 +11,7 @@ import { useCommentCaptureBridgeOptional } from "@prototype/lib/prototype-commen
 import styles from "@prototype/lib/prototype-comments/ui/capture-styles.module.scss";
 import { usePrototypeCommentRegistry } from "@prototype/lib/prototypes/prototype-comment-registry";
 import { usePrototypeReview } from "@prototype/lib/prototypes/prototype-review-context";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { buildComponentShareLink } from "@prototype/lib/prototypes/prototype-share-link";
 import { cn } from "@prototype/lib/utils";
 import { X } from "lucide-react";
@@ -27,6 +28,7 @@ import {
 export function PrototypeShareMode() {
   const review = usePrototypeReview();
   const bridge = useCommentCaptureBridgeOptional();
+  const track = useTrackEvent();
   const { readHandlers } = usePrototypeCommentRegistry();
   const highlightPortal = useHighlightPortalContainer();
   const [mounted, setMounted] = useState(false);
@@ -121,6 +123,7 @@ export function PrototypeShareMode() {
             description: "Paste the link to share this view.",
             duration: 3000,
           });
+          track("share.copied", { targetId });
           review.exitShareMode();
         })
         .catch(() => {
@@ -140,7 +143,7 @@ export function PrototypeShareMode() {
       document.removeEventListener("click", handleClick, true);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [readHandlers, review]);
+  }, [readHandlers, review, bridge?.selectedId, track]);
 
   useEffect(() => {
     if (!review.shareModeActive) return;

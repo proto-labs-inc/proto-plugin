@@ -24,6 +24,7 @@ import {
 } from "react";
 
 import { usePrototypeReviewOptional } from "@prototype/lib/prototypes/prototype-review-context";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 
 import { PrototypeStateScreenshotPreview } from "./prototype-state-screenshot-preview";
 import { PrototypeStateMapAddStateButton } from "./prototype-state-map-add-state-button";
@@ -396,8 +397,6 @@ type PrototypeStateCanvasViewProps<T extends string> = {
   onClose?: () => void;
   /** Highlights the node matching the currently previewed state. */
   activeStateId?: string | null;
-  /** Mini layout: click on empty canvas area (not a state node). */
-  onMiniBackgroundClick?: () => void;
 };
 
 export function PrototypeStateCanvasView<T extends string>({
@@ -406,7 +405,6 @@ export function PrototypeStateCanvasView<T extends string>({
   backHref,
   onClose,
   activeStateId = null,
-  onMiniBackgroundClick,
 }: PrototypeStateCanvasViewProps<T>) {
   const isMiniLayout = layout === "mini";
   const review = usePrototypeReviewOptional();
@@ -446,6 +444,7 @@ export function PrototypeStateCanvasView<T extends string>({
   const annotationFadeFrameRef = useRef<number | null>(null);
   const annotationFadeTimerRef = useRef<number | null>(null);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+  const track = useTrackEvent();
   const [miniHighlightedId, setMiniHighlightedId] = useState<T | null>(null);
   const hoverDismissTimerRef = useRef<number | null>(null);
   const hasFitRef = useRef(false);
@@ -699,11 +698,15 @@ export function PrototypeStateCanvasView<T extends string>({
       setActiveHighlightId(null);
       setActivePreviewStateId?.(id);
       onStateSelect(id);
+      track("state.selected", {
+        stateId: String(id),
+        surface: isMiniLayout ? "mini-state-map" : "state-map",
+      });
       if (!isMiniLayout) {
         onClose?.();
       }
     },
-    [isMiniLayout, onClose, onStateSelect, setActivePreviewStateId],
+    [isMiniLayout, onClose, onStateSelect, setActivePreviewStateId, track],
   );
 
   const showAnnotationForTarget = useCallback(
@@ -824,17 +827,12 @@ export function PrototypeStateCanvasView<T extends string>({
       const drag = dragRef.current;
       if (!drag || drag.pointerId !== event.pointerId) return;
 
-      const wasClick = !drag.moved;
       dragRef.current = null;
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
-
-      if (wasClick) {
-        onMiniBackgroundClick?.();
-      }
     },
-    [onMiniBackgroundClick],
+    [],
   );
 
   useEffect(() => {

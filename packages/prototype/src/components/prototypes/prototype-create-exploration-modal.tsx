@@ -5,6 +5,7 @@ import { PrototypeBriefTextarea } from "@prototype/components/prototypes/prototy
 import { Button } from "@prototype/components/ui/button";
 import { Switch } from "@prototype/components/ui/switch";
 import { buildCreateDesignExplorationCopyText } from "@prototype/lib/prototypes/design-exploration-types";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { useEffect, useState } from "react";
 
@@ -24,6 +25,7 @@ export function PrototypeCreateExplorationModal({
   const [brief, setBrief] = useState("");
   const [includeMobbin, setIncludeMobbin] = useState(true);
   const { copy, icon, isCopied } = useCopyToClipboard();
+  const track = useTrackEvent();
   const canCopy = brief.trim().length > 0;
 
   useEffect(() => {
@@ -31,6 +33,12 @@ export function PrototypeCreateExplorationModal({
       setBrief("");
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      track("modal.opened", { modal: "create-exploration" }, { slug });
+    }
+  }, [open, track, slug]);
 
   const handleCopy = () => {
     if (!canCopy) return;
@@ -51,6 +59,15 @@ export function PrototypeCreateExplorationModal({
         includeMobbin,
       }),
     );
+    track(
+      "modal.prompt_copied",
+      {
+        modal: "create-exploration",
+        includeMobbin,
+        existingExplorationsCount: existingExplorations.length,
+      },
+      { slug },
+    );
   };
 
   return (
@@ -67,7 +84,6 @@ export function PrototypeCreateExplorationModal({
               checked={includeMobbin}
               onCheckedChange={setIncludeMobbin}
               aria-label="Gather references from Mobbin"
-              className="data-[state=checked]:bg-foreground"
             />
             <span className="text-sm text-muted-foreground">
               Gather references from Mobbin

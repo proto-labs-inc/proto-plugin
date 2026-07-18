@@ -9,22 +9,13 @@ import { Button } from "@prototype/components/ui/button";
 import { Input } from "@prototype/components/ui/input";
 import { Label } from "@prototype/components/ui/label";
 import { buildCreateStarterScreenCopyText } from "@prototype/lib/prototypes/create-starter-screen-prompt";
+import { readBriefFieldValue } from "@prototype/lib/prototypes/read-brief-field-value";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
+import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { cn } from "@prototype/lib/utils";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
-
-function readBriefFieldValue(fieldId: string): string {
-  const element = document.getElementById(fieldId);
-  if (
-    element instanceof HTMLInputElement ||
-    element instanceof HTMLTextAreaElement
-  ) {
-    return element.value;
-  }
-
-  return "";
-}
 
 export type PrototypeCreateStarterScreenModalProps = {
   open: boolean;
@@ -46,6 +37,8 @@ export function PrototypeCreateStarterScreenModal({
   const [route, setRoute] = useState("");
   const [referenceHtml, setReferenceHtml] = useState("");
   const { copy, icon, isCopied } = useCopyToClipboard();
+  const workspaceProfile = useWorkspaceProfile();
+  const track = useTrackEvent();
   const [isCopying, setIsCopying] = useState(false);
   const canCopy =
     title.trim().length > 0 &&
@@ -92,8 +85,10 @@ export function PrototypeCreateStarterScreenModal({
           sourcePath,
           origin,
           starterScreensPagePath,
+          workspaceProfile,
         }),
       );
+      track("modal.prompt_copied", { modal: "create-starter-screen" });
     } catch {
       toast.error("Copy error", {
         description: "Failed to copy starter screen prompt",

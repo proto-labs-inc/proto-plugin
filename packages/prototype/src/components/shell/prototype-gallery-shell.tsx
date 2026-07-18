@@ -1,7 +1,10 @@
 "use client";
 
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
+import { PrototypeBootstrapOnboardingModal } from "@prototype/components/shell/prototype-bootstrap-onboarding-modal";
+import { PrototypeBootstrapPreviewFloatingStepper } from "@prototype/components/shell/prototype-bootstrap-preview-floating-stepper";
 import { PrototypeGalleryNav } from "@prototype/components/shell/prototype-gallery-nav";
+import { useBootstrapPreview } from "@prototype/lib/prototypes/use-bootstrap-preview";
 import { cn } from "@prototype/lib/utils";
 import type { HTMLAttributes, ReactNode, RefObject } from "react";
 
@@ -16,17 +19,38 @@ type PrototypeGalleryShellProps = {
   footer?: ReactNode;
   sourceDirectoryName?: string;
   sourcePath?: string;
+  syncConfigPath?: string;
+  componentLibraryPagePath?: string;
 };
+
+function PrototypeGalleryShellMain({
+  children,
+}: Pick<PrototypeGalleryShellProps, "children">) {
+  return (
+    <main className="bg-[var(--bg-ground)] flex min-h-0 flex-1 flex-col overflow-hidden">
+      {children}
+    </main>
+  );
+}
 
 export function PrototypeGalleryShell({
   children,
   footer,
   sourceDirectoryName,
   sourcePath,
+  syncConfigPath,
+  componentLibraryPagePath,
 }: PrototypeGalleryShellProps) {
+  const {
+    bootstrapStep,
+    openModalForStep,
+    isOnboardingBackdropActive,
+    isDevelopmentToggleVisible,
+  } = useBootstrapPreview();
+
   return (
     <PrototypeProvider className="bg-[var(--bg-main)] flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-      {footer ? (
+      {footer && !isOnboardingBackdropActive ? (
         <div
           className={cn(
             "border-[var(--tool-chrome-border)] bg-[var(--bg-main)] flex shrink-0 items-center justify-end border-b",
@@ -37,14 +61,36 @@ export function PrototypeGalleryShell({
         </div>
       ) : null}
 
-      <div className="flex h-full min-h-0 flex-1 overflow-hidden">
-        <PrototypeGalleryNav
-          sourceDirectoryName={sourceDirectoryName}
-          sourcePath={sourcePath}
+      <div className="relative flex h-full min-h-0 flex-1 overflow-hidden">
+        {isOnboardingBackdropActive ? (
+          <div
+            className="absolute inset-0 z-0 bg-[var(--tool-chrome-ground)]"
+            aria-hidden
+            data-prototype-bootstrap-backdrop=""
+          />
+        ) : (
+          <>
+            <PrototypeGalleryNav
+              sourceDirectoryName={sourceDirectoryName}
+              sourcePath={sourcePath}
+            />
+            <PrototypeGalleryShellMain>{children}</PrototypeGalleryShellMain>
+          </>
+        )}
+
+        <PrototypeBootstrapOnboardingModal
+          sourcePath={sourceDirectoryName ?? sourcePath}
+          currentSourcePath={sourcePath}
+          syncConfigPath={syncConfigPath}
+          componentLibraryPagePath={componentLibraryPagePath}
         />
-        <main className="bg-[var(--bg-ground)] flex min-h-0 flex-1 flex-col overflow-hidden">
-          {children}
-        </main>
+
+        {isDevelopmentToggleVisible ? (
+          <PrototypeBootstrapPreviewFloatingStepper
+            activeStep={bootstrapStep}
+            onStepChange={openModalForStep}
+          />
+        ) : null}
       </div>
     </PrototypeProvider>
   );
@@ -108,6 +154,10 @@ export function PrototypeGalleryHeader({
   className,
   actions,
 }: PrototypeGalleryHeaderProps) {
+  const descriptionClassName =
+    "mt-1 text-sm leading-normal text-[var(--tool-chrome-text-muted)]";
+  const descriptionBelowActions = Boolean(actions && description);
+
   return (
     <div
       className={cn(
@@ -117,7 +167,7 @@ export function PrototypeGalleryHeader({
       )}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {eyebrow ? (
             <p className="text-xs text-[var(--tool-chrome-text-muted)]">
               {eyebrow}
@@ -126,14 +176,17 @@ export function PrototypeGalleryHeader({
           <h1 className="mt-0 text-xl font-medium tracking-tight text-[var(--tool-chrome-text-heading)]">
             {title}
           </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-normal text-[var(--tool-chrome-text-muted)]">
-            {description}
-          </p>
+          {description && !descriptionBelowActions ? (
+            <p className={cn(descriptionClassName, "max-w-2xl")}>{description}</p>
+          ) : null}
         </div>
         {actions ? (
           <div className="flex shrink-0 items-center pt-0.5">{actions}</div>
         ) : null}
       </div>
+      {descriptionBelowActions ? (
+        <p className={cn(descriptionClassName, "w-full")}>{description}</p>
+      ) : null}
     </div>
   );
 }

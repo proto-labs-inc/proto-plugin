@@ -22,6 +22,7 @@ import { getRepliesForParent } from "../core/comment-threads";
 import type { CommentAnnotation } from "../core/types";
 import { useCommentStoreOptional } from "../react/CommentProvider";
 import { CommentThread } from "./CommentThread";
+import { CommentAuthorAvatar } from "./comment-author-avatar";
 import { usePrototypeToolTheme } from "@prototype/lib/prototypes/use-prototype-tool-theme";
 import { getViewportBoundingBox } from "./comment-highlight";
 import {
@@ -277,10 +278,16 @@ function buildCopyPrompt(
     lines.push(`Work in: src/prototypes/${prototypeSlug}/`);
   }
   lines.push(`\nComment: "${annotation.comment}"`);
+  if (annotation.authorName?.trim()) {
+    lines.push(`Author: ${annotation.authorName.trim()}`);
+  }
   if (allAnnotations) {
     const replies = getRepliesForParent(allAnnotations, annotation.id);
     for (const reply of replies) {
       lines.push(`Reply: "${reply.comment}"`);
+      if (reply.authorName?.trim()) {
+        lines.push(`Reply author: ${reply.authorName.trim()}`);
+      }
     }
   }
   if (annotation.element) lines.push(`Element: ${annotation.element}`);
@@ -624,53 +631,68 @@ function CommentCard<TState>({
           </div>
 
           {editing ? (
-            <textarea
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={handleSave}
-              onClick={(e) => e.stopPropagation()}
-              rows={3}
-              style={s.editInput}
-            />
+            <div className={cardStyles.commentRow}>
+              <CommentAuthorAvatar
+                name={annotation.authorName}
+                className={cardStyles.authorAvatar}
+              />
+              <textarea
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleSave}
+                onClick={(e) => e.stopPropagation()}
+                rows={3}
+                className={cardStyles.commentEditor}
+                style={s.editInput}
+              />
+            </div>
           ) : (
-            <p
-              className={cn(
-                cardStyles.comment,
-                expandComment && cardStyles.commentExpanded,
-              )}
-              style={
-                !expandComment && isResolved && !isCondensed
-                  ? s.comment(true)
-                  : undefined
-              }
-            >
-              {annotation.comment}
-            </p>
-          )}
+            <div className={cardStyles.commentRow}>
+              <CommentAuthorAvatar
+                name={annotation.authorName}
+                className={cardStyles.authorAvatar}
+              />
+              <div className={cardStyles.commentContent}>
+                <p
+                  className={cn(
+                    cardStyles.comment,
+                    expandComment && cardStyles.commentExpanded,
+                  )}
+                  style={
+                    !expandComment && isResolved && !isCondensed
+                      ? s.comment(true)
+                      : undefined
+                  }
+                >
+                  {annotation.comment}
+                </p>
 
-          {replyCount > 0 ? (
-            <span
-              className={cn(
-                cardStyles.replyCount,
-                cardStyles.replyCountVisible,
-              )}
-            >
-              {replyCount} {replyCount === 1 ? "reply" : "replies"}
-            </span>
-          ) : null}
+                {replyCount > 0 && isCondensed ? (
+                  <span
+                    className={cn(
+                      cardStyles.replyCount,
+                      cardStyles.replyCountVisible,
+                    )}
+                  >
+                    {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                  </span>
+                ) : null}
 
-          {showReplies ? (
-            <div className={cardStyles.threadCollapse}>
-              <div className={cardStyles.threadInner}>
-                <CommentThread
-                  rootAnnotation={annotation}
-                  dark={!useLightTheme}
-                />
+                {showReplies ? (
+                  <div className={cardStyles.threadCollapse}>
+                    <div className={cardStyles.threadInner}>
+                      <CommentThread
+                        rootAnnotation={annotation}
+                        dark={!useLightTheme}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

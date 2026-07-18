@@ -18,6 +18,9 @@ import { commentToLiveState } from "../core/restore";
 import { normalizeAnnotationViewport } from "../core/normalize-viewport";
 import { COMMENT_STORAGE_NOT_CONFIGURED_MESSAGE } from "@prototype/lib/prototypes/comment-storage-setup-prompt";
 import { fetchPrototypeStorageStatus, isPrototypeStorageFullyConfigured } from "@prototype/lib/prototypes/prototype-storage-status";
+import { resolveCommentAuthorName, resolveCommentTeamName } from "@prototype/lib/prototypes/workspace-profile";
+import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
+import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { createRemoteStorageAdapter } from "../core/storage";
 import type { CommentAnnotation, CommentStore } from "../core/types";
 
@@ -46,6 +49,9 @@ export function CommentProvider<TState>({
   const onRestoreRef = useRef(onRestore);
   useEffect(() => { getLiveStateRef.current = getLiveState; }, [getLiveState]);
   useEffect(() => { onRestoreRef.current = onRestore; }, [onRestore]);
+  const workspaceProfile = useWorkspaceProfile();
+  const teamName = resolveCommentTeamName(workspaceProfile);
+  const track = useTrackEvent();
 
   const handleLoadError = useCallback((message: string) => {
     setStorageError(message);
@@ -77,7 +83,7 @@ export function CommentProvider<TState>({
       setStorageConfigured(null);
 
       try {
-        const status = await fetchPrototypeStorageStatus();
+        const status = await fetchPrototypeStorageStatus(slug);
         if (cancelled) return;
 
         const fullyConfigured = isPrototypeStorageFullyConfigured(status);
@@ -136,6 +142,7 @@ export function CommentProvider<TState>({
       const { captureViewport, viewportBoundingBox } = normalizeAnnotationViewport(fields);
       const fullAnnotation: CommentAnnotation<TState> = {
         ...fields,
+        teamName,
         captureViewport,
         viewportBoundingBox,
         interactionState: captureInteractionState(getLiveStateRef.current()),
@@ -144,9 +151,18 @@ export function CommentProvider<TState>({
       void persistAnnotation(fullAnnotation).catch(() => {
         // errors are reported via onError in the remote adapter
       });
+      track(
+        "comment.created",
+        {
+          channel: fullAnnotation.channel ?? "comment",
+          targetId: fullAnnotation.targetId,
+          hasScreenshot: Boolean(fields.screenshot),
+        },
+        { slug },
+      );
       return fullAnnotation;
     },
-    [storageReady, storageError, persistAnnotation],
+    [storageReady, storageError, persistAnnotation, teamName, track, slug],
   );
 
   const addReply = useCallback(
@@ -170,6 +186,8 @@ export function CommentProvider<TState>({
         parentId: parent.id,
         comment: trimmed,
         timestamp: Date.now(),
+        authorName: resolveCommentAuthorName(workspaceProfile),
+        teamName,
         x: parent.x,
         y: parent.y,
         element: parent.element,
@@ -182,9 +200,14 @@ export function CommentProvider<TState>({
 
       setAnnotations((prev) => [...prev, reply]);
       void persistAnnotation(reply).catch(() => {});
+      track(
+        "comment.replied",
+        { parentId: parent.id, channel: parent.channel ?? "comment" },
+        { slug },
+      );
       return reply;
     },
-    [annotations, storageReady, storageError, persistAnnotation],
+    [annotations, storageReady, storageError, persistAnnotation, workspaceProfile, teamName, track, slug],
   );
 
   const updateAnnotation = useCallback(
@@ -198,9 +221,10 @@ export function CommentProvider<TState>({
       });
       if (nextAnnotation) {
         void persistAnnotation(nextAnnotation).catch(() => {});
+        track("comment.edited", { id }, { slug });
       }
     },
-    [persistAnnotation],
+    [persistAnnotation, track, slug],
   );
 
   const resolveAnnotation = useCallback(
@@ -217,9 +241,14 @@ export function CommentProvider<TState>({
       });
       if (nextAnnotation) {
         void persistAnnotation(nextAnnotation).catch(() => {});
+        track(
+          "comment.resolved",
+          { id, status: nextAnnotation.status },
+          { slug },
+        );
       }
     },
-    [persistAnnotation],
+    [persistAnnotation, track, slug],
   );
 
   const deleteAnnotation = useCallback(
@@ -241,8 +270,15 @@ export function CommentProvider<TState>({
       for (const annotation of toDelete) {
         void persistAnnotation({ ...annotation, deleted: true }).catch(() => {});
       }
+      if (toDelete.length > 0) {
+        track(
+          "comment.deleted",
+          { id, replyCount: toDelete.length - 1 },
+          { slug },
+        );
+      }
     },
-    [persistAnnotation],
+    [persistAnnotation, track, slug],
   );
 
   const clearAllAnnotations = useCallback(() => {
@@ -262,6 +298,7 @@ export function CommentProvider<TState>({
       if (!annotation) return undefined;
       const live = commentToLiveState(annotation.interactionState);
       onRestoreRef.current(live);
+      track("comment.restored", { id, targetId: annotation.targetId }, { slug });
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           restoreAnnotationScrollPosition(annotation.captureViewport, {
@@ -271,7 +308,7 @@ export function CommentProvider<TState>({
       });
       return annotation;
     },
-    [annotations],
+    [annotations, track, slug],
   );
 
   const value = useMemo(
