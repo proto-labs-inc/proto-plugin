@@ -9,6 +9,7 @@ DRY_RUN=0
 TAG="latest"
 SKIP_VERIFY=0
 SKIP_BUMP=0
+SKIP_TEMPLATE_INSTALL=0
 BUMP="patch"
 OTP=""
 
@@ -25,6 +26,8 @@ Options:
   --skip-verify    Skip pre-publish verification scripts
   --no-bump        Publish package.json version as-is (fail if already published)
   --bump <level>   Bump level when current version exists on npm: patch, minor, major (default: patch)
+  --skip-template-install
+                   Skip installing the published version into proto-template
   -h, --help       Show this help message
 
 Examples:
@@ -53,6 +56,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-bump)
       SKIP_BUMP=1
+      shift
+      ;;
+    --skip-template-install)
+      SKIP_TEMPLATE_INSTALL=1
       shift
       ;;
     --bump)
@@ -105,6 +112,42 @@ find_host_with_prototypes() {
   return 1
 }
 
+resolve_proto_template_root() {
+  if [[ -n "${PROTO_TEMPLATE_ROOT:-}" ]]; then
+    echo "$PROTO_TEMPLATE_ROOT"
+    return 0
+  fi
+  echo "$(cd "$TOOL_ROOT/../.." && pwd)/../proto-template"
+}
+
+install_into_proto_template() {
+  local template_root
+  template_root="$(resolve_proto_template_root)"
+
+  if [[ ! -f "$template_root/package.json" ]]; then
+    echo "Skipping proto-template install (not found at ${template_root})."
+    echo "Set PROTO_TEMPLATE_ROOT to override the default sibling path."
+    return 0
+  fi
+
+  echo "Installing ${PACKAGE_NAME}@${PACKAGE_VERSION} into proto-template..."
+  wait_for_registry_version "$PACKAGE_VERSION"
+  (
+    cd "$template_root"
+    if [[ -f pnpm-lock.yaml ]]; then
+      pnpm add "${PACKAGE_NAME}@${PACKAGE_VERSION}"
+    elif [[ -f package-lock.json ]]; then
+      npm install "${PACKAGE_NAME}@${PACKAGE_VERSION}"
+    elif [[ -f yarn.lock ]]; then
+      yarn add "${PACKAGE_NAME}@${PACKAGE_VERSION}"
+    else
+      echo "Could not detect package manager in ${template_root}." >&2
+      return 1
+    fi
+  )
+  echo "Updated proto-template at ${template_root}."
+}
+
 if [[ "$SKIP_VERIFY" -eq 0 ]]; then
   if host_root="$(find_host_with_prototypes)"; then
     echo "Running verification scripts against $host_root..."
@@ -120,6 +163,32 @@ PACKAGE_VERSION="$(node -pe "require('./package.json').version")"
 
 version_is_published() {
   npm view "${PACKAGE_NAME}@${1}" version --registry "$REGISTRY" >/dev/null 2>&1
+}
+
+wait_for_registry_version() {
+  local version="$1"
+  local max_attempts="${REGISTRY_WAIT_ATTEMPTS:-30}"
+  local attempt=1
+  local sleep_seconds=2
+
+  if version_is_published "$version"; then
+    return 0
+  fi
+
+  echo "Waiting for ${PACKAGE_NAME}@${version} to appear on npm..."
+  while ! version_is_published "$version"; do
+    if [[ "$attempt" -ge "$max_attempts" ]]; then
+      echo "Timed out waiting for ${PACKAGE_NAME}@${version} on ${REGISTRY}." >&2
+      echo "Publish succeeded; retry proto-template install manually:" >&2
+      echo "  cd proto-template && pnpm add ${PACKAGE_NAME}@${version}" >&2
+      return 1
+    fi
+    echo "  not visible yet (${attempt}/${max_attempts}); retrying in ${sleep_seconds}s..."
+    sleep "$sleep_seconds"
+    attempt=$((attempt + 1))
+  done
+
+  echo "${PACKAGE_NAME}@${version} is available on npm."
 }
 
 ensure_unpublished_version() {
@@ -184,5 +253,8 @@ if [[ "$DRY_RUN" -eq 0 ]]; then
   echo "  pnpm add ${PACKAGE_NAME}@${PACKAGE_VERSION}"
   if [[ "$SKIP_BUMP" -eq 0 ]]; then
     echo "Commit the version bump in package.json when ready."
+  fi
+  if [[ "$SKIP_TEMPLATE_INSTALL" -eq 0 ]]; then
+    install_into_proto_template
   fi
 fi
