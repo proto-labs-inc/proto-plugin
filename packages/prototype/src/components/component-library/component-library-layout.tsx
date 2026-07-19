@@ -1,7 +1,8 @@
 "use client";
 
+import type { AccordionMultipleProps } from "@radix-ui/react-accordion";
 import { ChevronDown } from "lucide-react";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import {
   Accordion,
@@ -16,12 +17,17 @@ import {
 import { useComponentLibraryProductTheme } from "@prototype/lib/use-component-library-product-theme";
 import { cn } from "@prototype/lib/utils";
 
+type ComponentLibraryAccordionProps = Omit<
+  AccordionMultipleProps,
+  "type" | "defaultValue"
+>;
+
 /** Accordion chrome for the component library page — proto tool styling, not synced source UI. */
 export function ComponentLibraryAccordion({
   className,
   children,
   ...props
-}: Omit<ComponentPropsWithoutRef<typeof Accordion>, "type" | "defaultValue">) {
+}: ComponentLibraryAccordionProps) {
   return (
     <Accordion
       type="multiple"
