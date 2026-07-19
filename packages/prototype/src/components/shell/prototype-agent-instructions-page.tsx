@@ -125,7 +125,7 @@ export function PrototypeAgentInstructionsPage() {
             type="button"
             variant="chrome"
             size="sm"
-            className="h-8 w-fit gap-1.5 px-3"
+            className="h-8 w-fit gap-2 px-3"
             disabled={!canCopy}
             onClick={() => {
               void handleCopyPrompt();

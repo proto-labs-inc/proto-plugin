@@ -315,7 +315,7 @@ export function PrototypeShareCommandButton({
           <Terminal className="size-3 shrink-0" aria-hidden />
           Share
         </span>
-        <span className="text-xs text-muted-foreground flex items-center gap-1 transition-colors duration-200 ease group-hover:text-muted-foreground">
+        <span className="text-xs text-muted-foreground flex items-center gap-1.5 transition-colors duration-200 ease group-hover:text-muted-foreground">
           <Copy className="size-3 shrink-0" aria-hidden />
           Copy
         </span>

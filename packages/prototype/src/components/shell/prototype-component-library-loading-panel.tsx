@@ -42,7 +42,7 @@ export function PrototypeComponentLibraryLoadingPanel({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 border-[var(--tool-chrome-border)] text-[var(--tool-chrome-text-heading)] hover:text-[var(--tool-chrome-text-heading)]"
+          className="h-8 gap-2 border-[var(--tool-chrome-border)] text-[var(--tool-chrome-text-heading)] hover:text-[var(--tool-chrome-text-heading)]"
           disabled={isCopying}
           onClick={() => {
             void copySetupPrompt();

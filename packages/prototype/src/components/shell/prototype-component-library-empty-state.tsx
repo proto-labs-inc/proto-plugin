@@ -47,7 +47,7 @@ export function PrototypeComponentLibraryEmptyState({
           type="button"
           variant="outline"
           size="sm"
-          className="border-default text-foreground hover:text-foreground h-8 gap-1.5"
+          className="border-default text-foreground hover:text-foreground h-8 gap-2"
           onClick={handleCopy}
           aria-label="Copy component library population prompt"
         >

@@ -396,7 +396,7 @@ export function PrototypeBootstrapOnboardingModal({
             type="button"
             variant="chrome"
             size="sm"
-            className="h-8 gap-1.5 px-3"
+            className="h-8 gap-2 px-3"
             disabled={continueDisabled}
             onClick={() => {
               void handlePrimaryAction();

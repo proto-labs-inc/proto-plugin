@@ -22,6 +22,8 @@ export type PrSplitEntry<
   analyticsNotes?: string[];
   approved?: boolean;
   merged?: boolean;
+  /** When true, shows Draft status with the GitHub draft PR icon. */
+  draft?: boolean;
 };
 
 export type PrSplitAgentPromptConfig = {

@@ -399,7 +399,7 @@ export function PrototypeDesignBriefPanel<TVariant extends string>({
             type="button"
             variant="chrome"
             size="sm"
-            className="h-8 gap-1.5"
+            className="h-8 gap-2"
             disabled={!canCopyMoreVariants}
             onClick={handleCopyMoreVariantsPrompt}
             aria-label="Copy more variations prompt"

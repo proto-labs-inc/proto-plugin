@@ -112,7 +112,7 @@ export function PrototypeCreateStarterScreenModal({
           type="button"
           variant="chrome"
           size="sm"
-          className="h-8 gap-1.5"
+          className="h-8 gap-2"
           disabled={!canCopy || isCopying}
           onClick={() => {
             void handleCopy();

@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Check,
-  ChevronDown,
-  Clock,
   Copy,
   GitBranch,
   GitMerge,
+  GitPullRequest,
+  GitPullRequestDraft,
   Github,
   Monitor,
 } from "lucide-react";
@@ -29,6 +29,13 @@ function reviewSidebarCardBorder(selected: boolean, hovered: boolean): string {
   }
   return "var(--border-solid)";
 }
+
+const PR_META_CHIP_BUTTON_CLASS =
+  "group inline-flex h-6 shrink-0 items-center rounded-md border border-[var(--border-medium)] bg-[var(--bg-subtle)] px-2 text-[11px] font-medium text-[var(--text-primary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)]";
+
+const PR_META_CHIP_LEADING_CLASS = "inline-flex items-center gap-1";
+const PR_META_CHIP_ICON_CLASS = "size-3 shrink-0";
+const PR_META_CHIP_TRAILING_ICON_CLASS = `${PR_META_CHIP_ICON_CLASS} ml-1.5`;
 
 function CopyPrPrompt<TWireframeId extends string, TLiveState>({
   entry,
@@ -58,17 +65,17 @@ function CopyPrPrompt<TWireframeId extends string, TLiveState>({
       type="button"
       aria-label={copied ? "Copied PR prompt" : "Create PR"}
       onClick={handleCopy}
-      className="inline-flex h-8 w-fit cursor-pointer items-center justify-center gap-1.5 rounded-md border border-[var(--border-medium)] bg-[var(--bg-subtle)] px-3 text-[12px] font-medium text-[var(--text-primary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)]"
+      className="inline-flex h-7 w-fit cursor-pointer items-center justify-center rounded-md border border-[var(--border-medium)] bg-[var(--bg-subtle)] px-2.5 text-[11px] font-medium text-[var(--text-primary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)]"
     >
       {copied ? (
         <>
           Copied prompt
-          <Check className="size-3.5 shrink-0" aria-hidden />
+          <Check className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
         </>
       ) : (
         <>
           Create PR
-          <Copy className="size-3.5 shrink-0" aria-hidden />
+          <Copy className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
         </>
       )}
     </button>
@@ -109,17 +116,16 @@ function CopyLinearLink({ linearUrl }: { linearUrl: string }) {
       type="button"
       aria-label={`Copy Linear issue URL: ${linearUrl}`}
       onClick={handleCopy}
-      className="group inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)]"
+      className={PR_META_CHIP_BUTTON_CLASS}
     >
-      <LinearIcon className="size-3 shrink-0 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]" />
-      Linear
+      <span className={PR_META_CHIP_LEADING_CLASS}>
+        <LinearIcon className={PR_META_CHIP_ICON_CLASS} />
+        Linear
+      </span>
       {copied ? (
-        <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
+        <Check className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       ) : (
-        <Copy
-          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
-          aria-hidden
-        />
+        <Copy className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       )}
     </button>
   );
@@ -141,20 +147,16 @@ function CopyBranch({ branch }: { branch: string }) {
       type="button"
       aria-label={`Copy branch name: ${branch}`}
       onClick={handleCopy}
-      className="group inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)]"
+      className={PR_META_CHIP_BUTTON_CLASS}
     >
-      <GitBranch
-        className="size-3 shrink-0 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
-        aria-hidden
-      />
-      Branch
+      <span className={PR_META_CHIP_LEADING_CLASS}>
+        <GitBranch className={PR_META_CHIP_ICON_CLASS} aria-hidden />
+        Branch
+      </span>
       {copied ? (
-        <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
+        <Check className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       ) : (
-        <Copy
-          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
-          aria-hidden
-        />
+        <Copy className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       )}
     </button>
   );
@@ -176,20 +178,16 @@ function CopyPrLink({ prUrl }: { prUrl: string }) {
       type="button"
       aria-label={`Copy pull request URL: ${prUrl}`}
       onClick={handleCopy}
-      className="group inline-flex h-6 shrink-0 items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)]"
+      className={PR_META_CHIP_BUTTON_CLASS}
     >
-      <Github
-        className="size-3 shrink-0 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
-        aria-hidden
-      />
-      PR
+      <span className={PR_META_CHIP_LEADING_CLASS}>
+        <Github className={PR_META_CHIP_ICON_CLASS} aria-hidden />
+        PR
+      </span>
       {copied ? (
-        <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
+        <Check className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       ) : (
-        <Copy
-          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)]"
-          aria-hidden
-        />
+        <Copy className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       )}
     </button>
   );
@@ -237,18 +235,20 @@ function CopyPreviewLink<TWireframeId extends string, TLiveState>({
             : "Preview unavailable"
       }
       onClick={handleCopy}
-      className="group inline-flex h-6 shrink-0 cursor-pointer items-center gap-1 rounded-md border border-[var(--border-solid)] bg-[var(--bg-subtle)] px-2 text-[11px] text-[var(--text-secondary)] transition-colors duration-150 ease hover:bg-[var(--bg-layered)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+      className={`${PR_META_CHIP_BUTTON_CLASS} cursor-pointer disabled:cursor-not-allowed disabled:opacity-60`}
     >
-      <Monitor
-        className="size-3 shrink-0 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)] group-disabled:opacity-60"
-        aria-hidden
-      />
-      Preview
+      <span className={PR_META_CHIP_LEADING_CLASS}>
+        <Monitor
+          className={`${PR_META_CHIP_ICON_CLASS} group-disabled:opacity-60`}
+          aria-hidden
+        />
+        Preview
+      </span>
       {copied ? (
-        <Check className="size-3 text-[var(--text-primary)]" aria-hidden />
+        <Check className={PR_META_CHIP_TRAILING_ICON_CLASS} aria-hidden />
       ) : (
         <Copy
-          className="size-3 text-[var(--text-tertiary)] transition-colors duration-150 ease group-hover:text-[var(--text-secondary)] group-disabled:opacity-60"
+          className={`${PR_META_CHIP_TRAILING_ICON_CLASS} group-disabled:opacity-60`}
           aria-hidden
         />
       )}
@@ -261,25 +261,32 @@ function PrStatusLink({
   status,
 }: {
   prUrl: string;
-  status: "merged" | "approved" | "in-review";
+  status: "merged" | "approved" | "draft" | "in-review";
 }) {
   const config = {
     merged: {
       label: "Merged",
-      className: "text-[#8957e5]",
-      icon: <GitMerge className="size-3.5" aria-hidden />,
+      className: "text-[#a371f7]",
+      icon: GitMerge,
     },
     approved: {
       label: "Approved",
       className: "text-green-600",
-      icon: <Check className="size-3.5" aria-hidden />,
+      icon: null,
+    },
+    draft: {
+      label: "Draft",
+      className: "text-[var(--text-tertiary)]",
+      icon: GitPullRequestDraft,
     },
     "in-review": {
-      label: "In Review",
-      className: "text-[var(--color-active)]",
-      icon: <Clock className="size-3.5" aria-hidden />,
+      label: "Open",
+      className: "text-[#3fb950]",
+      icon: GitPullRequest,
     },
   }[status];
+
+  const Icon = config.icon;
 
   return (
     <a
@@ -288,10 +295,10 @@ function PrStatusLink({
       rel="noopener noreferrer"
       aria-label={`Open pull request (${config.label})`}
       onClick={(e) => e.stopPropagation()}
-      className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 transition-opacity duration-200 ease hover:opacity-80 ${config.className}`}
+      className={`inline-flex shrink-0 cursor-pointer items-center gap-1 transition-opacity duration-200 ease hover:opacity-80 ${config.className}`}
     >
-      {config.icon}
-      <span className="text-[12px] font-medium">{config.label}</span>
+      {Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : null}
+      <span className="text-[11px] font-medium">{config.label}</span>
     </a>
   );
 }
@@ -321,58 +328,33 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
   vercelProjectName?: string;
 }) {
   const [hovered, setHovered] = useState(false);
-  const isMerged = Boolean(entry.merged);
-  const [expanded, setExpanded] = useState(!isMerged);
-
-  useEffect(() => {
-    if (selected) setExpanded(true);
-  }, [selected]);
-
-  const collapseStyle = {
-    display: "grid",
-    gridTemplateRows: expanded ? "1fr" : "0fr",
-    transition: "grid-template-rows 0.25s cubic-bezier(.215, .61, .355, 1)",
-  } as const;
-
-  const collapsedMerged = isMerged && !expanded;
 
   return (
     <button
       type="button"
       data-pr-order={entry.order}
       aria-current={selected ? "true" : undefined}
-      onClick={() => {
-        if (collapsedMerged) {
-          setExpanded(true);
-          return;
-        }
-        onSelect(entry);
-      }}
+      onClick={() => onSelect(entry)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className="tool-review-card flex w-full cursor-pointer flex-col overflow-hidden text-left"
       style={{
         borderRadius: 6,
         border: `1px solid ${reviewSidebarCardBorder(selected, hovered)}`,
-        background: collapsedMerged ? "var(--bg-subtle)" : "var(--bg-main)",
-        opacity: collapsedMerged ? 0.55 : 1,
+        background: "var(--bg-main)",
         transition:
-          "border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease",
+          "border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
       }}
     >
-      <div style={collapseStyle}>
-        <div className="overflow-hidden">
-          <div
-            className="border-b border-[var(--border-solid)]"
-            data-prototype-wireframe-preview
-          >
-            {renderWireframe(entry.wireframeId)}
-          </div>
-        </div>
+      <div
+        className="border-b border-[var(--border-solid)]"
+        data-prototype-wireframe-preview
+      >
+        {renderWireframe(entry.wireframeId)}
       </div>
       <div className="flex flex-col px-3 pb-3.5 pt-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex min-w-0 items-center gap-2.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="text-[13px] font-medium text-[var(--text-primary)]">
               PR {entry.order} · {entry.title}
             </span>
@@ -380,96 +362,61 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
               <PrStatusLink prUrl={entry.prUrl} status="merged" />
             ) : entry.approved && entry.prUrl ? (
               <PrStatusLink prUrl={entry.prUrl} status="approved" />
+            ) : entry.draft && entry.prUrl ? (
+              <PrStatusLink prUrl={entry.prUrl} status="draft" />
             ) : entry.prUrl ? (
               <PrStatusLink prUrl={entry.prUrl} status="in-review" />
             ) : null}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <span className="text-[11px] text-[var(--text-tertiary)]">
-              {entry.size}
-            </span>
-            {isMerged ? (
-              <span
-                role="button"
-                tabIndex={0}
-                aria-label={expanded ? "Collapse PR" : "Expand PR"}
-                aria-expanded={expanded}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setExpanded((v) => !v);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setExpanded((v) => !v);
-                  }
-                }}
-                className="inline-flex size-5 cursor-pointer items-center justify-center rounded text-[var(--text-tertiary)] transition-colors duration-200 ease hover:text-[var(--text-secondary)]"
-              >
-                <ChevronDown
-                  className="size-4 transition-transform duration-200 ease"
-                  style={{
-                    transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                  aria-hidden
-                />
-              </span>
-            ) : null}
-          </div>
+          <span className="shrink-0 text-[11px] text-[var(--text-tertiary)]">
+            {entry.size}
+          </span>
         </div>
-        <div style={collapseStyle}>
-          <div className="overflow-hidden">
-            <div className="flex flex-col gap-3 pt-3">
-              <p className="text-[12px] leading-normal text-[var(--text-secondary)]">
-                {entry.description}
+        <div className="flex flex-col gap-3 pt-3">
+          <p className="text-[12px] leading-normal text-[var(--text-secondary)]">
+            {entry.description}
+          </p>
+          {!entry.prUrl ? (
+            <CopyPrPrompt entry={entry} buildAgentPrompt={buildAgentPrompt} />
+          ) : null}
+          {entry.analyticsNotes && entry.analyticsNotes.length > 0 && (
+            <div className="border-l-2 border-[var(--border-faint)] pl-3">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-tertiary)]">
+                Event logging
               </p>
-              {!entry.prUrl ? (
-                <CopyPrPrompt
-                  entry={entry}
-                  buildAgentPrompt={buildAgentPrompt}
-                />
+              <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4">
+                {entry.analyticsNotes.map((note) => (
+                  <li
+                    key={note}
+                    className="text-[11px] leading-snug text-[var(--text-secondary)]"
+                  >
+                    {note}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {entry.prUrl ||
+          entry.branch ||
+          entry.linearUrl ||
+          entry.vercelPreviewHost ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {entry.prUrl ? <CopyPrLink prUrl={entry.prUrl} /> : null}
+              {entry.branch ? <CopyBranch branch={entry.branch} /> : null}
+              {entry.linearUrl ? (
+                <CopyLinearLink linearUrl={entry.linearUrl} />
               ) : null}
-              {entry.analyticsNotes && entry.analyticsNotes.length > 0 && (
-                <div className="border-l-2 border-[var(--border-faint)] pl-3">
-                  <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-tertiary)]">
-                    Event logging
-                  </p>
-                  <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4">
-                    {entry.analyticsNotes.map((note) => (
-                      <li
-                        key={note}
-                        className="text-[11px] leading-snug text-[var(--text-secondary)]"
-                      >
-                        {note}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-              {entry.prUrl ||
-              entry.branch ||
-              entry.linearUrl ||
-              entry.vercelPreviewHost ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {entry.prUrl ? <CopyPrLink prUrl={entry.prUrl} /> : null}
-                  {entry.branch ? <CopyBranch branch={entry.branch} /> : null}
-                  {entry.linearUrl ? (
-                    <CopyLinearLink linearUrl={entry.linearUrl} />
-                  ) : null}
-                  {entry.prUrl || entry.vercelPreviewHost ? (
-                    <CopyPreviewLink
-                      entry={entry}
-                      previewCache={previewCache}
-                      previewLoading={previewLoading}
-                      defaultPreviewPath={defaultPreviewPath}
-                      vercelProjectName={vercelProjectName}
-                    />
-                  ) : null}
-                </div>
+              {entry.prUrl || entry.vercelPreviewHost ? (
+                <CopyPreviewLink
+                  entry={entry}
+                  previewCache={previewCache}
+                  previewLoading={previewLoading}
+                  defaultPreviewPath={defaultPreviewPath}
+                  vercelProjectName={vercelProjectName}
+                />
               ) : null}
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
     </button>

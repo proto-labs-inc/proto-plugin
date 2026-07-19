@@ -167,7 +167,7 @@ export function PrototypeChangeLogPanel({
             type="button"
             variant="chrome"
             size="sm"
-            className="h-8 gap-1.5 self-start"
+            className="h-8 gap-2 self-start"
             onClick={handleCopyDescriptionPrompt}
             aria-label="Copy description prompt"
           >

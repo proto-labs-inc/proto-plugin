@@ -33,7 +33,7 @@ export function PrototypeSpecPanelEmptyState({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 cursor-pointer gap-1.5"
+          className="h-8 cursor-pointer gap-2"
           disabled={!canCopy}
           onClick={() => {
             if (!slug) return;

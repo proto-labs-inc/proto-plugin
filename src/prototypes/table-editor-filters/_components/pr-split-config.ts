@@ -87,6 +87,9 @@ export const PR_SPLIT_ENTRIES: TableEditorFiltersPrSplitEntry[] = [
     insertColumnVariant: DEFAULT_INSERT_COLUMN_VARIANT,
     liveState: createLiveStateForPreview(DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE),
     previewPath: "/project/default/editor/17604",
+    branch: "feat/table-editor-filters-fe-1-table-editor-sidebar",
+    prUrl: "https://github.com/supabase/supabase/pull/48064",
+    merged: true,
   },
   {
     order: 2,
@@ -101,6 +104,8 @@ export const PR_SPLIT_ENTRIES: TableEditorFiltersPrSplitEntry[] = [
     insertColumnVariant: DEFAULT_INSERT_COLUMN_VARIANT,
     liveState: createLiveStateForPreview(DEFAULT_TABLE_EDITOR_FILTERS_PREVIEW_STATE),
     previewPath: "/project/default/editor/17604",
+    branch: "feat/table-editor-filters-fe-2-grid-header-filter-toolbar",
+    prUrl: "https://github.com/supabase/supabase/pull/48066",
     analyticsNotes: ["table_editor_filter_applied", "table_editor_filter_chip_removed"],
   },
   {
@@ -116,6 +121,8 @@ export const PR_SPLIT_ENTRIES: TableEditorFiltersPrSplitEntry[] = [
     insertColumnVariant: DEFAULT_INSERT_COLUMN_VARIANT,
     liveState: createLiveStateForPreview("loading"),
     previewPath: "/project/default/editor/17604",
+    branch: "feat/table-editor-filters-fe-3-grid-loading-skeleton",
+    prUrl: "https://github.com/supabase/supabase/pull/48068",
   },
   {
     order: 4,
@@ -130,6 +137,9 @@ export const PR_SPLIT_ENTRIES: TableEditorFiltersPrSplitEntry[] = [
     insertColumnVariant: DEFAULT_INSERT_COLUMN_VARIANT,
     liveState: createLiveStateForPreview("empty-table"),
     previewPath: "/project/default/editor/17604",
+    branch: "feat/table-editor-filters-fe-4-grid-empty-states",
+    prUrl: "https://github.com/supabase/supabase/pull/48070",
+    draft: true,
   },
   {
     order: 5,

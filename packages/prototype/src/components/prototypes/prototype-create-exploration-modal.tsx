@@ -93,7 +93,7 @@ export function PrototypeCreateExplorationModal({
             type="button"
             variant="chrome"
             size="sm"
-            className="h-8 gap-1.5"
+            className="h-8 gap-2"
             disabled={!canCopy}
             onClick={handleCopy}
             aria-label="Copy exploration brief and prompt"

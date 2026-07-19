@@ -26,7 +26,7 @@ export function PrototypeCommentStorageEmptyState({
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 cursor-pointer gap-1.5"
+          className="h-8 cursor-pointer gap-2"
           onClick={() => {
             copy(buildCommentStorageSetupCopyText({ vercelProjectName }));
           }}
