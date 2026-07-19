@@ -8,7 +8,6 @@ import {
 import { Button } from "@prototype/components/ui/button";
 import { buildAgentContextCopyText } from "@prototype/lib/prototypes/agent-context-prompt";
 import {
-  CUSTOM_AGENT_CONTEXT_PATH,
   fetchAgentContext,
   readLocalAgentContextDraft,
   resolveInitialAgentContextContent,
@@ -66,7 +65,7 @@ export function PrototypeAgentInstructionsPage() {
   }, []);
 
   const hasChanges = content !== fileContent;
-  const canCopy = hasChanges && content.trim().length > 0 && !isCopying && !isLoading;
+  const canCopy = hasChanges && !isCopying && !isLoading;
 
   const handleCopyPrompt = useCallback(async () => {
     if (!canCopy) return;
@@ -99,13 +98,6 @@ export function PrototypeAgentInstructionsPage() {
       }
     >
       <div className="flex w-full max-w-3xl flex-col gap-3">
-        <p className="text-xs text-[var(--tool-chrome-text-muted)]">
-          File:{" "}
-          <code className="font-mono text-[var(--tool-chrome-text-heading)]">
-            {CUSTOM_AGENT_CONTEXT_PATH}
-          </code>
-        </p>
-
         {loadError ? (
           <p className="text-sm text-destructive">{loadError}</p>
         ) : null}

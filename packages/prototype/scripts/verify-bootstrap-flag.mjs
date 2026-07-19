@@ -24,7 +24,7 @@ const CHECKS = {
     passed: (hostRoot) => isWorkspaceOnboardedByState(hostRoot),
     success: "onboarded — source linked and workspace profile set.",
     failure:
-      "not onboarded — need `source` symlink + SOURCE_PATH + PROTOTYPE_USER_NAME in .env.local. Run `pnpm link-source` and set the workspace profile first.",
+      "not onboarded — need SOURCE_PATH + PROTOTYPE_USER_NAME in env (Vercel dashboard, or .env.local locally). Local dev also needs `pnpm link-source` for the `source/` symlink.",
   },
   "component-library-loaded": {
     passed: (hostRoot) => isComponentLibraryReadyByState(hostRoot),

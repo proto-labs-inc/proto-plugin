@@ -35,13 +35,26 @@ function hasSourceSymlink(hostRoot: string): boolean {
   }
 }
 
+/** Prefer `process.env` (Vercel, Next.js); fall back to `.env.local` for CLI verify scripts. */
+function envHasValue(
+  hostRoot: string,
+  key: string,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  if (env[key]?.trim()) return true;
+  return envLocalHasValue(hostRoot, key);
+}
+
 /** Source linked + workspace profile set — onboarding is materially complete. */
-export function isWorkspaceOnboardedByState(hostRoot: string): boolean {
-  return (
-    hasSourceSymlink(hostRoot) &&
-    envLocalHasValue(hostRoot, "SOURCE_PATH") &&
-    envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
-  );
+export function isWorkspaceOnboardedByState(
+  hostRoot: string,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const sourcePathSet = envHasValue(hostRoot, "SOURCE_PATH", env);
+  const userNameSet = envHasValue(hostRoot, "PROTOTYPE_USER_NAME", env);
+  const sourceLinked = hasSourceSymlink(hostRoot) || sourcePathSet;
+
+  return sourceLinked && sourcePathSet && userNameSet;
 }
 
 function collectSourceFiles(dir: string, acc: string[]): void {
