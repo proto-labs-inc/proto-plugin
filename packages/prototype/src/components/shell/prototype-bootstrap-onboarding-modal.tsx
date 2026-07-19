@@ -259,9 +259,9 @@ export function PrototypeBootstrapOnboardingModal({
         : "Copy setup prompt"
       : onboardingStep === "agent-context"
         ? hasAgentContext
-          ? "Continue"
+          ? "Get started"
           : "Skip"
-        : "Continue";
+        : "Get started";
 
   const handlePrimaryAction = useCallback(async () => {
     if (onboardingStep === "component-library") {
@@ -376,7 +376,7 @@ export function PrototypeBootstrapOnboardingModal({
         isWelcomeStep && "flex flex-1 items-center justify-center px-0 py-0",
         isHeaderOnlyStep && "hidden p-0",
       )}
-      footerClassName={canGoBack ? "justify-between" : "justify-end"}
+      footerClassName={canGoBack || isWelcomeStep ? "justify-between" : "justify-center"}
       footer={
         <>
           {canGoBack ? (
@@ -392,48 +392,50 @@ export function PrototypeBootstrapOnboardingModal({
               <ArrowLeft size={16} strokeWidth={2} />
             </Button>
           ) : null}
-          <Button
-            type="button"
-            variant="chrome"
-            size="sm"
-            className="h-8 gap-2 px-3"
-            disabled={continueDisabled}
-            onClick={() => {
-              void handlePrimaryAction();
-            }}
-            aria-label={
-              isWaitingForOnboarded
-                ? hasCopiedSetupPrompt
-                  ? "Copy setup prompt again"
-                  : "Copy setup prompt"
-                : onboardingStep === "setup-complete"
-                  ? "Copy setup prompt"
-                  : onboardingStep === "agent-context"
-                    ? hasAgentContext
-                      ? "Continue"
-                      : "Skip agent context"
-                    : "Continue"
-            }
-          >
-            {isWaitingForOnboarded
-              ? isCopied
-                ? "Copied prompt"
-                : isContinuing
-                  ? "Copying…"
-                  : hasCopiedSetupPrompt
+          {!isWelcomeStep && (
+            <Button
+              type="button"
+              variant="chrome"
+              size="sm"
+              className="h-8 gap-2 px-3"
+              disabled={continueDisabled}
+              onClick={() => {
+                void handlePrimaryAction();
+              }}
+              aria-label={
+                isWaitingForOnboarded
+                  ? hasCopiedSetupPrompt
                     ? "Copy setup prompt again"
                     : "Copy setup prompt"
-              : isContinuing
-                ? onboardingStep === "setup-complete"
-                  ? "Copying…"
-                  : "Continuing…"
-                : continueLabel}
-            {isWaitingForOnboarded || onboardingStep === "setup-complete" ? (
-              icon
-            ) : isContinuing ? null : (
-              <ArrowRight size={16} strokeWidth={2} />
-            )}
-          </Button>
+                  : onboardingStep === "setup-complete"
+                    ? "Copy setup prompt"
+                    : onboardingStep === "agent-context"
+                      ? hasAgentContext
+                        ? "Get started"
+                        : "Skip agent context"
+                      : "Get started"
+              }
+            >
+              {isWaitingForOnboarded
+                ? isCopied
+                  ? "Copied prompt"
+                  : isContinuing
+                    ? "Copying…"
+                    : hasCopiedSetupPrompt
+                      ? "Copy setup prompt again"
+                      : "Copy setup prompt"
+                : isContinuing
+                  ? onboardingStep === "setup-complete"
+                    ? "Copying…"
+                    : "Getting started…"
+                  : continueLabel}
+              {isWaitingForOnboarded || onboardingStep === "setup-complete" ? (
+                icon
+              ) : isContinuing ? null : (
+                <ArrowRight size={16} strokeWidth={2} />
+              )}
+            </Button>
+          )}
         </>
       }
     >
@@ -441,6 +443,9 @@ export function PrototypeBootstrapOnboardingModal({
         <PrototypeBootstrapOnboardingWelcomeStep
           title={title}
           description={description ?? ""}
+          onContinue={() => {
+            void handlePrimaryAction();
+          }}
         />
       ) : null}
 

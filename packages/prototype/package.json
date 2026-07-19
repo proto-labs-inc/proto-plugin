@@ -1,6 +1,6 @@
 {
   "name": "proto-plugin",
-  "version": "0.1.48",
+  "version": "0.1.46",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -36,6 +36,7 @@
     "setup-host": "node scripts/ensure-component-library-page.mjs",
     "verify:prototype-ids": "node scripts/verify-prototype-component-ids.mjs",
     "verify:prototype-preview-states": "node scripts/verify-prototype-preview-states.mjs",
+    "verify:component-library-visual": "node scripts/verify-component-library-visual.mjs",
     "link-source": "./scripts/link-source.sh",
     "sync-from-source": "./scripts/sync-from-source.sh",
     "link-source-db": "./scripts/link-source-db.sh",
@@ -75,5 +76,8 @@
     "server-only": "^0.0.1",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.5.2"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.48.0"
   }
 }

@@ -14,6 +14,7 @@ export const BOOTSTRAP_VERIFY_SCRIPTS = {
   workspaceProfile: "pnpm verify:workspace-profile",
   onboarded: "pnpm verify:onboarded",
   componentLibraryLoaded: "pnpm verify:component-library-loaded",
+  componentLibrary: "pnpm verify:component-library",
   bootstrapStatus: "pnpm verify:bootstrap-status",
 } as const;
 
@@ -95,6 +96,7 @@ export function buildBootstrapSetupMasterGatesLines(): string[] {
     "",
     "- **Do not parallelize across phases.**",
     "- **Do not** run `sync-from-source`, edit the component library, or explore source UI for extraction until the source is linked and the workspace profile is set (**CHECKPOINT 2**).",
+    "- **Agent context (phase 2b):** Run **only** when an **Agent context** section appears below. Write **only** what the user pasted or selected — no placeholder or Proto documentation. If that section is absent, **skip phase 2b** — do not create `.proto/agent/custom-context.md` and do not print CHECKPOINT 2b.",
     "- **When the user asks why something was not done:** answer the question first. Do not silently fix and move on unless they ask you to fix it.",
     "",
     "Proto tracks progress from real workspace state — there are no flags to write. Onboarding completes once the source is linked and the profile is set; the component library unlocks once `/component-library` is populated.",
@@ -106,9 +108,9 @@ export function buildBootstrapSetupMasterGatesLines(): string[] {
     "| 0 | Proto-plugin preflight (AGENTS.md) | `CHECKPOINT 0 COMPLETE: proto-plugin current` | version API / lockfile |",
     "| 1 | Link source directory | `CHECKPOINT 1 COMPLETE: source linked` | `pnpm verify:source-linked` |",
     "| 2 | Workspace profile | `CHECKPOINT 2 COMPLETE: workspace profile set` | `pnpm verify:workspace-profile` |",
-    "| 2b | Agent context (optional) | `CHECKPOINT 2b COMPLETE: agent context written` | target file exists |",
+    "| 2b | Agent context (optional — only if section below) | `CHECKPOINT 2b COMPLETE: agent context written` | user content written verbatim; skip if no section |",
     "| 3 | Component library sync | `CHECKPOINT 3 COMPLETE: component library synced from source` | sync succeeded |",
-    "| 4 | Component library previews | `CHECKPOINT 4 COMPLETE: component library renders on /component-library` | `pnpm verify:component-library-loaded` |",
+    "| 4 | Component library previews | `CHECKPOINT 4 COMPLETE: component library renders on /component-library` | `pnpm verify:component-library` + browser pass |",
     "| 5 | Bootstrap status API | `CHECKPOINT 5 COMPLETE: bootstrap status API reports workspace ready` | `pnpm verify:bootstrap-status` (dev server running) |",
     "",
     "Each section below ends with **⛔ HARD STOP**. Do not begin the next section until that checkpoint is in your reply.",

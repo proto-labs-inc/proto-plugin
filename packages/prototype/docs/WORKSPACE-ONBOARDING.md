@@ -111,7 +111,7 @@ Sections **in order**:
 | 0 | Proto-plugin preflight (AGENTS.md) | `CHECKPOINT 0 COMPLETE: proto-plugin current` | version API / lockfile |
 | 1 | Link source directory | `CHECKPOINT 1 COMPLETE: source linked` | `pnpm verify:source-linked` |
 | 2 | Workspace profile | `CHECKPOINT 2 COMPLETE: workspace profile set` | `pnpm verify:workspace-profile` |
-| 2b | Agent context (optional) | `CHECKPOINT 2b COMPLETE: agent context written` | target file exists |
+| 2b | Agent context (optional — only if section below) | `CHECKPOINT 2b COMPLETE: agent context written` | user content written verbatim; skip if no section |
 | 3 | Component library sync | `CHECKPOINT 3 COMPLETE: component library synced from source` | sync succeeded |
 | 4 | Component library previews | `CHECKPOINT 4 COMPLETE: component library renders on /component-library` | `pnpm verify:component-library-loaded` |
 | 5 | Bootstrap status API | `CHECKPOINT 5 COMPLETE: bootstrap status API reports workspace ready` | `pnpm verify:bootstrap-status` (dev server running) |

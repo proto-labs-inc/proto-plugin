@@ -36,6 +36,25 @@ SYNC_LOCAL_EXTENSIONS=(
   # "src/app/globals.css (keep @source line; tool theme lives in layout via proto-plugin/styles/globals.css)"
 )
 
+# --- pnpm verify:component-library (coverage oracle) ------------------------
+#
+# The component-library gate enumerates the synced design-system directories and
+# fails until every primitive/composite is previewed on /component-library (or
+# has a `// skip: <Name> - <reason>` comment). By default it derives the roots
+# from the component-looking entries in SYNC_DIRS above (paths under ui/shadcn
+# for primitives, paths matching "pattern" for composites; lib/utils/hooks/
+# styles are ignored).
+#
+# Set these ONLY when the heuristic picks the wrong dirs (e.g. an app has both an
+# app-chrome `components/ui` and a design-system `shadcn/ui`). Paths are relative
+# to the host repo root and point at the synced-in directories.
+COMPONENT_LIBRARY_PRIMITIVE_ROOTS=(
+  # "packages/ui/src/components/shadcn/ui"
+)
+COMPONENT_LIBRARY_COMPOSITE_ROOTS=(
+  # "packages/ui-patterns/src"
+)
+
 # --- pnpm link-source-db ---------------------------------------------------
 
 # Env var names to copy from the source app's .env.local into this host's.

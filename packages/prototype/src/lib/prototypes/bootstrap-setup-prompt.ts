@@ -98,6 +98,13 @@ export function buildBootstrapSetupCopyText({
         contextFilePath: trimmedAgentContextPath,
       }),
     );
+  } else {
+    sections.push(
+      "## Agent context",
+      "",
+      "The user skipped agent context during onboarding. **Do not** create `.proto/agent/custom-context.md`. **Do not** print CHECKPOINT 2b. Proceed from CHECKPOINT 2 to component library sync.",
+      "",
+    );
   }
 
   appendSection(

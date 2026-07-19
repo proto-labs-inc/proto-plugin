@@ -13,6 +13,10 @@ const VERIFY_SCRIPTS = {
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs onboarded",
   "verify:component-library-loaded":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs component-library-loaded",
+  "verify:component-library":
+    "node node_modules/proto-plugin/scripts/verify-component-library.mjs",
+  "verify:component-library-visual":
+    "node node_modules/proto-plugin/scripts/verify-component-library-visual.mjs",
   "verify:bootstrap-status":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-status.mjs",
 };

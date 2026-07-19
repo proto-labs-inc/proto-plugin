@@ -20,6 +20,8 @@ Unless `DEVELOPER=true` is set in `.env.local`, agent work scope in a **host app
 
 If `.proto/agent/custom-context.md` exists in the host repo, read it **before other work**. It contains project-specific agent instructions added during Proto workspace setup (team conventions, Cursor rules, skills notes, etc.). Treat it as authoritative for this host unless it conflicts with package AGENTS.md scope rules.
 
+**During workspace setup:** create this file **only** when the user pasted agent context or selected a file during onboarding. Write **only** that user-supplied content — verbatim. Do **not** add placeholder, boilerplate, or Proto documentation. If the user skipped agent context, **do not** create the file.
+
 ---
 
 ## Proto-plugin version preflight (mandatory, blocking)
@@ -288,20 +290,24 @@ When populating from source (see `buildPopulateComponentLibraryPrompt`):
 - Preserve semantic tokens from `globals.css`; no hardcoded hex in previews.
 - Do **not** add a "Clear library" footer or duplicate section headers above the first preview grid.
 
-### Product theme on preview surfaces (BLOCKING — do not skip)
+### Product theme on preview surfaces (generated bridge — do not hand-author)
 
-The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-`*, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations **never recompute** on a nested element — so copying source tokens and leaving the bridge as a stub renders the whole library in the `:root` fallback (usually dark), even though the app compiles and returns HTTP 200.
+The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-`*, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations do not recompute on a nested element on their own.
 
-1. **The host token bridge is REQUIRED** whenever the source derives tokens on `:root`. Re-declare the **full** token system — theme **inputs AND the derivations** — scoped to `[data-prototype-source-surface][data-prototype-product-theme-managed]`, once per configured mode (`[data-theme="light"]`, `[data-theme="dark"]`, …). A `color-scheme`-only stub is **not acceptable**; it is the #1 cause of dark/unstyled previews. Register the bridge file in `SYNC_LOCAL_EXTENSIONS` so `sync-from-source` never overwrites it.
-2. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes you have bridged and verified. Default to `["light"]` unless the source ships more.
-3. Do **not** rely on proto-plugin's generic light/dark fallbacks for real previews — they cover only a token subset.
+Proto solves this with a **generated bridge** at runtime: `component-library-theme-rescope.ts` reads the source's own `:root` / `.light` / `.dark` custom-property declarations out of `document.styleSheets` and re-emits them scoped to the managed preview surface per mode, so the browser recomputes every `var()` / `color-mix()` in the surface's own context. **You do not hand-author a per-host token bridge.**
+
+Your responsibilities (the generated bridge cannot do these for you):
+
+1. **Copy the source token CSS in faithfully.** Sync the source's token/theme CSS into the host and `@import` it from `globals.css`, preserving the `:root` / theme-class declarations **unmodified** — the runtime re-scoper reads those exact declarations. Missing or mangled source token CSS = nothing for the bridge to re-scope.
+2. **Never introduce a circular `--color-*` mapping.** Do **not** add a `@theme inline` block that maps a Tailwind color token to itself (e.g. `--color-primary: var(--color-primary)`). That resolves to nothing and renders every button/badge/swatch unstyled — the #1 cause of dark/unstyled previews. The `--color-*` names must map to the source semantic tokens (`--color-primary: var(--primary)`), which come from the source's imported theme CSS. The runtime bridge re-scopes source `--*` tokens; it does **not** fix this `--color-*` layer. Enforced by `pnpm verify:component-library`.
+3. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes the source actually ships. Default to `["light"]` unless the source genuinely ships more.
 
 ### Before finishing
 
-1. Run through all three sections expanded on `/component-library`.
-2. **Verify theming per mode — HTTP 200 / "sections render" / "no TS errors" is NOT verification.** For **each** configured `productThemes` mode, confirm the source token system applied. The test is *"did source tokens apply"*, not *"is it light"* — a dark preview is correct for a dark-only source. Dark-safe signal: a **chromatic** token (`--color-brand` / `--primary` / a status color) resolves to the **source** hue (e.g. brand green), not proto tool-chrome **blue/pink** or neutral grey. Blue/pink or all-grey = the bridge is a stub/incomplete → fix it before finishing.
-3. Toggle product light/dark on the component library if the host configures both themes.
-4. Confirm composite coverage is complete (list exports vs previews).
+Run the loop until both gates pass (see `buildPopulateComponentLibraryPrompt`):
+
+1. **`pnpm verify:component-library`** (static) — fails until every synced primitive/composite is previewed or `// skip:`-commented and there is no circular `--color-*` mapping. If it reports empty/misconfigured coverage roots, set `COMPONENT_LIBRARY_PRIMITIVE_ROOTS` / `COMPONENT_LIBRARY_COMPOSITE_ROOTS` in `prototype.sync.config.sh`.
+2. **Browser pass** (runtime — no static check can prove this): open `/component-library`, expand each of the three sections one at a time, and for each confirm (a) **no console errors** while it opens (the composite section is the frequent offender — a stateful preview throws or a server-only import slips in), (b) it renders real content (not blank / not a React error-boundary), and (c) a **chromatic** token (`--color-brand` / `--primary` / a status color) resolves to the **source** hue — not proto tool-chrome blue/pink or neutral grey. Repeat the chromatic check per configured `productThemes` mode. HTTP 200 / "sections render" / "no TS errors" is **not** verification.
 
 ---
 

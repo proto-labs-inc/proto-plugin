@@ -178,7 +178,18 @@ export function rescopeComponentLibraryTheme(
   if (typeof document === "undefined") return;
 
   const buckets = readSourceTokenBuckets();
-  if (buckets.base.size === 0 && buckets.dark.size === 0) return;
+  if (buckets.base.size === 0 && buckets.dark.size === 0) {
+    if (process.env.NODE_ENV !== "production") {
+      // No readable source token declarations found — previews will render in
+      // the :root fallback (usually unstyled/dark). Almost always means the
+      // source token CSS was not synced/@imported into globals.css.
+      console.warn(
+        "[proto-plugin] component-library theme rescoper found no source token declarations to re-scope. " +
+          "Confirm the source design tokens are @imported in globals.css (see the Component Library section of AGENTS.md).",
+      );
+    }
+    return;
+  }
 
   const blocks: string[] = [];
 

@@ -5,6 +5,16 @@ export const CUSTOM_AGENT_CONTEXT_PATH = ".proto/agent/custom-context.md";
 /** @deprecated Use CUSTOM_AGENT_CONTEXT_PATH */
 export const HOST_AGENT_CONTEXT_PATH = CUSTOM_AGENT_CONTEXT_PATH;
 
+/** Shared copy for agent-context prompts — user-supplied content only. */
+export const AGENT_CONTEXT_USER_CONTENT_ONLY_LINES = [
+  "## Content rules (mandatory)",
+  "",
+  "- Write **only** what the user provided — pasted markdown or the contents of their selected file.",
+  "- Copy verbatim. Do **not** add headers, boilerplate, placeholder text, or Proto documentation.",
+  "- If the user did not provide agent context, **do not** create or update `.proto/agent/custom-context.md`.",
+  "",
+] as const;
+
 const AGENT_CONTEXT_HARD_STOP = buildPhaseHardStopLines("agent-context", {
   extraVerifyLines: [
     "",
@@ -43,6 +53,7 @@ export function buildAgentContextPrompt({
       ? "Clear custom agent instructions so future agents rely on default Proto guidance only."
       : "Persist the agent instructions below so future agents read them before building prototypes.",
     "",
+    ...AGENT_CONTEXT_USER_CONTENT_ONLY_LINES,
     "## Target file",
     isClearing
       ? `Delete \`${CUSTOM_AGENT_CONTEXT_PATH}\` at the host repo root if it exists.`
@@ -52,7 +63,7 @@ export function buildAgentContextPrompt({
       ? []
       : [
           "## Content",
-          "Write the following markdown to the target file (replace any existing file unless the user asks to merge):",
+          "Write **only** the following markdown to the target file — nothing else (replace any existing file unless the user asks to merge):",
           "",
           "```markdown",
           trimmedContent,
@@ -97,6 +108,7 @@ export function buildAgentContextFromPathPrompt({
     "## Goal",
     "Persist agent instructions so future agents read them before building prototypes.",
     "",
+    ...AGENT_CONTEXT_USER_CONTENT_ONLY_LINES,
     "## Source file",
     `Read the agent context at \`${trimmedSourcePath}\`.`,
     "",
@@ -105,7 +117,7 @@ export function buildAgentContextFromPathPrompt({
     "",
     "## Steps",
     "1. Read the source file at the absolute path above.",
-    `2. Write its contents to \`${destinationFilePath}\` in this host repo (replace any existing file unless the user asks to merge).`,
+    `2. Write **only** its contents to \`${destinationFilePath}\` in this host repo — verbatim, with no additions (replace any existing file unless the user asks to merge).`,
     "3. Confirm the target file exists and is readable.",
     "4. Do not modify unrelated paths.",
     ...buildPhaseHardStopLines("agent-context", {
