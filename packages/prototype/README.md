@@ -134,7 +134,7 @@ Open [http://localhost:1985](http://localhost:1985) when developing.
 
 **Auto bootstrap onboarding:** on gallery routes the shell calls `GET /api/prototypes/bootstrap-status` and opens the first incomplete setup step (source linked → user name → design tokens → ui primitives → shared blocks). When all requirements pass, the normal gallery UI renders automatically. Configure check paths and order in `prototype.config.ts` under `bootstrap`.
 
-**Bootstrap preview (dev only):** the floating stepper appears automatically in local development (bottom-right on gallery routes). Set `NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG=true` to also override auto resolution from bootstrap status, or deep-link with `?bootstrapPreview=source-directory` (also `welcome`, `name`, `agent-context`, `setup-complete`, `normal`; legacy `1` → welcome, `0` → normal).
+**Bootstrap preview (debug only):** set `DEBUG=true` in `.env.local` to show the floating stepper (bottom-right on gallery routes) and override auto resolution from bootstrap status. Deep-link with `?bootstrapPreview=source-directory` (also `welcome`, `name`, `agent-context`, `setup-complete`, `normal`; legacy `1` → welcome, `0` → normal).
 
 ## Public API
 

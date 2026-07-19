@@ -2,6 +2,7 @@ import "server-only";
 
 export { createPrototypeGalleryPage } from "./config/create-prototype-gallery-page";
 export { createPrototypeStarterScreensPage } from "./config/create-prototype-starter-screens-page";
+export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
 
 export {
   readScreenshotManifest,

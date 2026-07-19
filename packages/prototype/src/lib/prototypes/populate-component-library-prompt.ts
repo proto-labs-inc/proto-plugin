@@ -2,7 +2,10 @@ import {
   buildWorkspaceProfilePromptLines,
   type WorkspaceProfile,
 } from "./workspace-profile";
-import { buildMarkComponentLibraryLoadedPromptLines } from "./workspace-component-library-loaded";
+import {
+  buildPhaseHardStopLines,
+  BOOTSTRAP_VERIFY_SCRIPTS,
+} from "./bootstrap-setup-phase-gates";
 
 const DEFAULT_SYNC_CONFIG_PATH = "prototype.sync.config.sh";
 const DEFAULT_COMPONENT_LIBRARY_PAGE_PATH = "src/app/component-library/page.tsx";
@@ -98,6 +101,8 @@ export function buildPopulateComponentLibraryPrompt({
   const lines = [
     "Populate the Component Library for this prototype host app, directly from the linked source.",
     "",
+    "**Run this section last** — after the source is linked and the workspace profile is set.",
+    "",
     "## Goal",
     "The Component Library page is empty. Inspect the linked source application and pull all base styles and UI building blocks into this host repo. There is no pre-built export — read the source directly.",
     "",
@@ -125,6 +130,19 @@ export function buildPopulateComponentLibraryPrompt({
     `2. Update \`${syncConfigPath}\` — add paths to \`SYNC_FILES\`, \`SYNC_DIRS\`, and/or \`SYNC_GLOBS\`. Prefer syncing whole directories (e.g. \`src/components/ui\`) over individual files.`,
     "3. Run `pnpm sync-from-source`.",
     "4. Re-apply any entries listed in `SYNC_LOCAL_EXTENSIONS` if this host customizes beyond source.",
+    ...buildPhaseHardStopLines("component-library-sync", {
+      extraVerifyLines: [
+        "",
+        "Confirm:",
+        "- `prototype.sync.config.sh` has sync paths configured",
+        "- `pnpm sync-from-source` succeeded",
+        "- `src/app/component-library/page.tsx` exists (`pnpm setup-host` if missing)",
+      ],
+    }),
+    "",
+    "## Component library previews",
+    "",
+    "**Prerequisite:** CHECKPOINT 3 must already be in the conversation.",
     "",
     ...buildComponentLibraryPageStructureLines({
       componentLibraryPagePath,
@@ -136,8 +154,18 @@ export function buildPopulateComponentLibraryPrompt({
     "- Preserve semantic tokens from `globals.css`; avoid hardcoded hex.",
     "- Do **not** hand-author a component-library token bridge — the plugin re-scopes source tokens onto preview surfaces at runtime.",
     "- Confirm components render correctly on `/component-library` before finishing.",
-    "",
-    ...buildMarkComponentLibraryLoadedPromptLines(),
+    ...buildPhaseHardStopLines("component-library-previews", {
+      verifyCommand: BOOTSTRAP_VERIFY_SCRIPTS.componentLibraryLoaded,
+      extraVerifyLines: [
+        "",
+        "Confirm on disk:",
+        "- Open `/component-library` source and verify all three accordion sections exist",
+        "- Toggle each configured product theme in the component library header when both modes are configured",
+        "- `pnpm verify:component-library-loaded` exits 0",
+        "",
+        "**Do not claim setup is finished here.** CHECKPOINT 4 only confirms the library page is populated on disk. Continue to the final bootstrap status API gate (CHECKPOINT 5) before telling the user setup is complete.",
+      ],
+    }),
   ];
 
   return lines.join("\n");

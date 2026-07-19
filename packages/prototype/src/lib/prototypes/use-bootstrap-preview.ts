@@ -5,10 +5,6 @@ import {
   type PrototypeBootstrapStatus,
 } from "@prototype/lib/prototypes/prototype-bootstrap-status";
 import {
-  clearAwaitingLibrarySync,
-  readAwaitingLibrarySync,
-} from "@prototype/lib/prototypes/workspace-setup-awaiting-library";
-import {
   createContext,
   createElement,
   useCallback,
@@ -29,6 +25,7 @@ export type BootstrapPreviewStep =
   | "agent-context"
   | "component-library"
   | "setup-complete"
+  | "library-loading"
   | "normal";
 
 export const BOOTSTRAP_PREVIEW_STEPS = [
@@ -38,6 +35,7 @@ export const BOOTSTRAP_PREVIEW_STEPS = [
   "agent-context",
   "setup-complete",
   "component-library",
+  "library-loading",
   "normal",
 ] as const satisfies readonly BootstrapPreviewStep[];
 
@@ -50,7 +48,8 @@ export const BOOTSTRAP_PREVIEW_STEP_LABELS: Record<
   name: "Name",
   "agent-context": "Agent context",
   "setup-complete": "Setup complete",
-  "component-library": "Library loading",
+  "component-library": "Waiting for setup",
+  "library-loading": "Library loading",
   normal: "Normal",
 };
 
@@ -61,30 +60,31 @@ const BOOTSTRAP_PREVIEW_STEP_ORDER: BootstrapPreviewStep[] = [
   "agent-context",
   "setup-complete",
   "component-library",
+  "library-loading",
   "normal",
 ];
 
-const MODAL_ONBOARDING_STEPS = new Set<BootstrapPreviewStep>([
+/** Modal + gallery-backdrop steps — not `library-loading` (gallery visible) or `normal`. */
+export const BOOTSTRAP_ONBOARDING_MODAL_STEPS = new Set<BootstrapPreviewStep>([
   "welcome",
   "source-directory",
   "name",
   "agent-context",
   "setup-complete",
+  "component-library",
+]);
+
+export function isBootstrapOnboardingModalStep(
+  step: BootstrapPreviewStep,
+): boolean {
+  return BOOTSTRAP_ONBOARDING_MODAL_STEPS.has(step);
+}
+
+const BOOTSTRAP_POLLING_STEPS = new Set<BootstrapPreviewStep>([
+  "component-library",
 ]);
 
 const FIRST_ONBOARDING_STEP: BootstrapPreviewStep = "welcome";
-
-/**
- * Full debug mode: skip auto bootstrap resolution and honor `?bootstrapPreview=`.
- * Opt in with `NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG=true` in `.env.local`.
- */
-const isDebugBootstrapPreviewEnabled =
-  process.env.NEXT_PUBLIC_PROTOTYPE_BOOTSTRAP_DEBUG === "true";
-
-/** Floating stepper — visible in local dev; production requires the debug env var. */
-const isDevelopmentToggleVisible =
-  process.env.NODE_ENV === "development" ||
-  isDebugBootstrapPreviewEnabled;
 
 function isBootstrapPreviewStep(value: string): value is BootstrapPreviewStep {
   return (BOOTSTRAP_PREVIEW_STEPS as readonly string[]).includes(value);
@@ -100,9 +100,10 @@ function parseBootstrapPreviewUrlParam(
 }
 
 /** One-shot URL activation for debug — strips the param without persisting a step. */
-function readBootstrapPreviewUrlActivation(): BootstrapPreviewStep | null {
-  if (!isDebugBootstrapPreviewEnabled || typeof window === "undefined")
-    return null;
+function readBootstrapPreviewUrlActivation(
+  debugEnabled: boolean,
+): BootstrapPreviewStep | null {
+  if (!debugEnabled || typeof window === "undefined") return null;
 
   const params = new URLSearchParams(window.location.search);
   const param = params.get(BOOTSTRAP_PREVIEW_URL_PARAM);
@@ -135,38 +136,28 @@ function resolveInitialBootstrapStep(
   status: PrototypeBootstrapStatus,
 ): BootstrapPreviewStep {
   if (status.complete) return "normal";
-  if (readAwaitingLibrarySync()) return "component-library";
-  if (status.componentLibraryReady) return "component-library";
   return FIRST_ONBOARDING_STEP;
 }
 
-/** Loading panel on /component-library until the agent sets `.proto/component-library-loaded`. */
+/** Loading panel on /component-library until the library page is populated. */
 export function shouldShowComponentLibraryLoadingPanel(
-  bootstrapStep: BootstrapPreviewStep,
   componentLibraryReady: boolean | null | undefined,
   forcePreview = false,
 ): boolean {
-  if (bootstrapStep !== "component-library") return false;
   if (forcePreview) return true;
   return componentLibraryReady !== true;
 }
 
 /** Block new prototype creation until the component library loaded flag is set. */
 export function blocksNewPrototypeCreation(
-  bootstrapStep: BootstrapPreviewStep,
   componentLibraryReady: boolean | null | undefined,
   forcePreview = false,
 ): boolean {
   return shouldShowComponentLibraryLoadingPanel(
-    bootstrapStep,
     componentLibraryReady,
     forcePreview,
   );
 }
-
-const BOOTSTRAP_POLLING_STEPS = new Set<BootstrapPreviewStep>([
-  "component-library",
-]);
 
 type BootstrapPreviewContextValue = {
   bootstrapStep: BootstrapPreviewStep;
@@ -179,14 +170,13 @@ type BootstrapPreviewContextValue = {
   retreatBootstrapStep: () => void;
   closeBootstrapOnboarding: () => void;
   refreshBootstrapStatus: () => Promise<PrototypeBootstrapStatus | null>;
-  /** Temporarily hide the onboarding modal + backdrop so the gallery is browsable. */
-  minimizeOnboarding: () => void;
-  /** Onboarding is underway (not complete/dismissed) — true even while minimized. */
+  /** Onboarding is underway — gallery routes stay blocked until bootstrap completes. */
   isOnboardingInProgress: boolean;
   /** Gallery is browsable while the component library syncs after setup. */
   isComponentLibraryLoadingActive: boolean;
-  /** Onboarding is underway but the modal is minimized so examples are browsable. */
-  isOnboardingMinimized: boolean;
+  /** True while the onboarding modal is open — until bootstrap status reports `complete: true`. */
+  isOnboardingModalVisible: boolean;
+  /** True while gallery chrome must stay hidden (any in-progress onboarding step). */
   isOnboardingBackdropActive: boolean;
   isBootstrapPreviewActive: boolean;
   /** @deprecated Use isBootstrapPreviewActive or isOnboardingBackdropActive */
@@ -200,17 +190,20 @@ type BootstrapPreviewContextValue = {
 const BootstrapPreviewContext =
   createContext<BootstrapPreviewContextValue | null>(null);
 
-function useBootstrapPreviewState(): BootstrapPreviewContextValue {
+function useBootstrapPreviewState(
+  debug = false,
+  workspaceOnboarded = false,
+): BootstrapPreviewContextValue {
+  const isDevelopmentToggleVisible = debug;
   const [bootstrapStep, setBootstrapStepState] =
-    useState<BootstrapPreviewStep>("normal");
+    useState<BootstrapPreviewStep>(() =>
+      workspaceOnboarded ? "normal" : FIRST_ONBOARDING_STEP,
+    );
   const [bootstrapStatus, setBootstrapStatus] =
     useState<PrototypeBootstrapStatus | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [isDismissedForSession, setIsDismissedForSession] = useState(false);
-  const [isOnboardingMinimized, setIsOnboardingMinimized] = useState(false);
-  /** Debug stepper: always preview loading UI on the library-loading step. */
-  const [forceLibraryLoadingPreview, setForceLibraryLoadingPreview] =
-    useState(false);
+  const [isDismissedForSession, setIsDismissedForSession] =
+    useState(workspaceOnboarded);
   /** Poll bootstrap status after advancing through agent-driven steps — not debug picker jumps. */
   const shouldPollBootstrapRef = useRef(false);
 
@@ -224,21 +217,24 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
       const shouldAutoAdvance =
         source === "initial" || shouldPollBootstrapRef.current;
 
-      if (status.componentLibraryReady) {
-        clearAwaitingLibrarySync();
-      }
-
       if (status.complete) {
         if (shouldAutoAdvance) {
           setBootstrapStepState("normal");
           setIsDismissedForSession(true);
           shouldPollBootstrapRef.current = false;
-          clearAwaitingLibrarySync();
         }
         return;
       }
 
+      if (source === "initial") {
+        setIsDismissedForSession(false);
+      }
+
       setBootstrapStepState((currentStep) => {
+        if (source === "initial") {
+          return resolveInitialBootstrapStep(status);
+        }
+
         if (currentStep !== "normal") {
           return currentStep;
         }
@@ -250,7 +246,7 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
   );
 
   const refreshBootstrapStatus = useCallback(async () => {
-    if (isDebugBootstrapPreviewEnabled) return null;
+    if (debug) return null;
 
     try {
       const status = await fetchPrototypeBootstrapStatus();
@@ -259,40 +255,46 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
     } catch {
       return null;
     }
-  }, [applyBootstrapStatus]);
+  }, [applyBootstrapStatus, debug]);
 
   useEffect(() => {
-    if (isDebugBootstrapPreviewEnabled) {
-      const urlStep = readBootstrapPreviewUrlActivation();
-      if (urlStep != null && urlStep !== "normal") {
-        setBootstrapStepState(FIRST_ONBOARDING_STEP);
-      }
-      setIsReady(true);
-      return;
-    }
-
     let cancelled = false;
+    const urlOverride = debug ? readBootstrapPreviewUrlActivation(true) : null;
 
     fetchPrototypeBootstrapStatus()
       .then((status) => {
         if (cancelled) return;
-        applyBootstrapStatus(status, "initial");
+
+        if (urlOverride != null) {
+          setBootstrapStatus(status);
+          if (urlOverride === "normal") {
+            setBootstrapStepState("normal");
+            setIsDismissedForSession(true);
+          } else {
+            setIsDismissedForSession(false);
+            setBootstrapStepState(urlOverride);
+          }
+        } else {
+          applyBootstrapStatus(status, "initial");
+        }
+
         setIsReady(true);
       })
       .catch(() => {
         if (cancelled) return;
-        setBootstrapStepState("normal");
+        setIsDismissedForSession(false);
+        setBootstrapStepState(FIRST_ONBOARDING_STEP);
         setIsReady(true);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [applyBootstrapStatus]);
+  }, [applyBootstrapStatus, debug]);
 
   useEffect(() => {
     if (
-      isDebugBootstrapPreviewEnabled ||
+      debug ||
       !shouldPollBootstrapRef.current ||
       !BOOTSTRAP_POLLING_STEPS.has(bootstrapStep) ||
       !isReady
@@ -314,45 +316,35 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
       window.removeEventListener("focus", handleVisibilityOrFocus);
     };
-  }, [bootstrapStep, isReady, refreshBootstrapStatus]);
+  }, [bootstrapStep, debug, isReady, refreshBootstrapStatus]);
 
   const setBootstrapStep = useCallback((nextStep: BootstrapPreviewStep) => {
     setBootstrapStepState(nextStep);
-    setIsOnboardingMinimized(false);
-    if (nextStep !== "component-library") {
-      setForceLibraryLoadingPreview(false);
-    }
     if (nextStep === "normal") {
       setIsDismissedForSession(true);
       shouldPollBootstrapRef.current = false;
-      clearAwaitingLibrarySync();
+    } else if (nextStep === "library-loading") {
+      setIsDismissedForSession(false);
+      shouldPollBootstrapRef.current = false;
     }
   }, []);
 
   const openModalForStep = useCallback(
     (step: BootstrapPreviewStep) => {
-      setIsDismissedForSession(false);
-      setIsOnboardingMinimized(false);
+      if (!isDevelopmentToggleVisible && step === "normal") {
+        return;
+      }
+      setIsDismissedForSession(step === "normal");
       shouldPollBootstrapRef.current = false;
-      setForceLibraryLoadingPreview(
-        isDevelopmentToggleVisible && step === "component-library",
-      );
       setBootstrapStep(step);
     },
-    [setBootstrapStep],
+    [isDevelopmentToggleVisible, setBootstrapStep],
   );
-
-  const minimizeOnboarding = useCallback(() => {
-    setIsOnboardingMinimized(true);
-  }, []);
 
   const advanceBootstrapStep = useCallback(() => {
     setBootstrapStepState((currentStep) => {
       const nextStep = getNextBootstrapStep(currentStep);
       shouldPollBootstrapRef.current = BOOTSTRAP_POLLING_STEPS.has(nextStep);
-      if (nextStep === "component-library") {
-        setForceLibraryLoadingPreview(false);
-      }
       return nextStep;
     });
   }, []);
@@ -368,21 +360,19 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
     setBootstrapStep("normal");
   }, [setBootstrapStep]);
 
-  const isOnboardingInProgress =
-    isReady && !isDismissedForSession && bootstrapStep !== "normal";
+  const isOnboardingModalStep =
+    !isDismissedForSession && isBootstrapOnboardingModalStep(bootstrapStep);
+  const isLibraryLoadingPreviewStep = bootstrapStep === "library-loading";
   const isComponentLibraryLoadingPanelVisible =
     shouldShowComponentLibraryLoadingPanel(
-      bootstrapStep,
       bootstrapStatus?.componentLibraryReady,
-      forceLibraryLoadingPreview,
+      isLibraryLoadingPreviewStep,
     );
   const isComponentLibraryLoadingActive =
-    isOnboardingInProgress &&
-    bootstrapStep === "component-library";
-  const isOnboardingBackdropActive =
-    isOnboardingInProgress &&
-    !isOnboardingMinimized &&
-    MODAL_ONBOARDING_STEPS.has(bootstrapStep);
+    bootstrapStatus?.componentLibraryReady !== true;
+  const isOnboardingInProgress = isOnboardingModalStep;
+  const isOnboardingModalVisible = isOnboardingModalStep;
+  const isOnboardingBackdropActive = isOnboardingModalStep;
   const isBootstrapPreviewActive = isOnboardingBackdropActive;
 
   return useMemo(
@@ -396,10 +386,9 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
       retreatBootstrapStep,
       closeBootstrapOnboarding,
       refreshBootstrapStatus,
-      minimizeOnboarding,
       isOnboardingInProgress,
       isComponentLibraryLoadingActive,
-      isOnboardingMinimized,
+      isOnboardingModalVisible,
       isOnboardingBackdropActive,
       isBootstrapPreviewActive,
       isBootstrapPreview: isBootstrapPreviewActive,
@@ -414,25 +403,32 @@ function useBootstrapPreviewState(): BootstrapPreviewContextValue {
       bootstrapStatus,
       bootstrapStep,
       closeBootstrapOnboarding,
-      forceLibraryLoadingPreview,
       isBootstrapPreviewActive,
       isComponentLibraryLoadingPanelVisible,
       isOnboardingBackdropActive,
       isOnboardingInProgress,
       isComponentLibraryLoadingActive,
-      isOnboardingMinimized,
-      minimizeOnboarding,
+      isOnboardingModalVisible,
       isReady,
       openModalForStep,
       refreshBootstrapStatus,
       retreatBootstrapStep,
       setBootstrapStep,
+      isDevelopmentToggleVisible,
     ],
   );
 }
 
-export function BootstrapPreviewProvider({ children }: { children: ReactNode }) {
-  const value = useBootstrapPreviewState();
+export function BootstrapPreviewProvider({
+  children,
+  debug = false,
+  workspaceOnboarded = false,
+}: {
+  children: ReactNode;
+  debug?: boolean;
+  workspaceOnboarded?: boolean;
+}) {
+  const value = useBootstrapPreviewState(debug, workspaceOnboarded);
   return createElement(BootstrapPreviewContext.Provider, { value }, children);
 }
 

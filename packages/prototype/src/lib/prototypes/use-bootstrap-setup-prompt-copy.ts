@@ -6,7 +6,6 @@ import { useGalleryHostConfig } from "@prototype/lib/prototypes/use-gallery-host
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
-import { markAwaitingLibrarySync } from "@prototype/lib/prototypes/workspace-setup-awaiting-library";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -60,8 +59,6 @@ export function useBootstrapSetupPromptCopy(options?: {
           workspaceProfile,
         }),
       );
-
-      markAwaitingLibrarySync();
 
       if (options?.telemetryModal) {
         track("modal.prompt_copied", { modal: options.telemetryModal });

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { ensureBootstrapVerifyScripts } from "./ensure-bootstrap-verify-scripts.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 const PAGE_CONTENT = `import { createPrototypeComponentLibraryPage } from "proto-plugin";
@@ -106,6 +107,13 @@ function main() {
   if (logoResult.copied) {
     console.log(
       `proto-plugin: synced brand logo to ${path.relative(hostRoot, logoResult.destLogo)}`,
+    );
+  }
+
+  const verifyResult = ensureBootstrapVerifyScripts(hostRoot);
+  if (verifyResult.updated) {
+    console.log(
+      `proto-plugin: added ${verifyResult.added} bootstrap verify script(s) to package.json`,
     );
   }
 }

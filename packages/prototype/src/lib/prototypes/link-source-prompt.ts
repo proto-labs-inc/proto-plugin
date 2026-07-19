@@ -1,3 +1,7 @@
+import {
+  BOOTSTRAP_VERIFY_SCRIPTS,
+  buildPhaseHardStopLines,
+} from "@prototype/lib/prototypes/bootstrap-setup-phase-gates";
 import { looksLikeAbsolutePath } from "@prototype/lib/prototypes/resolve-file-path";
 import {
   buildOnboardingFolderPathResolutionLines,
@@ -94,6 +98,13 @@ export function buildLinkSourcePrompt({
     "3. Run `pnpm link-source` from the host repo to create or refresh the `source/` symlink.",
     "4. Restart the dev server if it is already running so env changes are picked up.",
     "5. Confirm the gallery sidebar footer shows the correct source directory name.",
+    ...buildPhaseHardStopLines("link-source", {
+      verifyCommand: BOOTSTRAP_VERIFY_SCRIPTS.sourceLinked,
+      extraVerifyLines: [
+        "",
+        "Also confirm: `readlink source` points at the product repo root.",
+      ],
+    }),
   );
 
   return lines.join("\n");

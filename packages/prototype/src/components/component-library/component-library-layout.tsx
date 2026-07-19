@@ -49,12 +49,13 @@ export function LibraryAccordionSection({
     <AccordionItem
       value={id}
       id={id}
-      className="scroll-mt-8 border-b border-[var(--border-medium,var(--border-solid))] px-6 last:border-b-0"
+      className="scroll-mt-8 border-b !border-stronger last:border-b-0"
     >
       <AccordionTrigger
         hideIcon
         className={cn(
-          "group py-5 text-xl font-semibold tracking-tight text-[var(--text-primary,var(--foreground))] hover:no-underline",
+          "px-6 py-5 text-xl font-semibold tracking-tight text-[var(--text-primary,var(--foreground))] hover:no-underline",
+          "data-[state=open]:border-b data-[state=open]:!border-stronger",
           "[&[data-state=open]>svg]:!rotate-0",
           isFirst && "pt-0",
         )}
@@ -66,7 +67,9 @@ export function LibraryAccordionSection({
         />
       </AccordionTrigger>
       <AccordionContent className="pb-10">
-        <ComponentLibraryPreviewSurface>{children}</ComponentLibraryPreviewSurface>
+        <div className="px-6 pt-6">
+          <ComponentLibraryPreviewSurface>{children}</ComponentLibraryPreviewSurface>
+        </div>
       </AccordionContent>
     </AccordionItem>
   );

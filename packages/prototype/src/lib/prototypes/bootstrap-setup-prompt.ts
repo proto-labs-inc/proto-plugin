@@ -1,10 +1,13 @@
 import { buildAgentContextFromPathCopyText } from "@prototype/lib/prototypes/agent-context-prompt";
+import {
+  buildBootstrapSetupFinalApiGateLines,
+  buildBootstrapSetupMasterGatesLines,
+} from "@prototype/lib/prototypes/bootstrap-setup-phase-gates";
 import { buildLinkSourceCopyText } from "@prototype/lib/prototypes/link-source-prompt";
 import { buildPopulateComponentLibraryCopyText } from "@prototype/lib/prototypes/populate-component-library-prompt";
 import { buildWorkspaceProfileCopyText } from "@prototype/lib/prototypes/profile-prompt";
 import { looksLikeAbsolutePath } from "@prototype/lib/prototypes/resolve-file-path";
 import type { WorkspaceProfile } from "@prototype/lib/prototypes/workspace-profile";
-import { buildMarkWorkspaceOnboardedPromptLines } from "@prototype/lib/prototypes/workspace-onboarded";
 
 function appendSection(sections: string[], title: string, body: string) {
   const trimmedBody = body.trim();
@@ -38,11 +41,16 @@ export function buildBootstrapSetupCopyText({
   const sections = [
     "Complete prototype workspace setup for this host app.",
     "",
-    "Run every section below in order. The agent writes two flags when done:",
-    "- `.proto/component-library-loaded` — immediately after the component library sync",
-    "- `.proto/onboarded` — last, after every step succeeds",
+    "Run every section below **in order**. Each section ends with **⛔ HARD STOP** — print its checkpoint line before starting the next section.",
     "",
-    "Reload the gallery after marking onboarded.",
+    "Proto tracks progress from real workspace state — there are no flags to write:",
+    "- Onboarding completes automatically once the source is linked and the workspace profile is set.",
+    "- The component library unlocks automatically once `/component-library` is populated.",
+    "- The gallery UI reads `GET /api/prototypes/bootstrap-status` — disk verify scripts alone are **not** enough to declare setup finished.",
+    "",
+    "Reload the gallery when setup finishes.",
+    "",
+    ...buildBootstrapSetupMasterGatesLines(),
     "",
   ];
 
@@ -81,18 +89,6 @@ export function buildBootstrapSetupCopyText({
     );
   }
 
-  appendSection(
-    sections,
-    "Component library",
-    buildPopulateComponentLibraryCopyText({
-      sourcePath: absoluteSourcePath,
-      syncConfigPath,
-      componentLibraryPagePath,
-      origin,
-      workspaceProfile,
-    }),
-  );
-
   const trimmedAgentContextPath = agentContextPath?.trim();
   if (trimmedAgentContextPath) {
     appendSection(
@@ -106,9 +102,17 @@ export function buildBootstrapSetupCopyText({
 
   appendSection(
     sections,
-    "Mark workspace onboarded",
-    buildMarkWorkspaceOnboardedPromptLines().join("\n"),
+    "Component library",
+    buildPopulateComponentLibraryCopyText({
+      sourcePath: absoluteSourcePath,
+      syncConfigPath,
+      componentLibraryPagePath,
+      origin,
+      workspaceProfile,
+    }),
   );
+
+  sections.push(...buildBootstrapSetupFinalApiGateLines());
 
   return sections.join("\n").trimEnd();
 }

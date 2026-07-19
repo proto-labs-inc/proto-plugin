@@ -25,6 +25,8 @@ type PrototypeGalleryShellProps = {
   sourcePath?: string;
   syncConfigPath?: string;
   componentLibraryPagePath?: string;
+  debug?: boolean;
+  workspaceOnboarded?: boolean;
 };
 
 function PrototypeGalleryShellMain({
@@ -44,9 +46,11 @@ export function PrototypeGalleryShell({
   sourcePath,
   syncConfigPath,
   componentLibraryPagePath,
+  debug = false,
+  workspaceOnboarded = false,
 }: PrototypeGalleryShellProps) {
   return (
-    <BootstrapPreviewProvider>
+    <BootstrapPreviewProvider debug={debug} workspaceOnboarded={workspaceOnboarded}>
       <GalleryHostConfigProvider
         value={{
           currentSourcePath: sourcePath,
@@ -80,13 +84,8 @@ function PrototypeGalleryShellContent({
     bootstrapStep,
     openModalForStep,
     isOnboardingBackdropActive,
-    isOnboardingInProgress,
-    isOnboardingMinimized,
     isDevelopmentToggleVisible,
   } = useBootstrapPreview();
-
-  const showResumeOnboardingPill =
-    isOnboardingInProgress && isOnboardingMinimized;
 
   return (
     <PrototypeProvider className="bg-[var(--bg-main)] flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -123,21 +122,6 @@ function PrototypeGalleryShellContent({
           syncConfigPath={syncConfigPath}
           componentLibraryPagePath={componentLibraryPagePath}
         />
-
-        {showResumeOnboardingPill ? (
-          <button
-            type="button"
-            onClick={() => openModalForStep(bootstrapStep)}
-            className="border-[var(--tool-chrome-border)] bg-[var(--bg-main)] text-[var(--tool-chrome-text-heading)] absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-lg transition-colors hover:bg-[var(--tool-chrome-ground)]"
-            data-prototype-bootstrap-resume=""
-          >
-            <span
-              className="size-2 animate-pulse rounded-full bg-[var(--tool-chrome-accent,#6366f1)]"
-              aria-hidden
-            />
-            Finish workspace setup
-          </button>
-        ) : null}
 
         {isDevelopmentToggleVisible ? (
           <PrototypeBootstrapPreviewFloatingStepper

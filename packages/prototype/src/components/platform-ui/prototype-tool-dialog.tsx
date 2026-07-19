@@ -117,6 +117,7 @@ export type PrototypeToolDialogProps = {
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
   description?: ReactNode;
+  titleLeading?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   footerClassName?: string;
@@ -134,6 +135,7 @@ export function PrototypeToolDialog({
   onOpenChange,
   title,
   description,
+  titleLeading,
   children,
   footer,
   footerClassName,
@@ -204,13 +206,16 @@ export function PrototypeToolDialog({
         ) : (
           <>
             <div className="flex items-start justify-between gap-3 px-5 py-4">
-              <div className="flex min-w-0 flex-col gap-1">
-                <DialogTitle className="text-xl font-semibold text-foreground">
-                  {title}
-                </DialogTitle>
-                {description ? (
-                  <p className="tool-dialog-description">{description}</p>
-                ) : null}
+              <div className="flex min-w-0 items-start gap-2">
+                {titleLeading}
+                <div className="flex min-w-0 flex-col gap-1">
+                  <DialogTitle className="text-xl font-semibold text-foreground">
+                    {title}
+                  </DialogTitle>
+                  {description ? (
+                    <p className="tool-dialog-description">{description}</p>
+                  ) : null}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
                 {headerActions}

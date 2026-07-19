@@ -71,6 +71,50 @@ Host prototypes import framework from `prototype` and UI from `@/components/ui`.
 
 ---
 
+## Workspace onboarding gate (mandatory)
+
+**Full spec:** `[docs/WORKSPACE-ONBOARDING.md](docs/WORKSPACE-ONBOARDING.md)` — read before any bootstrap/onboarding change.
+
+Until the source is linked and the workspace profile is set, the **gallery dashboard must stay inaccessible**. This is enforced in `packages/prototype` — do not add bypasses.
+
+### Required behavior
+
+- **Block the gallery shell** — sidebar, prototype grid, and gallery routes stay hidden while onboarding is in progress (`isOnboardingInProgress`). The **onboarding modal stays visible** for every step until bootstrap status reports `complete: true` — including the post-copy waiting step inside the modal.
+- **No dismiss / minimize / browse affordances** — do not add buttons such as “Browse examples”, “Skip for now”, “Minimize”, or session dismiss that let reviewers reach the dashboard before onboarding completes.
+- **Unlock from real state** — gallery access clears when `GET /api/prototypes/bootstrap-status` reports `complete: true` (source symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME`), not when the user closes a modal or picks “Normal” on the debug stepper.
+- **Debug stepper is opt-in only** — the floating bootstrap step picker appears only when `DEBUG=true` in `.env.local`. It is for package development, not default host UX. Picking `normal` in debug mode must not ship as a product path for hosts.
+
+### Derived state (no flags)
+
+There are **no** `.proto/onboarded` or `.proto/component-library-loaded` marker files. Status is derived from disk:
+
+
+| Signal | Derived when | Effect |
+| ------ | ------------ | ------ |
+| `complete: true` | `source` symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` | Unlocks gallery / dashboard |
+| `componentLibraryReady: true` | `ui-primitives`, `composite-components`, and `tokens` sections exist under `src/app/component-library/` | Unlocks `/component-library` and new-prototype creation |
+
+
+Implementation: `evaluateHostBootstrapStatus()` + `evaluate-workspace-derived-status.ts` (server-only).
+
+**Agent prompt gates:** `buildBootstrapSetupCopyText()` requires a **checkpoint line in the agent reply** after each phase before the next begins (see `bootstrap-setup-phase-gates.ts` and `docs/WORKSPACE-ONBOARDING.md`). Host verify scripts: `pnpm verify:source-linked`, `verify:workspace-profile`, `verify:onboarded`, `verify:component-library-loaded`, `verify:bootstrap-status` (added/updated by `pnpm setup-host`).
+
+Setup agents must **not** declare workspace setup finished until **CHECKPOINT 5** (`pnpm verify:bootstrap-status` with dev server running). CHECKPOINT 4 only confirms component library files exist on disk; the gallery UI unlocks from the bootstrap status API.
+
+### Anti-patterns
+
+- “Browse examples”, minimize-onboarding, or resume-setup pills that expose the gallery before onboarding completes
+- Starting component library sync or editing `/component-library` before the source is linked and workspace profile is set (**CHECKPOINT 2**)
+- Reintroducing `.proto/onboarded` or `.proto/component-library-loaded` marker files
+- When the user asks why a step was skipped, fixing silently instead of answering first
+- `isOnboardingMinimized`, `minimizeOnboarding`, or any UI that hides the modal but leaves the gallery interactive
+- Importing server-only bootstrap eval (`evaluateHostBootstrapStatus`, `*-io.ts` with `server-only`) from client barrels — `createPrototypeSiteLayout` lives in `proto-plugin/server` only
+- Showing the debug step picker in all dev builds (`NODE_ENV === "development"`) — use `DEBUG=true` only
+- Declaring workspace setup finished at **CHECKPOINT 4** without **CHECKPOINT 5** (`pnpm verify:bootstrap-status` against the running dev server)
+- Hand-rolling a host gallery shell instead of `createPrototypeSiteLayout` from `proto-plugin/server`
+
+---
+
 ## Viewport layout vs responsive UI
 
 The review toolbar **Layout** toggle (desktop / mobile) only changes the **preview frame** — it sets `#prototype-viewport` dimensions and `data-prototype-viewport-layout` for shell chrome (device frame, footer behavior). It must **not** drive product UI differences inside prototype content.
@@ -246,7 +290,7 @@ When populating from source (see `buildPopulateComponentLibraryPrompt`):
 
 ### Product theme on preview surfaces (BLOCKING — do not skip)
 
-The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-*`, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations **never recompute** on a nested element — so copying source tokens and leaving the bridge as a stub renders the whole library in the `:root` fallback (usually dark), even though the app compiles and returns HTTP 200.
+The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-`*, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations **never recompute** on a nested element — so copying source tokens and leaving the bridge as a stub renders the whole library in the `:root` fallback (usually dark), even though the app compiles and returns HTTP 200.
 
 1. **The host token bridge is REQUIRED** whenever the source derives tokens on `:root`. Re-declare the **full** token system — theme **inputs AND the derivations** — scoped to `[data-prototype-source-surface][data-prototype-product-theme-managed]`, once per configured mode (`[data-theme="light"]`, `[data-theme="dark"]`, …). A `color-scheme`-only stub is **not acceptable**; it is the #1 cause of dark/unstyled previews. Register the bridge file in `SYNC_LOCAL_EXTENSIONS` so `sync-from-source` never overwrites it.
 2. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes you have bridged and verified. Default to `["light"]` unless the source ships more.

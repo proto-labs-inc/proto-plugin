@@ -17,7 +17,9 @@ export { createPrototypeAgentInstructionsPage } from "./config/create-prototype-
 export { createPrototypeStarterScreenPage } from "./config/create-prototype-starter-screen-page";
 export { createPrototypePage } from "./config/create-prototype-page";
 export { createPrototypeStateMapPage } from "./config/create-prototype-state-map-page";
-export { createPrototypeSiteLayout } from "./config/create-prototype-site-layout";
+// NOTE: `createPrototypeSiteLayout` derives onboarding status from workspace state
+// on disk and lives in `proto-plugin/server`. Do not re-export it here — the barrel
+// is imported by client prototype components and must stay browser-safe.
 // NOTE: `withPrototype` uses Node path APIs and belongs in `proto-plugin/with-prototype`
 // (next.config.ts only). Do not re-export it here — the barrel is imported by client
 // prototype components and must stay browser-safe.

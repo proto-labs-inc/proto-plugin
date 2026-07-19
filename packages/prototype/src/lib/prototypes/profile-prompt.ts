@@ -1,3 +1,7 @@
+import {
+  BOOTSTRAP_VERIFY_SCRIPTS,
+  buildPhaseHardStopLines,
+} from "./bootstrap-setup-phase-gates";
 import { WORKSPACE_PROFILE_ENV_KEYS } from "./workspace-profile";
 
 export function buildWorkspaceProfilePrompt({
@@ -21,6 +25,9 @@ export function buildWorkspaceProfilePrompt({
     "2. Restart the dev server if it is running so Next.js picks up the new env values.",
     "3. Confirm `/settings` shows the correct user name.",
     "4. Include the user name in future agent prompts when relevant.",
+    ...buildPhaseHardStopLines("workspace-profile", {
+      verifyCommand: BOOTSTRAP_VERIFY_SCRIPTS.workspaceProfile,
+    }),
   ].join("\n");
 }
 

@@ -100,11 +100,11 @@ function LibraryAccordionSection({
     <AccordionItem
       value={id}
       id={id}
-      className="scroll-mt-8 border-b !border-stronger px-6 last:border-b-0"
+      className="scroll-mt-8 border-b !border-stronger last:border-b-0"
     >
       <AccordionTrigger
         hideIcon
-        className={`group text-foreground py-5 text-xl font-semibold tracking-tight hover:no-underline [&[data-state=open]>svg]:!rotate-0${isFirst ? " pt-0" : ""}`}
+        className={`group text-foreground px-6 py-5 text-xl font-semibold tracking-tight hover:no-underline data-[state=open]:border-b data-[state=open]:!border-stronger [&[data-state=open]>svg]:!rotate-0${isFirst ? " pt-0" : ""}`}
       >
         {title}
         <ChevronDown
@@ -112,7 +112,9 @@ function LibraryAccordionSection({
           className="text-foreground-light size-4 shrink-0 rotate-180 transition-transform duration-200 group-data-[state=open]:!rotate-0 motion-reduce:transition-none"
         />
       </AccordionTrigger>
-      <AccordionContent className="pb-10">{children}</AccordionContent>
+      <AccordionContent className="pb-10">
+        <div className="px-6 pt-6">{children}</div>
+      </AccordionContent>
     </AccordionItem>
   );
 }

@@ -17,12 +17,13 @@ export function PrototypeLibraryLoadingModal({
       open={open}
       onOpenChange={onOpenChange}
       title="Component library syncing"
-      description="New prototypes need synced base components. Browse existing prototypes while setup finishes."
+      hideHeader
       bodyClassName="gap-4"
       footer={null}
     >
       <PrototypeComponentLibraryLoadingPanel
         telemetryModal="library-loading-gate"
+        className="max-w-none rounded-none border-0 bg-transparent p-0"
       />
     </PrototypeToolDialog>
   );

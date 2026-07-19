@@ -1,17 +1,47 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import {
   createCompletedBootstrapStatus,
   createOnboardingRequiredBootstrapStatus,
   type PrototypeBootstrapStatus,
 } from "@prototype/lib/prototypes/prototype-bootstrap-status";
 import type { PrototypeBootstrapConfig } from "@prototype/lib/prototypes/prototype-config-types";
-import { readComponentLibraryLoaded } from "@prototype/lib/prototypes/workspace-component-library-loaded-io";
-import { readWorkspaceOnboarded } from "@prototype/lib/prototypes/workspace-onboarded-io";
+
+import {
+  isComponentLibraryReadyByState,
+  isWorkspaceOnboardedByState,
+} from "./evaluate-workspace-derived-status";
+
+/** Resolve host repo root even when Next.js API routes run with an unexpected cwd. */
+function resolveHostRoot(explicitHostRoot?: string): string {
+  if (explicitHostRoot) {
+    return explicitHostRoot;
+  }
+
+  let dir = process.cwd();
+  while (true) {
+    if (fs.existsSync(path.join(dir, "prototype.config.ts"))) {
+      return dir;
+    }
+
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  return process.cwd();
+}
 
 /**
- * Workspace onboarding uses two agent-written flags under `.proto/`:
+ * Workspace onboarding status is derived entirely from real state on disk:
  *
- * - `component-library-loaded` — agent sets after the library sync finishes
- * - `onboarded` — agent sets after all setup steps finish (last)
+ * - `onboarded` — source is linked (`source` symlink + `SOURCE_PATH`) and the
+ *   workspace profile (`PROTOTYPE_USER_NAME`) is set
+ * - `component-library-ready` — the component library page is populated with the
+ *   three required accordion sections
  */
 export function evaluateHostBootstrapStatus(
   options: {
@@ -20,10 +50,10 @@ export function evaluateHostBootstrapStatus(
     env?: NodeJS.ProcessEnv;
   } = {},
 ): PrototypeBootstrapStatus {
-  const hostRoot = options.hostRoot ?? process.cwd();
-  const componentLibraryReady = readComponentLibraryLoaded(hostRoot);
+  const hostRoot = resolveHostRoot(options.hostRoot);
+  const componentLibraryReady = isComponentLibraryReadyByState(hostRoot);
 
-  if (readWorkspaceOnboarded(hostRoot)) {
+  if (isWorkspaceOnboardedByState(hostRoot)) {
     return {
       ...createCompletedBootstrapStatus(),
       componentLibraryReady,
