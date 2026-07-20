@@ -231,6 +231,14 @@ Reference prototype: `booking-flow` — `src/prototypes/booking-flow/` (or any r
 
 Host file: `src/app/component-library/component-library-content.tsx`, wired from `src/app/component-library/page.tsx` via `createPrototypeComponentLibraryPage({ children: <ComponentLibraryContent /> })`.
 
+### Two-phase generation (hybrid — the plugin never guesses the design system)
+
+The generator ships **no code that concludes a design system's structure**. Every design system (Supabase `ui`/`ui-patterns`, Cal `@coss/ui`+`@calcom/ui`, Onlook `@onlook/ui` wildcard, Plane `@plane/ui` barrel, …) is handled by the agent reasoning from the actual source, not by heuristics.
+
+- **PHASE 1 — scope (`node node_modules/proto-plugin/scripts/profile-design-system.mjs`).** Gathers *facts only* into `.proto/design-system-evidence.json` (candidate packages, their `exports` maps, component dir listings, story counts, context-token hits). The agent reads the source and **writes `.proto/design-system-profile.json`** (schema in `scripts/lib/design-system-profile.mjs`): `packages[]`, `roots.primitive[]`/`roots.composite[]` each with a `specifierTemplate` (`"@pkg/ui/components/{slug}"` for subpath, or a bare package name for barrel), `themes.modes`/`roles`, `providers`, `authored[]`, `skips[]`. Import style comes from each package's real `exports` map; `aliasPrefix` de-collides shared export names.
+- **PHASE 2 — build (`node node_modules/proto-plugin/scripts/generate-component-library.mjs`).** A deterministic engine consumes the profile: emits collision-aware aliased imports, `engine`-class previews (cva/enum/mined/prop-free), token swatches, and a guide. It **blocks without a valid profile**. Preview bodies for `authored` components (context-bound / needs composition) are hand-written in `component-library-overrides.tsx` — the engine never fakes them.
+- **Gates are load-bearing.** With structural detectors deleted, correctness rests entirely on `verify:component-library` (profile valid + coverage + import resolution + token layer), `pnpm build`, and `verify:component-library-visual` (real render + chromatic tokens).
+
 The page shell (`PrototypeComponentLibraryShell`) already renders **"Component Library"** / **"Base components from the source directory."** Do **not** repeat that header or add page-level subtitles in content.
 
 ### Required page structure

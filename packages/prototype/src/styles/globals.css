@@ -1170,6 +1170,88 @@ html.prototype-theme-transition-disable :is(*, *::before, *::after) {
   font-family: inherit;
 }
 
+/*
+ * Component library accordion chrome — high-contrast headers keyed to the
+ * source/product theme on the managed scroll surface (NOT tool chrome theme).
+ * Light product mode → black text/chevron/dividers on white; dark → white on
+ * plugin dark surface (#151515, same as --tool-chrome-bg).
+ */
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .light,
+    [data-theme="light"]
+  )
+  [data-prototype-component-library-accordion] {
+  background-color: #ffffff;
+}
+
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .light,
+    [data-theme="light"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__item,
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .light,
+    [data-theme="light"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__trigger[data-state="open"] {
+  border-color: #000000 !important;
+}
+
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .light,
+    [data-theme="light"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__trigger,
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .light,
+    [data-theme="light"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__chevron {
+  color: #000000 !important;
+}
+
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .dark,
+    [data-theme="dark"]
+  )
+  [data-prototype-component-library-accordion] {
+  background-color: #151515;
+}
+
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .dark,
+    [data-theme="dark"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__item,
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .dark,
+    [data-theme="dark"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__trigger[data-state="open"] {
+  border-color: #ffffff !important;
+}
+
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .dark,
+    [data-theme="dark"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__trigger,
+[data-prototype-source-surface][data-prototype-product-theme-managed]:where(
+    .dark,
+    [data-theme="dark"]
+  )
+  [data-prototype-component-library-accordion]
+  .prototype-component-library-accordion__chevron {
+  color: #ffffff !important;
+}
+
 /* Inverted schematic previews (state map + PR split wireframes).
    Dark tool → light wireframes; light tool → dark wireframes. */
 [data-prototype-wireframe-preview] {

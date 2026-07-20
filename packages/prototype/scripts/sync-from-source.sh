@@ -53,6 +53,14 @@ for glob in ${SYNC_GLOBS[@]+"${SYNC_GLOBS[@]}"}; do
   copy_glob "$glob"
 done
 
+# Reconcile dependencies: synced design-system files import third-party packages
+# (radix-ui, cmdk, vaul, sonner, …). Copying files without their deps guarantees
+# a client-side throw on any source app. Install what the synced files import,
+# pinned to the source app's own versions, before previews are ever built.
+if command -v node >/dev/null 2>&1; then
+  node "$TOOL_ROOT/scripts/install-synced-deps.mjs" "$HOST_ROOT" "$SOURCE" || true
+fi
+
 # Re-apply platform Tailwind source scan (package self-reference; not in source app).
 if ! grep -q '@source "../../packages/prototype' "$HOST_ROOT/src/app/globals.css"; then
   if [[ "$OSTYPE" == darwin* ]]; then

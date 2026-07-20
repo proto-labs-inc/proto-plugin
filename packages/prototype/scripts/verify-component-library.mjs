@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  MAX_SKIP_RATIO,
+  VALID_SKIP_CATEGORIES,
   checkCoverage,
   checkTokenLayer,
   checkTokenRoles,
@@ -10,6 +12,11 @@ import {
   resolveCoverageRoots,
 } from "./lib/component-library-coverage.mjs";
 import { checkImportResolution } from "./lib/component-library-imports.mjs";
+import {
+  PROFILE_RELATIVE_PATH,
+  loadProfile,
+  validateProfile,
+} from "./lib/design-system-profile.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 /**
@@ -43,6 +50,18 @@ function main() {
   const json = process.argv.includes("--json");
   const failures = [];
   const warnings = [];
+
+  // Load-bearing precondition: with structural detectors deleted, the
+  // agent-authored profile is the sole declaration of structure. A missing or
+  // malformed profile must block — never fall through to a silent guess.
+  const profile = loadProfile(hostRoot);
+  const profileValidation = validateProfile(profile);
+  if (!profileValidation.ok) {
+    failures.push(
+      `design-system profile (${PROFILE_RELATIVE_PATH}) is missing or invalid — run Phase 1 (profile-design-system.mjs) and author it:`,
+    );
+    for (const err of profileValidation.errors) failures.push(`    ${err}`);
+  }
 
   const roots = resolveCoverageRoots(hostRoot);
   const librarySources = readLibrarySources(hostRoot);
@@ -83,6 +102,26 @@ function main() {
     failures.push(
       `${compositeCoverage.missing.length} composite(s) not previewed or skipped: ${compositeCoverage.missing.join(", ")}`,
     );
+  }
+
+  // Skip-loophole guards: coverage is measured by RENDERED previews. A `// skip:`
+  // only counts when its reason cites an allowlisted category, and a section may
+  // not lean on skips past MAX_SKIP_RATIO — otherwise an agent can skip every
+  // export and pass on an empty library.
+  for (const [label, cov] of [
+    ["primitive", primitiveCoverage],
+    ["composite", compositeCoverage],
+  ]) {
+    if (cov.invalidSkips.length > 0) {
+      failures.push(
+        `${cov.invalidSkips.length} ${label} skip(s) lack a valid reason category (${VALID_SKIP_CATEGORIES.join(", ")}): ${cov.invalidSkips.join(", ")}. Use \`// skip: <Name> - <category>: <reason>\`, or render a preview instead.`,
+      );
+    }
+    if (cov.skipRatioExceeded) {
+      failures.push(
+        `${label} section skips too many exports (${cov.skippedTotal}/${cov.expectedTotal} = ${(cov.skipRatio * 100).toFixed(0)}%, max ${(MAX_SKIP_RATIO * 100).toFixed(0)}%). Coverage is measured by RENDERED previews — render the real components, don't skip them.`,
+      );
+    }
   }
 
   const tokenLayer = checkTokenLayer(hostRoot);
@@ -137,10 +176,14 @@ function main() {
     },
     primitives: {
       expected: primitiveCoverage.expectedTotal,
+      rendered: primitiveCoverage.renderedTotal,
+      skipped: primitiveCoverage.skippedTotal,
       missing: primitiveCoverage.missing,
     },
     composites: {
       expected: compositeCoverage.expectedTotal,
+      rendered: compositeCoverage.renderedTotal,
+      skipped: compositeCoverage.skippedTotal,
       missing: compositeCoverage.missing,
     },
     circularTokenVars: [...new Set(tokenLayer.circularVars ?? [])],
@@ -159,7 +202,7 @@ function main() {
     console.log(JSON.stringify(report, null, 2));
   } else {
     console.log(
-      `Component library coverage: ${primitiveCoverage.expectedTotal} primitives, ${compositeCoverage.expectedTotal} composites expected.`,
+      `Component library coverage: primitives ${primitiveCoverage.renderedTotal} rendered / ${primitiveCoverage.skippedTotal} skipped / ${primitiveCoverage.expectedTotal} expected; composites ${compositeCoverage.renderedTotal} rendered / ${compositeCoverage.skippedTotal} skipped / ${compositeCoverage.expectedTotal} expected.`,
     );
     console.log(
       `Import resolution: ${importCheck.checkedFileCount} reachable file(s), ${importCheck.packageCount} package(s) referenced.`,

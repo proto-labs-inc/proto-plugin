@@ -3,12 +3,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ensureBootstrapVerifyScripts } from "./ensure-bootstrap-verify-scripts.mjs";
+import { ensureComponentLibraryTooling } from "./ensure-component-library-tooling.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 const PAGE_CONTENT = `import { createPrototypeComponentLibraryPage } from "proto-plugin";
+import { ComponentLibraryContent } from "./component-library-content";
 
-// Scaffolded by proto-plugin — pass \`children\` once you've synced UI from source.
-export default createPrototypeComponentLibraryPage();
+export default createPrototypeComponentLibraryPage({
+  children: <ComponentLibraryContent />,
+});
 `;
 
 function resolveAppDir(hostRoot) {
@@ -114,6 +117,13 @@ function main() {
   if (verifyResult.updated) {
     console.log(
       `proto-plugin: added ${verifyResult.added} bootstrap verify script(s) to package.json`,
+    );
+  }
+
+  const toolingResult = ensureComponentLibraryTooling(hostRoot);
+  if (toolingResult.updated && toolingResult.gitignore?.updated) {
+    console.log(
+      "proto-plugin: updated .gitignore for generated component-library artifacts",
     );
   }
 }

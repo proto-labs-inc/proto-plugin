@@ -31,9 +31,9 @@ export function PrototypeBootstrapOnboardingWelcomeStep({
           size="sm"
           className="mt-8 h-8 gap-2 px-3"
           onClick={onContinue}
-          aria-label="Get started"
+          aria-label="Continue"
         >
-          Get started
+          Continue
           <ArrowRight size={16} strokeWidth={2} />
         </Button>
       )}

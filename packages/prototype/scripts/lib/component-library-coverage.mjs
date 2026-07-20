@@ -2,6 +2,11 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  coverageRootsFromProfile,
+  loadProfile,
+} from "./design-system-profile.mjs";
+
 /**
  * Ground-truth helpers for the component-library coverage + token oracle.
  *
@@ -81,76 +86,38 @@ export function readHostConfigArrays(hostRoot, arrayNames) {
   return result;
 }
 
-// Dirs that live under a components path but never hold visual components.
-const EXCLUDED_ROOT_BASENAMES = new Set([
-  "lib",
-  "utils",
-  "util",
-  "hooks",
-  "styles",
-  "test",
-  "tests",
-  "__tests__",
-  "constants",
-  "types",
-]);
-
-function isExcludedRoot(rel) {
-  return EXCLUDED_ROOT_BASENAMES.has(path.basename(rel));
-}
-
-function looksLikeComposite(rel) {
-  return /pattern/i.test(rel) && !isExcludedRoot(rel);
-}
-
-function looksLikePrimitive(rel) {
-  if (isExcludedRoot(rel) || looksLikeComposite(rel)) return false;
-  return /(^|\/)ui($|\/)|shadcn/i.test(rel);
-}
-
 /**
- * Resolve the primitive + composite coverage roots. Explicit override arrays win;
- * otherwise derive from the component-looking entries in SYNC_DIRS. Returns roots
- * that exist on disk in the host, adjusting `.../shadcn` -> `.../shadcn/ui` when
- * the primitives live one level down.
+ * Resolve the primitive + composite coverage roots.
+ *
+ * PRIMARY SOURCE: the agent-authored `design-system-profile.json` (Phase 1).
+ * The old path-regex deciders (`looksLikePrimitive` / `looksLikeComposite` over
+ * SYNC_DIRS) have been DELETED — the plugin no longer guesses which dir is a
+ * primitive vs composite root. A legacy `COMPONENT_LIBRARY_*_ROOTS` config
+ * override is still honored as a fallback for hosts without a profile yet.
+ * Returns roots that exist on disk.
  */
 export function resolveCoverageRoots(hostRoot) {
+  const profile = loadProfile(hostRoot);
+  if (profile) {
+    const roots = coverageRootsFromProfile(hostRoot, profile);
+    return { ...roots, source: "profile" };
+  }
+
+  // Fallback: explicit override arrays only (no regex guessing).
   const arrays = readHostConfigArrays(hostRoot, [
-    "SYNC_DIRS",
     "COMPONENT_LIBRARY_PRIMITIVE_ROOTS",
     "COMPONENT_LIBRARY_COMPOSITE_ROOTS",
   ]);
 
-  const overridePrimitive = arrays.COMPONENT_LIBRARY_PRIMITIVE_ROOTS;
-  const overrideComposite = arrays.COMPONENT_LIBRARY_COMPOSITE_ROOTS;
-
-  let primitiveRoots = overridePrimitive.length
-    ? overridePrimitive
-    : arrays.SYNC_DIRS.filter(looksLikePrimitive);
-  let compositeRoots = overrideComposite.length
-    ? overrideComposite
-    : arrays.SYNC_DIRS.filter(looksLikeComposite);
-
-  const normalize = (rel) => {
-    const abs = path.join(hostRoot, rel);
-    // Primitives frequently live in `<root>/ui` (shadcn convention).
-    const nested = path.join(abs, "ui");
-    if (fs.existsSync(nested) && fs.statSync(nested).isDirectory()) {
-      const directTsx = fs
-        .readdirSync(abs, { withFileTypes: true })
-        .some((e) => e.isFile() && /\.(tsx|jsx)$/.test(e.name));
-      if (!directTsx) return { rel: path.join(rel, "ui"), abs: nested };
-    }
-    return { rel, abs };
-  };
+  const toRoots = (list) =>
+    list
+      .map((rel) => ({ rel, abs: path.join(hostRoot, rel) }))
+      .filter((r) => fs.existsSync(r.abs));
 
   return {
-    primitive: primitiveRoots.map(normalize).filter((r) => fs.existsSync(r.abs)),
-    composite: compositeRoots.map(normalize).filter((r) => fs.existsSync(r.abs)),
-    usedOverride: {
-      primitive: overridePrimitive.length > 0,
-      composite: overrideComposite.length > 0,
-    },
+    primitive: toRoots(arrays.COMPONENT_LIBRARY_PRIMITIVE_ROOTS),
+    composite: toRoots(arrays.COMPONENT_LIBRARY_COMPOSITE_ROOTS),
+    source: "config",
   };
 }
 
@@ -212,7 +179,24 @@ function collectFiles(dir, acc) {
   }
 }
 
-/** Concatenated text of the component-library page + skip-comment lines. */
+/**
+ * Strip JS/JSX comments so a component NAME mentioned only inside a comment
+ * (a `// skip:` line or a JSX block comment) is not miscounted as a rendered
+ * preview. This is the crux of the coverage oracle: "rendered" must mean real
+ * code references the component, not that its name appears in prose.
+ */
+function stripCodeComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, "") // /* */ and JSX {/* */} blocks
+    .replace(/(^|[^:])\/\/.*$/gm, "$1"); // // line comments (keep http://)
+}
+
+/**
+ * Returns { text, skipLines } where:
+ *  - `text` is the concatenated library source with comments removed (used to
+ *    detect RENDERED components), and
+ *  - `skipLines` is the raw `// skip:` lines (used to detect + validate skips).
+ */
 export function readLibrarySources(hostRoot) {
   const dir = path.join(hostRoot, "src", "app", "component-library");
   const files = [];
@@ -227,41 +211,128 @@ export function readLibrarySources(hostRoot) {
     } catch {
       continue;
     }
-    text += `\n${content}`;
+    text += `\n${stripCodeComments(content)}`;
     for (const line of content.split("\n")) {
-      if (/\/\/\s*skip:/i.test(line)) skipLines.push(line.toLowerCase());
+      // Match both line-comment and JSX-block-comment skip styles.
+      if (/skip:/i.test(line) && /\/\/|\/\*/.test(line)) {
+        skipLines.push(line.toLowerCase());
+      }
     }
   }
   return { text, skipLines };
 }
 
-function isCovered(record, librarySources) {
+/**
+ * A `// skip:` is only valid coverage when it names a machine-checkable reason
+ * from this allowlist. Without this, an agent under pressure can skip every
+ * export ("skip: X - not needed") and the gate passes on an empty library —
+ * the exact failure this oracle exists to prevent. Coverage is measured by
+ * RENDERED previews; skips are the narrow, justified exception.
+ */
+export const VALID_SKIP_CATEGORIES = [
+  "server-only",
+  "type-only",
+  "hook-only",
+  "non-visual",
+  "infra-bound",
+  "deprecated",
+];
+
+/** Max fraction of a section's exports that may be skipped rather than rendered. */
+export const MAX_SKIP_RATIO = 0.4;
+
+/** Rendered = the component name appears in real (non-skip) library source text. */
+function isRendered(record, librarySources) {
   const nameRe = new RegExp(`\\b${record.name}\\b`);
-  if (nameRe.test(librarySources.text)) return true;
+  return nameRe.test(librarySources.text);
+}
+
+/** The skip line (if any) that references this component. */
+function skipLineFor(record, librarySources) {
   const kebab = record.kebab.toLowerCase();
   const nameLower = record.name.toLowerCase();
-  return librarySources.skipLines.some(
+  return librarySources.skipLines.find(
     (line) => line.includes(kebab) || line.includes(nameLower),
   );
 }
 
-/** Coverage report for a set of roots. missing = expected minus (rendered|skipped). */
+function skipReasonValid(skipLine) {
+  return VALID_SKIP_CATEGORIES.some((cat) => skipLine.includes(cat));
+}
+
+/**
+ * Classify one export as rendered | skipped | missing. A skip only counts when
+ * its reason cites an allowlisted category; otherwise it is an `invalidSkip`
+ * (treated as not-covered so it cannot pass silently).
+ */
+function classifyCoverage(record, librarySources) {
+  if (isRendered(record, librarySources)) return { status: "rendered" };
+  const skipLine = skipLineFor(record, librarySources);
+  if (skipLine) {
+    if (skipReasonValid(skipLine)) return { status: "skipped" };
+    return { status: "invalid-skip" };
+  }
+  return { status: "missing" };
+}
+
+/**
+ * Coverage report for a set of roots. Coverage is measured by RENDERED previews;
+ * `missing` = not rendered and not validly skipped. `invalidSkips` = skip comments
+ * whose reason is not an allowlisted category. `skipRatioExceeded` flags sections
+ * that lean on skips past MAX_SKIP_RATIO.
+ */
 export function checkCoverage(hostRoot, roots, librarySources) {
   const perRoot = [];
   const missing = [];
+  const invalidSkips = [];
   let expectedTotal = 0;
+  let renderedTotal = 0;
+  let skippedTotal = 0;
 
   for (const root of roots) {
     const records = enumerateComponents(root.abs);
     expectedTotal += records.length;
-    const rootMissing = records
-      .filter((record) => !isCovered(record, librarySources))
-      .map((record) => record.name);
-    perRoot.push({ rel: root.rel, expected: records.length, missing: rootMissing });
+
+    const rootMissing = [];
+    const rootInvalidSkips = [];
+    let rendered = 0;
+    let skipped = 0;
+
+    for (const record of records) {
+      const { status } = classifyCoverage(record, librarySources);
+      if (status === "rendered") rendered += 1;
+      else if (status === "skipped") skipped += 1;
+      else if (status === "invalid-skip") {
+        rootInvalidSkips.push(record.name);
+        rootMissing.push(record.name);
+      } else rootMissing.push(record.name);
+    }
+
+    renderedTotal += rendered;
+    skippedTotal += skipped;
     missing.push(...rootMissing);
+    invalidSkips.push(...rootInvalidSkips);
+    perRoot.push({
+      rel: root.rel,
+      expected: records.length,
+      rendered,
+      skipped,
+      missing: rootMissing,
+    });
   }
 
-  return { perRoot, missing, expectedTotal };
+  const skipRatio = expectedTotal > 0 ? skippedTotal / expectedTotal : 0;
+
+  return {
+    perRoot,
+    missing,
+    invalidSkips,
+    expectedTotal,
+    renderedTotal,
+    skippedTotal,
+    skipRatio,
+    skipRatioExceeded: skipRatio > MAX_SKIP_RATIO,
+  };
 }
 
 /** Scan globals.css for the token-layer bug that renders previews unstyled. */

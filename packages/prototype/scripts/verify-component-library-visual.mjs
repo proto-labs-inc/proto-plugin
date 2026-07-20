@@ -1,25 +1,32 @@
 #!/usr/bin/env node
 import process from "node:process";
+import fs from "node:fs";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 /**
  * Visual gate for the component library (CHECKPOINT 4, gate 3).
  *
- * This is the ONLY check that verifies *computed* CSS. The static gate and
- * `pnpm build` prove the code compiles, imports resolve, and the tree renders —
- * but they cannot prove that after the cascade runs, `--primary` actually
- * computes to a real color (source design systems derive tokens via
- * oklch/color-mix and re-scope them onto a nested surface at runtime; that can
- * collapse to transparent/grey). This launches a real headless Chromium, opens
- * `/component-library`, expands each accordion section, and asserts:
+ * This is the ONLY check that verifies *computed* CSS AND that the sections
+ * render real, interactive components rather than a list of names. The static
+ * gate and `pnpm build` prove the code compiles, imports resolve, and the tree
+ * renders — but they cannot prove that after the cascade runs `--primary`
+ * computes to a real color, nor that the previews are actual rendered controls.
+ * This launches a real headless Chromium, opens `/component-library`, expands
+ * each accordion section, and asserts:
  *   - no console errors / page exceptions fire while a section opens,
  *   - each section renders real content (a non-empty preview surface),
+ *   - the primitive/composite sections contain real rendered controls
+ *     (buttons/inputs/etc.), not just text labels ("names as text" failure),
  *   - a chromatic token (`--primary`) resolves to a real color, distinct from
  *     `--background` (not transparent, not identical to the surface bg).
  *
  * It is a `pnpm` command (not an interactive/MCP browser), so it runs uniformly
- * across Cursor, Codex, and Claude Code. It requires the dev server running and
- * a Chromium binary; when Playwright/Chromium is unavailable it exits with a
- * distinct code and actionable instructions rather than passing silently.
+ * across Cursor, Codex, and Claude Code. It is self-bootstrapping: when
+ * Playwright or the Chromium binary is missing it installs them automatically
+ * (opt out with PROTOTYPE_NO_AUTO_BROWSER=1) so the mandatory gate can never be
+ * silently skipped.
  */
 
 const URL =
@@ -27,26 +34,98 @@ const URL =
   "http://localhost:1999/component-library";
 
 const SECTIONS = [
-  { id: "ui-primitives", title: "UI primitives" },
-  { id: "composite-components", title: "Composite components" },
-  { id: "tokens", title: "Design tokens" },
+  { id: "ui-primitives", title: "UI primitives", requireControls: true },
+  { id: "composite-components", title: "Composite components", requireControls: true },
+  { id: "tokens", title: "Design tokens", requireControls: false },
 ];
+
+// Minimum real rendered control elements a component section must contain.
+// A list of component names as text has zero — this kills that failure mode.
+const MIN_RENDERED_CONTROLS = 3;
 
 const EXIT_UNAVAILABLE = 2; // cannot run the check (missing tool / browser / server)
 const EXIT_FAIL = 1; // ran, found problems
 
-async function loadChromium() {
+function hostRootFromToolRoot() {
+  const toolRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+  // Host root is where the sync config / package.json live; walk up from the
+  // installed package (node_modules/proto-plugin/..) to the nearest package.json
+  // that is not the tool package.
+  let dir = process.cwd();
+  for (let i = 0; i < 6; i += 1) {
+    if (
+      fs.existsSync(path.join(dir, "package.json")) &&
+      fs.existsSync(path.join(dir, "prototype.sync.config.sh"))
+    ) {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return process.cwd();
+}
+
+function detectPackageManager(hostRoot) {
+  if (fs.existsSync(path.join(hostRoot, "pnpm-lock.yaml"))) return "pnpm";
+  if (fs.existsSync(path.join(hostRoot, "yarn.lock"))) return "yarn";
+  if (fs.existsSync(path.join(hostRoot, "package-lock.json"))) return "npm";
+  return "pnpm";
+}
+
+async function importChromium() {
   try {
     const mod = await import("playwright");
     return mod.chromium ?? null;
   } catch {
     try {
-      // Some hosts install only the browser-specific package.
       const mod = await import("playwright-chromium");
       return mod.chromium ?? null;
     } catch {
       return null;
     }
+  }
+}
+
+/** Load Playwright, installing it (and the Chromium binary) if missing. */
+async function loadChromium() {
+  let chromium = await importChromium();
+  if (chromium) return chromium;
+
+  if (process.env.PROTOTYPE_NO_AUTO_BROWSER === "1") return null;
+
+  const hostRoot = hostRootFromToolRoot();
+  const pm = detectPackageManager(hostRoot);
+  const addArgs =
+    pm === "npm" ? ["install", "-D", "playwright"] : ["add", "-D", "playwright"];
+  console.log(`Visual gate: Playwright missing — installing with ${pm} …`);
+  try {
+    execFileSync(pm, addArgs, { cwd: hostRoot, stdio: "inherit" });
+  } catch (err) {
+    console.error(`Visual gate: could not auto-install Playwright (${err.message}).`);
+    return null;
+  }
+  chromium = await importChromium();
+  return chromium;
+}
+
+/** Install the Chromium browser binary (idempotent). Returns true on success. */
+function installChromiumBinary() {
+  if (process.env.PROTOTYPE_NO_AUTO_BROWSER === "1") return false;
+  const hostRoot = hostRootFromToolRoot();
+  const pm = detectPackageManager(hostRoot);
+  const runner = pm === "npm" ? "npx" : pm;
+  const args =
+    pm === "npm"
+      ? ["playwright", "install", "chromium"]
+      : ["exec", "playwright", "install", "chromium"];
+  console.log("Visual gate: installing Chromium binary …");
+  try {
+    execFileSync(runner, args, { cwd: hostRoot, stdio: "inherit" });
+    return true;
+  } catch (err) {
+    console.error(`Visual gate: could not install Chromium (${err.message}).`);
+    return false;
   }
 }
 
@@ -79,12 +158,29 @@ async function main() {
   try {
     browser = await chromium.launch({ headless: true });
   } catch (err) {
-    console.error(
-      `Visual gate UNAVAILABLE: could not launch Chromium (${err.message}).\n` +
-        "  Install the browser binary, then re-run:\n" +
-        "    pnpm exec playwright install chromium",
+    // Most common cause: Playwright is installed but the Chromium binary is
+    // not. Auto-install it once and retry before giving up.
+    console.log(
+      `Visual gate: Chromium launch failed (${err.message}) — attempting binary install.`,
     );
-    process.exit(EXIT_UNAVAILABLE);
+    const installed = installChromiumBinary();
+    if (installed) {
+      try {
+        browser = await chromium.launch({ headless: true });
+      } catch (retryErr) {
+        console.error(
+          `Visual gate UNAVAILABLE: Chromium still won't launch after install (${retryErr.message}).`,
+        );
+        process.exit(EXIT_UNAVAILABLE);
+      }
+    } else {
+      console.error(
+        `Visual gate UNAVAILABLE: could not launch Chromium (${err.message}).\n` +
+          "  Install the browser binary, then re-run:\n" +
+          "    pnpm exec playwright install chromium",
+      );
+      process.exit(EXIT_UNAVAILABLE);
+    }
   }
 
   const failures = [];
@@ -163,6 +259,28 @@ async function main() {
           failures.push(
             `section "${section.id}" preview surface is empty (no rendered content)`,
           );
+        }
+
+        // Real rendered controls, not a list of names. A "names as text"
+        // library has interactive elements ~0; a real preview grid has many.
+        if (section.requireControls) {
+          const controlCount = await surface
+            .evaluate(
+              (el) =>
+                el.querySelectorAll(
+                  "button, input, select, textarea, [role='button'], [role='switch'], [role='checkbox'], [role='tab'], [role='dialog'], [data-radix-collection-item], svg",
+                ).length,
+            )
+            .catch(() => 0);
+          if (controlCount < MIN_RENDERED_CONTROLS) {
+            failures.push(
+              `section "${section.id}" renders only ${controlCount} real control element(s) (min ${MIN_RENDERED_CONTROLS}) — looks like a list of component NAMES, not rendered previews. Import and render the actual components.`,
+            );
+          } else {
+            notes.push(
+              `section "${section.id}": ${controlCount} rendered control element(s)`,
+            );
+          }
         }
       }
 

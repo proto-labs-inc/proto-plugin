@@ -32,7 +32,11 @@ export function ComponentLibraryAccordion({
     <Accordion
       type="multiple"
       defaultValue={[]}
-      className={cn("-mx-6 pb-20", className)}
+      data-prototype-component-library-accordion=""
+      className={cn(
+        "prototype-component-library-accordion -mx-6 pb-20",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -51,17 +55,23 @@ export function LibraryAccordionSection({
   children: ReactNode;
   isFirst?: boolean;
 }) {
+  if (process.env.NODE_ENV !== "production" && !id) {
+    console.error(
+      "LibraryAccordionSection: `id` is required — the section will not open without it.",
+    );
+  }
+
   return (
     <AccordionItem
       value={id}
       id={id}
-      className="scroll-mt-8 border-b !border-stronger last:border-b-0"
+      className="prototype-component-library-accordion__item scroll-mt-8 border-b last:border-b-0"
     >
       <AccordionTrigger
         hideIcon
         className={cn(
-          "px-6 py-5 text-xl font-semibold tracking-tight text-[var(--text-primary,var(--foreground))] hover:no-underline",
-          "data-[state=open]:border-b data-[state=open]:!border-stronger",
+          "prototype-component-library-accordion__trigger px-6 py-5 text-xl font-semibold tracking-tight hover:no-underline",
+          "data-[state=open]:border-b",
           "[&[data-state=open]>svg]:!rotate-0",
           isFirst && "pt-0",
         )}
@@ -69,7 +79,7 @@ export function LibraryAccordionSection({
         {title}
         <ChevronDown
           aria-hidden
-          className="size-4 shrink-0 rotate-180 text-[var(--text-secondary,var(--muted-foreground))] transition-transform duration-200 group-data-[state=open]:!rotate-0 motion-reduce:transition-none"
+          className="prototype-component-library-accordion__chevron size-4 shrink-0 rotate-180 transition-transform duration-200 group-data-[state=open]:!rotate-0 motion-reduce:transition-none"
         />
       </AccordionTrigger>
       <AccordionContent className="pb-10">

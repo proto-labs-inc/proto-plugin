@@ -47,9 +47,9 @@ export function PrototypeComponentLibraryLoadingPanel({
           onClick={() => {
             void copySetupPrompt();
           }}
-          aria-label="Copy re-run setup prompt"
+          aria-label="Re-run setup prompt"
         >
-          {isCopied ? "Copied prompt" : isCopying ? "Copying…" : "Copy re-run setup prompt"}
+          {isCopied ? "Copied prompt" : isCopying ? "Copying…" : "Re-run setup prompt"}
           {icon}
         </Button>
       </div>

@@ -259,9 +259,9 @@ export function PrototypeBootstrapOnboardingModal({
         : "Copy setup prompt"
       : onboardingStep === "agent-context"
         ? hasAgentContext
-          ? "Get started"
+          ? "Continue"
           : "Skip"
-        : "Get started";
+        : "Continue";
 
   const handlePrimaryAction = useCallback(async () => {
     if (onboardingStep === "component-library") {
@@ -376,7 +376,7 @@ export function PrototypeBootstrapOnboardingModal({
         isWelcomeStep && "flex flex-1 items-center justify-center px-0 py-0",
         isHeaderOnlyStep && "hidden p-0",
       )}
-      footerClassName={canGoBack || isWelcomeStep ? "justify-between" : "justify-center"}
+      footerClassName={canGoBack || isWelcomeStep ? "justify-between" : "justify-end"}
       footer={
         <>
           {canGoBack ? (
@@ -411,9 +411,9 @@ export function PrototypeBootstrapOnboardingModal({
                     ? "Copy setup prompt"
                     : onboardingStep === "agent-context"
                       ? hasAgentContext
-                        ? "Get started"
+                        ? "Continue"
                         : "Skip agent context"
-                      : "Get started"
+                      : "Continue"
               }
             >
               {isWaitingForOnboarded
@@ -427,7 +427,7 @@ export function PrototypeBootstrapOnboardingModal({
                 : isContinuing
                   ? onboardingStep === "setup-complete"
                     ? "Copying…"
-                    : "Getting started…"
+                    : "Continuing…"
                   : continueLabel}
               {isWaitingForOnboarded || onboardingStep === "setup-complete" ? (
                 icon

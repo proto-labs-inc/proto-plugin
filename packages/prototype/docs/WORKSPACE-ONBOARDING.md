@@ -120,6 +120,18 @@ Sections **in order**:
 
 Verify scripts are added/updated in host `package.json` by `pnpm setup-host` (`ensure-bootstrap-verify-scripts.mjs`).
 
+### Component library tooling (phase 4)
+
+After sync, the setup agent runs (from the host repo root — **not** as host `package.json` scripts):
+
+```bash
+node node_modules/proto-plugin/scripts/generate-component-library.mjs
+```
+
+This extracts tokens (SkillUI dir mode on `source/` → `.skillui/`) and scaffolds previews + `component-library-guide.md`. The agent then works the guide and loops the verify gates.
+
+Generated artifacts (`.skillui/`, `component-library-*.generated.tsx`) are gitignored via `setup-host`; `component-library-overrides.tsx` and the guide are committed.
+
 Reload gallery when setup finishes.
 
 ---

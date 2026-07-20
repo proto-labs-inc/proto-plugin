@@ -18,6 +18,14 @@ export const BOOTSTRAP_VERIFY_SCRIPTS = {
   bootstrapStatus: "pnpm verify:bootstrap-status",
 } as const;
 
+/** PHASE 1 (scope): gather evidence + print the profile-authoring instruction. */
+export const COMPONENT_LIBRARY_SCOPE_COMMAND =
+  "node node_modules/proto-plugin/scripts/profile-design-system.mjs";
+
+/** PHASE 2 (build): run during onboarding phase 4 — not a host package.json script. */
+export const COMPONENT_LIBRARY_GENERATE_COMMAND =
+  "node node_modules/proto-plugin/scripts/generate-component-library.mjs";
+
 export const BOOTSTRAP_CHECKPOINTS: Record<BootstrapSetupPhase, string> = {
   preflight: "CHECKPOINT 0 COMPLETE: proto-plugin current",
   "link-source": "CHECKPOINT 1 COMPLETE: source linked",
