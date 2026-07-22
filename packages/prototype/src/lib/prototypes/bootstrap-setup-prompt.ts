@@ -1,10 +1,13 @@
-import { buildAgentContextFromPathCopyText } from "@prototype/lib/prototypes/agent-context-prompt";
+import {
+  buildAgentContextCopyText,
+  buildAgentContextFromPathCopyText,
+} from "@prototype/lib/prototypes/agent-context-prompt";
 import {
   buildBootstrapSetupFinalApiGateLines,
   buildBootstrapSetupMasterGatesLines,
 } from "@prototype/lib/prototypes/bootstrap-setup-phase-gates";
 import { buildLinkSourceCopyText } from "@prototype/lib/prototypes/link-source-prompt";
-import { buildPopulateComponentLibraryCopyText } from "@prototype/lib/prototypes/populate-component-library-prompt";
+import { buildPopulateDesignSystemCopyText } from "@prototype/lib/prototypes/populate-design-system-prompt";
 import { buildWorkspaceProfileCopyText } from "@prototype/lib/prototypes/profile-prompt";
 import { looksLikeAbsolutePath } from "@prototype/lib/prototypes/resolve-file-path";
 import type { WorkspaceProfile } from "@prototype/lib/prototypes/workspace-profile";
@@ -21,9 +24,10 @@ export function buildBootstrapSetupCopyText({
   sourceDescription,
   currentSourcePath,
   userName,
+  agentContext,
   agentContextPath,
   syncConfigPath,
-  componentLibraryPagePath,
+  designSystemPagePath,
   origin,
   workspaceProfile,
 }: {
@@ -32,9 +36,10 @@ export function buildBootstrapSetupCopyText({
   sourceDescription?: string;
   currentSourcePath?: string;
   userName: string;
+  agentContext?: string;
   agentContextPath?: string;
   syncConfigPath?: string;
-  componentLibraryPagePath?: string;
+  designSystemPagePath?: string;
   origin?: string;
   workspaceProfile?: WorkspaceProfile;
 }): string {
@@ -45,7 +50,7 @@ export function buildBootstrapSetupCopyText({
     "",
     "Proto tracks progress from real workspace state — there are no flags to write:",
     "- Onboarding completes automatically once the source is linked and the workspace profile is set.",
-    "- The component library unlocks automatically once `/component-library` is populated.",
+    "- The design system unlocks automatically once `/design-system` is populated.",
     "- The gallery UI reads `GET /api/prototypes/bootstrap-status` — disk verify scripts alone are **not** enough to declare setup finished.",
     "",
     "Reload the gallery when setup finishes.",
@@ -90,30 +95,23 @@ export function buildBootstrapSetupCopyText({
   }
 
   const trimmedAgentContextPath = agentContextPath?.trim();
-  if (trimmedAgentContextPath) {
-    appendSection(
-      sections,
-      "Agent context",
-      buildAgentContextFromPathCopyText({
-        contextFilePath: trimmedAgentContextPath,
-      }),
-    );
-  } else {
-    sections.push(
-      "## Agent context",
-      "",
-      "The user skipped agent context during onboarding. **Do not** create `.proto/agent/custom-context.md`. **Do not** print CHECKPOINT 2b. Proceed from CHECKPOINT 2 to component library sync.",
-      "",
-    );
-  }
+  appendSection(
+    sections,
+    "Agent context",
+    trimmedAgentContextPath
+      ? buildAgentContextFromPathCopyText({
+          contextFilePath: trimmedAgentContextPath,
+        })
+      : buildAgentContextCopyText({ content: agentContext ?? "" }),
+  );
 
   appendSection(
     sections,
-    "Component library",
-    buildPopulateComponentLibraryCopyText({
+    "Design system",
+    buildPopulateDesignSystemCopyText({
       sourcePath: absoluteSourcePath,
       syncConfigPath,
-      componentLibraryPagePath,
+      designSystemPagePath,
       origin,
       workspaceProfile,
     }),

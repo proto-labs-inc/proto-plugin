@@ -282,12 +282,12 @@ import {
   LibraryAccordionSection,
 } from "proto-plugin";
 
-import { CompositePreviews } from "./component-library-composite-previews.generated";
-import { PrimitivePreviews } from "./component-library-primitive-previews.generated";
-import { TokensSection } from "./component-library-tokens.generated";
-import { previewOverrides } from "./component-library-overrides";
+import { CompositePreviews } from "./design-system-composite-previews.generated";
+import { PrimitivePreviews } from "./design-system-primitive-previews.generated";
+import { TokensSection } from "./design-system-tokens.generated";
+import { previewOverrides } from "./design-system-overrides";
 
-export function ComponentLibraryContent() {
+export function DesignSystemContent() {
   return (
     <ComponentLibraryAccordion type="multiple" defaultValue={[]}>
       <LibraryAccordionSection id="ui-primitives" title="UI primitives" isFirst>

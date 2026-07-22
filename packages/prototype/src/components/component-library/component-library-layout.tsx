@@ -22,7 +22,7 @@ type ComponentLibraryAccordionProps = Omit<
   "type" | "defaultValue"
 >;
 
-/** Accordion chrome for the component library page — proto tool styling, not synced source UI. */
+/** Accordion chrome for the design system page — proto tool styling, not synced source UI. */
 export function ComponentLibraryAccordion({
   className,
   children,

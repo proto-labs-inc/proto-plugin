@@ -34,7 +34,7 @@ import path from "node:path";
  *     ]
  *   },
  *   "themes": { "modes": ["light", "dark"], "roles": ["background", ...] },
- *   "providers": { "needed": true, "importPath": "./component-library-providers",
+ *   "providers": { "needed": true, "importPath": "./design-system-providers",
  *                  "componentName": "PreviewProviders" },
  *   "authored": ["Table", "EmptyScreen"],
  *   "skips": [ { "name": "useFoo", "category": "hook-only", "reason": "..." } ]

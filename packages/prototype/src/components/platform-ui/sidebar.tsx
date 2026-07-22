@@ -31,7 +31,7 @@ export function getSidebarStateAttribute(
   return `data-${base}-${suffix}`;
 }
 
-const SIDEBAR_TITLE_CLASS =
+export const SIDEBAR_TITLE_CLASS =
   "font-display truncate text-sm font-semibold text-[var(--tool-chrome-text-heading)]";
 
 export const SIDEBAR_ICON_BUTTON_CLASS =
@@ -39,7 +39,8 @@ export const SIDEBAR_ICON_BUTTON_CLASS =
 
 type SidebarProps = {
   open: boolean;
-  text: string;
+  /** Plain title string, or custom header title content (e.g. a switcher). */
+  text: ReactNode;
   onClose: () => void;
   children: ReactNode;
   titleAddon?: ReactNode;
@@ -270,18 +271,22 @@ export function SidebarHeader({
   titleAddon,
   actions,
 }: {
-  text: string;
+  text: ReactNode;
   titleAddon?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
     <div className="flex h-[3.25rem] max-h-[3.25rem] min-h-[3.25rem] shrink-0 items-center justify-between gap-3 border-b border-[var(--tool-chrome-border)] px-4">
-      <div className="flex min-w-0 flex-1 items-baseline gap-0">
-        <span className={cn(SIDEBAR_TITLE_CLASS, "truncate")}>{text}</span>
+      <div className="flex min-w-0 flex-1 items-center gap-0">
+        {typeof text === "string" ? (
+          <span className={cn(SIDEBAR_TITLE_CLASS, "truncate")}>{text}</span>
+        ) : (
+          text
+        )}
         {titleAddon}
       </div>
       {actions ? (
-        <div className="flex shrink-0 items-center gap-1">{actions}</div>
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
       ) : null}
     </div>
   );

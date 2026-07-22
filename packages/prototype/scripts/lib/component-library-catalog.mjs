@@ -4,7 +4,7 @@ import path from "node:path";
 import {
   findComponentSourceFile,
   resolveImportInfoFromProfile,
-} from "./component-library-packages.mjs";
+} from "./design-system-packages.mjs";
 import { deriveAliasPrefix, findPackage } from "./design-system-profile.mjs";
 
 const CONTEXT_PROPS = [

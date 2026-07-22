@@ -3,35 +3,23 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import {
-  isComponentLibraryReadyByState,
+  isDesignSystemReadyByState,
   isWorkspaceOnboardedByState,
 } from "./lib/bootstrap-workspace-state.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
-
-/**
- * Read-only verify for workspace bootstrap state on disk.
- *
- * There are no `.proto/` marker flags — Proto derives onboarding and component
- * library status from real workspace state. These checks confirm that state for
- * the setup agent's phase gates and exit non-zero when prerequisites are unmet.
- *
- * Gallery UI unlock uses GET /api/prototypes/bootstrap-status — run
- * `pnpm verify:bootstrap-status` after disk checks pass.
- */
 
 const CHECKS = {
   onboarded: {
     passed: (hostRoot) => isWorkspaceOnboardedByState(hostRoot),
     success: "onboarded — source linked and workspace profile set.",
     failure:
-      "not onboarded — need SOURCE_PATH + PROTOTYPE_USER_NAME in env (Vercel dashboard, or .env.local locally). Local dev also needs `pnpm link-source` for the `source/` symlink.",
+      "not onboarded — need `source` symlink + SOURCE_PATH + PROTOTYPE_USER_NAME in .env.local. Run `pnpm link-source` and set the workspace profile first.",
   },
-  "component-library-loaded": {
-    passed: (hostRoot) => isComponentLibraryReadyByState(hostRoot),
-    success:
-      "component library populated — ui-primitives, composite-components, and tokens sections found.",
+  "design-system-loaded": {
+    passed: (hostRoot) => isDesignSystemReadyByState(hostRoot),
+    success: "design system populated — tokens section found.",
     failure:
-      "component library not populated — sections [ui-primitives, composite-components, tokens] not found under src/app/component-library/. Complete the component library sync + previews first.",
+      "design system not populated — tokens section not found under src/app/design-system/. Run the design system generate script first.",
   },
 };
 

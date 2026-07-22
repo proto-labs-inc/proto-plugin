@@ -24,7 +24,7 @@ type PrototypeGalleryShellProps = {
   sourceDirectoryName?: string;
   sourcePath?: string;
   syncConfigPath?: string;
-  componentLibraryPagePath?: string;
+  designSystemPagePath?: string;
   debug?: boolean;
   workspaceOnboarded?: boolean;
 };
@@ -45,7 +45,7 @@ export function PrototypeGalleryShell({
   sourceDirectoryName,
   sourcePath,
   syncConfigPath,
-  componentLibraryPagePath,
+  designSystemPagePath,
   debug = false,
   workspaceOnboarded = false,
 }: PrototypeGalleryShellProps) {
@@ -55,7 +55,7 @@ export function PrototypeGalleryShell({
         value={{
           currentSourcePath: sourcePath,
           syncConfigPath,
-          componentLibraryPagePath,
+          designSystemPagePath,
         }}
       >
         <PrototypeGalleryShellContent
@@ -63,7 +63,7 @@ export function PrototypeGalleryShell({
           sourceDirectoryName={sourceDirectoryName}
           sourcePath={sourcePath}
           syncConfigPath={syncConfigPath}
-          componentLibraryPagePath={componentLibraryPagePath}
+          designSystemPagePath={designSystemPagePath}
         >
           {children}
         </PrototypeGalleryShellContent>
@@ -78,7 +78,7 @@ function PrototypeGalleryShellContent({
   sourceDirectoryName,
   sourcePath,
   syncConfigPath,
-  componentLibraryPagePath,
+  designSystemPagePath,
 }: PrototypeGalleryShellProps) {
   const {
     bootstrapStep,
@@ -120,7 +120,7 @@ function PrototypeGalleryShellContent({
         <PrototypeBootstrapOnboardingModal
           currentSourcePath={sourcePath}
           syncConfigPath={syncConfigPath}
-          componentLibraryPagePath={componentLibraryPagePath}
+          designSystemPagePath={designSystemPagePath}
         />
 
         {isDevelopmentToggleVisible ? (

@@ -1,21 +1,21 @@
 "use client";
 
 import { Button } from "@prototype/components/ui/button";
-import { buildPopulateComponentLibraryCopyText } from "@prototype/lib/prototypes/populate-component-library-prompt";
+import { buildPopulateDesignSystemCopyText } from "@prototype/lib/prototypes/populate-design-system-prompt";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 
-type PrototypeComponentLibraryEmptyStateProps = {
+type PrototypeDesignSystemEmptyStateProps = {
   sourcePath?: string;
   syncConfigPath?: string;
-  componentLibraryPagePath?: string;
+  designSystemPagePath?: string;
 };
 
-export function PrototypeComponentLibraryEmptyState({
+export function PrototypeDesignSystemEmptyState({
   sourcePath,
   syncConfigPath,
-  componentLibraryPagePath,
-}: PrototypeComponentLibraryEmptyStateProps) {
+  designSystemPagePath,
+}: PrototypeDesignSystemEmptyStateProps) {
   const { copy, icon, isCopied } = useCopyToClipboard();
   const workspaceProfile = useWorkspaceProfile();
 
@@ -24,10 +24,10 @@ export function PrototypeComponentLibraryEmptyState({
       typeof window !== "undefined" ? window.location.origin : undefined;
 
     copy(
-      buildPopulateComponentLibraryCopyText({
+      buildPopulateDesignSystemCopyText({
         sourcePath,
         syncConfigPath,
-        componentLibraryPagePath,
+        designSystemPagePath,
         origin,
         workspaceProfile,
       }),
@@ -35,9 +35,9 @@ export function PrototypeComponentLibraryEmptyState({
   };
 
   return (
-    <div className="border-default bg-surface-100 text-foreground-light max-w-2xl rounded-xl border border-dashed px-6 py-8">
-      <p className="text-foreground text-sm font-medium">No components yet</p>
-      <p className="mt-2 text-sm leading-relaxed">
+    <div className="max-w-2xl rounded-xl border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)] px-6 py-8 text-[var(--tool-chrome-text-heading)]">
+      <p className="text-sm font-medium">No components yet</p>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
         Copy the prompt below into your agent. It will inspect the linked source
         app and port over base styles, UI primitives, and shared building
         blocks — err on the side of syncing more rather than less.
@@ -47,9 +47,9 @@ export function PrototypeComponentLibraryEmptyState({
           type="button"
           variant="outline"
           size="sm"
-          className="border-default text-foreground hover:text-foreground h-8 gap-2"
+          className="h-8 gap-2 border-[var(--tool-chrome-border)] text-[var(--tool-chrome-text-heading)] hover:text-[var(--tool-chrome-text-heading)]"
           onClick={handleCopy}
-          aria-label="Copy component library population prompt"
+          aria-label="Copy design system population prompt"
         >
           {isCopied ? "Copied prompt" : "Copy prompt"}
           {icon}

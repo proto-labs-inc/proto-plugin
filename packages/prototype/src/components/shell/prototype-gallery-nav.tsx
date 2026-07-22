@@ -14,8 +14,8 @@ const GALLERY_NAV_ITEMS = [
     icon: LayoutGrid,
   },
   {
-    href: "/component-library",
-    label: "Component Library",
+    href: "/design-system",
+    label: "Design system",
     icon: LibraryBig,
   },
   {

@@ -185,7 +185,7 @@ export function rescopeComponentLibraryTheme(
       // source token CSS was not synced/@imported into globals.css.
       console.warn(
         "[proto-plugin] component-library theme rescoper found no source token declarations to re-scope. " +
-          "Confirm the source design tokens are @imported in globals.css (see the Component Library section of AGENTS.md).",
+          "Confirm the source design tokens are @imported in globals.css (see the Design system section of AGENTS.md).",
       );
     }
     return;

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 const PROFILE_STORAGE_KEYS = {
   sourceName: "prototype-profile:source-name",
+  agentContext: "prototype-profile:agent-context",
   agentContextPath: "prototype-profile:agent-context-path",
 } as const;
 
@@ -21,10 +22,14 @@ export function useBootstrapSetupPromptCopy(options?: {
   const { copy, icon, isCopied } = useCopyToClipboard();
   const workspaceProfile = useWorkspaceProfile();
   const track = useTrackEvent();
-  const { currentSourcePath, syncConfigPath, componentLibraryPagePath } =
+  const { currentSourcePath, syncConfigPath, designSystemPagePath } =
     useGalleryHostConfig();
   const { value: sourceName } = usePersistedLocalString(
     PROFILE_STORAGE_KEYS.sourceName,
+    "",
+  );
+  const { value: agentContext } = usePersistedLocalString(
+    PROFILE_STORAGE_KEYS.agentContext,
     "",
   );
   const { value: agentContextPath } = usePersistedLocalString(
@@ -52,9 +57,10 @@ export function useBootstrapSetupPromptCopy(options?: {
           sourceFolderName: onboardingSource.folderName,
           currentSourcePath,
           userName: workspaceProfile.userName,
+          agentContext,
           agentContextPath: agentContextPath.trim() || undefined,
           syncConfigPath,
-          componentLibraryPagePath,
+          designSystemPagePath,
           origin,
           workspaceProfile,
         }),
@@ -74,8 +80,9 @@ export function useBootstrapSetupPromptCopy(options?: {
       setIsCopying(false);
     }
   }, [
+    agentContext,
     agentContextPath,
-    componentLibraryPagePath,
+    designSystemPagePath,
     copy,
     currentSourcePath,
     isCopying,

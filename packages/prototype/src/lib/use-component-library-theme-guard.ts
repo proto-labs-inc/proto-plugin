@@ -76,7 +76,7 @@ export function useComponentLibraryThemeGuard<T extends HTMLElement>(
           "The product theme class is applied to a nested preview surface, but the source tokens did not resolve there.",
           "This is almost always a STUB token bridge: the host must re-scope the source's full token system (inputs AND derivations) onto",
           "[data-prototype-source-surface][data-prototype-product-theme-managed] for each configured productThemes mode.",
-          "See AGENTS.md → Component Library → 'Product theme on preview surfaces'.",
+          "See AGENTS.md → Design system → 'Product theme on preview surfaces'.",
           accentIsToolChrome
             ? `  • accent resolved to tool chrome: ${surfacePrimary}`
             : "",

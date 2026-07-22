@@ -84,7 +84,7 @@ function scopeInstruction(hostRoot, evidence) {
     "an aliasPrefix per package so the engine can de-collide (CossButton / CalcomButton).",
     "",
     "Then run Phase 2:",
-    "  node node_modules/proto-plugin/scripts/generate-component-library.mjs",
+    "  node node_modules/proto-plugin/scripts/generate-design-system.mjs",
     "================================================================",
   ].join("\n");
 }

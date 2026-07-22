@@ -3,17 +3,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 
-/**
- * Derives workspace onboarding + component-library status from real files on
- * disk. There are no `.proto/` marker flags — the gallery unlocks from actual
- * workspace state only.
- */
-
-const COMPONENT_LIBRARY_SECTION_IDS = [
-  "ui-primitives",
-  "composite-components",
-  "tokens",
-] as const;
+const DESIGN_SYSTEM_SECTION_IDS = ["tokens"] as const;
 
 function readEnvLocal(hostRoot: string): string {
   try {
@@ -35,26 +25,12 @@ function hasSourceSymlink(hostRoot: string): boolean {
   }
 }
 
-/** Prefer `process.env` (Vercel, Next.js); fall back to `.env.local` for CLI verify scripts. */
-function envHasValue(
-  hostRoot: string,
-  key: string,
-  env: NodeJS.ProcessEnv = process.env,
-): boolean {
-  if (env[key]?.trim()) return true;
-  return envLocalHasValue(hostRoot, key);
-}
-
-/** Source linked + workspace profile set — onboarding is materially complete. */
-export function isWorkspaceOnboardedByState(
-  hostRoot: string,
-  env: NodeJS.ProcessEnv = process.env,
-): boolean {
-  const sourcePathSet = envHasValue(hostRoot, "SOURCE_PATH", env);
-  const userNameSet = envHasValue(hostRoot, "PROTOTYPE_USER_NAME", env);
-  const sourceLinked = hasSourceSymlink(hostRoot) || sourcePathSet;
-
-  return sourceLinked && sourcePathSet && userNameSet;
+export function isWorkspaceOnboardedByState(hostRoot: string): boolean {
+  return (
+    hasSourceSymlink(hostRoot) &&
+    envLocalHasValue(hostRoot, "SOURCE_PATH") &&
+    envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
+  );
 }
 
 function collectSourceFiles(dir: string, acc: string[]): void {
@@ -74,9 +50,8 @@ function collectSourceFiles(dir: string, acc: string[]): void {
   }
 }
 
-/** Library page populated with the three required accordion sections. */
-export function isComponentLibraryReadyByState(hostRoot: string): boolean {
-  const dir = path.join(hostRoot, "src", "app", "component-library");
+export function isDesignSystemReadyByState(hostRoot: string): boolean {
+  const dir = path.join(hostRoot, "src", "app", "design-system");
   const files: string[] = [];
   collectSourceFiles(dir, files);
 
@@ -88,12 +63,15 @@ export function isComponentLibraryReadyByState(hostRoot: string): boolean {
     } catch {
       continue;
     }
-    for (const id of COMPONENT_LIBRARY_SECTION_IDS) {
+    for (const id of DESIGN_SYSTEM_SECTION_IDS) {
       if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
         found.add(id);
       }
     }
   }
 
-  return COMPONENT_LIBRARY_SECTION_IDS.every((id) => found.has(id));
+  return DESIGN_SYSTEM_SECTION_IDS.every((id) => found.has(id));
 }
+
+/** @deprecated use isDesignSystemReadyByState */
+export const isComponentLibraryReadyByState = isDesignSystemReadyByState;

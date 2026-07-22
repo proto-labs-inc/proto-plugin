@@ -8,15 +8,15 @@ import { Loader2 } from "lucide-react";
 const LOADING_PANEL_CLASS =
   "max-w-2xl rounded-xl border border-dashed border-[var(--tool-chrome-border)] bg-[var(--tool-chrome-surface)] px-6 py-8 text-[var(--tool-chrome-text-heading)]";
 
-type PrototypeComponentLibraryLoadingPanelProps = {
+type PrototypeDesignSystemLoadingPanelProps = {
   telemetryModal?: string;
   className?: string;
 };
 
-export function PrototypeComponentLibraryLoadingPanel({
+export function PrototypeDesignSystemLoadingPanel({
   telemetryModal = "component-library-loading",
   className,
-}: PrototypeComponentLibraryLoadingPanelProps) {
+}: PrototypeDesignSystemLoadingPanelProps) {
   const { copySetupPrompt, icon, isCopied, isCopying } =
     useBootstrapSetupPromptCopy({ telemetryModal });
 
@@ -27,12 +27,12 @@ export function PrototypeComponentLibraryLoadingPanel({
           className="size-4 animate-spin text-[var(--tool-chrome-text-heading)]"
           aria-hidden
         />
-        <p className="text-sm font-medium">Setting up your component library</p>
+        <p className="text-sm font-medium">Setting up your design system</p>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
-        Your agent is syncing design tokens, UI primitives, and previews from
-        the linked source. You can browse prototypes while this finishes —
-        reload or return to this tab when the sync completes.
+        Your agent is syncing design tokens from the linked source. You can
+        browse prototypes while this finishes — reload or return to this tab
+        when the sync completes.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
         Taking too long? Copy the setup prompt again and rerun it in your agent.

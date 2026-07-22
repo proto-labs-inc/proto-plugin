@@ -3,7 +3,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 
 /**
- * Import-resolution oracle for the component library (CHECKPOINT 4).
+ * Import-resolution oracle for the design system (CHECKPOINT 4).
  *
  * The coverage gate only proves a component is *mentioned* in the library page.
  * It does not prove the component can actually load. The #1 real-world failure
@@ -217,7 +217,7 @@ export function collectReachable(hostRoot, entryFiles, tsPaths) {
   return { visited, packages, unresolvedLocal };
 }
 
-/** Entry files: everything under src/app/component-library. */
+/** Entry files: everything under src/app/design-system. */
 function componentLibraryEntryFiles(hostRoot) {
   const dir = path.join(hostRoot, "src", "app", "component-library");
   const files = [];

@@ -17,6 +17,8 @@ import {
   getPrototypeSlugFromPathname,
 } from "@prototype/lib/prototypes/share-command";
 import {
+  preventToolbarHoverButtonActivation,
+  supportsToolbarHover,
   TOOLBAR_HOVER_ONLY_BUTTON_PROPS,
   useToolbarHoverPanel,
 } from "@prototype/lib/prototypes/use-toolbar-hover-panel";
@@ -34,8 +36,6 @@ import {
   TooltipTrigger,
 } from "@prototype/components/ui/tooltip";
 import {
-  MessageSquare,
-  MessageSquarePlus,
   Monitor,
   Plus,
   Rocket,
@@ -236,12 +236,15 @@ function ReviewToolbarTextTabTrigger({
   open,
   hoverTriggerProps,
   badgeCount,
+  onActivate,
 }: {
   label: string;
   active: boolean;
   open: boolean;
   hoverTriggerProps?: ToolbarTooltipAnchorProps;
   badgeCount?: number;
+  /** Desktop click handler. Hover still opens the menu; touch keeps menu-on-click. */
+  onActivate?: () => void;
 }) {
   const showBadge = badgeCount != null && badgeCount > 0;
   const badgeLabel =
@@ -274,7 +277,23 @@ function ReviewToolbarTextTabTrigger({
             showBadge ? `${label}, ${badgeCount} unresolved` : label
           }
           aria-expanded={open}
-          {...TOOLBAR_HOVER_ONLY_BUTTON_PROPS}
+          onClick={(event) => {
+            if (onActivate && supportsToolbarHover()) {
+              event.preventDefault();
+              event.stopPropagation();
+              onActivate();
+              return;
+            }
+            preventToolbarHoverButtonActivation(event);
+          }}
+          onPointerDown={(event) => {
+            if (onActivate && supportsToolbarHover()) {
+              event.preventDefault();
+              event.stopPropagation();
+              return;
+            }
+            preventToolbarHoverButtonActivation(event);
+          }}
         >
           {label}
         </button>
@@ -453,7 +472,6 @@ export function PrototypeReviewChrome({
   const stateMapHoverSuppressedRef = useRef(false);
   const miniStateMapRef = useRef<PrototypeMiniStateMapHandle>(null);
   const [explorationsMenuOpen, setExplorationsMenuOpen] = useState(false);
-  const [commentsMenuOpen, setCommentsMenuOpen] = useState(false);
   const [handoffMenuOpen, setHandoffMenuOpen] = useState(false);
   const [createExplorationModalOpen, setCreateExplorationModalOpen] =
     useState(false);
@@ -500,14 +518,8 @@ export function PrototypeReviewChrome({
     setMiniStateMapRestoring(false);
   }, []);
 
-  const handleStateMapTabClick = useCallback(() => {
-    setStateMapModalOpen(true);
-    track("state_map.opened", { surface: "toolbar-tab" });
-  }, [track]);
-
   const closeToolbarMenus = useCallback(() => {
     setExplorationsMenuOpen(false);
-    setCommentsMenuOpen(false);
     setHandoffMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(false);
@@ -524,7 +536,6 @@ export function PrototypeReviewChrome({
   const openExplorationsMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
     review.closeSettings();
-    setCommentsMenuOpen(false);
     setHandoffMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(false);
@@ -536,26 +547,10 @@ export function PrototypeReviewChrome({
     blurToolbarFocus();
   }, [blurToolbarFocus]);
 
-  const openCommentsMenu = useCallback(() => {
-    dismissReviewToolbarTooltips();
-    review.closeSettings();
-    setExplorationsMenuOpen(false);
-    setHandoffMenuOpen(false);
-    setShareMenuOpen(false);
-    setViewportMenuOpen(false);
-    setCommentsMenuOpen(true);
-  }, [review.closeSettings]);
-
-  const closeCommentsMenu = useCallback(() => {
-    setCommentsMenuOpen(false);
-    blurToolbarFocus();
-  }, [blurToolbarFocus]);
-
   const openHandoffMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
     review.closeSettings();
     setExplorationsMenuOpen(false);
-    setCommentsMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(false);
     setHandoffMenuOpen(true);
@@ -596,11 +591,77 @@ export function PrototypeReviewChrome({
     blurToolbarFocus();
   }, [blurToolbarFocus]);
 
+  const toggleCommentsSidebar = useCallback(() => {
+    dismissReviewToolbarTooltips();
+    blurToolbarFocus();
+    closeToolbarMenus();
+    if (review.open && review.sidebarPanel === "comments") {
+      onClose();
+      return;
+    }
+    onOpenCommentsPanel?.();
+  }, [
+    blurToolbarFocus,
+    closeToolbarMenus,
+    onClose,
+    onOpenCommentsPanel,
+    review.open,
+    review.sidebarPanel,
+  ]);
+
+  const openLastVariantSet = review.openLastVariantSet;
+  const closeVariants = review.closeVariants;
+  const openLastHandoffPanel = review.openLastHandoffPanel;
+  const closeSidebar = review.closeSidebar;
+  const toggleLastExploration = useCallback(() => {
+    dismissReviewToolbarTooltips();
+    blurToolbarFocus();
+    closeToolbarMenus();
+    if (review.open && review.sidebarPanel === "variants") {
+      closeVariants();
+      return;
+    }
+    if (review.variantSets.length === 0) {
+      openExplorationsMenu();
+      return;
+    }
+    openLastVariantSet();
+  }, [
+    blurToolbarFocus,
+    closeToolbarMenus,
+    closeVariants,
+    openExplorationsMenu,
+    openLastVariantSet,
+    review.open,
+    review.sidebarPanel,
+    review.variantSets.length,
+  ]);
+
+  const toggleLastHandoff = useCallback(() => {
+    dismissReviewToolbarTooltips();
+    blurToolbarFocus();
+    closeToolbarMenus();
+    if (
+      review.open &&
+      (review.sidebarPanel === "change-log" || review.sidebarPanel === "spec")
+    ) {
+      closeSidebar();
+      return;
+    }
+    openLastHandoffPanel();
+  }, [
+    blurToolbarFocus,
+    closeSidebar,
+    closeToolbarMenus,
+    openLastHandoffPanel,
+    review.open,
+    review.sidebarPanel,
+  ]);
+
   const openViewportMenu = useCallback(() => {
     dismissReviewToolbarTooltips();
     review.closeSettings();
     setExplorationsMenuOpen(false);
-    setCommentsMenuOpen(false);
     setHandoffMenuOpen(false);
     setShareMenuOpen(false);
     setViewportMenuOpen(true);
@@ -614,11 +675,6 @@ export function PrototypeReviewChrome({
   const explorationsHover = useToolbarHoverPanel({
     onOpen: openExplorationsMenu,
     onClose: closeExplorationsMenu,
-  });
-
-  const commentsHover = useToolbarHoverPanel({
-    onOpen: openCommentsMenu,
-    onClose: closeCommentsMenu,
   });
 
   const handoffHover = useToolbarHoverPanel({
@@ -652,7 +708,6 @@ export function PrototypeReviewChrome({
 
       if (
         explorationsMenuOpen ||
-        commentsMenuOpen ||
         handoffMenuOpen ||
         shareMenuOpen ||
         viewportMenuOpen
@@ -669,7 +724,6 @@ export function PrototypeReviewChrome({
   }, [
     blurToolbarFocus,
     closeToolbarMenus,
-    commentsMenuOpen,
     explorationsMenuOpen,
     handoffMenuOpen,
     shareMenuOpen,
@@ -699,9 +753,14 @@ export function PrototypeReviewChrome({
     showStateMapTab && (!miniStateMapMinimized || stateMapModalOpen);
 
   const commentsTabActive =
-    commentsMenuOpen ||
-    isCommentModeActive ||
+    Boolean(isCommentModeActive) ||
     (review.open && review.sidebarPanel === "comments");
+  const commentsBadgeLabel =
+    commentCount > 0
+      ? commentCount > 99
+        ? "99+"
+        : String(commentCount)
+      : null;
   const explorationsTabActive =
     explorationsMenuOpen ||
     (review.open && review.sidebarPanel === "variants");
@@ -738,7 +797,6 @@ export function PrototypeReviewChrome({
               )}
               aria-label="State Map"
               aria-pressed={stateMapTabActive}
-              onClick={handleStateMapTabClick}
               {...stateMapHover.triggerProps}
             >
               State Map
@@ -764,6 +822,7 @@ export function PrototypeReviewChrome({
               active={explorationsTabActive}
               open={explorationsMenuOpen}
               hoverTriggerProps={explorationsHover.triggerProps}
+              onActivate={toggleLastExploration}
             />
             <DropdownMenuContent
               {...TOOLBAR_MENU_CONTENT_PROPS}
@@ -816,81 +875,30 @@ export function PrototypeReviewChrome({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu
-            modal={false}
-            open={commentsMenuOpen}
-            onOpenChange={(open) => {
-              if (open) {
-                openCommentsMenu();
-                return;
+          <div className={styles.footerTabHoverArea}>
+            {commentsBadgeLabel ? (
+              <span className={styles.footerTabBadge} aria-hidden>
+                {commentsBadgeLabel}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              className={cn(
+                styles.footerTab,
+                commentsTabActive && styles.footerTabActive,
+                styles.toolbarMenuTrigger,
+              )}
+              aria-label={
+                commentCount > 0
+                  ? `Comments, ${commentCount} unresolved`
+                  : "Comments"
               }
-              closeCommentsMenu();
-            }}
-          >
-            <ReviewToolbarTextTabTrigger
-              label="Comments"
-              active={commentsTabActive}
-              open={commentsMenuOpen}
-              hoverTriggerProps={commentsHover.triggerProps}
-              badgeCount={commentCount}
-            />
-            <DropdownMenuContent
-              {...TOOLBAR_MENU_CONTENT_PROPS}
-              {...commentsHover.panelProps}
-              className={FOOTER_MENU_CONTENT_CLASS}
-              data-prototype-comment-theme={commentTheme}
-              data-prototype-review-panel="comments"
+              aria-pressed={commentsTabActive}
+              onClick={toggleCommentsSidebar}
             >
-              <div className={FOOTER_MENU_PANEL_CLASS}>
-                {onToggleCommentMode ? (
-                  <DropdownMenuItem
-                    className={pillStyles.dropdownMenuItem}
-                    onSelect={() => {
-                      setCommentsMenuOpen(false);
-                      blurToolbarFocus();
-                      onToggleCommentMode();
-                    }}
-                  >
-                    <span>Add comment</span>
-                    <MessageSquarePlus
-                      size={14}
-                      strokeWidth={2}
-                      className={pillStyles.dropdownItemIcon}
-                      aria-hidden
-                    />
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem
-                  className={pillStyles.dropdownMenuItem}
-                  onSelect={() => {
-                    setCommentsMenuOpen(false);
-                    blurToolbarFocus();
-                    closeShareMenu();
-                    if (review.open && review.sidebarPanel === "comments") {
-                      onClose();
-                    } else {
-                      onOpenCommentsPanel?.();
-                    }
-                  }}
-                >
-                  <span>View comments</span>
-                  <span className={pillStyles.dropdownItemTrailingGroup}>
-                    {commentCount > 0 ? (
-                      <span className={pillStyles.dropdownItemCount}>
-                        {commentCount > 99 ? "99+" : commentCount}
-                      </span>
-                    ) : null}
-                    <MessageSquare
-                      size={14}
-                      strokeWidth={2}
-                      className={pillStyles.dropdownItemIcon}
-                      aria-hidden
-                    />
-                  </span>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              Comments
+            </button>
+          </div>
 
           <DropdownMenu
             modal={false}
@@ -908,6 +916,7 @@ export function PrototypeReviewChrome({
               active={handoffTabActive}
               open={handoffMenuOpen}
               hoverTriggerProps={handoffHover.triggerProps}
+              onActivate={toggleLastHandoff}
             />
             <DropdownMenuContent
               {...TOOLBAR_MENU_CONTENT_PROPS}
@@ -1066,6 +1075,8 @@ export function PrototypeReviewChrome({
               onSelect={onSelect}
               selectedId={selectedId}
               onClose={onClose}
+              isCommentModeActive={isCommentModeActive}
+              onToggleCommentMode={onToggleCommentMode}
             />,
             sidebarPortalTarget,
           )

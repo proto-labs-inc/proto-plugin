@@ -11,12 +11,14 @@ const VERIFY_SCRIPTS = {
     "test -f .env.local && grep -q '^PROTOTYPE_USER_NAME=' .env.local",
   "verify:onboarded":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs onboarded",
-  "verify:component-library-loaded":
-    "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs component-library-loaded",
-  "verify:component-library":
-    "node node_modules/proto-plugin/scripts/verify-component-library.mjs",
-  "verify:component-library-visual":
-    "node node_modules/proto-plugin/scripts/verify-component-library-visual.mjs",
+  "verify:design-system-loaded":
+    "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs design-system-loaded",
+  "verify:design-system-static":
+    "node node_modules/proto-plugin/scripts/verify-design-system-static.mjs",
+  "verify:design-system-visual":
+    "node node_modules/proto-plugin/scripts/verify-design-system-visual.mjs",
+  "verify:tailwind-theme":
+    "node node_modules/proto-plugin/scripts/verify-tailwind-theme-registration.mjs",
   "verify:bootstrap-status":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-status.mjs",
 };
@@ -56,6 +58,15 @@ export function ensureBootstrapVerifyScripts(hostRoot) {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   packageJson.scripts ??= {};
 
+  const removeKeys = [
+    "verify:design-system-loaded",
+    "verify:design-system-removed-static",
+    "verify:design-system-removed",
+  ];
+  for (const key of removeKeys) {
+    delete packageJson.scripts[key];
+  }
+
   let added = 0;
   let updated = 0;
   for (const [name, command] of Object.entries(VERIFY_SCRIPTS)) {
@@ -66,7 +77,7 @@ export function ensureBootstrapVerifyScripts(hostRoot) {
     else added += 1;
   }
 
-  if (added === 0 && updated === 0) {
+  if (added === 0 && updated === 0 && removeKeys.every((k) => !packageJson.scripts[k])) {
     return { updated: false, reason: "already-present" };
   }
 

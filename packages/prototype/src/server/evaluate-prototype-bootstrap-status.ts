@@ -9,11 +9,10 @@ import {
 import type { PrototypeBootstrapConfig } from "@prototype/lib/prototypes/prototype-config-types";
 
 import {
-  isComponentLibraryReadyByState,
+  isDesignSystemReadyByState,
   isWorkspaceOnboardedByState,
 } from "./evaluate-workspace-derived-status";
 
-/** Resolve host repo root even when Next.js API routes run with an unexpected cwd. */
 function resolveHostRoot(explicitHostRoot?: string): string {
   if (explicitHostRoot) {
     return explicitHostRoot;
@@ -35,14 +34,6 @@ function resolveHostRoot(explicitHostRoot?: string): string {
   return process.cwd();
 }
 
-/**
- * Workspace onboarding status is derived entirely from real state on disk:
- *
- * - `onboarded` — `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in env (Vercel / Next.js
- *   / `.env.local` fallback), and source linked locally (`source` symlink) or via env
- * - `component-library-ready` — the component library page is populated with the
- *   three required accordion sections
- */
 export function evaluateHostBootstrapStatus(
   options: {
     hostRoot?: string;
@@ -51,18 +42,17 @@ export function evaluateHostBootstrapStatus(
   } = {},
 ): PrototypeBootstrapStatus {
   const hostRoot = resolveHostRoot(options.hostRoot);
-  const env = options.env ?? process.env;
-  const componentLibraryReady = isComponentLibraryReadyByState(hostRoot);
+  const designSystemReady = isDesignSystemReadyByState(hostRoot);
 
-  if (isWorkspaceOnboardedByState(hostRoot, env)) {
+  if (isWorkspaceOnboardedByState(hostRoot)) {
     return {
       ...createCompletedBootstrapStatus(),
-      componentLibraryReady,
+      designSystemReady,
     };
   }
 
   return {
     ...createOnboardingRequiredBootstrapStatus(),
-    componentLibraryReady,
+    designSystemReady,
   };
 }

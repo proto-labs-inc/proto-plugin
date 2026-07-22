@@ -22,7 +22,7 @@ import {
   PrototypeGalleryPageLayout,
 } from "./prototype-gallery-shell";
 
-type PrototypeComponentLibraryShellProps = {
+type PrototypeDesignSystemShellProps = {
   title: string;
   description: string;
   children: ReactNode;
@@ -30,15 +30,15 @@ type PrototypeComponentLibraryShellProps = {
   productThemes?: readonly ComponentLibraryProductTheme[];
 };
 
-function PrototypeComponentLibraryShellContent({
+function PrototypeDesignSystemShellContent({
   title,
   description,
   children,
   isEmpty = false,
   productThemes,
-}: PrototypeComponentLibraryShellProps) {
-  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
-  const showPreSyncSurface = isEmpty || isComponentLibraryLoadingPanelVisible;
+}: PrototypeDesignSystemShellProps) {
+  const { isDesignSystemLoadingPanelVisible } = useBootstrapPreview();
+  const showPreSyncSurface = isEmpty || isDesignSystemLoadingPanelVisible;
   const themes = productThemes ?? (["light", "dark"] as const);
   const libraryTheme = resolveComponentLibraryDefaultTheme(themes);
 
@@ -49,19 +49,19 @@ function PrototypeComponentLibraryShellContent({
       themes={themes}
       defaultTheme={libraryTheme}
     >
-      <PrototypeComponentLibraryShellLayout
+      <PrototypeDesignSystemShellLayout
         title={title}
         description={description}
         themes={themes}
         guardTheme={!showPreSyncSurface}
       >
         {children}
-      </PrototypeComponentLibraryShellLayout>
+      </PrototypeDesignSystemShellLayout>
     </ComponentLibraryProductThemeProvider>
   );
 }
 
-function PrototypeComponentLibraryShellLayout({
+function PrototypeDesignSystemShellLayout({
   title,
   description,
   children,
@@ -111,21 +111,21 @@ function PrototypeComponentLibraryShellLayout({
 }
 
 /** Component library content area — dark before import, then source product tokens. */
-export function PrototypeComponentLibraryShell({
+export function PrototypeDesignSystemShell({
   title,
   description,
   children,
   isEmpty,
   productThemes,
-}: PrototypeComponentLibraryShellProps) {
+}: PrototypeDesignSystemShellProps) {
   return (
-    <PrototypeComponentLibraryShellContent
+    <PrototypeDesignSystemShellContent
       title={title}
       description={description}
       isEmpty={isEmpty}
       productThemes={productThemes}
     >
       {children}
-    </PrototypeComponentLibraryShellContent>
+    </PrototypeDesignSystemShellContent>
   );
 }

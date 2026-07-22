@@ -1,6 +1,9 @@
 "use client";
 
-import { PrototypeToolDialog } from "@prototype/components/platform-ui/prototype-tool-dialog";
+import {
+  PROTOTYPE_ONBOARDING_MODAL_MIN_HEIGHT_CLASS,
+  PrototypeToolDialog,
+} from "@prototype/components/platform-ui/prototype-tool-dialog";
 import { PrototypeBootstrapOnboardingAgentContextStep } from "@prototype/components/shell/prototype-bootstrap-onboarding-agent-context-step";
 import { PrototypeBootstrapOnboardingNameStep } from "@prototype/components/shell/prototype-bootstrap-onboarding-name-step";
 import { PrototypeBootstrapOnboardingSourceStep } from "@prototype/components/shell/prototype-bootstrap-onboarding-source-step";
@@ -59,16 +62,16 @@ const ONBOARDING_STEP_CONTENT: Record<
   "setup-complete": {
     title: "Set up your workspace",
     description:
-      "Copy the setup prompt into your agent and it will link the source directory and load its component library.",
+      "Copy the setup prompt into your agent and it will link the source directory and load its design system.",
   },
   "component-library": {
     title: "Waiting for workspace setup",
     description: "Run the copied prompt in your agent to finish linking your workspace.",
   },
   "library-loading": {
-    title: "Component library syncing",
+    title: "Design system syncing",
     description:
-      "New prototypes need synced base components. Browse existing prototypes while setup finishes.",
+      "New prototypes need synced design tokens. Browse existing prototypes while setup finishes.",
   },
 };
 
@@ -76,13 +79,13 @@ type PrototypeBootstrapOnboardingModalProps = {
   /** Full linked SOURCE_PATH from the host — never the sidebar display name. */
   currentSourcePath?: string;
   syncConfigPath?: string;
-  componentLibraryPagePath?: string;
+  designSystemPagePath?: string;
 };
 
 export function PrototypeBootstrapOnboardingModal({
   currentSourcePath,
   syncConfigPath,
-  componentLibraryPagePath,
+  designSystemPagePath,
 }: PrototypeBootstrapOnboardingModalProps) {
   const {
     bootstrapStep,
@@ -189,27 +192,20 @@ export function PrototypeBootstrapOnboardingModal({
         );
       } else if (onboardingStep === "agent-context") {
         const trimmedAgentContextPath = agentContextPath.trim();
-        const trimmedAgentContext = agentContext.trim();
         if (trimmedAgentContextPath) {
           await copy(
             buildAgentContextFromPathCopyText({
               contextFilePath: trimmedAgentContextPath,
             }),
           );
-          track("modal.prompt_copied", { modal: "onboarding-agent-context" });
-        } else if (trimmedAgentContext) {
+        } else {
           await copy(
             buildAgentContextCopyText({
-              content: trimmedAgentContext,
+              content: agentContext,
             }),
           );
-          track("modal.prompt_copied", { modal: "onboarding-agent-context" });
-        } else {
-          track("onboarding.step_advanced", {
-            step: onboardingStep,
-            skipped: true,
-          });
         }
+        track("modal.prompt_copied", { modal: "onboarding-agent-context" });
       }
 
       track("onboarding.step_advanced", { step: onboardingStep });
@@ -225,7 +221,7 @@ export function PrototypeBootstrapOnboardingModal({
     advanceOnboardingStep,
     agentContext,
     agentContextPath,
-    componentLibraryPagePath,
+    designSystemPagePath,
     copy,
     currentSourcePath,
     isContinuing,
@@ -243,9 +239,6 @@ export function PrototypeBootstrapOnboardingModal({
   }, [retreatOnboardingStep]);
 
   const hasSourceSelection = Boolean(selectedDirectory?.name.trim());
-  const hasAgentContext = Boolean(
-    agentContext.trim() || agentContextPath.trim(),
-  );
 
   const continueDisabled =
     isContinuing ||
@@ -258,10 +251,10 @@ export function PrototypeBootstrapOnboardingModal({
         ? "Copied prompt"
         : "Copy setup prompt"
       : onboardingStep === "agent-context"
-        ? hasAgentContext
-          ? "Continue"
-          : "Skip"
-        : "Continue";
+        ? "Continue"
+        : onboardingStep === "welcome"
+          ? "Get Started"
+          : "Continue";
 
   const handlePrimaryAction = useCallback(async () => {
     if (onboardingStep === "component-library") {
@@ -278,9 +271,10 @@ export function PrototypeBootstrapOnboardingModal({
             sourceFolderName: onboardingSource.folderName,
             currentSourcePath,
             userName,
+            agentContext,
             agentContextPath: agentContextPath.trim() || undefined,
             syncConfigPath,
-            componentLibraryPagePath,
+            designSystemPagePath,
             origin,
             workspaceProfile,
           }),
@@ -311,9 +305,10 @@ export function PrototypeBootstrapOnboardingModal({
             sourceFolderName: onboardingSource.folderName,
             currentSourcePath,
             userName,
+            agentContext,
             agentContextPath: agentContextPath.trim() || undefined,
             syncConfigPath,
-            componentLibraryPagePath,
+            designSystemPagePath,
             origin,
             workspaceProfile,
           }),
@@ -334,8 +329,9 @@ export function PrototypeBootstrapOnboardingModal({
     void handleContinue();
   }, [
     advanceOnboardingStep,
+    agentContext,
     agentContextPath,
-    componentLibraryPagePath,
+    designSystemPagePath,
     copy,
     currentSourcePath,
     handleContinue,
@@ -357,8 +353,6 @@ export function PrototypeBootstrapOnboardingModal({
   const description = stepContent.description;
 
   const isWelcomeStep = onboardingStep === "welcome";
-  const isSetupCompleteStep = onboardingStep === "setup-complete";
-  const isHeaderOnlyStep = isSetupCompleteStep;
   const dialogDescription =
     isWelcomeStep || !description ? undefined : description;
 
@@ -368,16 +362,18 @@ export function PrototypeBootstrapOnboardingModal({
       onOpenChange={() => {}}
       dismissible={false}
       overlayClassName="tool-dialog-overlay-opaque"
+      className={PROTOTYPE_ONBOARDING_MODAL_MIN_HEIGHT_CLASS}
       title={title}
       description={dialogDescription}
       hideHeader={isWelcomeStep}
       bodyClassName={cn(
         "gap-4",
         isWelcomeStep && "flex flex-1 items-center justify-center px-0 py-0",
-        isHeaderOnlyStep && "hidden p-0",
       )}
-      footerClassName={canGoBack || isWelcomeStep ? "justify-between" : "justify-end"}
-      footer={
+      footerClassName={
+        canGoBack ? "justify-between" : "justify-end"
+      }
+      footer={isWelcomeStep ? undefined : (
         <>
           {canGoBack ? (
             <Button
@@ -392,52 +388,46 @@ export function PrototypeBootstrapOnboardingModal({
               <ArrowLeft size={16} strokeWidth={2} />
             </Button>
           ) : null}
-          {!isWelcomeStep && (
-            <Button
-              type="button"
-              variant="chrome"
-              size="sm"
-              className="h-8 gap-2 px-3"
-              disabled={continueDisabled}
-              onClick={() => {
-                void handlePrimaryAction();
-              }}
-              aria-label={
-                isWaitingForOnboarded
-                  ? hasCopiedSetupPrompt
+          <Button
+            type="button"
+            variant="chrome"
+            size="sm"
+            className="h-8 gap-2 px-3"
+            disabled={continueDisabled}
+            onClick={() => {
+              void handlePrimaryAction();
+            }}
+            aria-label={
+              isWaitingForOnboarded
+                ? hasCopiedSetupPrompt
+                  ? "Copy setup prompt again"
+                  : "Copy setup prompt"
+                : onboardingStep === "setup-complete"
+                  ? "Copy setup prompt"
+                  : "Continue"
+            }
+          >
+            {isWaitingForOnboarded
+              ? isCopied
+                ? "Copied prompt"
+                : isContinuing
+                  ? "Copying…"
+                  : hasCopiedSetupPrompt
                     ? "Copy setup prompt again"
                     : "Copy setup prompt"
-                  : onboardingStep === "setup-complete"
-                    ? "Copy setup prompt"
-                    : onboardingStep === "agent-context"
-                      ? hasAgentContext
-                        ? "Continue"
-                        : "Skip agent context"
-                      : "Continue"
-              }
-            >
-              {isWaitingForOnboarded
-                ? isCopied
-                  ? "Copied prompt"
-                  : isContinuing
-                    ? "Copying…"
-                    : hasCopiedSetupPrompt
-                      ? "Copy setup prompt again"
-                      : "Copy setup prompt"
-                : isContinuing
-                  ? onboardingStep === "setup-complete"
-                    ? "Copying…"
-                    : "Continuing…"
-                  : continueLabel}
-              {isWaitingForOnboarded || onboardingStep === "setup-complete" ? (
-                icon
-              ) : isContinuing ? null : (
-                <ArrowRight size={16} strokeWidth={2} />
-              )}
-            </Button>
-          )}
+              : isContinuing
+                ? onboardingStep === "setup-complete"
+                  ? "Copying…"
+                  : "Continuing…"
+                : continueLabel}
+            {isWaitingForOnboarded || onboardingStep === "setup-complete" ? (
+              icon
+            ) : isContinuing ? null : (
+              <ArrowRight size={16} strokeWidth={2} />
+            )}
+          </Button>
         </>
-      }
+      )}
     >
       {onboardingStep === "welcome" ? (
         <PrototypeBootstrapOnboardingWelcomeStep
@@ -446,6 +436,8 @@ export function PrototypeBootstrapOnboardingModal({
           onContinue={() => {
             void handlePrimaryAction();
           }}
+          continueDisabled={continueDisabled}
+          isContinuing={isContinuing}
         />
       ) : null}
 

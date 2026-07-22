@@ -10,11 +10,11 @@ import type {
   PrototypeExtraRoute,
 } from "@prototype/lib/prototypes/prototype-config-types";
 
-import { createPrototypeComponentLibraryPage } from "./create-prototype-component-library-page";
+import { createPrototypeDesignSystemPage } from "./create-prototype-design-system-page";
 import { createPrototypePage } from "./create-prototype-page";
 import { createPrototypeStateMapPage } from "./create-prototype-state-map-page";
 
-const ComponentLibraryPage = createPrototypeComponentLibraryPage();
+const DesignSystemPage = createPrototypeDesignSystemPage();
 
 function matchExtraRoute(
   path: string[],
@@ -65,7 +65,7 @@ export function createPrototypeCatchAllPage(config: PrototypeConfig) {
     }));
 
     return [
-      { path: ["component-library"] },
+      { path: ["design-system"] },
       ...prototypePaths,
       ...stateMapPaths,
     ];
@@ -78,8 +78,8 @@ export function createPrototypeCatchAllPage(config: PrototypeConfig) {
   }) {
     const { path = [] } = await params;
 
-    if (path.length === 1 && path[0] === "component-library") {
-      return <ComponentLibraryPage />;
+    if (path.length === 1 && path[0] === "design-system") {
+      return <DesignSystemPage />;
     }
 
     if (path.length === 2 && path[0] === "prototypes") {

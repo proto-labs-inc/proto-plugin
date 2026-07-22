@@ -571,7 +571,7 @@ function TokensSection() {
   );
 }
 
-export function ComponentLibraryContent() {
+export function DesignSystemContent() {
   return (
     <Accordion
       type="multiple"

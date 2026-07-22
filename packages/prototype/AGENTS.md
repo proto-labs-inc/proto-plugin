@@ -20,7 +20,7 @@ Unless `DEVELOPER=true` is set in `.env.local`, agent work scope in a **host app
 
 If `.proto/agent/custom-context.md` exists in the host repo, read it **before other work**. It contains project-specific agent instructions added during Proto workspace setup (team conventions, Cursor rules, skills notes, etc.). Treat it as authoritative for this host unless it conflicts with package AGENTS.md scope rules.
 
-**During workspace setup:** create this file **only** when the user pasted agent context or selected a file during onboarding. Write **only** that user-supplied content — verbatim. Do **not** add placeholder, boilerplate, or Proto documentation. If the user skipped agent context, **do not** create the file.
+**During workspace setup:** write `.proto/agent/custom-context.md` with **only** what the user pasted or selected — verbatim. Empty content means delete the file if it exists. Do **not** add placeholder, boilerplate, or Proto documentation.
 
 ---
 
@@ -196,7 +196,17 @@ Host apps replicate product UI from the **source application** (linked read-only
 | Source reference        | `source/` symlink (`SOURCE_PATH` + `pnpm link-source`) | Read-only                   |
 
 
-**Initial onboarding** pulls the design system **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, run `pnpm sync-from-source`, then build the Component Library previews (see `buildPopulateComponentLibraryPrompt`). Copy the source's `:root` / theme-class token declarations **verbatim** — the plugin re-scopes those tokens onto the nested preview surfaces at runtime, so no hand-authored token bridge is needed. The host keeps `page.tsx` and `component-library-content.tsx`.
+**Initial onboarding** pulls the design system **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, run `pnpm sync-from-source`, then build the Component Library previews (see `buildPopulateDesignSystemPrompt` / design-system setup). Copy the source's `:root` / theme-class token declarations **verbatim** — the plugin re-scopes those **VALUES** onto the nested preview surfaces at runtime, so no hand-authored runtime token bridge is needed. The host keeps `page.tsx` and design-system content files.
+
+**Two CSS layers (mandatory):** Token **VALUES** (`:root` / theme-class `--*`) and Tailwind **registration** (`@theme` / `@theme inline` that generates `bg-*` / `text-*` / `shadow-*` utilities) are separate. The runtime rescoper only fixes VALUES. Importing values without registration leaves product classes silently unstyled. Do **not** `@import` the source theme entrypoint wholesale when it contains `@plugin` / `@config` / `@source` — extract a host-safe sheet with:
+
+```bash
+node node_modules/proto-plugin/scripts/extract-tailwind-theme.mjs \
+  --input source/<path-to-source-theme.css> \
+  --out src/styles/product-tailwind-theme.css
+```
+
+`@import` both the VALUES sheet and that registration output from host `globals.css`. Gate with `pnpm verify:tailwind-theme`.
 
 **Synced** via `pnpm sync-from-source`: `globals.css` (host only), fonts, `src/components/ui/`, shared utils.
 
@@ -306,9 +316,10 @@ Proto solves this with a **generated bridge** at runtime: `component-library-the
 
 Your responsibilities (the generated bridge cannot do these for you):
 
-1. **Copy the source token CSS in faithfully.** Sync the source's token/theme CSS into the host and `@import` it from `globals.css`, preserving the `:root` / theme-class declarations **unmodified** — the runtime re-scoper reads those exact declarations. Missing or mangled source token CSS = nothing for the bridge to re-scope.
-2. **Never introduce a circular `--color-*` mapping.** Do **not** add a `@theme inline` block that maps a Tailwind color token to itself (e.g. `--color-primary: var(--color-primary)`). That resolves to nothing and renders every button/badge/swatch unstyled — the #1 cause of dark/unstyled previews. The `--color-*` names must map to the source semantic tokens (`--color-primary: var(--primary)`), which come from the source's imported theme CSS. The runtime bridge re-scopes source `--*` tokens; it does **not** fix this `--color-*` layer. Enforced by `pnpm verify:component-library`.
-3. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes the source actually ships. Default to `["light"]` unless the source genuinely ships more.
+1. **Copy the source token CSS in faithfully.** Sync the source's token/theme **VALUES** into the host and `@import` them from `globals.css`, preserving the `:root` / theme-class declarations **unmodified** — the runtime re-scoper reads those exact declarations. Missing or mangled source token CSS = nothing for the bridge to re-scope.
+2. **Also import a sanitized Tailwind `@theme` registration sheet** when the source defines one (see **Two CSS layers** above). VALUES alone do not generate `bg-subtle` / `text-emphasis` / etc. Enforced by `pnpm verify:tailwind-theme`.
+3. **Never introduce a circular `--color-*` mapping.** Do **not** add a `@theme inline` block that maps a Tailwind color token to itself (e.g. `--color-primary: var(--color-primary)`). That resolves to nothing and renders every button/badge/swatch unstyled — the #1 cause of dark/unstyled previews. The `--color-*` names must map to the source semantic tokens (`--color-primary: var(--primary)`), which come from the source's imported theme CSS. The runtime bridge re-scopes source `--*` tokens; it does **not** fix this `--color-*` layer. Enforced by `pnpm verify:design-system-static` / design-system gates.
+4. `productThemes` on `createPrototypeComponentLibraryPage` / design-system page helpers must list **only** modes the source actually ships. Default to `["light"]` unless the source genuinely ships more.
 
 ### Before finishing
 

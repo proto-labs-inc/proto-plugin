@@ -5,6 +5,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { readHostConfigArrays } from "./lib/component-library-coverage.mjs";
+import {
+  buildDesignSystemTokenManifest,
+  validateManifestForScaffold,
+  writeDesignSystemTokenManifest,
+} from "./lib/design-system-token-manifest.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 function resolveSourceRoot(hostRoot) {
@@ -22,25 +27,45 @@ function resolveSourceRoot(hostRoot) {
   return null;
 }
 
-function pickExtractDirs(hostRoot, sourceRoot) {
-  const arrays = readHostConfigArrays(hostRoot, ["SYNC_DIRS"]);
-  const dirs = arrays.SYNC_DIRS.filter((rel) =>
-    /ui|pattern|component|design/i.test(rel),
-  );
-
-  const resolved = dirs
+function pickTokenExtractDir(hostRoot, sourceRoot) {
+  const arrays = readHostConfigArrays(hostRoot, ["SYNC_FILES", "SYNC_DIRS"]);
+  const cssFiles = arrays.SYNC_FILES.filter((rel) =>
+    /\.(css|scss)$/i.test(rel),
+  )
     .map((rel) => path.join(sourceRoot, rel))
     .filter((abs) => fs.existsSync(abs));
 
-  if (resolved.length > 0) return resolved;
+  if (cssFiles.length > 0) {
+    return path.dirname(cssFiles[0]);
+  }
+
+  const tokenDirs = arrays.SYNC_DIRS.filter((rel) =>
+    /config|theme|styles|tokens/i.test(rel),
+  )
+    .map((rel) => path.join(sourceRoot, rel))
+    .filter((abs) => fs.existsSync(abs));
+
+  if (tokenDirs.length > 0) return tokenDirs[0];
 
   const fallbacks = [
-    "packages/ui",
-    "packages/ui-patterns",
     "packages/ui/src",
+    "packages/ui",
+    "packages/config",
+    "packages/config/theme",
+    "apps/web/styles",
+    "src/styles",
   ].map((rel) => path.join(sourceRoot, rel));
 
-  return fallbacks.filter((abs) => fs.existsSync(abs));
+  for (const candidate of fallbacks) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  const hostGlobals = path.join(hostRoot, "src", "app", "globals.css");
+  if (fs.existsSync(hostGlobals)) {
+    return path.dirname(hostGlobals);
+  }
+
+  return sourceRoot;
 }
 
 function runSkillUi(hostRoot, dir, outDir, name) {
@@ -63,6 +88,59 @@ function runSkillUi(hostRoot, dir, outDir, name) {
   return result.status === 0;
 }
 
+function consolidateSkillUiTokens(outDir) {
+  const targetTokensDir = path.join(outDir, "tokens");
+  fs.mkdirSync(targetTokensDir, { recursive: true });
+
+  function walk(dir) {
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "tokens" && full !== targetTokensDir) {
+          for (const file of fs.readdirSync(full)) {
+            if (file.endsWith(".json")) {
+              fs.copyFileSync(
+                path.join(full, file),
+                path.join(targetTokensDir, file),
+              );
+            }
+          }
+        } else {
+          walk(full);
+        }
+      }
+    }
+  }
+
+  walk(outDir);
+
+  // Keep DESIGN.md / .skill packages for agent reference; only remove duplicate token dirs.
+  for (const entry of fs.readdirSync(outDir, { withFileTypes: true })) {
+    if (entry.name === "tokens") continue;
+    if (entry.isDirectory() && entry.name.endsWith("-design")) continue;
+    if (entry.isFile() && entry.name.endsWith(".skill")) continue;
+    fs.rmSync(path.join(outDir, entry.name), { recursive: true, force: true });
+  }
+}
+
+function writeColorsJsonFromManifest(hostRoot, manifest) {
+  const colorsPath = path.join(hostRoot, ".skillui", "tokens", "colors.json");
+  fs.mkdirSync(path.dirname(colorsPath), { recursive: true });
+  const colors = manifest.swatches.map((swatch) => ({
+    name: swatch.role,
+    variable: swatch.sourceVar,
+    format: swatch.format,
+  }));
+  fs.writeFileSync(colorsPath, `${JSON.stringify(colors, null, 2)}\n`, "utf8");
+  return colorsPath;
+}
+
 function main() {
   const toolRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -81,32 +159,41 @@ function main() {
   const outDir = path.join(hostRoot, ".skillui");
   fs.mkdirSync(outDir, { recursive: true });
 
-  const extractDirs = pickExtractDirs(hostRoot, sourceRoot);
-  if (extractDirs.length === 0) {
+  const extractDir = pickTokenExtractDir(hostRoot, sourceRoot);
+  const name = path.basename(extractDir).replace(/[^a-z0-9-]+/gi, "-") || "tokens";
+
+  console.log(
+    `Extracting SkillUI tokens from ${path.relative(sourceRoot, extractDir)} (static, tokens only)...`,
+  );
+
+  if (!runSkillUi(hostRoot, extractDir, outDir, name)) {
+    console.warn(
+      "WARN: SkillUI CLI failed — continuing with CSS-derived token manifest.",
+    );
+  }
+
+  consolidateSkillUiTokens(outDir);
+
+  const manifest = buildDesignSystemTokenManifest(hostRoot);
+  const manifestErrors = validateManifestForScaffold(manifest);
+  if (manifestErrors.length) {
+    console.error("BLOCKED: could not build a usable design-system token manifest.");
+    for (const error of manifestErrors) {
+      console.error(`- ${error}`);
+    }
     console.error(
-      "BLOCKED: no design-system dirs found under source/. Configure SYNC_DIRS in prototype.sync.config.sh.",
+      "Sync source token CSS into the host (see AGENTS.md) and ensure :root / .dark declarations are @imported from src/app/globals.css.",
     );
     process.exit(1);
   }
 
+  const manifestPath = writeDesignSystemTokenManifest(hostRoot, manifest);
+  const colorsPath = writeColorsJsonFromManifest(hostRoot, manifest);
+
   console.log(
-    `Extracting design tokens from ${extractDirs.length} source dir(s) via SkillUI (dir mode, static)...`,
+    `Token manifest: ${path.relative(hostRoot, manifestPath)} (${manifest.swatches.length} swatches)`,
   );
-
-  let ok = true;
-  for (const dir of extractDirs) {
-    const name = path.basename(dir).replace(/[^a-z0-9-]+/gi, "-");
-    console.log(`  → ${path.relative(sourceRoot, dir)}`);
-    if (!runSkillUi(hostRoot, dir, outDir, name)) ok = false;
-  }
-
-  if (!ok) {
-    console.error(
-      "WARN: one or more SkillUI extractions failed — continuing with partial output.",
-    );
-  }
-
-  console.log(`SkillUI output: ${path.relative(hostRoot, outDir)}`);
+  console.log(`SkillUI colors: ${path.relative(hostRoot, colorsPath)}`);
 }
 
 main();

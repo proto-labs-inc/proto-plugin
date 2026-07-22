@@ -1121,16 +1121,42 @@ export function CommentCaptureToolbar<TState = unknown>({
         }
       }
 
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        (e.key === "c" || e.key === "C")
+      ) {
+        if (isTyping) return;
+        const hasTextSelection = Boolean(
+          window.getSelection()?.toString().trim(),
+        );
+        if (hasTextSelection) return;
+
+        e.preventDefault();
+        if (integratedReview) {
+          review.setCaptureChannel("comment");
+          review.openSidebar("comments");
+        }
+        setActiveRestoreId(null);
+        setIsActive(true);
+        setIsGiveAMomentMode(true);
+        return;
+      }
+
       if (isTyping || e.metaKey || e.ctrlKey) return;
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [
+    activateToolbar,
+    integratedReview,
+    isActive,
     isChangelogModeActive,
     pendingAnnotation,
     pendingMultiSelectElements.length,
-    activateToolbar,
+    review,
   ]);
 
   useEffect(() => {

@@ -60,7 +60,7 @@ export type PrototypeBootstrapStatus = {
   requirements: BootstrapRequirement[];
   complete: boolean;
   /** Synced design tokens + ui primitives exist on disk. */
-  componentLibraryReady: boolean;
+  designSystemReady: boolean;
   firstIncompleteId: BootstrapRequirementId | null;
   resolvedStep: BootstrapPreviewStep;
 };
@@ -247,7 +247,7 @@ export function evaluateBootstrapRequirements(options: {
   env?: NodeJS.ProcessEnv;
   checkExists: PathExistenceChecker;
   syncPaths?: BootstrapSyncPaths | null;
-  componentLibraryReady?: boolean;
+  designSystemReady?: boolean;
 }): PrototypeBootstrapStatus {
   const order = resolveBootstrapRequirementOrder(options.bootstrap);
   const requirements = order.map((id) =>
@@ -261,14 +261,14 @@ export function evaluateBootstrapRequirements(options: {
   const uiPrimitives = requirements.find(
     (requirement) => requirement.id === "uiPrimitives",
   );
-  const componentLibraryReady =
-    options.componentLibraryReady ??
+  const designSystemReady =
+    options.designSystemReady ??
     Boolean(designTokens?.satisfied && uiPrimitives?.satisfied);
 
   return {
     requirements,
     complete: firstIncomplete == null,
-    componentLibraryReady,
+    designSystemReady,
     firstIncompleteId: firstIncomplete?.id ?? null,
     resolvedStep: resolveBootstrapStep(requirements),
   };
@@ -284,7 +284,7 @@ export function createCompletedBootstrapStatus(): PrototypeBootstrapStatus {
   return {
     requirements,
     complete: true,
-    componentLibraryReady: true,
+    designSystemReady: true,
     firstIncompleteId: null,
     resolvedStep: "normal",
   };
@@ -305,7 +305,7 @@ export function createOnboardingRequiredBootstrapStatus(): PrototypeBootstrapSta
   return {
     requirements,
     complete: false,
-    componentLibraryReady: false,
+    designSystemReady: false,
     firstIncompleteId: requirements[0]?.id ?? null,
     resolvedStep: "welcome",
   };

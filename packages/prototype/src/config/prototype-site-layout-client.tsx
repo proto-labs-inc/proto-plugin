@@ -37,7 +37,7 @@ export function PrototypeSiteLayoutClient({
   const pathname = usePathname();
   const isGalleryRoute =
     pathname === "/" ||
-    pathname.startsWith("/component-library") ||
+    pathname.startsWith("/design-system") ||
     pathname.startsWith("/agent-instructions") ||
     pathname.startsWith("/settings");
 

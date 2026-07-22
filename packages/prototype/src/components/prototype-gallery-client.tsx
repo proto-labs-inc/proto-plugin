@@ -57,8 +57,8 @@ export function PrototypeGalleryClient({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [libraryLoadingModalOpen, setLibraryLoadingModalOpen] = useState(false);
   const track = useTrackEvent();
-  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
-  const isNewPrototypeBlocked = isComponentLibraryLoadingPanelVisible;
+  const { isDesignSystemLoadingPanelVisible } = useBootstrapPreview();
+  const isNewPrototypeBlocked = isDesignSystemLoadingPanelVisible;
 
   const handleNewPrototypeClick = () => {
     track("prototype.new_clicked", { surface: "gallery" });

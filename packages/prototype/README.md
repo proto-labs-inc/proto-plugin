@@ -56,12 +56,12 @@ export default page.default;
 export const generateStaticParams = page.generateStaticParams;
 ```
 
-4. **Component library** — `src/app/component-library/page.tsx` (created automatically on `pnpm install` if missing; or run `pnpm --dir node_modules/proto-plugin setup-host`):
+4. **Component library** — `src/app/design-system/page.tsx` (created automatically on `pnpm install` if missing; or run `pnpm --dir node_modules/proto-plugin setup-host`):
 
 ```tsx
-import { createPrototypeComponentLibraryPage } from "proto-plugin";
+import { createPrototypeDesignSystemPage } from "proto-plugin";
 
-export default createPrototypeComponentLibraryPage();
+export default createPrototypeDesignSystemPage();
 ```
 
 Pass `children` once you've synced UI from source. Until then, the page shows an empty state with a copyable agent prompt.
@@ -72,7 +72,7 @@ Pass `children` once you've synced UI from source. Until then, the page shows an
 pnpm sync-from-source
 ```
 
-Copy the source's `:root` / theme-class token declarations **verbatim** into the synced CSS. The plugin re-scopes those tokens onto the nested component-library preview surfaces at runtime (light and dark), so **no hand-authored token bridge is needed**. After syncing, wire the previews in host `component-library-content.tsx`. The final onboarding **Copy setup prompt** includes the component-library population prompt (`buildPopulateComponentLibraryPrompt`).
+Copy the source's `:root` / theme-class token declarations **verbatim** into the synced CSS. The plugin re-scopes those tokens onto the nested component-library preview surfaces at runtime (light and dark), so **no hand-authored token bridge is needed**. After syncing, wire the previews in host `component-library-content.tsx`. The final onboarding **Copy setup prompt** includes the component-library population prompt (`buildPopulateDesignSystemPrompt`).
 
 5. **Next.js config** — transpile the package (use a relative import so CSS is not loaded during config evaluation):
 
@@ -142,7 +142,7 @@ Open [http://localhost:1985](http://localhost:1985) when developing.
 | --- | --- |
 | `definePrototypeConfig` | Register prototypes (sets global config as a side effect) |
 | `createPrototypePage` | Factory for `/prototypes/[slug]` page + `generateStaticParams` |
-| `createPrototypeComponentLibraryPage` | Factory for `/component-library` (empty state until host passes `children`) |
+| `createPrototypeDesignSystemPage` | Factory for `/design-system` (empty state until host passes `children`) |
 | `createPrototypeRegistry` | Server helpers: `getAllPrototypes`, `getPrototype`, … |
 | `PrototypeComponent`, `PrototypeControl` | Comment-anchorable UI wrappers |
 | `PrototypeShell` | Review chrome (comments sidebar, screenshot capture) |
@@ -284,7 +284,7 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 1. **`prototype.config.ts`** at the repo root — start with an empty `prototypes: []` array using `definePrototypeConfig` from `proto-plugin`.
 2. **Gallery home** — `src/app/page.tsx` via `createPrototypeGalleryPage(prototypeConfig)`.
 3. **Prototype route** — `src/app/prototypes/[slug]/page.tsx` via `createPrototypePage(prototypeConfig)` (export `default` + `generateStaticParams`).
-4. **Component library** — `src/app/component-library/page.tsx` via `createPrototypeComponentLibraryPage()` (auto-scaffolded on `pnpm install` if missing; shows empty state + copyable populate prompt until synced UI is wired as `children`).
+4. **Component library** — `src/app/design-system/page.tsx` via `createPrototypeDesignSystemPage()` (auto-scaffolded on `pnpm install` if missing; shows empty state + copyable populate prompt until synced UI is wired as `children`).
 5. **Root layout** — wrap children with `createPrototypeSiteLayout()` from `proto-plugin` in `src/app/layout.tsx`, and import the tool chrome theme:
 
    ```tsx
@@ -318,7 +318,7 @@ Follow the package README (`node_modules/proto-plugin/README.md`) and implement 
 
 10. **`.env.example` and `.env.local`** — document and set `SOURCE_PATH` to the source app path I provided. Add comment/screenshot storage vars only if I asked for them in step 5 — the app should run without them, but comments won't persist.
 
-Run `pnpm dev` and confirm [http://localhost:1985](http://localhost:1985) shows the empty gallery, `/component-library` renders (empty state is fine), and the app builds cleanly before continuing.
+Run `pnpm dev` and confirm [http://localhost:1985](http://localhost:1985) shows the empty gallery, `/design-system` renders (empty state is fine), and the app builds cleanly before continuing.
 
 ## 3. Link the source app
 

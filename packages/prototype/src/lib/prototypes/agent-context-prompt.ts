@@ -11,7 +11,7 @@ export const AGENT_CONTEXT_USER_CONTENT_ONLY_LINES = [
   "",
   "- Write **only** what the user provided — pasted markdown or the contents of their selected file.",
   "- Copy verbatim. Do **not** add headers, boilerplate, placeholder text, or Proto documentation.",
-  "- If the user did not provide agent context, **do not** create or update `.proto/agent/custom-context.md`.",
+  "- If content is empty, delete `.proto/agent/custom-context.md` if it exists.",
   "",
 ] as const;
 

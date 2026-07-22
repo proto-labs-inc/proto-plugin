@@ -6,7 +6,7 @@ export type GalleryHostConfig = {
   /** Full linked SOURCE_PATH from the host — not the sidebar display name. */
   currentSourcePath?: string;
   syncConfigPath?: string;
-  componentLibraryPagePath?: string;
+  designSystemPagePath?: string;
 };
 
 const GalleryHostConfigContext = createContext<GalleryHostConfig>({});

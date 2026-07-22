@@ -30,7 +30,7 @@ SYNC_LOCAL_EXTENSIONS=(
   "src/app/supabase-product-theme.tsx (pins data-theme=light on prototype viewport)"
   "src/app/layout.tsx (host fonts from apps/studio/fonts via next/font)"
   "src/app/providers.tsx (TooltipProvider from synced ui package)"
-  "src/app/component-library/component-library-content.tsx (light-theme previews)"
+  "src/app/design-system/design-system-content.tsx (light-theme previews)"
   "package.json (workspace deps ui/ui-patterns/common; cal.com packages for legacy prototypes)"
   "pnpm-workspace.yaml (catalog entries for synced package catalog: refs)"
 )

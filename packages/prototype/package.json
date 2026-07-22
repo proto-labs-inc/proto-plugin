@@ -1,6 +1,6 @@
 {
   "name": "proto-plugin",
-  "version": "0.1.50",
+  "version": "0.1.53",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -32,11 +32,12 @@
     "./styles/globals.css": "./src/styles/globals.css"
   },
   "scripts": {
-    "postinstall": "node scripts/ensure-component-library-page.mjs",
-    "setup-host": "node scripts/ensure-component-library-page.mjs",
+    "postinstall": "node scripts/ensure-design-system-page.mjs",
+    "setup-host": "node scripts/ensure-design-system-page.mjs",
     "verify:prototype-ids": "node scripts/verify-prototype-component-ids.mjs",
     "verify:prototype-preview-states": "node scripts/verify-prototype-preview-states.mjs",
-    "verify:component-library-visual": "node scripts/verify-component-library-visual.mjs",
+    "verify:tailwind-theme": "node scripts/verify-tailwind-theme-registration.mjs",
+    "extract-tailwind-theme": "node scripts/extract-tailwind-theme.mjs",
     "link-source": "./scripts/link-source.sh",
     "sync-from-source": "./scripts/sync-from-source.sh",
     "link-source-db": "./scripts/link-source-db.sh",

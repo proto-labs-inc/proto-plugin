@@ -3,15 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ensureBootstrapVerifyScripts } from "./ensure-bootstrap-verify-scripts.mjs";
-import { ensureComponentLibraryTooling } from "./ensure-component-library-tooling.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
-const PAGE_CONTENT = `import { createPrototypeComponentLibraryPage } from "proto-plugin";
-import { ComponentLibraryContent } from "./component-library-content";
+const PAGE_CONTENT = `import { createPrototypeDesignSystemPage } from "proto-plugin";
 
-export default createPrototypeComponentLibraryPage({
-  children: <ComponentLibraryContent />,
-});
+export default createPrototypeDesignSystemPage();
 `;
 
 function resolveAppDir(hostRoot) {
@@ -50,7 +46,7 @@ function isPrototypeHost(hostRoot) {
   }
 }
 
-export function ensureComponentLibraryPage(hostRoot) {
+export function ensureDesignSystemPage(hostRoot) {
   if (!isPrototypeHost(hostRoot)) {
     return { created: false, reason: "not-a-prototype-host" };
   }
@@ -60,7 +56,7 @@ export function ensureComponentLibraryPage(hostRoot) {
     return { created: false, reason: "missing-app-dir" };
   }
 
-  const pageDir = path.join(appDir, "component-library");
+  const pageDir = path.join(appDir, "design-system");
   const pagePath = path.join(pageDir, "page.tsx");
 
   if (fs.existsSync(pagePath)) {
@@ -98,11 +94,11 @@ function main() {
     "..",
   );
   const hostRoot = resolveHostRoot(toolRoot);
-  const result = ensureComponentLibraryPage(hostRoot);
+  const result = ensureDesignSystemPage(hostRoot);
 
   if (result.created) {
     console.log(
-      `proto-plugin: created component library route at ${path.relative(hostRoot, result.pagePath)}`,
+      `proto-plugin: created design system route at ${path.relative(hostRoot, result.pagePath)}`,
     );
   }
 
@@ -117,13 +113,6 @@ function main() {
   if (verifyResult.updated) {
     console.log(
       `proto-plugin: added ${verifyResult.added} bootstrap verify script(s) to package.json`,
-    );
-  }
-
-  const toolingResult = ensureComponentLibraryTooling(hostRoot);
-  if (toolingResult.updated && toolingResult.gitignore?.updated) {
-    console.log(
-      "proto-plugin: updated .gitignore for generated component-library artifacts",
     );
   }
 }

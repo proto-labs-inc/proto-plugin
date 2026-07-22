@@ -8,10 +8,10 @@ export const PROTOTYPE_VIEWPORT_ID = "prototype-viewport";
 
 export const PROTOTYPE_SCREENSHOT_ATTR = "data-prototype-screenshot";
 
-/** Synced source-app previews (component library, etc.) — fixed product tokens, not tool theme. */
+/** Synced source-app previews (design system, etc.) — fixed product tokens, not tool theme. */
 export const PROTOTYPE_SOURCE_SURFACE_ATTR = "data-prototype-source-surface";
 
-/** Source surfaces that manage their own product Light/Dark preview theme (component library). */
+/** Source surfaces that manage their own product Light/Dark preview theme (design system). */
 export const PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR =
   "data-prototype-product-theme-managed";
 

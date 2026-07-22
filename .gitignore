@@ -42,3 +42,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.skillui/
+src/app/component-library/component-library-*.generated.tsx

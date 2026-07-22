@@ -8,7 +8,7 @@ import {
   extractSpecifiers,
   loadTsconfigPaths,
   packageResolves,
-} from "./lib/component-library-imports.mjs";
+} from "./lib/design-system-imports.mjs";
 import { resolveCoverageRoots } from "./lib/component-library-coverage.mjs";
 
 /**

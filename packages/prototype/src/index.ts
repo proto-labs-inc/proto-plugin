@@ -3,7 +3,7 @@ export { defineStarterScreenConfig } from "./config/define-starter-screen-config
 // NOTE: `createPrototypeGalleryPage` is server-only (reads the screenshot manifest
 // from disk) and lives in `proto-plugin/server`. Keeping it out of this barrel is
 // what lets client prototype components import from `proto-plugin` safely.
-export { createPrototypeComponentLibraryPage } from "./config/create-prototype-component-library-page";
+export { createPrototypeDesignSystemPage } from "./config/create-prototype-design-system-page";
 export {
   ComponentLibraryAccordion,
   ComponentLibraryPreviewSurface,
@@ -152,13 +152,13 @@ export {
 } from "./lib/prototypes/create-starter-screen-prompt";
 
 export {
-  buildPopulateComponentLibraryCopyText,
-  buildPopulateComponentLibraryPrompt,
-} from "./lib/prototypes/populate-component-library-prompt";
+  buildPopulateDesignSystemCopyText,
+  buildPopulateDesignSystemPrompt,
+} from "./lib/prototypes/populate-design-system-prompt";
 export {
-  buildClearComponentLibraryCopyText,
-  buildClearComponentLibraryPrompt,
-} from "./lib/prototypes/clear-component-library-prompt";
+  buildClearDesignSystemCopyText,
+  buildClearDesignSystemPrompt,
+} from "./lib/prototypes/clear-design-system-prompt";
 export {
   buildLinkSourceCopyText,
   buildLinkSourcePrompt,

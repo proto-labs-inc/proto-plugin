@@ -8,20 +8,24 @@ type PrototypeBootstrapOnboardingWelcomeStepProps = {
   title: string;
   description: string;
   onContinue?: () => void;
+  continueDisabled?: boolean;
+  isContinuing?: boolean;
 };
 
 export function PrototypeBootstrapOnboardingWelcomeStep({
   title,
   description,
   onContinue,
+  continueDisabled = false,
+  isContinuing = false,
 }: PrototypeBootstrapOnboardingWelcomeStepProps) {
   return (
-    <div className="flex w-full flex-col items-center justify-center px-6 pb-10 pt-24 text-center">
-      <ProtoLogoMark className="mb-8 size-12" size={48} />
+    <div className="flex w-full flex-col items-center justify-center gap-3 px-6 py-8 text-center">
+      <ProtoLogoMark className="size-9" size={36} />
       <h2 className="text-3xl font-semibold tracking-tight text-foreground">
         {title}
       </h2>
-      <p className="mt-3 max-w-sm text-base leading-relaxed text-muted-foreground">
+      <p className="max-w-sm text-base leading-relaxed text-muted-foreground">
         {description}
       </p>
       {onContinue && (
@@ -29,12 +33,13 @@ export function PrototypeBootstrapOnboardingWelcomeStep({
           type="button"
           variant="chrome"
           size="sm"
-          className="mt-8 h-8 gap-2 px-3"
+          className="mt-1 h-8 gap-2 px-3"
+          disabled={continueDisabled}
           onClick={onContinue}
-          aria-label="Continue"
+          aria-label="Get Started"
         >
-          Continue
-          <ArrowRight size={16} strokeWidth={2} />
+          {isContinuing ? "Continuing…" : "Get Started"}
+          {isContinuing ? null : <ArrowRight size={16} strokeWidth={2} />}
         </Button>
       )}
     </div>

@@ -27,7 +27,6 @@ import { readBriefFieldValue } from "@prototype/lib/prototypes/read-brief-field-
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
-import { cn } from "@prototype/lib/utils";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
@@ -259,10 +258,10 @@ export function PrototypeCreatePrototypeModal({
               value={referenceHtml}
               onChange={(event) => setReferenceHtml(event.target.value)}
               placeholder="Paste rendered HTML from the source app (Inspect → Copy outerHTML)…"
-              minHeightClass="min-h-[min(28vh,12rem)]"
+              scrollable
               aria-label="Reference HTML"
               spellCheck={false}
-              className={cn("flex-1 font-mono text-xs leading-relaxed")}
+              className="font-mono text-xs leading-relaxed"
             />
           </div>
           <div className="flex shrink-0 items-center justify-between gap-4">

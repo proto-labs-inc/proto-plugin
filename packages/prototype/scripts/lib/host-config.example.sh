@@ -32,6 +32,10 @@ SYNC_GLOBS=(
 # Reminder list printed after a sync: files this host has customized beyond
 # the source version, which the blanket copy overwrites and you must re-apply.
 # Leave empty if the host does not diverge from source.
+#
+# Neutral hosts that ship Supabase examples often list:
+#   src/prototypes/table-editor-filters/table-editor-filters-theme.css
+#   src/app/globals.css (keep Supabase @imports; append product token imports)
 SYNC_LOCAL_EXTENSIONS=(
   # "src/app/globals.css (keep @source line; tool theme lives in layout via proto-plugin/styles/globals.css)"
 )

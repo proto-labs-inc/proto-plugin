@@ -39,4 +39,4 @@ fi
 ln -s "$TARGET" "$LINK"
 echo "Linked source/ -> $TARGET"
 
-node "$TOOL_ROOT/scripts/ensure-component-library-page.mjs"
+node "$TOOL_ROOT/scripts/ensure-design-system-page.mjs"

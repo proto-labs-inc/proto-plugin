@@ -1,11 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const COMPONENT_LIBRARY_SECTION_IDS = [
-  "ui-primitives",
-  "composite-components",
-  "tokens",
-];
+export const DESIGN_SYSTEM_SECTION_IDS = ["tokens"];
 
 function readEnvLocal(hostRoot) {
   try {
@@ -17,12 +13,6 @@ function readEnvLocal(hostRoot) {
 
 export function envLocalHasValue(hostRoot, key) {
   return new RegExp(`^${key}=\\s*\\S`, "m").test(readEnvLocal(hostRoot));
-}
-
-/** Prefer `process.env` (Vercel, Next.js); fall back to `.env.local` for CLI verify scripts. */
-export function envHasValue(hostRoot, key, env = process.env) {
-  if (env[key]?.trim()) return true;
-  return envLocalHasValue(hostRoot, key);
 }
 
 export function hasSourceSymlink(hostRoot) {
@@ -50,16 +40,16 @@ function collectSourceFiles(dir, acc) {
   }
 }
 
-export function isWorkspaceOnboardedByState(hostRoot, env = process.env) {
-  const sourcePathSet = envHasValue(hostRoot, "SOURCE_PATH", env);
-  const userNameSet = envHasValue(hostRoot, "PROTOTYPE_USER_NAME", env);
-  const sourceLinked = hasSourceSymlink(hostRoot) || sourcePathSet;
-
-  return sourceLinked && sourcePathSet && userNameSet;
+export function isWorkspaceOnboardedByState(hostRoot) {
+  return (
+    hasSourceSymlink(hostRoot) &&
+    envLocalHasValue(hostRoot, "SOURCE_PATH") &&
+    envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
+  );
 }
 
-export function isComponentLibraryReadyByState(hostRoot) {
-  const dir = path.join(hostRoot, "src", "app", "component-library");
+export function isDesignSystemReadyByState(hostRoot) {
+  const dir = path.join(hostRoot, "src", "app", "design-system");
   const files = [];
   collectSourceFiles(dir, files);
 
@@ -71,22 +61,25 @@ export function isComponentLibraryReadyByState(hostRoot) {
     } catch {
       continue;
     }
-    for (const id of COMPONENT_LIBRARY_SECTION_IDS) {
+    for (const id of DESIGN_SYSTEM_SECTION_IDS) {
       if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
         found.add(id);
       }
     }
   }
 
-  return COMPONENT_LIBRARY_SECTION_IDS.every((id) => found.has(id));
+  return DESIGN_SYSTEM_SECTION_IDS.every((id) => found.has(id));
 }
+
+/** @deprecated use isDesignSystemReadyByState */
+export const isComponentLibraryReadyByState = isDesignSystemReadyByState;
 
 export function readExpectedBootstrapStatus(hostRoot) {
   const onboarded = isWorkspaceOnboardedByState(hostRoot);
-  const componentLibraryReady = isComponentLibraryReadyByState(hostRoot);
+  const designSystemReady = isDesignSystemReadyByState(hostRoot);
 
   return {
     complete: onboarded,
-    componentLibraryReady: onboarded ? componentLibraryReady : componentLibraryReady,
+    designSystemReady: onboarded ? designSystemReady : designSystemReady,
   };
 }

@@ -16,6 +16,10 @@ export const PROTOTYPE_TOOL_MODAL_CLOSE_CLASS =
 export const PROTOTYPE_TOOL_MODAL_TEXTAREA_CLASS =
   "field-sizing-content min-h-[min(50vh,20rem)] w-full resize-y border-0 bg-transparent px-0 py-0 text-sm leading-relaxed text-foreground shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0";
 
+/** Shared min height for workspace onboarding / bootstrap gate modals. */
+export const PROTOTYPE_ONBOARDING_MODAL_MIN_HEIGHT_CLASS =
+  "min-h-[min(26rem,72svh)]";
+
 const MODAL_SIZE_CLASS = {
   md: "w-[min(42rem,calc(100vw-2rem))] max-w-[min(42rem,calc(100vw-2rem))] sm:max-w-[min(42rem,calc(100vw-2rem))]",
   wide: "w-[min(96rem,calc(100vw-2rem))] max-w-[min(96rem,calc(100vw-2rem))] sm:max-w-[min(96rem,calc(100vw-2rem))]",

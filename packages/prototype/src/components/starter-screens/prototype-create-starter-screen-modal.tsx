@@ -13,7 +13,6 @@ import { readBriefFieldValue } from "@prototype/lib/prototypes/read-brief-field-
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
-import { cn } from "@prototype/lib/utils";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
@@ -103,7 +102,7 @@ export function PrototypeCreateStarterScreenModal({
       open={open}
       onOpenChange={onOpenChange}
       title="New starter screen"
-      description="Name the screen, add the source route, and paste reference HTML. Copy the prompt into your agent to build it from the cached component library."
+      description="Name the screen, add the source route, and paste reference HTML. Copy the prompt into your agent to build it from the cached design system."
       size="wide"
       bodyClassName="gap-4"
       footerClassName="justify-end"
@@ -158,10 +157,10 @@ export function PrototypeCreateStarterScreenModal({
           value={referenceHtml}
           onChange={(event) => setReferenceHtml(event.target.value)}
           placeholder="Paste rendered HTML from the source app (Inspect → Copy outerHTML)…"
-          minHeightClass="min-h-[min(40vh,16rem)]"
+          scrollable
           aria-label="Reference HTML"
           spellCheck={false}
-          className={cn("font-mono text-xs leading-relaxed")}
+          className="font-mono text-xs leading-relaxed"
         />
       </div>
     </PrototypeToolDialog>

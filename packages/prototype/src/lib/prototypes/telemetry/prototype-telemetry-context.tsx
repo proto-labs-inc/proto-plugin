@@ -94,7 +94,7 @@ export function PrototypeTelemetryProvider({
 /**
  * Returns a stable `track(name, props?)` function. Safe to call outside a
  * provider (returns a no-op), so instrumented components never crash when
- * rendered in isolation (e.g. the component library).
+ * rendered in isolation (e.g. the design system).
  */
 export function useTrackEvent(): TrackEventFn {
   return useContext(TelemetryContext) ?? noop;

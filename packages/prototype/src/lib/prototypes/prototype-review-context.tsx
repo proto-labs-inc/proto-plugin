@@ -38,6 +38,17 @@ export type { PrototypeReviewSidebarPanel, PrototypeReviewTab };
 
 export type PrototypeViewportLayout = "desktop" | "mobile";
 
+export type PrototypeHandoffSidebarPanel = Extract<
+  PrototypeReviewSidebarPanel,
+  "change-log" | "spec"
+>;
+
+function isHandoffSidebarPanel(
+  panel: string | null | undefined,
+): panel is PrototypeHandoffSidebarPanel {
+  return panel === "change-log" || panel === "spec";
+}
+
 /** iPhone 14/15 logical width */
 export const PROTOTYPE_MOBILE_VIEWPORT_WIDTH_PX = 390;
 
@@ -112,6 +123,8 @@ type PrototypeReviewContextValue = {
   settingsOpen: boolean;
   shareModeActive: boolean;
   openSidebar: (panel?: PrototypeReviewSidebarPanel) => void;
+  /** Opens the last-used handoff panel (Overview or PRs). */
+  openLastHandoffPanel: () => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
   setActiveTab: (tab: PrototypeReviewTab) => void;
@@ -136,6 +149,8 @@ type PrototypeReviewContextValue = {
   closeTweaks: () => void;
   toggleTweaks: () => void;
   openVariantSet: (id: string) => void;
+  /** Opens the last-used design exploration, or the first registered set. */
+  openLastVariantSet: () => void;
   closeVariants: () => void;
   toggleVariantSet: (id: string) => void;
   /** @deprecated Use toggleVariantSet instead. */
@@ -225,6 +240,22 @@ export function PrototypeReviewProvider({
     );
   const viewportLayout: PrototypeViewportLayout =
     viewportLayoutRaw === "mobile" ? "mobile" : "desktop";
+  const {
+    value: lastActiveVariantSetId,
+    updateValue: persistLastActiveVariantSetId,
+  } = usePersistedLocalString(
+    prototypeReviewPreferenceKey(slug, "last-variant-set"),
+    "",
+  );
+  const {
+    value: lastHandoffPanelRaw,
+    updateValue: persistLastHandoffPanel,
+  } = usePersistedLocalString(
+    prototypeReviewPreferenceKey(slug, "last-handoff-panel"),
+    "change-log",
+  );
+  const lastHandoffPanel: PrototypeHandoffSidebarPanel =
+    lastHandoffPanelRaw === "spec" ? "spec" : "change-log";
   const closePanelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUrlVariantSetRef = useRef<string | null>(null);
   const urlHydratingRef = useRef(false);
@@ -333,6 +364,9 @@ export function PrototypeReviewProvider({
   const openSidebar = useCallback(
     (panel?: PrototypeReviewSidebarPanel) => {
       const nextPanel = panel ?? "comments";
+      if (isHandoffSidebarPanel(nextPanel)) {
+        persistLastHandoffPanel(nextPanel);
+      }
       if (nextPanel === "comments" || nextPanel === "change-log") {
         setVariantsOpen(false);
         setActiveVariantSetId(null);
@@ -347,8 +381,12 @@ export function PrototypeReviewProvider({
         setActiveTabState(tweaksContentRef.current ? "tweaks" : "comments");
       }
     },
-    [],
+    [persistLastHandoffPanel],
   );
+
+  const openLastHandoffPanel = useCallback(() => {
+    openSidebar(lastHandoffPanel);
+  }, [lastHandoffPanel, openSidebar]);
 
   const closeSidebar = useCallback(() => {
     if (closePanelTimerRef.current) {
@@ -526,19 +564,50 @@ export function PrototypeReviewProvider({
     });
   }, []);
 
-  const openVariantSet = useCallback((id: string) => {
-    variantSetActivateHandlersRef.current[id]?.();
+  const openVariantSet = useCallback(
+    (id: string) => {
+      variantSetActivateHandlersRef.current[id]?.();
+      setSettingsOpen(false);
+      setTweaksOpen(false);
+      if (closePanelTimerRef.current) {
+        clearTimeout(closePanelTimerRef.current);
+        closePanelTimerRef.current = null;
+      }
+      setActiveVariantSetId(id);
+      persistLastActiveVariantSetId(id);
+      setVariantsOpen(true);
+      setSidebarPanel("variants");
+      setOpen(true);
+    },
+    [persistLastActiveVariantSetId],
+  );
+
+  const openLastVariantSet = useCallback(() => {
+    const preferred =
+      lastActiveVariantSetId && variantSetMap[lastActiveVariantSetId]
+        ? lastActiveVariantSetId
+        : null;
+    const id = preferred ?? variantSetOrder[0] ?? null;
+    if (id) {
+      openVariantSet(id);
+      return;
+    }
+
     setSettingsOpen(false);
     setTweaksOpen(false);
     if (closePanelTimerRef.current) {
       clearTimeout(closePanelTimerRef.current);
       closePanelTimerRef.current = null;
     }
-    setActiveVariantSetId(id);
     setVariantsOpen(true);
     setSidebarPanel("variants");
     setOpen(true);
-  }, []);
+  }, [
+    lastActiveVariantSetId,
+    openVariantSet,
+    variantSetMap,
+    variantSetOrder,
+  ]);
 
   const toggleVariantSet = useCallback(
     (id: string) => {
@@ -552,20 +621,12 @@ export function PrototypeReviewProvider({
   );
 
   const openVariants = useCallback(() => {
-    setSettingsOpen(false);
-    setTweaksOpen(false);
-    if (closePanelTimerRef.current) {
-      clearTimeout(closePanelTimerRef.current);
-      closePanelTimerRef.current = null;
-    }
-    setVariantsOpen(true);
-    setSidebarPanel("variants");
-    setOpen(true);
-  }, []);
+    openLastVariantSet();
+  }, [openLastVariantSet]);
 
   const toggleVariants = useCallback(() => {
-    openVariants();
-  }, [openVariants]);
+    openLastVariantSet();
+  }, [openLastVariantSet]);
 
   const openTweaks = useCallback(() => {
     setSettingsOpen(false);
@@ -665,6 +726,7 @@ export function PrototypeReviewProvider({
         if (parsed.variantSetId) {
           pendingUrlVariantSetRef.current = parsed.variantSetId;
           setActiveVariantSetId(parsed.variantSetId);
+          persistLastActiveVariantSetId(parsed.variantSetId);
         } else {
           pendingUrlVariantSetRef.current = null;
           setActiveVariantSetId(null);
@@ -678,6 +740,10 @@ export function PrototypeReviewProvider({
       setSidebarPanel(parsed.panel);
       setOpen(true);
 
+      if (isHandoffSidebarPanel(parsed.panel)) {
+        persistLastHandoffPanel(parsed.panel);
+      }
+
       if (parsed.panel === "comments") {
         setActiveTabState(
           parsed.activeTab === "comments" && !tweaksContentRef.current
@@ -686,7 +752,7 @@ export function PrototypeReviewProvider({
         );
       }
     },
-    [],
+    [persistLastActiveVariantSetId, persistLastHandoffPanel],
   );
 
   const hydrateReviewStateFromUrl = useCallback(() => {
@@ -796,6 +862,7 @@ export function PrototypeReviewProvider({
       settingsOpen,
       shareModeActive,
       openSidebar,
+      openLastHandoffPanel,
       closeSidebar,
       toggleSidebar,
       setActiveTab,
@@ -816,6 +883,7 @@ export function PrototypeReviewProvider({
       closeTweaks,
       toggleTweaks,
       openVariantSet,
+      openLastVariantSet,
       closeVariants,
       toggleVariantSet,
       openVariants,
@@ -874,6 +942,7 @@ export function PrototypeReviewProvider({
       settingsOpen,
       shareModeActive,
       openSidebar,
+      openLastHandoffPanel,
       closeSidebar,
       toggleSidebar,
       setActiveTab,
@@ -894,6 +963,7 @@ export function PrototypeReviewProvider({
       closeTweaks,
       toggleTweaks,
       openVariantSet,
+      openLastVariantSet,
       closeVariants,
       toggleVariantSet,
       openVariants,

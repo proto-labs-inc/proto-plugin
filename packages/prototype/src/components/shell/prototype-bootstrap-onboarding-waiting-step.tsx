@@ -9,7 +9,7 @@ const WAITING_PANEL_CLASS =
 const SETUP_CHECKPOINTS = [
   "Link source directory",
   "Set workspace profile",
-  "Sync component library from source",
+  "Sync design system from source",
 ] as const;
 
 type PrototypeBootstrapOnboardingWaitingStepProps = {
