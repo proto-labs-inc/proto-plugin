@@ -112,7 +112,7 @@ export function buildBootstrapSetupMasterGatesLines(): string[] {
     "- **When the user asks why something was not done:** answer the question first. Do not silently fix and move on unless they ask you to fix it.",
     "- **Supabase template hosts:** If the repo ships bundled Supabase packages (`packages/ui`, `packages/config`, …) or `table-editor-filters-theme.css`, sync linked-source tokens to a **separate path** and **append** imports in `src/app/globals.css` — never overwrite or merge into those Supabase dirs.",
     "",
-    "Proto tracks progress from real workspace state — there are no flags to write. Gallery onboarding completes once `SOURCE_PATH` and the workspace profile are set (the `source/` symlink is not required for gallery unlock); the design system unlocks once `/design-system` is populated. Creating the symlink remains required before design-system sync.",
+    "Proto tracks progress from real workspace state — there are no flags to write. Host env vars resolve from `process.env` first (incl. Vercel), then `.env.local`. Gallery onboarding completes once `SOURCE_PATH` and the workspace profile are set that way (the `source/` symlink is not required for gallery unlock); the design system unlocks once `/design-system` is populated. Creating the symlink remains required before design-system sync.",
     "",
     "**Gallery unlock is API-driven.** Disk verify scripts are necessary but not sufficient — the final phase must confirm `GET /api/prototypes/bootstrap-status` returns `complete: true` and `designSystemReady: true` while the dev server is running.",
     "",

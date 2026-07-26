@@ -3,24 +3,17 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 
+import { hostEnvHasValue } from "./host-env";
+
 const DESIGN_SYSTEM_SECTION_IDS = ["tokens"] as const;
 
-function readEnvLocal(hostRoot: string): string {
-  try {
-    return fs.readFileSync(path.join(hostRoot, ".env.local"), "utf8");
-  } catch {
-    return "";
-  }
-}
-
-function envLocalHasValue(hostRoot: string, key: string): boolean {
-  return new RegExp(`^${key}=\\s*\\S`, "m").test(readEnvLocal(hostRoot));
-}
-
-export function isWorkspaceOnboardedByState(hostRoot: string): boolean {
+export function isWorkspaceOnboardedByState(
+  hostRoot: string,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
   return (
-    envLocalHasValue(hostRoot, "SOURCE_PATH") &&
-    envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
+    hostEnvHasValue(hostRoot, "SOURCE_PATH", env) &&
+    hostEnvHasValue(hostRoot, "PROTOTYPE_USER_NAME", env)
   );
 }
 

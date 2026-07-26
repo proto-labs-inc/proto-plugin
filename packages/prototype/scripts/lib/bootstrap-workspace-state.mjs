@@ -1,19 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { hostEnvHasValue } from "./host-env.mjs";
+
 export const DESIGN_SYSTEM_SECTION_IDS = ["tokens"];
-
-function readEnvLocal(hostRoot) {
-  try {
-    return fs.readFileSync(path.join(hostRoot, ".env.local"), "utf8");
-  } catch {
-    return "";
-  }
-}
-
-export function envLocalHasValue(hostRoot, key) {
-  return new RegExp(`^${key}=\\s*\\S`, "m").test(readEnvLocal(hostRoot));
-}
 
 function collectSourceFiles(dir, acc) {
   let entries;
@@ -32,10 +22,10 @@ function collectSourceFiles(dir, acc) {
   }
 }
 
-export function isWorkspaceOnboardedByState(hostRoot) {
+export function isWorkspaceOnboardedByState(hostRoot, env = process.env) {
   return (
-    envLocalHasValue(hostRoot, "SOURCE_PATH") &&
-    envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
+    hostEnvHasValue(hostRoot, "SOURCE_PATH", env) &&
+    hostEnvHasValue(hostRoot, "PROTOTYPE_USER_NAME", env)
   );
 }
 
@@ -71,6 +61,13 @@ export function readExpectedBootstrapStatus(hostRoot) {
 
   return {
     complete: onboarded,
-    designSystemReady: onboarded ? designSystemReady : designSystemReady,
+    designSystemReady,
   };
 }
+
+// Re-export so scripts can import env helpers from the bootstrap state module.
+export {
+  hostEnvHasValue,
+  readHostEnvValue,
+  readEnvLocalValue,
+} from "./host-env.mjs";

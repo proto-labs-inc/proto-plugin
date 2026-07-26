@@ -6,9 +6,9 @@ import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 const VERIFY_SCRIPTS = {
   "verify:source-linked":
-    "test -L source && test -f .env.local && grep -q '^SOURCE_PATH=' .env.local",
+    "test -L source && node node_modules/proto-plugin/scripts/verify-host-env.mjs SOURCE_PATH",
   "verify:workspace-profile":
-    "test -f .env.local && grep -q '^PROTOTYPE_USER_NAME=' .env.local",
+    "node node_modules/proto-plugin/scripts/verify-host-env.mjs PROTOTYPE_USER_NAME",
   "verify:onboarded":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs onboarded",
   "verify:design-system-loaded":

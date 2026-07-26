@@ -11,6 +11,7 @@ import { formatSourceDirectoryName } from "@prototype/lib/format-source-director
 
 import { readScreenshotManifest } from "../lib/prototypes/screenshot-manifest";
 import { sortPrototypesByCreationDate } from "../lib/prototypes/sort-prototypes-by-creation-date";
+import { readHostEnvValue, resolveHostRoot } from "../server/host-env";
 import { reconcilePrototypeRegistry } from "../server/redis/prototype-telemetry";
 
 type PrototypeGalleryPageOptions = {
@@ -29,7 +30,7 @@ export function createPrototypeGalleryPage(
     title = "Prototypes",
     description = "UI experiments and concept explorations. Select a prototype to open it.",
     eyebrow,
-    sourcePath = process.env.SOURCE_PATH,
+    sourcePath = readHostEnvValue(resolveHostRoot(), "SOURCE_PATH"),
   } = options;
   const sourceDirectoryName = formatSourceDirectoryName(sourcePath);
 

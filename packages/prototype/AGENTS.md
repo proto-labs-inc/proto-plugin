@@ -75,14 +75,15 @@ Host prototypes import framework from `prototype` and UI from `@/components/ui`.
 
 **Full spec:** `[docs/WORKSPACE-ONBOARDING.md](docs/WORKSPACE-ONBOARDING.md)` — read before any bootstrap/onboarding change.
 
-Until `SOURCE_PATH` and the workspace profile are set, the **gallery dashboard must stay inaccessible**. The `source/` symlink is not required for gallery unlock. This is enforced in `packages/prototype` — do not add bypasses.
+Until `SOURCE_PATH` and the workspace profile are set, the **gallery dashboard must stay inaccessible**. The `source/` symlink is not required for gallery unlock. Host env vars resolve via `process.env` first (incl. Vercel), then `.env.local`. This is enforced in `packages/prototype` — do not add bypasses.
 
 ### Required behavior
 
 - **Block the gallery shell** — sidebar, prototype grid, and gallery routes stay hidden while onboarding is in progress (`isOnboardingInProgress`). The **onboarding modal stays visible** for every step until bootstrap status reports `complete: true` — including the post-copy waiting step inside the modal.
 - **No dismiss / minimize / browse affordances** — do not add buttons such as “Browse examples”, “Skip for now”, “Minimize”, or session dismiss that let reviewers reach the dashboard before onboarding completes.
-- **Unlock from real state** — gallery access clears when `GET /api/prototypes/bootstrap-status` reports `complete: true` (`SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local`; symlink not required), not when the user closes a modal or picks “Normal” on the debug stepper.
-- **Debug stepper is opt-in only** — the floating bootstrap step picker appears only when `DEBUG=true` in `.env.local`. It is for package development, not default host UX. Picking `normal` in debug mode must not ship as a product path for hosts.
+- **Unlock from real state** — gallery access clears when `GET /api/prototypes/bootstrap-status` reports `complete: true` (`SOURCE_PATH` + `PROTOTYPE_USER_NAME` via host-env; symlink not required), not when the user closes a modal or picks “Normal” on the debug stepper.
+- **Host env vars** — resolve with `process.env` first (incl. Vercel), then `.env.local` (`host-env`). Apply this to every host configuration key, not only bootstrap.
+- **Debug stepper is opt-in only** — the floating bootstrap step picker appears only when `DEBUG=true` (host-env). It is for package development, not default host UX. Picking `normal` in debug mode must not ship as a product path for hosts.
 
 ### Derived state (no flags)
 
@@ -91,7 +92,7 @@ There are **no** `.proto/onboarded` or `.proto/component-library-loaded` marker 
 
 | Signal | Derived when | Effect |
 | ------ | ------------ | ------ |
-| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` (symlink not required) | Unlocks gallery / dashboard |
+| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` via host-env (symlink not required) | Unlocks gallery / dashboard |
 | `componentLibraryReady: true` | `ui-primitives`, `composite-components`, and `tokens` sections exist under `src/app/component-library/` | Unlocks `/component-library` and new-prototype creation |
 
 

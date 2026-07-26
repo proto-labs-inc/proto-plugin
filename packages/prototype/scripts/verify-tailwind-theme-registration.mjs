@@ -16,6 +16,7 @@ import {
   collectThemeTokenNames,
   extractTailwindThemeBlocks,
 } from "./lib/extract-tailwind-theme.mjs";
+import { readHostEnvValue } from "./lib/host-env.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
 
 const SOURCE_THEME_CANDIDATES = [
@@ -38,17 +39,8 @@ function resolveSourceRoot(hostRoot) {
   } catch {
     // fall through
   }
-  const envPath = path.join(hostRoot, ".env.local");
-  try {
-    const env = fs.readFileSync(envPath, "utf8");
-    const match = env.match(/^SOURCE_PATH=(.+)$/m);
-    if (match) {
-      const raw = match[1].trim().replace(/^["']|["']$/g, "");
-      if (raw && fs.existsSync(raw)) return path.resolve(raw);
-    }
-  } catch {
-    // fall through
-  }
+  const raw = readHostEnvValue(hostRoot, "SOURCE_PATH");
+  if (raw && fs.existsSync(raw)) return path.resolve(raw);
   return null;
 }
 

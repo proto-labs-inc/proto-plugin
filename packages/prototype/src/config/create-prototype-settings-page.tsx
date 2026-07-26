@@ -10,6 +10,7 @@ type PrototypeSettingsPageOptions = {
 export function createPrototypeSettingsPage(
   options: PrototypeSettingsPageOptions = {},
 ) {
+  // Next/Vercel already merge project env + `.env.local` into process.env.
   const { sourcePath = process.env.SOURCE_PATH } = options;
   const sourceDirectoryName = formatSourceDirectoryName(sourcePath);
   const workspaceProfile = readWorkspaceProfileFromEnv();

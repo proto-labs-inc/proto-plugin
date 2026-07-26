@@ -21,6 +21,7 @@ export function createPrototypeDesignSystemPage(
 ) {
   const {
     children,
+    // Next/Vercel already merge project env + `.env.local` into process.env.
     sourcePath = process.env.SOURCE_PATH,
     syncConfigPath,
     designSystemPagePath,

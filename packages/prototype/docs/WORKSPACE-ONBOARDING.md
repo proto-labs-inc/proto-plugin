@@ -12,12 +12,16 @@ New host repos start with no synced design system. Until setup finishes, reviewe
 
 ## Derived state (source of truth)
 
-There are **no** `.proto/onboarded` or `.proto/design-system-loaded` marker files. Bootstrap status is derived from real files on disk:
+There are **no** `.proto/onboarded` or `.proto/design-system-loaded` marker files. Bootstrap status is derived from real files on disk.
+
+### Host environment variables
+
+All host configuration env vars resolve the same way (`host-env`): **`process.env` first** (includes Vercel project env and Next-loaded values), then **`.env.local` on disk**. Never require `.env.local` alone when the same key is available from the environment.
 
 
 | Signal | Derived when | What it unlocks |
 | ------ | ------------ | --------------- |
-| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` (symlink not required) | Gallery / dashboard (`/`). Onboarding modal closes. |
+| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` via host-env (symlink not required) | Gallery / dashboard (`/`). Onboarding modal closes. |
 | `designSystemReady: true` | `ui-primitives`, `composite-components`, and `tokens` accordion sections exist under `src/app/design-system/` | `/design-system` accordion content. “New prototype” on the gallery. |
 
 

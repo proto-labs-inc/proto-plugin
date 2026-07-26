@@ -49,7 +49,7 @@ export function buildBootstrapSetupCopyText({
     "Run every section below **in order**. Each section ends with **⛔ HARD STOP** — print its checkpoint line before starting the next section.",
     "",
     "Proto tracks progress from real workspace state — there are no flags to write:",
-    "- Gallery onboarding completes automatically once `SOURCE_PATH` and the workspace profile are set. Creating the `source/` symlink is still required before design-system sync.",
+    "- Host env vars resolve from `process.env` first (incl. Vercel), then `.env.local`. Gallery onboarding completes once `SOURCE_PATH` and the workspace profile are set. Creating the `source/` symlink is still required before design-system sync.",
     "- The design system unlocks automatically once `/design-system` is populated.",
     "- The gallery UI reads `GET /api/prototypes/bootstrap-status` — disk verify scripts alone are **not** enough to declare setup finished.",
     "",

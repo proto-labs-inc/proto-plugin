@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import {
   createCompletedBootstrapStatus,
   createOnboardingRequiredBootstrapStatus,
@@ -12,27 +9,7 @@ import {
   isDesignSystemReadyByState,
   isWorkspaceOnboardedByState,
 } from "./evaluate-workspace-derived-status";
-
-function resolveHostRoot(explicitHostRoot?: string): string {
-  if (explicitHostRoot) {
-    return explicitHostRoot;
-  }
-
-  let dir = process.cwd();
-  while (true) {
-    if (fs.existsSync(path.join(dir, "prototype.config.ts"))) {
-      return dir;
-    }
-
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      break;
-    }
-    dir = parent;
-  }
-
-  return process.cwd();
-}
+import { resolveHostRoot } from "./host-env";
 
 export function evaluateHostBootstrapStatus(
   options: {
@@ -42,9 +19,10 @@ export function evaluateHostBootstrapStatus(
   } = {},
 ): PrototypeBootstrapStatus {
   const hostRoot = resolveHostRoot(options.hostRoot);
+  const env = options.env ?? process.env;
   const designSystemReady = isDesignSystemReadyByState(hostRoot);
 
-  if (isWorkspaceOnboardedByState(hostRoot)) {
+  if (isWorkspaceOnboardedByState(hostRoot, env)) {
     return {
       ...createCompletedBootstrapStatus(),
       designSystemReady,

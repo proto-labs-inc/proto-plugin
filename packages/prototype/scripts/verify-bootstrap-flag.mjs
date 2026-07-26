@@ -13,7 +13,7 @@ const CHECKS = {
     passed: (hostRoot) => isWorkspaceOnboardedByState(hostRoot),
     success: "onboarded — SOURCE_PATH and workspace profile set.",
     failure:
-      "not onboarded — need SOURCE_PATH + PROTOTYPE_USER_NAME in .env.local. Set the source path and workspace profile first.",
+      "not onboarded — need SOURCE_PATH + PROTOTYPE_USER_NAME via host-env (process.env / Vercel or .env.local). Set the source path and workspace profile first.",
   },
   "design-system-loaded": {
     passed: (hostRoot) => isDesignSystemReadyByState(hostRoot),

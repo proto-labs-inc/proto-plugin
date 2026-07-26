@@ -10,6 +10,8 @@ import type { StarterScreenConfig } from "@prototype/lib/prototypes/starter-scre
 import { formatSourceDirectoryName } from "@prototype/lib/format-source-directory-name";
 import { readScreenshotManifest } from "@prototype/lib/prototypes/screenshot-manifest";
 
+import { readHostEnvValue, resolveHostRoot } from "../server/host-env";
+
 const STARTER_SCREENS_HEADER_TITLE = "Starter Screens";
 const STARTER_SCREENS_HEADER_DESCRIPTION =
   "Base screens to start your prototype with.";
@@ -26,7 +28,7 @@ export function createPrototypeStarterScreensPage(
   const {
     config,
     starterScreensPagePath = "src/app/starter-screens/page.tsx",
-    sourcePath = process.env.SOURCE_PATH,
+    sourcePath = readHostEnvValue(resolveHostRoot(), "SOURCE_PATH"),
   } = options;
   const sourceDirectoryName = formatSourceDirectoryName(sourcePath);
   const registry = config ? createStarterScreenRegistry(config) : null;
