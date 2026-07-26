@@ -17,7 +17,7 @@ There are **no** `.proto/onboarded` or `.proto/design-system-loaded` marker file
 
 | Signal | Derived when | What it unlocks |
 | ------ | ------------ | --------------- |
-| `complete: true` | `source` symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` | Gallery / dashboard (`/`). Onboarding modal closes. |
+| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` (symlink not required) | Gallery / dashboard (`/`). Onboarding modal closes. |
 | `designSystemReady: true` | `ui-primitives`, `composite-components`, and `tokens` accordion sections exist under `src/app/design-system/` | `/design-system` accordion content. “New prototype” on the gallery. |
 
 

@@ -20,8 +20,6 @@ Unless `DEVELOPER=true` is set in `.env.local`, agent work scope in a **host app
 
 If `.proto/agent/custom-context.md` exists in the host repo, read it **before other work**. It contains project-specific agent instructions added during Proto workspace setup (team conventions, Cursor rules, skills notes, etc.). Treat it as authoritative for this host unless it conflicts with package AGENTS.md scope rules.
 
-**During workspace setup:** write `.proto/agent/custom-context.md` with **only** what the user pasted or selected — verbatim. Empty content means delete the file if it exists. Do **not** add placeholder, boilerplate, or Proto documentation.
-
 ---
 
 ## Proto-plugin version preflight (mandatory, blocking)
@@ -77,13 +75,13 @@ Host prototypes import framework from `prototype` and UI from `@/components/ui`.
 
 **Full spec:** `[docs/WORKSPACE-ONBOARDING.md](docs/WORKSPACE-ONBOARDING.md)` — read before any bootstrap/onboarding change.
 
-Until the source is linked and the workspace profile is set, the **gallery dashboard must stay inaccessible**. This is enforced in `packages/prototype` — do not add bypasses.
+Until `SOURCE_PATH` and the workspace profile are set, the **gallery dashboard must stay inaccessible**. The `source/` symlink is not required for gallery unlock. This is enforced in `packages/prototype` — do not add bypasses.
 
 ### Required behavior
 
 - **Block the gallery shell** — sidebar, prototype grid, and gallery routes stay hidden while onboarding is in progress (`isOnboardingInProgress`). The **onboarding modal stays visible** for every step until bootstrap status reports `complete: true` — including the post-copy waiting step inside the modal.
 - **No dismiss / minimize / browse affordances** — do not add buttons such as “Browse examples”, “Skip for now”, “Minimize”, or session dismiss that let reviewers reach the dashboard before onboarding completes.
-- **Unlock from real state** — gallery access clears when `GET /api/prototypes/bootstrap-status` reports `complete: true` (source symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME`), not when the user closes a modal or picks “Normal” on the debug stepper.
+- **Unlock from real state** — gallery access clears when `GET /api/prototypes/bootstrap-status` reports `complete: true` (`SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local`; symlink not required), not when the user closes a modal or picks “Normal” on the debug stepper.
 - **Debug stepper is opt-in only** — the floating bootstrap step picker appears only when `DEBUG=true` in `.env.local`. It is for package development, not default host UX. Picking `normal` in debug mode must not ship as a product path for hosts.
 
 ### Derived state (no flags)
@@ -93,7 +91,7 @@ There are **no** `.proto/onboarded` or `.proto/component-library-loaded` marker 
 
 | Signal | Derived when | Effect |
 | ------ | ------------ | ------ |
-| `complete: true` | `source` symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` | Unlocks gallery / dashboard |
+| `complete: true` | `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` (symlink not required) | Unlocks gallery / dashboard |
 | `componentLibraryReady: true` | `ui-primitives`, `composite-components`, and `tokens` sections exist under `src/app/component-library/` | Unlocks `/component-library` and new-prototype creation |
 
 
@@ -196,17 +194,7 @@ Host apps replicate product UI from the **source application** (linked read-only
 | Source reference        | `source/` symlink (`SOURCE_PATH` + `pnpm link-source`) | Read-only                   |
 
 
-**Initial onboarding** pulls the design system **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, run `pnpm sync-from-source`, then build the Component Library previews (see `buildPopulateDesignSystemPrompt` / design-system setup). Copy the source's `:root` / theme-class token declarations **verbatim** — the plugin re-scopes those **VALUES** onto the nested preview surfaces at runtime, so no hand-authored runtime token bridge is needed. The host keeps `page.tsx` and design-system content files.
-
-**Two CSS layers (mandatory):** Token **VALUES** (`:root` / theme-class `--*`) and Tailwind **registration** (`@theme` / `@theme inline` that generates `bg-*` / `text-*` / `shadow-*` utilities) are separate. The runtime rescoper only fixes VALUES. Importing values without registration leaves product classes silently unstyled. Do **not** `@import` the source theme entrypoint wholesale when it contains `@plugin` / `@config` / `@source` — extract a host-safe sheet with:
-
-```bash
-node node_modules/proto-plugin/scripts/extract-tailwind-theme.mjs \
-  --input source/<path-to-source-theme.css> \
-  --out src/styles/product-tailwind-theme.css
-```
-
-`@import` both the VALUES sheet and that registration output from host `globals.css`. Gate with `pnpm verify:tailwind-theme`.
+**Initial onboarding** pulls the design system **directly from the linked source** — there is no ahead-of-time export folder. Link the source (`SOURCE_PATH` + `pnpm link-source`), add its design-system paths to `SYNC_FILES` / `SYNC_DIRS` / `SYNC_GLOBS` in `prototype.sync.config.sh`, run `pnpm sync-from-source`, then build the Component Library previews (see `buildPopulateComponentLibraryPrompt`). Copy the source's `:root` / theme-class token declarations **verbatim** — the plugin re-scopes those tokens onto the nested preview surfaces at runtime, so no hand-authored token bridge is needed. The host keeps `page.tsx` and `component-library-content.tsx`.
 
 **Synced** via `pnpm sync-from-source`: `globals.css` (host only), fonts, `src/components/ui/`, shared utils.
 
@@ -240,14 +228,6 @@ Reference prototype: `booking-flow` — `src/prototypes/booking-flow/` (or any r
 ## Component Library (`/component-library`)
 
 Host file: `src/app/component-library/component-library-content.tsx`, wired from `src/app/component-library/page.tsx` via `createPrototypeComponentLibraryPage({ children: <ComponentLibraryContent /> })`.
-
-### Two-phase generation (hybrid — the plugin never guesses the design system)
-
-The generator ships **no code that concludes a design system's structure**. Every design system (Supabase `ui`/`ui-patterns`, Cal `@coss/ui`+`@calcom/ui`, Onlook `@onlook/ui` wildcard, Plane `@plane/ui` barrel, …) is handled by the agent reasoning from the actual source, not by heuristics.
-
-- **PHASE 1 — scope (`node node_modules/proto-plugin/scripts/profile-design-system.mjs`).** Gathers *facts only* into `.proto/design-system-evidence.json` (candidate packages, their `exports` maps, component dir listings, story counts, context-token hits). The agent reads the source and **writes `.proto/design-system-profile.json`** (schema in `scripts/lib/design-system-profile.mjs`): `packages[]`, `roots.primitive[]`/`roots.composite[]` each with a `specifierTemplate` (`"@pkg/ui/components/{slug}"` for subpath, or a bare package name for barrel), `themes.modes`/`roles`, `providers`, `authored[]`, `skips[]`. Import style comes from each package's real `exports` map; `aliasPrefix` de-collides shared export names.
-- **PHASE 2 — build (`node node_modules/proto-plugin/scripts/generate-component-library.mjs`).** A deterministic engine consumes the profile: emits collision-aware aliased imports, `engine`-class previews (cva/enum/mined/prop-free), token swatches, and a guide. It **blocks without a valid profile**. Preview bodies for `authored` components (context-bound / needs composition) are hand-written in `component-library-overrides.tsx` — the engine never fakes them.
-- **Gates are load-bearing.** With structural detectors deleted, correctness rests entirely on `verify:component-library` (profile valid + coverage + import resolution + token layer), `pnpm build`, and `verify:component-library-visual` (real render + chromatic tokens).
 
 The page shell (`PrototypeComponentLibraryShell`) already renders **"Component Library"** / **"Base components from the source directory."** Do **not** repeat that header or add page-level subtitles in content.
 
@@ -308,25 +288,20 @@ When populating from source (see `buildPopulateComponentLibraryPrompt`):
 - Preserve semantic tokens from `globals.css`; no hardcoded hex in previews.
 - Do **not** add a "Clear library" footer or duplicate section headers above the first preview grid.
 
-### Product theme on preview surfaces (generated bridge — do not hand-author)
+### Product theme on preview surfaces (BLOCKING — do not skip)
 
-The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-`*, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations do not recompute on a nested element on their own.
+The product theme class is applied to a **nested** preview surface (`[data-prototype-source-surface][data-prototype-product-theme-managed]`), **not** `:root`. Many source design systems (Supabase/Cal, OKLCH shadcn systems) **derive** their semantic tokens (`--background`, `--card`, `--surface-`*, `--brand-*`, …) on `:root` and only override **input** variables (`--surface`, `--hue`, brand literals) under the theme class. Those `:root`-only derivations **never recompute** on a nested element — so copying source tokens and leaving the bridge as a stub renders the whole library in the `:root` fallback (usually dark), even though the app compiles and returns HTTP 200.
 
-Proto solves this with a **generated bridge** at runtime: `component-library-theme-rescope.ts` reads the source's own `:root` / `.light` / `.dark` custom-property declarations out of `document.styleSheets` and re-emits them scoped to the managed preview surface per mode, so the browser recomputes every `var()` / `color-mix()` in the surface's own context. **You do not hand-author a per-host token bridge.**
-
-Your responsibilities (the generated bridge cannot do these for you):
-
-1. **Copy the source token CSS in faithfully.** Sync the source's token/theme **VALUES** into the host and `@import` them from `globals.css`, preserving the `:root` / theme-class declarations **unmodified** — the runtime re-scoper reads those exact declarations. Missing or mangled source token CSS = nothing for the bridge to re-scope.
-2. **Also import a sanitized Tailwind `@theme` registration sheet** when the source defines one (see **Two CSS layers** above). VALUES alone do not generate `bg-subtle` / `text-emphasis` / etc. Enforced by `pnpm verify:tailwind-theme`.
-3. **Never introduce a circular `--color-*` mapping.** Do **not** add a `@theme inline` block that maps a Tailwind color token to itself (e.g. `--color-primary: var(--color-primary)`). That resolves to nothing and renders every button/badge/swatch unstyled — the #1 cause of dark/unstyled previews. The `--color-*` names must map to the source semantic tokens (`--color-primary: var(--primary)`), which come from the source's imported theme CSS. The runtime bridge re-scopes source `--*` tokens; it does **not** fix this `--color-*` layer. Enforced by `pnpm verify:design-system-static` / design-system gates.
-4. `productThemes` on `createPrototypeComponentLibraryPage` / design-system page helpers must list **only** modes the source actually ships. Default to `["light"]` unless the source genuinely ships more.
+1. **The host token bridge is REQUIRED** whenever the source derives tokens on `:root`. Re-declare the **full** token system — theme **inputs AND the derivations** — scoped to `[data-prototype-source-surface][data-prototype-product-theme-managed]`, once per configured mode (`[data-theme="light"]`, `[data-theme="dark"]`, …). A `color-scheme`-only stub is **not acceptable**; it is the #1 cause of dark/unstyled previews. Register the bridge file in `SYNC_LOCAL_EXTENSIONS` so `sync-from-source` never overwrites it.
+2. `productThemes` on `createPrototypeComponentLibraryPage` must list **only** modes you have bridged and verified. Default to `["light"]` unless the source ships more.
+3. Do **not** rely on proto-plugin's generic light/dark fallbacks for real previews — they cover only a token subset.
 
 ### Before finishing
 
-Run the loop until both gates pass (see `buildPopulateComponentLibraryPrompt`):
-
-1. **`pnpm verify:component-library`** (static) — fails until every synced primitive/composite is previewed or `// skip:`-commented and there is no circular `--color-*` mapping. If it reports empty/misconfigured coverage roots, set `COMPONENT_LIBRARY_PRIMITIVE_ROOTS` / `COMPONENT_LIBRARY_COMPOSITE_ROOTS` in `prototype.sync.config.sh`.
-2. **Browser pass** (runtime — no static check can prove this): open `/component-library`, expand each of the three sections one at a time, and for each confirm (a) **no console errors** while it opens (the composite section is the frequent offender — a stateful preview throws or a server-only import slips in), (b) it renders real content (not blank / not a React error-boundary), and (c) a **chromatic** token (`--color-brand` / `--primary` / a status color) resolves to the **source** hue — not proto tool-chrome blue/pink or neutral grey. Repeat the chromatic check per configured `productThemes` mode. HTTP 200 / "sections render" / "no TS errors" is **not** verification.
+1. Run through all three sections expanded on `/component-library`.
+2. **Verify theming per mode — HTTP 200 / "sections render" / "no TS errors" is NOT verification.** For **each** configured `productThemes` mode, confirm the source token system applied. The test is *"did source tokens apply"*, not *"is it light"* — a dark preview is correct for a dark-only source. Dark-safe signal: a **chromatic** token (`--color-brand` / `--primary` / a status color) resolves to the **source** hue (e.g. brand green), not proto tool-chrome **blue/pink** or neutral grey. Blue/pink or all-grey = the bridge is a stub/incomplete → fix it before finishing.
+3. Toggle product light/dark on the component library if the host configures both themes.
+4. Confirm composite coverage is complete (list exports vs previews).
 
 ---
 

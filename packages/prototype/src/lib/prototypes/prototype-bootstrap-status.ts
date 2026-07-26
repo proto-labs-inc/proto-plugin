@@ -291,9 +291,8 @@ export function createCompletedBootstrapStatus(): PrototypeBootstrapStatus {
 }
 
 /**
- * Status returned when the workspace is not yet onboarded (source not linked or
- * workspace profile unset), so this reports incomplete and starts the modal from
- * the beginning.
+ * Status returned when the workspace is not yet onboarded (workspace profile
+ * unset), so this reports incomplete and starts the modal from the beginning.
  */
 export function createOnboardingRequiredBootstrapStatus(): PrototypeBootstrapStatus {
   const requirements = DEFAULT_BOOTSTRAP_REQUIREMENT_ORDER.map((id) => ({

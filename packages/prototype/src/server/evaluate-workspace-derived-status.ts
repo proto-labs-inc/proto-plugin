@@ -17,17 +17,8 @@ function envLocalHasValue(hostRoot: string, key: string): boolean {
   return new RegExp(`^${key}=\\s*\\S`, "m").test(readEnvLocal(hostRoot));
 }
 
-function hasSourceSymlink(hostRoot: string): boolean {
-  try {
-    return fs.lstatSync(path.join(hostRoot, "source")).isSymbolicLink();
-  } catch {
-    return false;
-  }
-}
-
 export function isWorkspaceOnboardedByState(hostRoot: string): boolean {
   return (
-    hasSourceSymlink(hostRoot) &&
     envLocalHasValue(hostRoot, "SOURCE_PATH") &&
     envLocalHasValue(hostRoot, "PROTOTYPE_USER_NAME")
   );
