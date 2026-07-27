@@ -364,7 +364,10 @@ function ShapeFullBleedFrame({
   return (
     <div
       className={cn(
-        "relative w-full shrink-0 overflow-hidden bg-transparent",
+        // Must be absolute (not relative): Tailwind source order can let
+        // `relative` win over a later `absolute` class, collapsing inset-0
+        // height to 0 and leaving the shape canvas unmeasured.
+        "absolute inset-0 overflow-hidden bg-transparent",
         className,
       )}
     >
@@ -402,7 +405,6 @@ function SquareCapFullBleedLayout({
         >
           <ShapeFullBleedFrame
             selection={selection}
-            className="absolute inset-0"
             dragAttributionLabel={dragAttributionLabel}
           />
         </SubmitModalCardTextureBackground>

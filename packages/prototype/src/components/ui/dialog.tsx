@@ -24,11 +24,7 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn(
-      styles.overlay,
-      "tool-dialog-overlay fixed inset-0 z-50",
-      className,
-    )}
+    className={cn(styles.overlay, "fixed inset-0 z-50", className)}
     {...props}
   />
 ));
@@ -51,12 +47,31 @@ const DialogContent = React.forwardRef<
         : getPrototypeDialogPortalContainer()
     }
   >
-    <DialogOverlay className={overlayClassName} />
+    {portalScope === "tool" ? (
+      <DialogOverlay
+        className={cn("tool-dialog-overlay", overlayClassName)}
+      />
+    ) : (
+      // Radix `Dialog.Overlay` returns null when `modal={false}` (required for
+      // product dialogs so review chrome stays interactive). Render a plain
+      // scrim instead so viewport-scoped dialogs still dim the preview.
+      <div
+        aria-hidden
+        data-state="open"
+        className={cn(
+          styles.overlay,
+          styles.productOverlay,
+          "fixed inset-0",
+          overlayClassName,
+        )}
+      />
+    )}
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
         styles.content,
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
+        portalScope === "viewport" ? styles.productContent : "z-50",
+        "fixed left-[50%] top-[50%] grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
         className,
       )}
       onPointerDownOutside={(event) => {

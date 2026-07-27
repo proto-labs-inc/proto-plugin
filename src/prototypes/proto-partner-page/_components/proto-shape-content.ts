@@ -92,6 +92,18 @@ export type ProtoShapeCustomizerVariant =
   | "dual-row"
   | "shape-carousel";
 
+/** Canonical customizer chrome — former Proto shapes exploration default. */
+export const DEFAULT_PROTO_SHAPES_VARIANT: ProtoShapeCustomizerVariant =
+  "compact-minimal-dock";
+
+export function defaultProtoShapeSelection() {
+  return {
+    shapeId: DEFAULT_PROTO_SHAPE_ID,
+    colorId: DEFAULT_PROTO_COLOR_ID,
+    textureId: DEFAULT_PROTO_TEXTURE_ID,
+  };
+}
+
 /** Bottom offset on the shape canvas so overlay controls do not cover the play area. */
 export const PROTO_SHAPE_CUSTOMIZER_CANVAS_INSET: Partial<
   Record<ProtoShapeCustomizerVariant, string>

@@ -55,14 +55,12 @@ type InviteFollowUpShapeExamplesProps = {
   /** Forces a remount when the layout variant switches. */
   previewKey?: string;
   className?: string;
-  dragAttributionLabel?: string;
 };
 
 export function InviteFollowUpShapeExamples({
   layoutVariant = DEFAULT_INVITE_FOLLOW_UP_SHAPE_LAYOUT_VARIANT,
   previewKey = layoutVariant,
   className,
-  dragAttributionLabel,
 }: InviteFollowUpShapeExamplesProps) {
   const isMobileViewport = useMobileViewport();
   const config = useMemo<MultiShapeSpringsCanvasConfig>(() => {
@@ -75,15 +73,18 @@ export function InviteFollowUpShapeExamples({
       shapeCount: fixedSlots.length,
       fixedSlots,
       shapeEntranceStagger: INVITE_FOLLOW_UP_BEAT / fixedSlots.length,
-      dragAttributionLabel,
     };
-  }, [dragAttributionLabel, isMobileViewport, layoutVariant]);
+  }, [isMobileViewport, layoutVariant]);
+
+  const remountKey = `${previewKey}-${isMobileViewport ? "mobile" : "desktop"}`;
 
   return (
     <PrototypeComponent id="invite-follow-up-shape-examples">
+      {/* key remounts partner physics — previewKey alone only swaps an inner div */}
       <HomePageShapesBackground
+        key={remountKey}
         config={config}
-        previewKey={`${previewKey}-${isMobileViewport ? "mobile" : "desktop"}`}
+        previewKey={remountKey}
         className={cn(
           "pointer-events-auto absolute inset-0 z-10 overflow-hidden bg-transparent",
           className,

@@ -90,79 +90,99 @@ const INVITE_SHAPE_IDENTITIES = [
   },
 ] as const satisfies readonly ShapeIdentity[];
 
+/**
+ * Each layout places shapes around the centered copy blurb — typically 2 above
+ * (~0.2–0.38 floor) and 3 below (~0.7–0.98). Variants differ in x/y rhythm, not
+ * by collapsing everything onto the bottom edge.
+ */
 const INVITE_SHAPE_LAYOUTS: Record<
   InviteFollowUpShapeLayoutVariant,
   Record<(typeof INVITE_SHAPE_IDENTITIES)[number]["id"], ShapePlacement>
 > = {
+  // Diagonal steps from high-left down to low-right, wrapping the blurb.
   "staggered-shelf": {
-    "invite-prism": { restFloorFactor: 0.78, xFactor: 0.14, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.84, xFactor: 0.72, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.9, xFactor: 0.48, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.95, xFactor: 0.26, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.99, xFactor: 0.86, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.22, xFactor: 0.12, yFactor: 0.24 },
+    "invite-pentagon": { restFloorFactor: 0.36, xFactor: 0.78, yFactor: 0.3 },
+    "invite-square": { restFloorFactor: 0.7, xFactor: 0.42, yFactor: 0.18 },
+    "invite-cube": { restFloorFactor: 0.84, xFactor: 0.22, yFactor: 0.28 },
+    "invite-triangle": { restFloorFactor: 0.97, xFactor: 0.86, yFactor: 0.34 },
   },
+  // Even horizontal spacing; two float above, three share a lower shelf.
   "bottom-line": {
-    "invite-prism": { restFloorFactor: 0.97, xFactor: 0.1, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.97, xFactor: 0.28, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.97, xFactor: 0.5, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.97, xFactor: 0.72, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.97, xFactor: 0.9, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.28, xFactor: 0.18, yFactor: 0.28 },
+    "invite-pentagon": { restFloorFactor: 0.28, xFactor: 0.82, yFactor: 0.28 },
+    "invite-square": { restFloorFactor: 0.94, xFactor: 0.22, yFactor: 0.35 },
+    "invite-cube": { restFloorFactor: 0.94, xFactor: 0.5, yFactor: 0.35 },
+    "invite-triangle": { restFloorFactor: 0.94, xFactor: 0.78, yFactor: 0.35 },
   },
+  // Loose field above and below the blurb.
   "scatter-field": {
-    "invite-prism": { restFloorFactor: 0.72, xFactor: 0.12, yFactor: 0.25 },
-    "invite-pentagon": { restFloorFactor: 0.8, xFactor: 0.78, yFactor: 0.3 },
-    "invite-square": { restFloorFactor: 0.88, xFactor: 0.35, yFactor: 0.28 },
-    "invite-cube": { restFloorFactor: 0.94, xFactor: 0.58, yFactor: 0.32 },
-    "invite-triangle": { restFloorFactor: 0.98, xFactor: 0.9, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.2, xFactor: 0.14, yFactor: 0.22 },
+    "invite-pentagon": { restFloorFactor: 0.34, xFactor: 0.8, yFactor: 0.28 },
+    "invite-square": { restFloorFactor: 0.62, xFactor: 0.38, yFactor: 0.2 },
+    "invite-cube": { restFloorFactor: 0.82, xFactor: 0.18, yFactor: 0.3 },
+    "invite-triangle": { restFloorFactor: 0.94, xFactor: 0.72, yFactor: 0.34 },
   },
+  // Alternating high / low rests across the width.
   "wave-rise": {
-    "invite-prism": { restFloorFactor: 0.92, xFactor: 0.1, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.82, xFactor: 0.3, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.97, xFactor: 0.5, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.85, xFactor: 0.7, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.96, xFactor: 0.9, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.26, xFactor: 0.1, yFactor: 0.26 },
+    "invite-pentagon": { restFloorFactor: 0.86, xFactor: 0.3, yFactor: 0.32 },
+    "invite-square": { restFloorFactor: 0.3, xFactor: 0.5, yFactor: 0.28 },
+    "invite-cube": { restFloorFactor: 0.9, xFactor: 0.7, yFactor: 0.34 },
+    "invite-triangle": { restFloorFactor: 0.24, xFactor: 0.9, yFactor: 0.24 },
   },
+  // High edges, low center under the blurb.
   "arc-shelf": {
-    "invite-prism": { restFloorFactor: 0.88, xFactor: 0.1, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.92, xFactor: 0.25, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.98, xFactor: 0.5, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.92, xFactor: 0.75, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.88, xFactor: 0.9, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.24, xFactor: 0.1, yFactor: 0.24 },
+    "invite-pentagon": { restFloorFactor: 0.24, xFactor: 0.9, yFactor: 0.24 },
+    "invite-square": { restFloorFactor: 0.92, xFactor: 0.5, yFactor: 0.34 },
+    "invite-cube": { restFloorFactor: 0.72, xFactor: 0.26, yFactor: 0.22 },
+    "invite-triangle": { restFloorFactor: 0.72, xFactor: 0.74, yFactor: 0.22 },
   },
+  // Three on the left (stacked), two on the right — still above + below.
   "left-cluster": {
-    "invite-prism": { restFloorFactor: 0.9, xFactor: 0.1, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.82, xFactor: 0.72, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.97, xFactor: 0.28, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.94, xFactor: 0.18, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.96, xFactor: 0.88, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.22, xFactor: 0.12, yFactor: 0.24 },
+    "invite-square": { restFloorFactor: 0.7, xFactor: 0.24, yFactor: 0.2 },
+    "invite-cube": { restFloorFactor: 0.92, xFactor: 0.14, yFactor: 0.34 },
+    "invite-pentagon": { restFloorFactor: 0.3, xFactor: 0.78, yFactor: 0.28 },
+    "invite-triangle": { restFloorFactor: 0.9, xFactor: 0.86, yFactor: 0.34 },
   },
+  // Tight to the bottom edge, with two small accents still above the blurb.
   "deep-edge": {
-    "invite-prism": { restFloorFactor: 0.985, xFactor: 0.12, yFactor: 0.4 },
-    "invite-pentagon": { restFloorFactor: 0.988, xFactor: 0.3, yFactor: 0.4 },
-    "invite-square": { restFloorFactor: 0.992, xFactor: 0.5, yFactor: 0.4 },
-    "invite-cube": { restFloorFactor: 0.995, xFactor: 0.7, yFactor: 0.4 },
-    "invite-triangle": { restFloorFactor: 0.998, xFactor: 0.88, yFactor: 0.4 },
+    "invite-prism": { restFloorFactor: 0.32, xFactor: 0.16, yFactor: 0.3 },
+    "invite-pentagon": { restFloorFactor: 0.32, xFactor: 0.84, yFactor: 0.3 },
+    "invite-square": { restFloorFactor: 0.985, xFactor: 0.22, yFactor: 0.4 },
+    "invite-cube": { restFloorFactor: 0.99, xFactor: 0.5, yFactor: 0.4 },
+    "invite-triangle": { restFloorFactor: 0.995, xFactor: 0.78, yFactor: 0.4 },
   },
+  // Default product look — two shapes above the copy blurb, three below.
   "gallery-float": {
-    "invite-prism": { restFloorFactor: 0.68, xFactor: 0.28, yFactor: 0.22 },
-    "invite-pentagon": { restFloorFactor: 0.76, xFactor: 0.75, yFactor: 0.28 },
-    "invite-square": { restFloorFactor: 0.85, xFactor: 0.45, yFactor: 0.25 },
-    "invite-cube": { restFloorFactor: 0.92, xFactor: 0.16, yFactor: 0.3 },
-    "invite-triangle": { restFloorFactor: 0.96, xFactor: 0.82, yFactor: 0.32 },
+    "invite-prism": { restFloorFactor: 0.26, xFactor: 0.28, yFactor: 0.26 },
+    "invite-pentagon": { restFloorFactor: 0.3, xFactor: 0.75, yFactor: 0.3 },
+    "invite-square": { restFloorFactor: 0.72, xFactor: 0.45, yFactor: 0.16 },
+    "invite-cube": { restFloorFactor: 0.8, xFactor: 0.16, yFactor: 0.2 },
+    "invite-triangle": {
+      restFloorFactor: 0.96,
+      xFactor: 0.82,
+      yFactor: 0.32,
+      restFloorSpreadAdjust: 0.06,
+    },
   },
+  // Frame the blurb from the four corners + one mid anchor.
   "wide-corners": {
-    "invite-prism": { restFloorFactor: 0.93, xFactor: 0.08, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.93, xFactor: 0.85, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.95, xFactor: 0.5, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.97, xFactor: 0.15, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.98, xFactor: 0.92, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.2, xFactor: 0.1, yFactor: 0.22 },
+    "invite-pentagon": { restFloorFactor: 0.22, xFactor: 0.88, yFactor: 0.24 },
+    "invite-square": { restFloorFactor: 0.58, xFactor: 0.5, yFactor: 0.2 },
+    "invite-cube": { restFloorFactor: 0.94, xFactor: 0.12, yFactor: 0.36 },
+    "invite-triangle": { restFloorFactor: 0.96, xFactor: 0.9, yFactor: 0.36 },
   },
+  // Terrace steps ascending visually toward the right (low → high).
   "stepped-terrace": {
-    "invite-prism": { restFloorFactor: 0.86, xFactor: 0.12, yFactor: 0.35 },
-    "invite-pentagon": { restFloorFactor: 0.89, xFactor: 0.32, yFactor: 0.35 },
-    "invite-square": { restFloorFactor: 0.92, xFactor: 0.52, yFactor: 0.35 },
-    "invite-cube": { restFloorFactor: 0.95, xFactor: 0.7, yFactor: 0.35 },
-    "invite-triangle": { restFloorFactor: 0.98, xFactor: 0.88, yFactor: 0.35 },
+    "invite-prism": { restFloorFactor: 0.94, xFactor: 0.12, yFactor: 0.34 },
+    "invite-cube": { restFloorFactor: 0.78, xFactor: 0.3, yFactor: 0.28 },
+    "invite-square": { restFloorFactor: 0.55, xFactor: 0.5, yFactor: 0.22 },
+    "invite-pentagon": { restFloorFactor: 0.34, xFactor: 0.7, yFactor: 0.28 },
+    "invite-triangle": { restFloorFactor: 0.22, xFactor: 0.88, yFactor: 0.24 },
   },
 };
 
@@ -177,57 +197,17 @@ const MOBILE_HIDDEN_INVITE_SHAPE_IDS = new Set<InviteShapeId>([
   "invite-square",
 ]);
 
-/** Mobile-only placement tweaks layered on each layout variant. */
-const MOBILE_INVITE_SHAPE_PLACEMENT_OVERRIDES: Partial<
-  Record<InviteShapeId, Partial<ShapePlacement>>
+/**
+ * Viewport-only tweaks that must NOT override layout x/y/floor — those belong
+ * to each exploration variant in INVITE_SHAPE_LAYOUTS. Absolute position
+ * overrides here made every layout look the same when switching explorations.
+ */
+const MOBILE_INVITE_SHAPE_VIEWPORT_TWEAKS: Partial<
+  Record<InviteShapeId, Pick<ShapePlacement, "visualScale" | "restFloorSpreadAdjust">>
 > = {
-  // Pink pentagon — smaller accent above the copy blurb.
-  "invite-pentagon": {
-    visualScale: 0.78,
-    restFloorFactor: 0.22,
-    yFactor: 0.22,
-  },
-  // Gold cube — left shelf; inset x avoids wall bounce.
-  "invite-cube": {
-    restFloorFactor: 0.93,
-    yFactor: 0.38,
-    xFactor: 0.11,
-    restFloorSpreadAdjust: 0.02,
-  },
-  // Green triangle — settle lower alongside the cube.
-  "invite-triangle": {
-    restFloorFactor: 0.99,
-    yFactor: 0.38,
-    restFloorSpreadAdjust: 0.03,
-  },
-};
-
-/** Desktop-only placement tweaks layered on each layout variant. */
-const DESKTOP_INVITE_SHAPE_PLACEMENT_OVERRIDES: Partial<
-  Record<InviteShapeId, Partial<ShapePlacement>>
-> = {
-  // Purple prism and pink pentagon — float above the copy blurb.
-  "invite-prism": {
-    restFloorFactor: 0.26,
-    yFactor: 0.26,
-  },
-  "invite-pentagon": {
-    restFloorFactor: 0.3,
-    yFactor: 0.3,
-  },
-  // Gold cube and teal square — nudge upward from the bottom cluster.
-  "invite-cube": {
-    restFloorFactor: 0.8,
-    yFactor: 0.2,
-  },
-  "invite-square": {
-    restFloorFactor: 0.72,
-    yFactor: 0.16,
-  },
-  // Green triangle — lift its floor without moving the other shelves.
-  "invite-triangle": {
-    restFloorSpreadAdjust: 0.06,
-  },
+  "invite-pentagon": { visualScale: 0.78 },
+  "invite-cube": { restFloorSpreadAdjust: 0.02 },
+  "invite-triangle": { restFloorSpreadAdjust: 0.03 },
 };
 
 export type InviteFollowUpShapeSlotsOptions = {
@@ -246,8 +226,6 @@ export function getInviteFollowUpShapeSlots(
   ).map((identity) => ({
     ...identity,
     ...placements[identity.id],
-    ...(mobile
-      ? MOBILE_INVITE_SHAPE_PLACEMENT_OVERRIDES[identity.id]
-      : DESKTOP_INVITE_SHAPE_PLACEMENT_OVERRIDES[identity.id]),
+    ...(mobile ? MOBILE_INVITE_SHAPE_VIEWPORT_TWEAKS[identity.id] : undefined),
   }));
 }

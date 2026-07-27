@@ -1,18 +1,16 @@
 "use client";
 
-import { PrototypeComponent } from "proto-plugin";
-import { cn } from "@/lib/cn";
-import { usePrototypeComments } from "proto-plugin";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-
 import {
-  DEFAULT_CREATOR_ATTRIBUTION_VARIANT,
-  PROTOTYPE_CREATOR,
-  type CreatorAttributionVariant,
-} from "./_components/creator-attribution-content";
-import { CreatorAttributionBlock } from "./_components/creator-attribution-block";
-import { CreatorAttributionVariantToggle } from "./_components/creator-attribution-variant-toggle";
+  PREVIEW_STATE_PARAM,
+  PrototypeComponent,
+  usePrototypeComments,
+  usePrototypeReviewOptional,
+  useSyncPrototypePreviewStateToUrl,
+} from "proto-plugin";
+import { cn } from "@/lib/cn";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import {
   DEFAULT_INVITE_ANIMATIONS_VARIANT,
   type InviteAnimationsVariant,
@@ -32,16 +30,8 @@ import {
 } from "./_components/invite-follow-up-shape-layout-content";
 import { InviteFollowUpShapeLayoutVariantToggle } from "./_components/invite-follow-up-shape-layout-variant-toggle";
 import { InviteCopyVariantToggle } from "./_components/invite-copy-variant-toggle";
-import {
-  DEFAULT_MOBILE_PANEL_MOTION_VARIANT,
-  type MobilePanelMotionVariant,
-} from "./_components/mobile-panel-motion-design-exploration-config";
-import { MobilePanelMotionVariantToggle } from "./_components/mobile-panel-motion-variant-toggle";
-import {
-  DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT,
-  type MobilePickerLayoutVariant,
-} from "./_components/mobile-picker-layout-design-exploration-config";
-import { MobilePickerLayoutVariantToggle } from "./_components/mobile-picker-layout-variant-toggle";
+import { DEFAULT_MOBILE_PANEL_MOTION_VARIANT } from "./_components/mobile-panel-motion-content";
+import { DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT } from "./_components/mobile-picker-layout-content";
 import {
   PartnerPageFlowBlock,
   type PartnerPageId,
@@ -52,14 +42,12 @@ import {
   useInviteFollowUpShapeEntranceReady,
 } from "./_components/partner-page-motion";
 import type { ProtoShapeSelection } from "./_components/proto-shape-customizer-block";
-import { getProtoShapeCustomizerCanvasInset } from "./_components/proto-shape-content";
 import {
   DEFAULT_PROTO_SHAPES_VARIANT,
   defaultProtoShapeSelection,
-  type ProtoShapeCustomizerVariant,
-} from "./_components/proto-shapes-design-exploration-config";
+  getProtoShapeCustomizerCanvasInset,
+} from "./_components/proto-shape-content";
 import { ProtoShapeCustomizerBlock } from "./_components/proto-shape-customizer-block";
-import { ProtoShapesVariantToggle } from "./_components/proto-shapes-variant-toggle";
 import {
   DEFAULT_SHAPE_COLOR_PICKER_VARIANT,
   type ShapeColorPickerVariant,
@@ -70,20 +58,51 @@ import {
   type SubmitModalVariant,
 } from "./_components/submit-modal-design-exploration-config";
 import { SubmitModalVariantToggle } from "./_components/submit-modal-variant-toggle";
-import { useRegisterPartnerVariantSets } from "./_components/partner-variant-sets";
+import {
+  PARTNER_VARIANT_SET_PREVIEW_STATE,
+  useRegisterPartnerVariantSets,
+  type PartnerPageVariantSetId,
+} from "./_components/partner-variant-sets";
+import {
+  createLiveStateForPreview,
+  DEFAULT_PROTO_PARTNER_PAGE_PREVIEW_STATE,
+  normalizeProtoPartnerPageLiveState,
+  PROTO_PARTNER_PAGE_PREVIEW_STATE_IDS,
+  withInferredPreviewState,
+  type ProtoPartnerPageLiveState,
+  type ProtoPartnerPagePreviewStateId,
+} from "./_components/proto-partner-page-preview-states";
+import { ProtoPartnerPagePreviewStateSelect } from "./_components/proto-partner-page-preview-state-select";
+import { buildProtoPartnerPageStateCanvasConfig } from "./_components/proto-partner-page-state-canvas-config";
 import { PartnerShapeCanvas } from "./partner-shape-canvas";
 import {
   getPartnerPageFromPathname,
   getPartnerPagePath,
 } from "./partner-page-routes";
 
-type LiveState = Record<string, never>;
+function createDefaultLiveState(
+  pageId: PartnerPageId,
+): ProtoPartnerPageLiveState {
+  const previewStateId: ProtoPartnerPagePreviewStateId =
+    pageId === "invite-follow-up"
+      ? "invite-follow-up"
+      : pageId === "customize"
+        ? "customize"
+        : DEFAULT_PROTO_PARTNER_PAGE_PREVIEW_STATE;
+  return createLiveStateForPreview(previewStateId);
+}
 
 export default function ProtoPartnerPage() {
-  const liveState: LiveState = {};
   const pathname = usePathname();
   const router = useRouter();
-  const activePage = getPartnerPageFromPathname(pathname);
+  const pathPage = getPartnerPageFromPathname(pathname);
+  const pendingPageIdRef = useRef<PartnerPageId | null>(null);
+  const [liveState, setLiveState] = useState<ProtoPartnerPageLiveState>(() =>
+    createDefaultLiveState(pathPage),
+  );
+  // Prefer liveState so state-map / States menu clicks update UI immediately
+  // while the Next route catches up. Pathname still drives shareable URLs.
+  const activePage = liveState.pageId;
   const [inviteCopyVariant, setInviteCopyVariant] = useState<InviteCopyVariant>(
     DEFAULT_INVITE_COPY_VARIANT,
   );
@@ -95,24 +114,21 @@ export default function ProtoPartnerPage() {
   ] = useState<InviteFollowUpShapeLayoutVariant>(
     DEFAULT_INVITE_FOLLOW_UP_SHAPE_LAYOUT_VARIANT,
   );
-  const [protoShapesVariant, setProtoShapesVariant] =
-    useState<ProtoShapeCustomizerVariant>(DEFAULT_PROTO_SHAPES_VARIANT);
+  const protoShapesVariant = DEFAULT_PROTO_SHAPES_VARIANT;
+  const mobilePickerLayoutVariant = DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT;
+  const mobilePanelMotionVariant = DEFAULT_MOBILE_PANEL_MOTION_VARIANT;
   const [shapeColorPickerVariant, setShapeColorPickerVariant] =
     useState<ShapeColorPickerVariant>(DEFAULT_SHAPE_COLOR_PICKER_VARIANT);
-  const [mobilePickerLayoutVariant, setMobilePickerLayoutVariant] =
-    useState<MobilePickerLayoutVariant>(DEFAULT_MOBILE_PICKER_LAYOUT_VARIANT);
-  const [mobilePanelMotionVariant, setMobilePanelMotionVariant] =
-    useState<MobilePanelMotionVariant>(DEFAULT_MOBILE_PANEL_MOTION_VARIANT);
   const [submitModalVariant, setSubmitModalVariant] =
     useState<SubmitModalVariant>(DEFAULT_SUBMIT_MODAL_VARIANT);
-  const [creatorAttributionVariant, setCreatorAttributionVariant] =
-    useState<CreatorAttributionVariant>(DEFAULT_CREATOR_ATTRIBUTION_VARIANT);
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
   const [shapeSelection, setShapeSelection] = useState<ProtoShapeSelection>(
     defaultProtoShapeSelection(),
   );
   const [customizeMotionEpoch, setCustomizeMotionEpoch] = useState(0);
   const [inviteFollowUpMotionEpoch, setInviteFollowUpMotionEpoch] = useState(0);
+
+  const review = usePrototypeReviewOptional();
+  const setStateCanvasConfig = review?.setStateCanvasConfig;
 
   const onInvitePage =
     activePage === "invite" || activePage === "invite-follow-up";
@@ -137,18 +153,158 @@ export default function ProtoPartnerPage() {
     `${inviteFollowUpMotionEpoch}-${inviteAnimationsVariant}`,
   );
 
-  const handlePageChange = useCallback(
-    (page: PartnerPageId) => {
-      if (page === "customize") {
-        setCustomizeMotionEpoch((epoch) => epoch + 1);
-      }
-      if (page === "invite-follow-up") {
-        setInviteFollowUpMotionEpoch((epoch) => epoch + 1);
-      }
-      router.push(getPartnerPagePath(page));
+  const bumpMotionForPage = useCallback((page: PartnerPageId) => {
+    if (page === "customize") {
+      setCustomizeMotionEpoch((epoch) => epoch + 1);
+    }
+    if (page === "invite-follow-up") {
+      setInviteFollowUpMotionEpoch((epoch) => epoch + 1);
+    }
+  }, []);
+
+  const navigateToPage = useCallback(
+    (page: PartnerPageId, previewStateId: ProtoPartnerPagePreviewStateId) => {
+      pendingPageIdRef.current = page;
+      const path = getPartnerPagePath(page);
+      const url = new URL(path, window.location.origin);
+      url.searchParams.set(PREVIEW_STATE_PARAM, previewStateId);
+      router.push(`${url.pathname}${url.search}`);
     },
     [router],
   );
+
+  const handlePageChange = useCallback(
+    (page: PartnerPageId) => {
+      bumpMotionForPage(page);
+      const next = createLiveStateForPreview(
+        page === "invite-follow-up"
+          ? "invite-follow-up"
+          : page === "customize"
+            ? "customize"
+            : "invite",
+      );
+      setLiveState(next);
+      navigateToPage(page, next.previewStateId);
+    },
+    [bumpMotionForPage, navigateToPage],
+  );
+
+  const setPreviewState = useCallback(
+    (previewStateId: ProtoPartnerPagePreviewStateId) => {
+      const next = createLiveStateForPreview(previewStateId);
+      bumpMotionForPage(next.pageId);
+      setLiveState(next);
+
+      const currentStateParam =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get(PREVIEW_STATE_PARAM)
+          : null;
+      // Always push when path or ?state= is wrong so map clicks land on the
+      // matching partner route (not only rewrite search on the current page).
+      if (pathPage !== next.pageId || currentStateParam !== previewStateId) {
+        navigateToPage(next.pageId, previewStateId);
+      }
+    },
+    [bumpMotionForPage, navigateToPage, pathPage],
+  );
+
+  const exploringSubmitModal = review?.activeVariantSetId === "submit-modal";
+  const exploringSubmitModalRef = useRef(exploringSubmitModal);
+  exploringSubmitModalRef.current = exploringSubmitModal;
+
+  const handleSubmitModalOpenChange = useCallback((open: boolean) => {
+    // Keep the live modal up while flipping submit-modal design options.
+    if (!open && exploringSubmitModalRef.current) return;
+    setLiveState((current) =>
+      withInferredPreviewState(current, {
+        pageId: "customize",
+        submitModalOpen: open,
+      }),
+    );
+  }, []);
+
+  const onRestore = useCallback(
+    (restored: ProtoPartnerPageLiveState) => {
+      const next = normalizeProtoPartnerPageLiveState(restored);
+      bumpMotionForPage(next.pageId);
+      setLiveState(next);
+      if (pathPage !== next.pageId) {
+        navigateToPage(next.pageId, next.previewStateId);
+      }
+    },
+    [bumpMotionForPage, navigateToPage, pathPage],
+  );
+
+  usePrototypeComments(liveState, onRestore);
+  useSyncPrototypePreviewStateToUrl(
+    liveState.previewStateId,
+    setPreviewState,
+    { validStateIds: PROTO_PARTNER_PAGE_PREVIEW_STATE_IDS },
+  );
+
+  const handleVariantSetActivate = useCallback(
+    (setId: PartnerPageVariantSetId) => {
+      setPreviewState(PARTNER_VARIANT_SET_PREVIEW_STATE[setId]);
+    },
+    [setPreviewState],
+  );
+  useRegisterPartnerVariantSets({ onActivate: handleVariantSetActivate });
+
+  // While the submit-modal exploration is open, pin the live preview to the
+  // open modal on customize — including when the URL still points at an
+  // invite-* route (common when opening the exploration from follow-up).
+  useEffect(() => {
+    if (!exploringSubmitModal) return;
+
+    setLiveState((current) => {
+      if (
+        current.pageId === "customize" &&
+        current.submitModalOpen &&
+        current.previewStateId === "submit-modal"
+      ) {
+        return current;
+      }
+      return createLiveStateForPreview("submit-modal");
+    });
+
+    if (pathPage !== "customize") {
+      navigateToPage("customize", "submit-modal");
+    }
+  }, [exploringSubmitModal, navigateToPage, pathPage]);
+
+  // Sync browser back/forward into liveState. Skip while a programmatic
+  // navigation is in flight so we don't clobber the selected preview state.
+  useEffect(() => {
+    if (pendingPageIdRef.current != null) {
+      if (pathPage === pendingPageIdRef.current) {
+        pendingPageIdRef.current = null;
+      }
+      return;
+    }
+
+    // Don't let a stale invite-* path clobber submit-modal while that
+    // exploration is open (path can lag behind liveState during navigation).
+    if (exploringSubmitModalRef.current && pathPage !== "customize") {
+      return;
+    }
+
+    setLiveState((current) => {
+      if (current.pageId === pathPage) return current;
+      return withInferredPreviewState(current, {
+        pageId: pathPage,
+        submitModalOpen:
+          pathPage === "customize" ? current.submitModalOpen : false,
+      });
+    });
+  }, [pathPage]);
+
+  useEffect(() => {
+    if (!setStateCanvasConfig) return;
+    setStateCanvasConfig(
+      buildProtoPartnerPageStateCanvasConfig(setPreviewState),
+    );
+    return () => setStateCanvasConfig(null);
+  }, [setPreviewState, setStateCanvasConfig]);
 
   const dockInFlowLayout =
     !onInvitePage && protoShapesVariant === "compact-minimal-dock";
@@ -159,15 +315,9 @@ export default function ProtoPartnerPage() {
       ? undefined
       : getProtoShapeCustomizerCanvasInset(protoShapesVariant);
 
-  const onRestore = useCallback((_restored: LiveState) => {}, []);
-
-  usePrototypeComments(liveState, onRestore);
-  useRegisterPartnerVariantSets();
-
-  const dragAttributionLabel =
-    creatorAttributionVariant === "shape-drag-tooltip"
-      ? PROTOTYPE_CREATOR.firstName
-      : undefined;
+  const submitModalOpen =
+    (liveState.submitModalOpen || exploringSubmitModal) &&
+    activePage === "customize";
 
   const inviteFollowUpNav =
     activePage === "invite-follow-up" ? (
@@ -209,30 +359,9 @@ export default function ProtoPartnerPage() {
         selection={shapeSelection}
         registerOnly
       />
-      <MobilePanelMotionVariantToggle
-        variant={mobilePanelMotionVariant}
-        onVariantChange={setMobilePanelMotionVariant}
-        selection={shapeSelection}
-        onSelectionChange={setShapeSelection}
-        registerOnly
-      />
-      <MobilePickerLayoutVariantToggle
-        variant={mobilePickerLayoutVariant}
-        onVariantChange={setMobilePickerLayoutVariant}
-        selection={shapeSelection}
-        onSelectionChange={setShapeSelection}
-        registerOnly
-      />
       <ShapeColorPickerVariantToggle
         variant={shapeColorPickerVariant}
         onVariantChange={setShapeColorPickerVariant}
-        selection={shapeSelection}
-        onSelectionChange={setShapeSelection}
-        registerOnly
-      />
-      <ProtoShapesVariantToggle
-        variant={protoShapesVariant}
-        onVariantChange={setProtoShapesVariant}
         selection={shapeSelection}
         onSelectionChange={setShapeSelection}
         registerOnly
@@ -252,11 +381,6 @@ export default function ProtoPartnerPage() {
         onVariantChange={setInviteAnimationsVariant}
         registerOnly
       />
-      <CreatorAttributionVariantToggle
-        variant={creatorAttributionVariant}
-        onVariantChange={setCreatorAttributionVariant}
-        registerOnly
-      />
     </div>
   );
 
@@ -269,10 +393,10 @@ export default function ProtoPartnerPage() {
         id="page"
         className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-white"
       >
-        {creatorAttributionVariant !== "none" &&
-        creatorAttributionVariant !== "shape-drag-tooltip" ? (
-          <CreatorAttributionBlock variant={creatorAttributionVariant} />
-        ) : null}
+        <ProtoPartnerPagePreviewStateSelect
+          previewStateId={liveState.previewStateId}
+          onPreviewStateChange={setPreviewState}
+        />
         {onInvitePage ? (
           overlayLayout ? (
             <>
@@ -281,7 +405,6 @@ export default function ProtoPartnerPage() {
                 <InviteFollowUpShapeExamples
                   layoutVariant={inviteFollowUpShapeLayoutVariant}
                   previewKey={`${inviteFollowUpMotionEpoch}-${inviteFollowUpShapeLayoutVariant}`}
-                  dragAttributionLabel={dragAttributionLabel}
                 />
               ) : null}
               {inviteFollowUpNav}
@@ -296,7 +419,6 @@ export default function ProtoPartnerPage() {
                 <InviteFollowUpShapeExamples
                   layoutVariant={inviteFollowUpShapeLayoutVariant}
                   previewKey={`${inviteFollowUpMotionEpoch}-${inviteFollowUpShapeLayoutVariant}`}
-                  dragAttributionLabel={dragAttributionLabel}
                 />
               ) : null}
               {inviteFollowUpNav}
@@ -325,8 +447,8 @@ export default function ProtoPartnerPage() {
               panelMotionVariant={mobilePanelMotionVariant}
               shapeSelection={shapeSelection}
               submitModalVariant={submitModalVariant}
-              onSubmitModalOpenChange={setSubmitModalOpen}
-              dragAttributionLabel={dragAttributionLabel}
+              submitModalOpen={submitModalOpen}
+              onSubmitModalOpenChange={handleSubmitModalOpenChange}
             />
             {dockInFlowLayout ? (
               <div className="relative z-10 min-h-0 flex-1">

@@ -17,6 +17,21 @@ $dialog-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
   }
 }
 
+/** Dark scrim for product dialogs portaled into `#prototype-viewport`. */
+.productOverlay {
+  z-index: 40;
+  background: rgb(0 0 0 / 0.8);
+
+  @media (min-width: 640px) {
+    background: rgb(0 0 0 / 0.65);
+  }
+}
+
+/** Sit above `.productOverlay` (same portal). */
+.productContent {
+  z-index: 51;
+}
+
 .content {
   transform: translate(-50%, -50%);
 

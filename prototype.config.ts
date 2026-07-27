@@ -2,6 +2,7 @@ import { definePrototypeConfig } from "proto-plugin";
 
 import ProtoPartnerPage from "./src/prototypes/proto-partner-page";
 import { protoPartnerPageComponentRegistry } from "./src/prototypes/proto-partner-page/component-ids";
+import ProtoPartnerPageStateMapPage from "./src/prototypes/proto-partner-page/state-map-page";
 import TableEditorFilters from "./src/prototypes/table-editor-filters";
 import { tableEditorFiltersComponentRegistry } from "./src/prototypes/table-editor-filters/component-ids";
 import TableEditorFiltersStateMapPage from "./src/prototypes/table-editor-filters/state-map-page";
@@ -34,14 +35,15 @@ export default definePrototypeConfig({
   prototypes: [
     {
       slug: "proto-partner-page",
-      title: "Proto Partner Page",
+      title: "Proto Marketing Site Partner Page",
       screenshot: "/prototypes/screenshots/proto-partner-page.png",
       component: ProtoPartnerPage,
       componentRegistry: protoPartnerPageComponentRegistry,
+      stateMapComponent: ProtoPartnerPageStateMapPage,
     },
     {
       slug: "table-editor-filters",
-      title: "Table Editor Filters",
+      title: "Supabase Table Editor Filters",
       screenshot: "/prototypes/screenshots/table-editor-filters.png",
       component: TableEditorFilters,
       componentRegistry: tableEditorFiltersComponentRegistry,

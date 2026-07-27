@@ -35,10 +35,11 @@ export function SubmitShapeModal({
   const reduceMotion = useReducedMotion();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    // `modal={false}` so review sidebar / variant flipping stay interactive
+    // without Radix setting pointer-events:none on body or fighting focus.
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent
         showCloseButton={false}
-        overlayClassName="bg-black/80 sm:bg-black/65"
         // The shared dialog scales its content in (scale 0.97 -> 1). On real
         // iOS Safari, text inside a scaling layer is rasterized at the sub-1
         // scale and only re-rasterizes crisply once it settles, so the title

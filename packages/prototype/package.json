@@ -1,6 +1,6 @@
 {
   "name": "proto-plugin",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

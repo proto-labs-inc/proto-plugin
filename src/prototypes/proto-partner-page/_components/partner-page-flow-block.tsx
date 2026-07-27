@@ -3,7 +3,6 @@
 import { PrototypeComponent } from "proto-plugin";
 import { cn } from "@/lib/cn";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
 
 import { INVITE_COPY } from "./invite-copy-content";
 import { inviteCtaButtonClass, inviteBlockClassName, inviteCtaSectionClass, inviteCtaShellClass } from "./invite-layout-classes";
@@ -70,8 +69,8 @@ type PartnerPageFlowBlockProps = {
   panelMotionVariant?: MobilePanelMotionVariant;
   shapeSelection?: ProtoShapeSelection;
   submitModalVariant?: SubmitModalVariant;
+  submitModalOpen?: boolean;
   onSubmitModalOpenChange?: (open: boolean) => void;
-  dragAttributionLabel?: string;
 };
 
 export function PartnerPageFlowBlock({
@@ -83,14 +82,12 @@ export function PartnerPageFlowBlock({
   panelMotionVariant = "slide-up",
   shapeSelection,
   submitModalVariant = "plain-header",
+  submitModalOpen = false,
   onSubmitModalOpenChange,
-  dragAttributionLabel,
 }: PartnerPageFlowBlockProps) {
   const motionOn = usePartnerEntranceMotion(animateEntrance);
-  const [submitModalOpen, setSubmitModalOpen] = useState(false);
 
   const handleSubmitModalOpenChange = (open: boolean) => {
-    setSubmitModalOpen(open);
     onSubmitModalOpenChange?.(open);
   };
   if (activePage === "invite" || activePage === "invite-follow-up") {
@@ -163,7 +160,6 @@ export function PartnerPageFlowBlock({
             saveSubmittedProtoShape(shapeSelection);
             handleSubmitModalOpenChange(false);
           }}
-          dragAttributionLabel={dragAttributionLabel}
         />
       ) : null}
     </>

@@ -22,52 +22,52 @@ export const INVITE_FOLLOW_UP_SHAPE_LAYOUT_VARIANT_OPTIONS: Array<{
   {
     value: "staggered-shelf",
     label: "Staggered shelf",
-    hint: "Diagonal height steps along the bottom edge",
+    hint: "Diagonal steps from high-left to low-right around the blurb",
   },
   {
     value: "bottom-line",
     label: "Bottom line",
-    hint: "All five shapes share one floor, spaced evenly",
+    hint: "Two float above; three share one even shelf below",
   },
   {
     value: "scatter-field",
     label: "Scatter field",
-    hint: "Looser placement across the lower two-thirds",
+    hint: "Loose placement above and below the copy",
   },
   {
     value: "wave-rise",
     label: "Wave rise",
-    hint: "Alternating low and high rests in a wave",
+    hint: "Alternating high and low rests across the width",
   },
   {
     value: "arc-shelf",
     label: "Arc shelf",
-    hint: "Center shape sits lowest; edges rise like a shelf",
+    hint: "High edges with the center sitting lowest under the blurb",
   },
   {
     value: "left-cluster",
     label: "Left cluster",
-    hint: "Three shapes grouped bottom-left, two on the right",
+    hint: "Three stacked on the left, two framing the right",
   },
   {
     value: "deep-edge",
     label: "Deep edge",
-    hint: "Everything pinned tight to the bottom edge",
+    hint: "Tight bottom shelf with two small accents above",
   },
   {
     value: "gallery-float",
     label: "Gallery float",
-    hint: "Taller vertical spread for an airy gallery feel",
+    hint: "Airy default — two above the blurb, three below",
   },
   {
     value: "wide-corners",
     label: "Wide corners",
-    hint: "Shapes pushed to the lower corners with one center anchor",
+    hint: "Four corners plus a mid anchor framing the copy",
   },
   {
     value: "stepped-terrace",
     label: "Stepped terrace",
-    hint: "Clear left-to-right terrace steps ascending toward the right",
+    hint: "Terrace steps ascending from low-left to high-right",
   },
 ];
 
