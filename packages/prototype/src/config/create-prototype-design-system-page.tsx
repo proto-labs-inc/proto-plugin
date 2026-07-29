@@ -14,7 +14,7 @@ type PrototypeDesignSystemPageOptions = {
 
 const DESIGN_SYSTEM_HEADER_TITLE = "Design system";
 const DESIGN_SYSTEM_HEADER_DESCRIPTION =
-  "Design tokens from the source directory.";
+  "Styles and base components from the linked source.";
 
 export function createPrototypeDesignSystemPage(
   options: PrototypeDesignSystemPageOptions = {},

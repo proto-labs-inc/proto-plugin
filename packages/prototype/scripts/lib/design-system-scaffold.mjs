@@ -38,7 +38,6 @@ export function generateTokensSection(manifest) {
 
   return `"use client";
 
-import { PreviewGrid } from "proto-plugin";
 import type { ReactNode } from "react";
 
 type TokenValueFormat = "hsl-components" | "color" | "unknown";
@@ -69,7 +68,7 @@ function TokenSwatch({
         data-token-var={sourceVar}
         data-token-format={format}
         data-token-required={required ? "true" : "false"}
-        className="w-full aspect-square rounded-lg border border-border"
+        className="h-12 w-full rounded-lg border border-border"
         style={{ backgroundColor: swatchBackgroundExpression(format, sourceVar) }}
       />
       <div className="text-xs font-medium text-center">
@@ -85,9 +84,9 @@ export function TokensSection() {
     <div id="tokens" className="space-y-8">${tokenComment}
       <div>
         <h3 className="font-semibold mb-4">Semantic Colors</h3>
-        <PreviewGrid>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 ${swatches}
-        </PreviewGrid>
+        </div>
       </div>
     </div>
   );

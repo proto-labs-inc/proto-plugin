@@ -10,10 +10,7 @@ import { PrototypeBootstrapOnboardingSourceStep } from "@prototype/components/sh
 import { PrototypeBootstrapOnboardingWaitingStep } from "@prototype/components/shell/prototype-bootstrap-onboarding-waiting-step";
 import { PrototypeBootstrapOnboardingWelcomeStep } from "@prototype/components/shell/prototype-bootstrap-onboarding-welcome-step";
 import { Button } from "@prototype/components/ui/button";
-import { buildAgentContextCopyText, buildAgentContextFromPathCopyText } from "@prototype/lib/prototypes/agent-context-prompt";
 import { buildBootstrapSetupCopyText } from "@prototype/lib/prototypes/bootstrap-setup-prompt";
-import { buildLinkSourceCopyText } from "@prototype/lib/prototypes/link-source-prompt";
-import { buildWorkspaceProfileCopyText } from "@prototype/lib/prototypes/profile-prompt";
 import { resolveOnboardingSourceForSetup } from "@prototype/lib/prototypes/resolve-onboarding-source-for-setup";
 import type { SourceDirectoryPick } from "@prototype/lib/prototypes/resolve-source-directory-pick";
 import { usePersistedLocalString } from "@prototype/lib/prototypes/use-persisted-local-state";
@@ -71,7 +68,7 @@ const ONBOARDING_STEP_CONTENT: Record<
   "library-loading": {
     title: "Design system syncing",
     description:
-      "New prototypes need synced design tokens. Browse existing prototypes while setup finishes.",
+      "New prototypes need styles and base components from the linked source. Browse existing prototypes while setup finishes.",
   },
 };
 
@@ -151,7 +148,7 @@ export function PrototypeBootstrapOnboardingModal({
     [selectedDirectory, sourceName],
   );
 
-  const handleContinue = useCallback(async () => {
+  const handleContinue = useCallback(() => {
     if (!onboardingStep || isContinuing) return;
 
     setIsContinuing(true);
@@ -169,67 +166,22 @@ export function PrototypeBootstrapOnboardingModal({
             ? selectedDirectory.path.trim()
             : `Source folder "${nextSourceName}" selected from this machine.`,
         );
-
-        const linkSource = resolveOnboardingSourceForSetup({
-          selectedDirectory,
-          persistedSourceName: nextSourceName,
-        });
-
-        await copy(
-          buildLinkSourceCopyText({
-            sourcePath: linkSource.absolutePath,
-            selectedFolderName: linkSource.folderName,
-            currentSourcePath,
-          }),
-        );
       } else if (onboardingStep === "name") {
         if (!userName.trim()) return;
-
-        await copy(
-          buildWorkspaceProfileCopyText({
-            userName,
-          }),
-        );
-      } else if (onboardingStep === "agent-context") {
-        const trimmedAgentContextPath = agentContextPath.trim();
-        if (trimmedAgentContextPath) {
-          await copy(
-            buildAgentContextFromPathCopyText({
-              contextFilePath: trimmedAgentContextPath,
-            }),
-          );
-        } else {
-          await copy(
-            buildAgentContextCopyText({
-              content: agentContext,
-            }),
-          );
-        }
-        track("modal.prompt_copied", { modal: "onboarding-agent-context" });
       }
 
       track("onboarding.step_advanced", { step: onboardingStep });
       advanceOnboardingStep();
-    } catch {
-      toast.error("Copy error", {
-        description: "Failed to copy the setup prompt",
-      });
     } finally {
       setIsContinuing(false);
     }
   }, [
     advanceOnboardingStep,
-    agentContext,
-    agentContextPath,
-    designSystemPagePath,
-    copy,
-    currentSourcePath,
     isContinuing,
     onboardingStep,
     selectedDirectory,
     setSourceDescription,
     setSourceName,
-    syncConfigPath,
     track,
     userName,
   ]);
@@ -326,7 +278,7 @@ export function PrototypeBootstrapOnboardingModal({
       return;
     }
 
-    void handleContinue();
+    handleContinue();
   }, [
     advanceOnboardingStep,
     agentContext,
@@ -369,6 +321,7 @@ export function PrototypeBootstrapOnboardingModal({
       bodyClassName={cn(
         "gap-4",
         isWelcomeStep && "flex flex-1 items-center justify-center px-0 py-0",
+        isWaitingForOnboarded && "flex flex-1",
       )}
       footerClassName={
         canGoBack ? "justify-between" : "justify-end"

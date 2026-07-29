@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  PrototypeToolDialog,
-  PrototypeToolDialogXylophone,
-  PrototypeToolDialogXylophoneSection,
-} from "@prototype/components/platform-ui/prototype-tool-dialog";
+import { PrototypeToolDialog } from "@prototype/components/platform-ui/prototype-tool-dialog";
 import {
   PROTOTYPE_BRIEF_FIELD_BORDER_CLASS,
   PrototypeBriefTextarea,
@@ -30,8 +26,6 @@ import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
 
-type CreatePrototypeSection = "description" | "starter-ui";
-
 export type PrototypeCreatePrototypeModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,8 +46,6 @@ export function PrototypeCreatePrototypeModal({
   const [route, setRoute] = useState("");
   const [referenceHtml, setReferenceHtml] = useState("");
   const [docs, setDocs] = useState<DocField[]>([]);
-  const [expandedSection, setExpandedSection] =
-    useState<CreatePrototypeSection>("description");
   const { copy, icon, isCopied } = useCopyToClipboard();
   const workspaceProfile = useWorkspaceProfile();
   const track = useTrackEvent();
@@ -68,7 +60,6 @@ export function PrototypeCreatePrototypeModal({
       setRoute("");
       setReferenceHtml("");
       setDocs([]);
-      setExpandedSection("description");
     }
   }, [open]);
 
@@ -77,15 +68,6 @@ export function PrototypeCreatePrototypeModal({
       track("modal.opened", { modal: "create-prototype" });
     }
   }, [open, track]);
-
-  const handleSectionExpandedChange = (
-    section: CreatePrototypeSection,
-    expanded: boolean,
-  ) => {
-    if (expanded) {
-      setExpandedSection(section);
-    }
-  };
 
   const handleCopy = async () => {
     if (isCopying) return;
@@ -160,7 +142,7 @@ export function PrototypeCreatePrototypeModal({
       onOpenChange={onOpenChange}
       title="New prototype"
       description="Describe the prototype, add starter UI from the source app, then copy the prompt into your agent."
-      bodyClassName="flex min-h-0 flex-1 flex-col gap-0 py-3"
+      bodyClassName="gap-4"
       footerClassName="justify-end"
       footer={
         <Button
@@ -179,110 +161,84 @@ export function PrototypeCreatePrototypeModal({
         </Button>
       }
     >
-      <PrototypeToolDialogXylophone>
-        <PrototypeToolDialogXylophoneSection
-          step="Step 1"
-          title="Prototype description"
-          description="Name the prototype, summarize scope, and attach reference docs."
-          expanded={expandedSection === "description"}
-          onExpandedChange={(expanded) => {
-            handleSectionExpandedChange("description", expanded);
-          }}
-        >
-          <div className="flex shrink-0 flex-col gap-1.5">
-            <Label htmlFor={titleFieldId} className="text-foreground">
-              Title
-            </Label>
-            <Input
-              id={titleFieldId}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="ex. Team Settings"
-              className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
-            />
-          </div>
-          <div className="flex shrink-0 flex-col gap-1.5">
-            <Label htmlFor={descriptionFieldId} className="text-foreground">
-              Description{" "}
-              <span className="tool-dialog-field-hint">(optional)</span>
-            </Label>
-            <PrototypeBriefTextarea
-              id={descriptionFieldId}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="What should this prototype cover? Scope, key states, and success criteria…"
-              minHeightClass="min-h-[5rem]"
-              aria-label="Description"
-            />
-          </div>
-          <div className="flex shrink-0 flex-col gap-2">
-            <Label className="text-foreground">
-              Docs{" "}
-              <span className="tool-dialog-field-hint">(optional)</span>
-            </Label>
-            <DocFields docs={docs} onChange={setDocs} />
-          </div>
-        </PrototypeToolDialogXylophoneSection>
-
-        <PrototypeToolDialogXylophoneSection
-          step="Step 2"
-          title="Starter UI"
-          description="Anchor the build to a source route and captured HTML from the live app."
-          expanded={expandedSection === "starter-ui"}
-          onExpandedChange={(expanded) => {
-            handleSectionExpandedChange("starter-ui", expanded);
-          }}
-          contentClassName="min-h-0 flex-1"
-        >
-          <div className="flex shrink-0 flex-col gap-1.5">
-            <Label htmlFor={routeFieldId} className="text-foreground">
-              Route{" "}
-              <span className="tool-dialog-field-hint">(optional)</span>
-            </Label>
-            <Input
-              id={routeFieldId}
-              value={route}
-              onChange={(event) => setRoute(event.target.value)}
-              placeholder="ex. /project/default/settings/team"
-              className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
-              spellCheck={false}
-            />
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5">
-            <Label htmlFor={referenceHtmlFieldId} className="text-foreground">
-              Reference HTML{" "}
-              <span className="tool-dialog-field-hint">(optional)</span>
-            </Label>
-            <PrototypeBriefTextarea
-              id={referenceHtmlFieldId}
-              value={referenceHtml}
-              onChange={(event) => setReferenceHtml(event.target.value)}
-              placeholder="Paste rendered HTML from the source app (Inspect → Copy outerHTML)…"
-              scrollable
-              aria-label="Reference HTML"
-              spellCheck={false}
-              className="font-mono text-xs leading-relaxed"
-            />
-          </div>
-          <div className="flex shrink-0 items-center justify-between gap-4">
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm text-foreground">
-                Hook up real data{" "}
-                <span className="tool-dialog-field-hint">(coming soon)</span>
-              </span>
-              <span className="text-xs text-[var(--tool-chrome-text-muted)]">
-                Use live API/database env from the source app instead of mock
-                constants.
-              </span>
-            </div>
-            <Switch
-              checked={false}
-              disabled
-              aria-label="Hook up real data (coming soon)"
-            />
-          </div>
-        </PrototypeToolDialogXylophoneSection>
-      </PrototypeToolDialogXylophone>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={titleFieldId} className="text-foreground">
+          Title
+        </Label>
+        <Input
+          id={titleFieldId}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder="ex. Team Settings"
+          className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={descriptionFieldId} className="text-foreground">
+          Description{" "}
+          <span className="tool-dialog-field-hint">(optional)</span>
+        </Label>
+        <PrototypeBriefTextarea
+          id={descriptionFieldId}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="What should this prototype cover? Scope, key states, and success criteria…"
+          minHeightClass="min-h-[5rem]"
+          aria-label="Description"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label className="text-foreground">
+          Docs <span className="tool-dialog-field-hint">(optional)</span>
+        </Label>
+        <DocFields docs={docs} onChange={setDocs} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={routeFieldId} className="text-foreground">
+          Route <span className="tool-dialog-field-hint">(optional)</span>
+        </Label>
+        <Input
+          id={routeFieldId}
+          value={route}
+          onChange={(event) => setRoute(event.target.value)}
+          placeholder="ex. /project/default/settings/team"
+          className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
+          spellCheck={false}
+        />
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+        <Label htmlFor={referenceHtmlFieldId} className="text-foreground">
+          Reference HTML{" "}
+          <span className="tool-dialog-field-hint">(optional)</span>
+        </Label>
+        <PrototypeBriefTextarea
+          id={referenceHtmlFieldId}
+          value={referenceHtml}
+          onChange={(event) => setReferenceHtml(event.target.value)}
+          placeholder="Paste rendered HTML from the source app (Inspect → Copy outerHTML)…"
+          scrollable
+          aria-label="Reference HTML"
+          spellCheck={false}
+          className="font-mono text-xs leading-relaxed"
+        />
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-sm text-foreground">
+            Hook up real data{" "}
+            <span className="tool-dialog-field-hint">(coming soon)</span>
+          </span>
+          <span className="text-xs text-[var(--tool-chrome-text-muted)]">
+            Use live API/database env from the source app instead of mock
+            constants.
+          </span>
+        </div>
+        <Switch
+          checked={false}
+          disabled
+          aria-label="Hook up real data (coming soon)"
+        />
+      </div>
     </PrototypeToolDialog>
   );
 }

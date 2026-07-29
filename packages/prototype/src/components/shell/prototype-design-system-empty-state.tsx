@@ -39,8 +39,8 @@ export function PrototypeDesignSystemEmptyState({
       <p className="text-sm font-medium">No components yet</p>
       <p className="mt-2 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
         Copy the prompt below into your agent. It will inspect the linked source
-        app and port over base styles, UI primitives, and shared building
-        blocks — err on the side of syncing more rather than less.
+        and distill styles and base components onto this page — err on the side
+        of syncing more rather than less.
       </p>
       <div className="mt-5 flex items-center gap-3">
         <Button

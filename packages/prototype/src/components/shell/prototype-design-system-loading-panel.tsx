@@ -30,9 +30,9 @@ export function PrototypeDesignSystemLoadingPanel({
         <p className="text-sm font-medium">Setting up your design system</p>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
-        Your agent is syncing design tokens from the linked source. You can
-        browse prototypes while this finishes — reload or return to this tab
-        when the sync completes.
+        Your agent is syncing styles and base components from the linked
+        source. You can browse prototypes while this finishes — reload or
+        return to this tab when the sync completes.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
         Taking too long? Copy the setup prompt again and rerun it in your agent.

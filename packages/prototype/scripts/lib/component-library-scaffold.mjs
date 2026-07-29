@@ -235,7 +235,6 @@ export function generateTokensSection(tokenColors, roles) {
 
   return `"use client";
 
-import { PreviewGrid } from "proto-plugin";
 import type { ReactNode } from "react";
 
 function TokenSwatch({
@@ -248,7 +247,7 @@ function TokenSwatch({
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className="w-full aspect-square rounded-lg border"
+        className="h-12 w-full rounded-lg border"
         style={{ backgroundColor: \`var(\${variable})\` as any }}
       />
       <div className="text-xs font-medium text-center">
@@ -264,9 +263,9 @@ export function TokensSection() {
     <div className="space-y-8">${tokenComment}
       <div>
         <h3 className="font-semibold mb-4">Semantic Colors</h3>
-        <PreviewGrid>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 ${swatches}
-        </PreviewGrid>
+        </div>
       </div>
     </div>
   );
