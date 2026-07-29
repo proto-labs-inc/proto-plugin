@@ -29,9 +29,21 @@ export function buildPrAgentPrompt<TLiveState>(
   if (priorPrs.length > 0) {
     lines.push("## Depends on (merge order)");
     for (const prior of priorPrs) {
-      const status = prior.prUrl
+      const link = prior.prUrl
         ? `${prior.prUrl}${prior.branch ? ` (branch: ${prior.branch})` : ""}`
-        : "not yet open";
+        : null;
+      let status: string;
+      if (prior.merged) {
+        status = link ? `merged — ${link}` : "merged";
+      } else if (prior.closed) {
+        status = link ? `closed — ${link}` : "closed";
+      } else if (prior.cancelled) {
+        status = link ? `cancelled — ${link}` : "cancelled";
+      } else if (link) {
+        status = link;
+      } else {
+        status = "not yet open";
+      }
       lines.push(`- PR ${prior.order} · ${prior.title} — ${status}`);
     }
     lines.push("");

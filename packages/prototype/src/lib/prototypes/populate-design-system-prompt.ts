@@ -6,6 +6,7 @@ import {
   buildPhaseHardStopLines,
   BOOTSTRAP_VERIFY_SCRIPTS,
   DESIGN_SYSTEM_GENERATE_COMMAND,
+  SOURCE_STORIES_PARSE_COMMAND,
 } from "./bootstrap-setup-phase-gates";
 
 const DEFAULT_SYNC_CONFIG_PATH = "prototype.sync.config.sh";
@@ -33,6 +34,45 @@ export function buildSupabaseTemplatePreservationLines(): string[] {
     "4. After `pnpm sync-from-source`, **re-apply** every `SYNC_LOCAL_EXTENSIONS` entry (especially Supabase prototype theme and globals customizations).",
     "",
     "The `/design-system` page previews **styles and base components** from the linked source only. Existing Supabase prototypes keep their scoped theme CSS — setup must not break them.",
+    "",
+  ];
+}
+
+/**
+ * Conditional component-inventory route. The scan runs against the linked
+ * source before any sync, and its verdict line selects one of two routes:
+ * story-driven when the source ships Storybook, direct source reading when it
+ * does not.
+ */
+export function buildComponentInventoryRouteLines(
+  syncConfigPath: string,
+): string[] {
+  return [
+    "### Component inventory route",
+    "",
+    "Run from the host repo root (reads the linked source only — safe before any sync):",
+    "",
+    "```bash",
+    SOURCE_STORIES_PARSE_COMMAND,
+    "```",
+    "",
+    "It writes `.proto/design-system-stories.json` and prints one verdict line as its last output. Take the route that matches that line.",
+    "",
+    "**`STORYBOOK: detected (…)` — the source's stories are the component inventory.**",
+    "",
+    "- Treat `.proto/design-system-stories.json` as the list of what to preview. Do not re-derive that list from a directory crawl.",
+    `- **Sync paths:** each record's \`component.resolvedFile\` and \`package.dir\` are the real files behind a story — use them to choose \`SYNC_FILES\` / \`SYNC_DIRS\` entries in \`${syncConfigPath}\` instead of syncing whole trees and hoping.`,
+    "- **Previews:** author one `PreviewBlock` per named story export from that story's `args`. When `viaFactory` is true the story is built by a helper, so read `initializer` instead. `metaArgs` holds args shared by every story in the file.",
+    "- **Variants:** `controls[]` comes from the story file's `argTypes` `options` — the source's own variant list for a prop. Prefer it over inferring variants from `cva` internals.",
+    "- **Mock data:** `fixtures[]` holds the top-level consts a story references (table rows, column defs, option lists). Lift those rather than inventing data.",
+    "- **Sections:** `titleSegments` (from `meta.title`) is the source's own grouping — use it to split UI primitives from composite components. A record with `component: null` is a showcase/docs story, not one component.",
+    "- **Truncation:** long `args` / `initializer` / fixture snippets are cut with a `… truncated` marker. Open the file at `storyFile` when you need the full body.",
+    "- **Coverage:** every record with at least one story export should end up previewed, or carry a stated reason it was not.",
+    "",
+    "**`STORYBOOK: none` — the source ships no stories.**",
+    "",
+    "- Build the inventory by reading the source directly: component directories plus each package's `package.json` `exports` map.",
+    "- Do **not** add Storybook to the source or to this host to work around a missing one.",
     "",
   ];
 }
@@ -70,13 +110,15 @@ export function buildPopulateDesignSystemPrompt({
     ...buildSupabaseTemplatePreservationLines(),
     "## How to populate",
     "1. Ensure `SOURCE_PATH` is set in `.env.local` and run `pnpm link-source`.",
-    `2. Sync styles from the linked source into this host (use \`${syncConfigPath}\` + \`pnpm sync-from-source\` as needed). Prefer a dedicated product CSS path over overwriting bundled Supabase template packages.`,
-    "3. Bring over base components and styles (tokens, colors, typography, fonts) so product UI can render faithfully on `/design-system`.",
-    "4. Run the registration gate when the source uses Tailwind `@theme`:",
+    "2. Build the component inventory — see **Component inventory route** below. Do this before writing sync config; the inventory tells you which source files to sync.",
+    `3. Sync styles from the linked source into this host (use \`${syncConfigPath}\` + \`pnpm sync-from-source\` as needed). Prefer a dedicated product CSS path over overwriting bundled Supabase template packages.`,
+    "4. Bring over base components and styles (tokens, colors, typography, fonts) so product UI can render faithfully on `/design-system`.",
+    "5. Run the registration gate when the source uses Tailwind `@theme`:",
     "```bash",
     BOOTSTRAP_VERIFY_SCRIPTS.tailwindThemeRegistration,
     "```",
     "",
+    ...buildComponentInventoryRouteLines(syncConfigPath),
     ...buildPhaseHardStopLines("design-system-sync", {
       verifyCommand: BOOTSTRAP_VERIFY_SCRIPTS.tailwindThemeRegistration,
       extraVerifyLines: [
@@ -99,6 +141,8 @@ export function buildPopulateDesignSystemPrompt({
     "```",
     "",
     "Wire the generated content in `design-system/page.tsx` via `createPrototypeDesignSystemPage`. Expand the page as needed so reviewers can see **base components and styles** from the linked source.",
+    "",
+    "That command generates token swatches only — component previews are yours to author. Work from the inventory you built in **Component inventory route** (`.proto/design-system-stories.json` on the Storybook route).",
     "",
     "**Section order (mandatory):** put **Base components** (UI primitives / composites) **above** **Colors** (token swatches / semantic colors). On the page, base components come first; colors and other style sections follow below. Do not lead with a colors-only stack.",
     "",

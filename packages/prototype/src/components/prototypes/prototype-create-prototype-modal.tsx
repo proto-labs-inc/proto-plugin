@@ -5,26 +5,24 @@ import {
   PROTOTYPE_BRIEF_FIELD_BORDER_CLASS,
   PrototypeBriefTextarea,
 } from "@prototype/components/prototypes/prototype-brief-field";
-import {
-  DocFields,
-  isDocFieldComplete,
-  isDocFieldPartial,
-  type DocField,
-} from "@prototype/components/prototypes/prototype-create-prototype-doc-fields";
 import { Button } from "@prototype/components/ui/button";
 import { Input } from "@prototype/components/ui/input";
 import { Label } from "@prototype/components/ui/label";
 import { Switch } from "@prototype/components/ui/switch";
-import {
-  buildCreatePrototypeCopyText,
-  type CreatePrototypeReferenceDocInput,
-} from "@prototype/lib/prototypes/create-prototype-prompt";
+import { buildCreatePrototypeCopyText } from "@prototype/lib/prototypes/create-prototype-prompt";
 import { readBriefFieldValue } from "@prototype/lib/prototypes/read-brief-field-value";
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
 import useCopyToClipboard from "@prototype/lib/use-copy-to-clipboard";
+import { cn } from "@prototype/lib/utils";
+import { Plus } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { toast } from "sonner";
+
+/** Shared height/resize behavior for Description + Reference HTML. */
+const CREATE_PROTOTYPE_TEXTAREA_MIN_HEIGHT_CLASS = "min-h-[5rem]";
+const CREATE_PROTOTYPE_TEXTAREA_CLASS =
+  "max-h-[min(28vh,12rem)] overflow-y-auto";
 
 export type PrototypeCreatePrototypeModalProps = {
   open: boolean;
@@ -45,13 +43,11 @@ export function PrototypeCreatePrototypeModal({
   const [description, setDescription] = useState("");
   const [route, setRoute] = useState("");
   const [referenceHtml, setReferenceHtml] = useState("");
-  const [docs, setDocs] = useState<DocField[]>([]);
   const { copy, icon, isCopied } = useCopyToClipboard();
   const workspaceProfile = useWorkspaceProfile();
   const track = useTrackEvent();
   const [isCopying, setIsCopying] = useState(false);
-  const canCopy =
-    title.trim().length > 0 && !docs.some(isDocFieldPartial);
+  const canCopy = title.trim().length > 0;
 
   useEffect(() => {
     if (!open) {
@@ -59,7 +55,6 @@ export function PrototypeCreatePrototypeModal({
       setDescription("");
       setRoute("");
       setReferenceHtml("");
-      setDocs([]);
     }
   }, [open]);
 
@@ -85,22 +80,6 @@ export function PrototypeCreatePrototypeModal({
       return;
     }
 
-    const partialDoc = docs.find(isDocFieldPartial);
-    if (partialDoc) {
-      toast.error("Incomplete doc", {
-        description: "Each doc needs content. Title and URL are optional.",
-      });
-      return;
-    }
-
-    const referenceDocs: CreatePrototypeReferenceDocInput[] = docs
-      .filter(isDocFieldComplete)
-      .map((doc) => ({
-        name: doc.name.trim(),
-        content: doc.content.trim(),
-        link: doc.link.trim() || undefined,
-      }));
-
     setIsCopying(true);
 
     try {
@@ -114,7 +93,7 @@ export function PrototypeCreatePrototypeModal({
           route: routeValue,
           referenceHtml: referenceHtmlValue,
           origin,
-          referenceDocs,
+          referenceDocs: [],
           useRealData: false,
           sourcePath,
           workspaceProfile,
@@ -125,7 +104,7 @@ export function PrototypeCreatePrototypeModal({
         hasDescription: descriptionValue.trim().length > 0,
         hasRoute: routeValue.trim().length > 0,
         hasReferenceHtml: referenceHtmlValue.trim().length > 0,
-        referenceDocsCount: referenceDocs.length,
+        referenceDocsCount: 0,
       });
     } catch {
       toast.error("Copy error", {
@@ -163,7 +142,7 @@ export function PrototypeCreatePrototypeModal({
     >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={titleFieldId} className="text-foreground">
-          Title
+          Title <span className="tool-dialog-field-hint">(required)</span>
         </Label>
         <Input
           id={titleFieldId}
@@ -175,27 +154,37 @@ export function PrototypeCreatePrototypeModal({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={descriptionFieldId} className="text-foreground">
-          Description{" "}
-          <span className="tool-dialog-field-hint">(optional)</span>
+          Description
         </Label>
         <PrototypeBriefTextarea
           id={descriptionFieldId}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder="What should this prototype cover? Scope, key states, and success criteria…"
-          minHeightClass="min-h-[5rem]"
+          minHeightClass={CREATE_PROTOTYPE_TEXTAREA_MIN_HEIGHT_CLASS}
+          className={CREATE_PROTOTYPE_TEXTAREA_CLASS}
           aria-label="Description"
         />
       </div>
-      <div className="flex flex-col gap-2">
-        <Label className="text-foreground">
-          Docs <span className="tool-dialog-field-hint">(optional)</span>
+      <div className="flex flex-col gap-2 opacity-50">
+        <Label className="text-muted-foreground">
+          Docs <span className="tool-dialog-field-hint">(coming soon)</span>
         </Label>
-        <DocFields docs={docs} onChange={setDocs} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled
+          className="h-8 w-fit gap-1.5 px-2 text-muted-foreground"
+          aria-label="Add doc (coming soon)"
+        >
+          <Plus size={14} strokeWidth={2} aria-hidden />
+          Add doc
+        </Button>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={routeFieldId} className="text-foreground">
-          Route <span className="tool-dialog-field-hint">(optional)</span>
+          Route
         </Label>
         <Input
           id={routeFieldId}
@@ -206,25 +195,24 @@ export function PrototypeCreatePrototypeModal({
           spellCheck={false}
         />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor={referenceHtmlFieldId} className="text-foreground">
-          Reference HTML{" "}
-          <span className="tool-dialog-field-hint">(optional)</span>
+          Reference HTML
         </Label>
         <PrototypeBriefTextarea
           id={referenceHtmlFieldId}
           value={referenceHtml}
           onChange={(event) => setReferenceHtml(event.target.value)}
-          placeholder="Paste rendered HTML from the source app (Inspect → Copy outerHTML)…"
-          scrollable
+          placeholder="If there's a page that looks like this that you want to use as a starting point, copy its html here"
+          minHeightClass={CREATE_PROTOTYPE_TEXTAREA_MIN_HEIGHT_CLASS}
+          className={cn(CREATE_PROTOTYPE_TEXTAREA_CLASS, "font-mono")}
           aria-label="Reference HTML"
           spellCheck={false}
-          className="font-mono text-xs leading-relaxed"
         />
       </div>
       <div className="flex shrink-0 items-center justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-sm text-foreground">
+        <div className="flex min-w-0 flex-col gap-0.5 opacity-50">
+          <span className="text-sm text-muted-foreground">
             Hook up real data{" "}
             <span className="tool-dialog-field-hint">(coming soon)</span>
           </span>

@@ -22,6 +22,10 @@ export type PrSplitEntry<
   analyticsNotes?: string[];
   approved?: boolean;
   merged?: boolean;
+  /** When true, shows Closed status (PR closed without merge). */
+  closed?: boolean;
+  /** When true, shows Cancelled status (slice dropped from the plan). */
+  cancelled?: boolean;
   /** When true, shows Draft status with the GitHub draft PR icon. */
   draft?: boolean;
 };

@@ -829,7 +829,11 @@ export const PR_SPLIT_ENTRIES: MyPrSplitEntry[] = [
 | `previewPath`                  | optional       | Path on Vercel preview host (default from config)                              |
 | `vercelPreviewHost`            | optional       | Fallback when GitHub comment lookup fails                                      |
 | `analyticsNotes`               | optional       | Product analytics events for the agent prompt                                  |
-| `approved`                     | optional       | Shows approved vs in-review badge                                              |
+| `merged`                       | optional       | Shows Merged badge (terminal; wins over other status flags)                    |
+| `closed`                       | optional       | Shows Closed badge — PR closed without merge                                   |
+| `cancelled`                    | optional       | Shows Cancelled badge — slice dropped from the plan (no copy-prompt)           |
+| `approved`                     | optional       | Shows Approved badge                                                           |
+| `draft`                        | optional       | Shows Draft badge with the GitHub draft PR icon                                |
 
 
 ### Wireframes (`pr-split-wireframes.tsx`)

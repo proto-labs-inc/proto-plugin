@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
+  Ban,
   Check,
   Copy,
   GitBranch,
   GitMerge,
   GitPullRequest,
+  GitPullRequestClosed,
   GitPullRequestDraft,
   Github,
   Monitor,
@@ -256,37 +258,95 @@ function CopyPreviewLink<TWireframeId extends string, TLiveState>({
   );
 }
 
-function PrStatusLink({
-  prUrl,
-  status,
-}: {
-  prUrl: string;
-  status: "merged" | "approved" | "draft" | "in-review";
-}) {
-  const config = {
-    merged: {
-      label: "Merged",
-      className: "text-[#a371f7]",
-      icon: GitMerge,
-    },
-    approved: {
-      label: "Approved",
-      className: "text-green-600",
-      icon: null,
-    },
-    draft: {
-      label: "Draft",
-      className: "text-[var(--text-tertiary)]",
-      icon: GitPullRequestDraft,
-    },
-    "in-review": {
-      label: "Open",
-      className: "text-[#3fb950]",
-      icon: GitPullRequest,
-    },
-  }[status];
+type PrStatus =
+  | "merged"
+  | "closed"
+  | "cancelled"
+  | "approved"
+  | "draft"
+  | "in-review";
 
+const PR_STATUS_CONFIG: Record<
+  PrStatus,
+  {
+    label: string;
+    className: string;
+    icon: typeof GitMerge | null;
+  }
+> = {
+  merged: {
+    label: "Merged",
+    className: "text-[#a371f7]",
+    icon: GitMerge,
+  },
+  closed: {
+    label: "Closed",
+    className: "text-[#f85149]",
+    icon: GitPullRequestClosed,
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "text-[var(--text-tertiary)]",
+    icon: Ban,
+  },
+  approved: {
+    label: "Approved",
+    className: "text-green-600",
+    icon: null,
+  },
+  draft: {
+    label: "Draft",
+    className: "text-[var(--text-tertiary)]",
+    icon: GitPullRequestDraft,
+  },
+  "in-review": {
+    label: "Open",
+    className: "text-[#3fb950]",
+    icon: GitPullRequest,
+  },
+};
+
+function resolvePrStatus(
+  entry: Pick<
+    PrSplitEntry,
+    "merged" | "closed" | "cancelled" | "approved" | "draft" | "prUrl"
+  >,
+): PrStatus | null {
+  if (entry.merged) return "merged";
+  if (entry.closed) return "closed";
+  if (entry.cancelled) return "cancelled";
+  if (entry.approved) return "approved";
+  if (entry.draft) return "draft";
+  if (entry.prUrl) return "in-review";
+  return null;
+}
+
+function PrStatusBadge({
+  status,
+  prUrl,
+}: {
+  status: PrStatus;
+  prUrl?: string;
+}) {
+  const config = PR_STATUS_CONFIG[status];
   const Icon = config.icon;
+  const content = (
+    <>
+      {Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : null}
+      <span className="text-[11px] font-medium">{config.label}</span>
+    </>
+  );
+
+  if (!prUrl) {
+    return (
+      <span
+        className={`inline-flex shrink-0 items-center gap-1 ${config.className}`}
+        aria-label={`Pull request status: ${config.label}`}
+      >
+        {content}
+      </span>
+    );
+  }
 
   return (
     <a
@@ -297,8 +357,7 @@ function PrStatusLink({
       onClick={(e) => e.stopPropagation()}
       className={`inline-flex shrink-0 cursor-pointer items-center gap-1 transition-opacity duration-200 ease hover:opacity-80 ${config.className}`}
     >
-      {Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : null}
-      <span className="text-[11px] font-medium">{config.label}</span>
+      {content}
     </a>
   );
 }
@@ -328,6 +387,8 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
   vercelProjectName?: string;
 }) {
   const [hovered, setHovered] = useState(false);
+  const status = resolvePrStatus(entry);
+  const showCopyPrompt = !entry.prUrl && status !== "cancelled";
 
   return (
     <button
@@ -358,14 +419,8 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
             <span className="text-[13px] font-medium text-[var(--text-primary)]">
               PR {entry.order} · {entry.title}
             </span>
-            {entry.merged && entry.prUrl ? (
-              <PrStatusLink prUrl={entry.prUrl} status="merged" />
-            ) : entry.approved && entry.prUrl ? (
-              <PrStatusLink prUrl={entry.prUrl} status="approved" />
-            ) : entry.draft && entry.prUrl ? (
-              <PrStatusLink prUrl={entry.prUrl} status="draft" />
-            ) : entry.prUrl ? (
-              <PrStatusLink prUrl={entry.prUrl} status="in-review" />
+            {status ? (
+              <PrStatusBadge status={status} prUrl={entry.prUrl} />
             ) : null}
           </div>
           <span className="shrink-0 text-[11px] text-[var(--text-tertiary)]">
@@ -376,7 +431,7 @@ function PrPreviewCard<TWireframeId extends string, TLiveState>({
           <p className="text-[12px] leading-normal text-[var(--text-secondary)]">
             {entry.description}
           </p>
-          {!entry.prUrl ? (
+          {showCopyPrompt ? (
             <CopyPrPrompt entry={entry} buildAgentPrompt={buildAgentPrompt} />
           ) : null}
           {entry.analyticsNotes && entry.analyticsNotes.length > 0 && (
