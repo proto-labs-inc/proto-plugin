@@ -5,9 +5,9 @@ export { defineStarterScreenConfig } from "./config/define-starter-screen-config
 // what lets client prototype components import from `proto-plugin` safely.
 export { createPrototypeDesignSystemPage } from "./config/create-prototype-design-system-page";
 export {
-  ComponentLibraryAccordion,
   ComponentLibraryPreviewSurface,
-  LibraryAccordionSection,
+  DesignSystemPage,
+  DesignSystemSection,
   PreviewBlock,
   PreviewGrid,
   PreviewStack,

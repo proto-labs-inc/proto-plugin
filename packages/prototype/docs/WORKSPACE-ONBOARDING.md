@@ -18,7 +18,7 @@ There are **no** `.proto/onboarded` or `.proto/component-library-loaded` marker 
 | Signal | Derived when | What it unlocks |
 | ------ | ------------ | --------------- |
 | `complete: true` | `source` symlink + `SOURCE_PATH` + `PROTOTYPE_USER_NAME` in `.env.local` | Gallery / dashboard (`/`). Onboarding modal closes. |
-| `componentLibraryReady: true` | `ui-primitives`, `composite-components`, and `tokens` accordion sections exist under `src/app/component-library/` | `/component-library` accordion content. “New prototype” on the gallery. |
+| `componentLibraryReady: true` | `ui-primitives`, `composite-components`, and `tokens` sections exist under `src/app/component-library/` | `/component-library` page content. “New prototype” on the gallery. |
 
 
 Server check: `GET /api/prototypes/bootstrap-status`

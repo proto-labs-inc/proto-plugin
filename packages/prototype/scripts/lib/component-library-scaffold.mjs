@@ -276,10 +276,7 @@ ${swatches}
 export function generateContentShell() {
   return `"use client";
 
-import {
-  ComponentLibraryAccordion,
-  LibraryAccordionSection,
-} from "proto-plugin";
+import { DesignSystemPage, DesignSystemSection } from "proto-plugin";
 
 import { CompositePreviews } from "./design-system-composite-previews.generated";
 import { PrimitivePreviews } from "./design-system-primitive-previews.generated";
@@ -288,24 +285,23 @@ import { previewOverrides } from "./design-system-overrides";
 
 export function DesignSystemContent() {
   return (
-    <ComponentLibraryAccordion type="multiple" defaultValue={[]}>
-      <LibraryAccordionSection id="ui-primitives" title="UI primitives" isFirst>
+    <DesignSystemPage>
+      <DesignSystemSection id="ui-primitives" title="UI primitives">
         {previewOverrides.primitives ?? <PrimitivePreviews />}
-      </LibraryAccordionSection>
+      </DesignSystemSection>
 
-      <LibraryAccordionSection id="composite-components" title="Composite components">
+      <DesignSystemSection id="composite-components" title="Composite components">
         {previewOverrides.composites ?? <CompositePreviews />}
-      </LibraryAccordionSection>
+      </DesignSystemSection>
 
-      <LibraryAccordionSection id="tokens" title="Design tokens">
+      <DesignSystemSection id="tokens" title="Design tokens">
         <TokensSection />
-      </LibraryAccordionSection>
-    </ComponentLibraryAccordion>
+      </DesignSystemSection>
+    </DesignSystemPage>
   );
 }
 `;
 }
-
 export function generateOverridesTemplate(entries) {
   const authored = entries.filter((e) => e.classification === "authored");
 

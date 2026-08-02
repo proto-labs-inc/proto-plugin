@@ -1,15 +1,7 @@
 "use client";
 
-import type { AccordionMultipleProps } from "@radix-ui/react-accordion";
-import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@prototype/components/ui/accordion";
 import {
   PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR,
   PROTOTYPE_SOURCE_SURFACE_ATTR,
@@ -17,81 +9,47 @@ import {
 import { useComponentLibraryProductTheme } from "@prototype/lib/use-component-library-product-theme";
 import { cn } from "@prototype/lib/utils";
 
-type ComponentLibraryAccordionProps = Omit<
-  AccordionMultipleProps,
-  "type" | "defaultValue"
->;
-
-/** Accordion chrome for the design system page — proto tool styling, not synced source UI. */
-export function ComponentLibraryAccordion({
+/** Flat page wrapper for design-system / component-library content — one scrollable surface. */
+export function DesignSystemPage({
   className,
   children,
-  ...props
-}: ComponentLibraryAccordionProps) {
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <Accordion
-      type="multiple"
-      defaultValue={[]}
-      data-prototype-component-library-accordion=""
-      className={cn(
-        "prototype-component-library-accordion -mx-6 pb-20",
-        className,
-      )}
-      {...props}
+    <div
+      data-prototype-design-system-page=""
+      className={cn("space-y-12 px-6 pb-20", className)}
     >
       {children}
-    </Accordion>
+    </div>
   );
 }
 
-export function LibraryAccordionSection({
+/** Titled section on the flat design-system page (not collapsible). */
+export function DesignSystemSection({
   id,
   title,
   children,
-  isFirst = false,
 }: {
   id: string;
   title: string;
   children: ReactNode;
-  isFirst?: boolean;
 }) {
   if (process.env.NODE_ENV !== "production" && !id) {
-    console.error(
-      "LibraryAccordionSection: `id` is required — the section will not open without it.",
-    );
+    console.error("DesignSystemSection: `id` is required for section anchors.");
   }
 
   return (
-    <AccordionItem
-      value={id}
-      id={id}
-      className="prototype-component-library-accordion__item scroll-mt-8 border-b last:border-b-0"
-    >
-      <AccordionTrigger
-        hideIcon
-        className={cn(
-          "prototype-component-library-accordion__trigger px-6 py-5 text-xl font-semibold tracking-tight hover:no-underline",
-          "data-[state=open]:border-b",
-          "[&[data-state=open]>svg]:!rotate-0",
-          isFirst && "pt-0",
-        )}
-      >
-        {title}
-        <ChevronDown
-          aria-hidden
-          className="prototype-component-library-accordion__chevron size-4 shrink-0 rotate-180 transition-transform duration-200 group-data-[state=open]:!rotate-0 motion-reduce:transition-none"
-        />
-      </AccordionTrigger>
-      <AccordionContent className="pb-10">
-        <div className="px-6 pt-6">
-          <ComponentLibraryPreviewSurface>{children}</ComponentLibraryPreviewSurface>
-        </div>
-      </AccordionContent>
-    </AccordionItem>
+    <section id={id} className="scroll-mt-8 space-y-4">
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      <ComponentLibraryPreviewSurface>{children}</ComponentLibraryPreviewSurface>
+    </section>
   );
 }
 
-/** Product-token surface for synced source previews — isolated from accordion chrome. */
+/** Product-token surface for synced source previews — isolated from tool chrome. */
 export function ComponentLibraryPreviewSurface({
   children,
   className,

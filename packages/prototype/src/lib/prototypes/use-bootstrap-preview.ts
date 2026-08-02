@@ -139,22 +139,22 @@ function resolveInitialBootstrapStep(
   return FIRST_ONBOARDING_STEP;
 }
 
-/** Loading panel on /design-system until the library page is populated. */
-export function shouldShowDesignSystemLoadingPanel(
-  designSystemReady: boolean | null | undefined,
+/** Loading panel on /component-library until the library page is populated. */
+export function shouldShowComponentLibraryLoadingPanel(
+  componentLibraryReady: boolean | null | undefined,
   forcePreview = false,
 ): boolean {
   if (forcePreview) return true;
-  return designSystemReady !== true;
+  return componentLibraryReady !== true;
 }
 
-/** Block new prototype creation until the design system loaded flag is set. */
+/** Block new prototype creation until the component library loaded flag is set. */
 export function blocksNewPrototypeCreation(
-  designSystemReady: boolean | null | undefined,
+  componentLibraryReady: boolean | null | undefined,
   forcePreview = false,
 ): boolean {
-  return shouldShowDesignSystemLoadingPanel(
-    designSystemReady,
+  return shouldShowComponentLibraryLoadingPanel(
+    componentLibraryReady,
     forcePreview,
   );
 }
@@ -162,8 +162,8 @@ export function blocksNewPrototypeCreation(
 type BootstrapPreviewContextValue = {
   bootstrapStep: BootstrapPreviewStep;
   bootstrapStatus: PrototypeBootstrapStatus | null;
-  /** True while /design-system should show the loading panel (not accordion content). */
-  isDesignSystemLoadingPanelVisible: boolean;
+  /** True while /component-library should show the loading panel (not page content). */
+  isComponentLibraryLoadingPanelVisible: boolean;
   setBootstrapStep: (nextStep: BootstrapPreviewStep) => void;
   openModalForStep: (step: BootstrapPreviewStep) => void;
   advanceBootstrapStep: () => void;
@@ -172,7 +172,7 @@ type BootstrapPreviewContextValue = {
   refreshBootstrapStatus: () => Promise<PrototypeBootstrapStatus | null>;
   /** Onboarding is underway — gallery routes stay blocked until bootstrap completes. */
   isOnboardingInProgress: boolean;
-  /** Gallery is browsable while the design system syncs after setup. */
+  /** Gallery is browsable while the component library syncs after setup. */
   isComponentLibraryLoadingActive: boolean;
   /** True while the onboarding modal is open — until bootstrap status reports `complete: true`. */
   isOnboardingModalVisible: boolean;
@@ -363,13 +363,13 @@ function useBootstrapPreviewState(
   const isOnboardingModalStep =
     !isDismissedForSession && isBootstrapOnboardingModalStep(bootstrapStep);
   const isLibraryLoadingPreviewStep = bootstrapStep === "library-loading";
-  const isDesignSystemLoadingPanelVisible =
-    shouldShowDesignSystemLoadingPanel(
-      bootstrapStatus?.designSystemReady,
+  const isComponentLibraryLoadingPanelVisible =
+    shouldShowComponentLibraryLoadingPanel(
+      bootstrapStatus?.componentLibraryReady,
       isLibraryLoadingPreviewStep,
     );
   const isComponentLibraryLoadingActive =
-    bootstrapStatus?.designSystemReady !== true;
+    bootstrapStatus?.componentLibraryReady !== true;
   const isOnboardingInProgress = isOnboardingModalStep;
   const isOnboardingModalVisible = isOnboardingModalStep;
   const isOnboardingBackdropActive = isOnboardingModalStep;
@@ -379,7 +379,7 @@ function useBootstrapPreviewState(
     () => ({
       bootstrapStep,
       bootstrapStatus,
-      isDesignSystemLoadingPanelVisible,
+      isComponentLibraryLoadingPanelVisible,
       setBootstrapStep,
       openModalForStep,
       advanceBootstrapStep,
@@ -404,7 +404,7 @@ function useBootstrapPreviewState(
       bootstrapStep,
       closeBootstrapOnboarding,
       isBootstrapPreviewActive,
-      isDesignSystemLoadingPanelVisible,
+      isComponentLibraryLoadingPanelVisible,
       isOnboardingBackdropActive,
       isOnboardingInProgress,
       isComponentLibraryLoadingActive,
