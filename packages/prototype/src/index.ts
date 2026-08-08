@@ -386,6 +386,11 @@ export {
 export { usePrototypeViewportFrame } from "./lib/prototypes/use-prototype-viewport-frame";
 export { usePrototypeMobileViewportFrame } from "./lib/prototypes/use-prototype-mobile-viewport-frame";
 export { usePrototypeProductOverlayPortal } from "./lib/prototypes/use-prototype-product-overlay-portal";
+export {
+  PrototypeProductPreviewThemeProvider,
+  usePrototypeProductPreviewTheme,
+  type PrototypeProductPreviewTheme,
+} from "./lib/prototypes/prototype-product-preview-theme";
 
 export {
   PROTOTYPE_CHROME_ROOT_ID,

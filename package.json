@@ -22,6 +22,7 @@
     "verify:design-system-static": "node node_modules/proto-plugin/scripts/verify-design-system-static.mjs",
     "verify:design-system-visual": "node node_modules/proto-plugin/scripts/verify-design-system-visual.mjs",
     "verify:tailwind-theme": "node node_modules/proto-plugin/scripts/verify-tailwind-theme-registration.mjs",
+    "verify:component-library-loaded": "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs component-library-loaded",
     "verify:design-system-loaded": "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs design-system-loaded"
   },
   "dependencies": {

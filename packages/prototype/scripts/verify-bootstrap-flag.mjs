@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import {
-  isDesignSystemReadyByState,
+  isComponentLibraryReadyByState,
   isWorkspaceOnboardedByState,
 } from "./lib/bootstrap-workspace-state.mjs";
 import { resolveHostRoot } from "./lib/resolve-host-root.mjs";
@@ -15,11 +15,20 @@ const CHECKS = {
     failure:
       "not onboarded — need SOURCE_PATH + PROTOTYPE_USER_NAME via host-env (process.env / Vercel or .env.local). Set the source path and workspace profile first.",
   },
-  "design-system-loaded": {
-    passed: (hostRoot) => isDesignSystemReadyByState(hostRoot),
-    success: "design system populated — tokens section found.",
+  "component-library-loaded": {
+    passed: (hostRoot) => isComponentLibraryReadyByState(hostRoot),
+    success:
+      "component library populated — ui-primitives, composite-components, and tokens sections found.",
     failure:
-      "design system not populated — tokens section not found under src/app/design-system/. Run the design system generate script first.",
+      "component library not populated — required sections not found under src/app/component-library/. Run the component library generate script first.",
+  },
+  /** @deprecated use component-library-loaded */
+  "design-system-loaded": {
+    passed: (hostRoot) => isComponentLibraryReadyByState(hostRoot),
+    success:
+      "component library populated — ui-primitives, composite-components, and tokens sections found.",
+    failure:
+      "component library not populated — required sections not found under src/app/component-library/. Run the component library generate script first.",
   },
 };
 

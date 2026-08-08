@@ -37,8 +37,8 @@ function PrototypeDesignSystemShellContent({
   isEmpty = false,
   productThemes,
 }: PrototypeDesignSystemShellProps) {
-  const { isDesignSystemLoadingPanelVisible } = useBootstrapPreview();
-  const showPreSyncSurface = isEmpty || isDesignSystemLoadingPanelVisible;
+  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
+  const showPreSyncSurface = isEmpty || isComponentLibraryLoadingPanelVisible;
   const themes = productThemes ?? (["light", "dark"] as const);
   const libraryTheme = resolveComponentLibraryDefaultTheme(themes);
 

@@ -18,6 +18,7 @@ import {
   PROTOTYPE_TOOL_OVERLAY_ROOT_ID,
   PROTOTYPE_VIEWPORT_ID,
 } from "@prototype/lib/tool-portal";
+import { usePrototypeProductPreviewTheme } from "@prototype/lib/prototypes/prototype-product-preview-theme";
 import { cn } from "@prototype/lib/utils";
 
 import { PrototypeProvider } from "@prototype/components/prototype-provider";
@@ -72,6 +73,7 @@ function PrototypePreviewArea({
   const review = usePrototypeReview();
   const isMobileViewport = review.viewportLayout === "mobile";
   const onStateMapPage = useOnStateMapPage();
+  const productPreviewTheme = usePrototypeProductPreviewTheme();
 
   return (
     <div
@@ -102,7 +104,11 @@ function PrototypePreviewArea({
             className={cn(
               styles.viewport,
               isMobileViewport && styles.viewportMobile,
+              productPreviewTheme,
             )}
+            {...(productPreviewTheme && !onStateMapPage
+              ? { "data-theme": productPreviewTheme }
+              : {})}
             style={
               isMobileViewport
                 ? {

@@ -59,7 +59,7 @@ export function buildLinkSourcePrompt({
     lines.push(`- ${trimmedInput}`);
     lines.push(
       "",
-      "Resolve this to a filesystem path (relative path like `../cal.diy` or absolute path) before writing `.env.local`. If it is only a folder name, use common sense to locate it under the user's home directory (Documents, Downloads, Projects, etc.) — do not run broad search scripts.",
+      "Resolve this to a filesystem path (relative path like `../my-product-repo` or absolute path) before writing `.env.local`. If it is only a folder name, use common sense to locate it under the user's home directory (Documents, Downloads, Projects, etc.) — do not run broad search scripts.",
     );
   } else {
     lines.push("- (Specify folder name, path, or description above before copying.)");

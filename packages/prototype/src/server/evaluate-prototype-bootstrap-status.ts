@@ -6,7 +6,7 @@ import {
 import type { PrototypeBootstrapConfig } from "@prototype/lib/prototypes/prototype-config-types";
 
 import {
-  isDesignSystemReadyByState,
+  isComponentLibraryReadyByState,
   isWorkspaceOnboardedByState,
 } from "./evaluate-workspace-derived-status";
 import { resolveHostRoot } from "./host-env";
@@ -20,17 +20,17 @@ export function evaluateHostBootstrapStatus(
 ): PrototypeBootstrapStatus {
   const hostRoot = resolveHostRoot(options.hostRoot);
   const env = options.env ?? process.env;
-  const designSystemReady = isDesignSystemReadyByState(hostRoot);
+  const componentLibraryReady = isComponentLibraryReadyByState(hostRoot);
 
   if (isWorkspaceOnboardedByState(hostRoot, env)) {
     return {
       ...createCompletedBootstrapStatus(),
-      designSystemReady,
+      componentLibraryReady,
     };
   }
 
   return {
     ...createOnboardingRequiredBootstrapStatus(),
-    designSystemReady,
+    componentLibraryReady,
   };
 }

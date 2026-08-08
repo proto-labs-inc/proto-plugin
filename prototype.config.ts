@@ -6,6 +6,9 @@ import ProtoPartnerPageStateMapPage from "./src/prototypes/proto-partner-page/st
 import TableEditorFilters from "./src/prototypes/table-editor-filters";
 import { tableEditorFiltersComponentRegistry } from "./src/prototypes/table-editor-filters/component-ids";
 import TableEditorFiltersStateMapPage from "./src/prototypes/table-editor-filters/state-map-page";
+import SupabaseHomePage from "./src/prototypes/supabase-home-page";
+import { supabaseHomePageComponentRegistry } from "./src/prototypes/supabase-home-page/component-ids";
+import SupabaseHomePageStateMapPage from "./src/prototypes/supabase-home-page/state-map-page";
 
 export default definePrototypeConfig({
   bootstrap: {
@@ -48,6 +51,14 @@ export default definePrototypeConfig({
       component: TableEditorFilters,
       componentRegistry: tableEditorFiltersComponentRegistry,
       stateMapComponent: TableEditorFiltersStateMapPage,
+    },
+    {
+      slug: "supabase-home-page",
+      title: "Supabase home page",
+      screenshot: "/prototypes/screenshots/supabase-home-page.png",
+      component: SupabaseHomePage,
+      componentRegistry: supabaseHomePageComponentRegistry,
+      stateMapComponent: SupabaseHomePageStateMapPage,
     },
   ],
 });

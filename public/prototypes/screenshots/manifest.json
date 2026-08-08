@@ -1,5 +1,5 @@
 {
-  "proto-partner-page": 1785649384834,
+  "proto-partner-page": 1785694430355,
   "table-editor-filters/states/edit-row": 1785035775872,
   "table-editor-filters/states/empty-table": 1785200016507,
   "table-editor-filters/states/error": 1785200062359,
@@ -10,7 +10,9 @@
   "table-editor-filters/states/populated": 1785363211899,
   "table-editor-filters": 1785363210343,
   "proto-partner-page/states/invite": 1785216105075,
-  "proto-partner-page/states/invite-follow-up": 1785649421539,
+  "proto-partner-page/states/invite-follow-up": 1785694431326,
   "proto-partner-page/states/customize": 1785135942370,
-  "proto-partner-page/states/submit-modal": 1785135506088
+  "proto-partner-page/states/submit-modal": 1785135506088,
+  "supabase-home-page": 1785964647417,
+  "supabase-home-page/states/default": 1785964648584
 }

@@ -143,9 +143,8 @@ export function PrototypeBootstrapOnboardingModal({
     () =>
       resolveOnboardingSourceForSetup({
         selectedDirectory,
-        persistedSourceName: sourceName,
       }),
-    [selectedDirectory, sourceName],
+    [selectedDirectory],
   );
 
   const handleContinue = useCallback(() => {

@@ -11,7 +11,10 @@
 
 @import "../../packages/config/tailwind.config.css";
 @import "../../packages/config/typography.css";
+@import "../styles/supabase-product/product-tokens.css";
+@import "../styles/product-tailwind-theme.css";
 @import "./supabase-product-surface.css";
+@import "../prototypes/supabase-home-page/supabase-home-page-theme.css";
 
 @theme {
   --text-grid: 13px;

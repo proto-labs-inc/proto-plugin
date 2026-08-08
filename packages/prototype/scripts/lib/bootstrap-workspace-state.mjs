@@ -3,7 +3,11 @@ import path from "node:path";
 
 import { hostEnvHasValue } from "./host-env.mjs";
 
-export const DESIGN_SYSTEM_SECTION_IDS = ["tokens"];
+export const COMPONENT_LIBRARY_SECTION_IDS = [
+  "ui-primitives",
+  "composite-components",
+  "tokens",
+];
 
 function collectSourceFiles(dir, acc) {
   let entries;
@@ -29,39 +33,45 @@ export function isWorkspaceOnboardedByState(hostRoot, env = process.env) {
   );
 }
 
-export function isDesignSystemReadyByState(hostRoot) {
-  const dir = path.join(hostRoot, "src", "app", "design-system");
-  const files = [];
-  collectSourceFiles(dir, files);
+export function isComponentLibraryReadyByState(hostRoot) {
+  for (const rel of ["src/app/component-library", "src/app/design-system"]) {
+    const dir = path.join(hostRoot, rel);
+    const files = [];
+    collectSourceFiles(dir, files);
 
-  const found = new Set();
-  for (const file of files) {
-    let text;
-    try {
-      text = fs.readFileSync(file, "utf8");
-    } catch {
-      continue;
-    }
-    for (const id of DESIGN_SYSTEM_SECTION_IDS) {
-      if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
-        found.add(id);
+    const found = new Set();
+    for (const file of files) {
+      let text;
+      try {
+        text = fs.readFileSync(file, "utf8");
+      } catch {
+        continue;
       }
+      for (const id of COMPONENT_LIBRARY_SECTION_IDS) {
+        if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
+          found.add(id);
+        }
+      }
+    }
+
+    if (COMPONENT_LIBRARY_SECTION_IDS.every((id) => found.has(id))) {
+      return true;
     }
   }
 
-  return DESIGN_SYSTEM_SECTION_IDS.every((id) => found.has(id));
+  return false;
 }
 
-/** @deprecated use isDesignSystemReadyByState */
-export const isComponentLibraryReadyByState = isDesignSystemReadyByState;
+/** @deprecated use isComponentLibraryReadyByState */
+export const isDesignSystemReadyByState = isComponentLibraryReadyByState;
 
 export function readExpectedBootstrapStatus(hostRoot) {
   const onboarded = isWorkspaceOnboardedByState(hostRoot);
-  const designSystemReady = isDesignSystemReadyByState(hostRoot);
+  const componentLibraryReady = isComponentLibraryReadyByState(hostRoot);
 
   return {
     complete: onboarded,
-    designSystemReady,
+    componentLibraryReady,
   };
 }
 

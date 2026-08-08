@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@prototype/components/ui/button";
-import { useBootstrapSetupPromptCopy } from "@prototype/lib/prototypes/use-bootstrap-setup-prompt-copy";
+import { usePopulateDesignSystemPromptCopy } from "@prototype/lib/prototypes/use-populate-design-system-prompt-copy";
 import { cn } from "@prototype/lib/utils";
 import { Loader2 } from "lucide-react";
 
@@ -17,8 +17,8 @@ export function PrototypeDesignSystemLoadingPanel({
   telemetryModal = "component-library-loading",
   className,
 }: PrototypeDesignSystemLoadingPanelProps) {
-  const { copySetupPrompt, icon, isCopied, isCopying } =
-    useBootstrapSetupPromptCopy({ telemetryModal });
+  const { copyDesignSystemPrompt, icon, isCopied, isCopying } =
+    usePopulateDesignSystemPromptCopy({ telemetryModal });
 
   return (
     <div className={cn(LOADING_PANEL_CLASS, className)}>
@@ -35,7 +35,8 @@ export function PrototypeDesignSystemLoadingPanel({
         return to this tab when the sync completes.
       </p>
       <p className="mt-3 text-sm leading-relaxed text-[var(--tool-chrome-text-muted)]">
-        Taking too long? Copy the setup prompt again and rerun it in your agent.
+        Taking too long? Copy the design system prompt again and rerun it in
+        your agent.
       </p>
       <div className="mt-5 flex items-center gap-3">
         <Button
@@ -45,11 +46,15 @@ export function PrototypeDesignSystemLoadingPanel({
           className="h-8 gap-2 border-[var(--tool-chrome-border)] text-[var(--tool-chrome-text-heading)] hover:text-[var(--tool-chrome-text-heading)]"
           disabled={isCopying}
           onClick={() => {
-            void copySetupPrompt();
+            void copyDesignSystemPrompt();
           }}
-          aria-label="Re-run setup prompt"
+          aria-label="Copy design system prompt"
         >
-          {isCopied ? "Copied prompt" : isCopying ? "Copying…" : "Re-run setup prompt"}
+          {isCopied
+            ? "Copied prompt"
+            : isCopying
+              ? "Copying…"
+              : "Copy design system prompt"}
           {icon}
         </Button>
       </div>
