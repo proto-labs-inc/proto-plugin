@@ -142,8 +142,10 @@ export {
   buildCreatePrototypePrompt,
   normalizeCreatePrototypeReferenceDocs,
   normalizeCreatePrototypeDocLinks,
+  parseCreatePrototypeSourceUrl,
   suggestPrototypeSlug,
   type CreatePrototypeReferenceDocInput,
+  type ParsedCreatePrototypeSourceUrl,
 } from "./lib/prototypes/create-prototype-prompt";
 
 export {

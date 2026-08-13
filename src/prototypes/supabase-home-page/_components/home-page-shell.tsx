@@ -2,89 +2,102 @@
 
 import type { ComponentType, ReactNode } from "react";
 import {
+  Auth,
+  Database,
+  EdgeFunctions,
+  Home,
+  Realtime,
+  SqlEditor,
+  Storage,
+  TableEditor,
+} from "icons";
+import {
   Blocks,
   CircleHelp,
-  Database,
-  Home,
   Lightbulb,
   List,
-  Lock,
   Plug,
   Search,
   Settings,
-  Table2,
   User,
-  Zap,
 } from "lucide-react";
 import { PrototypeComponent } from "proto-plugin";
-import { Button, cn } from "ui";
+import { Button, cn, Tooltip, TooltipContent, TooltipTrigger } from "ui";
 
-function SqlEditorIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={20}
-      height={20}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M7.89844 8.4342L11.5004 12.0356L7.89844 15.6375M12 15.3292H16.5M5 21.1055H19C20.1046 21.1055 21 20.21 21 19.1055V5.10547C21 4.0009 20.1046 3.10547 19 3.10547H5C3.89543 3.10547 3 4.0009 3 5.10547V19.1055C3 20.21 3.89543 21.1055 5 21.1055Z" />
-    </svg>
-  );
-}
+import { MOCK_PROJECT } from "./supabase-home-page-mock-data";
+
+const ICON_SIZE = 20;
+const ICON_STROKE_WIDTH = 1.5;
 
 function HeaderIconButton({
   children,
   className,
   destructive,
+  label,
 }: {
   children: ReactNode;
   className?: string;
   destructive?: boolean;
+  label: string;
 }) {
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="tiny"
-      className={cn(
-        "rounded-full w-8 h-8 p-0 flex items-center justify-center group",
-        destructive &&
-          "bg-destructive-200 border-destructive-500 hover:bg-destructive-200",
-        className,
-      )}
-    >
-      {children}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="tiny"
+          aria-label={label}
+          className={cn(
+            "rounded-full w-[32px] h-[32px] p-0 flex items-center justify-center group",
+            destructive && "bg-destructive-200 border-destructive-500 hover:bg-destructive-200",
+            className,
+          )}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
-export function ProjectHeader() {
+type ProjectHeaderProps = {
+  onConnectClick: () => void;
+  hasAdvisorIssue: boolean;
+};
+
+export function ProjectHeader({ onConnectClick, hasAdvisorIssue }: ProjectHeaderProps) {
   return (
     <PrototypeComponent
       id="home-page-shell.project-header"
-      className="hidden md:flex h-11 md:h-12 items-center shrink-0 border-b border-default"
+      className="hidden md:flex h-11 md:h-12 items-center shrink-0 border-b"
     >
       <div className="flex items-center justify-between h-full pr-3 flex-1 overflow-x-auto gap-x-8 pl-4">
         <div className="hidden md:flex items-center text-sm">
-          <a className="items-center justify-center shrink-0 flex" href="/project/default">
-            <img alt="Supabase" className="h-[18px]" src="/img/supabase-logo.svg" />
-          </a>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                className="items-center justify-center shrink-0 flex"
+                href="/project/default"
+                tabIndex={0}
+              >
+                <img alt="Supabase" className="h-[18px]" src="/img/supabase-logo.svg" />
+                <span className="sr-only">Back to organization home</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent>Back to organization home</TooltipContent>
+          </Tooltip>
           <div className="flex items-center md:pl-2">
-            <div className="text-sm px-3 py-1">Default Project</div>
+            <div className="text-sm px-3 py-1">{MOCK_PROJECT.name}</div>
           </div>
           <div className="ml-3 items-center gap-x-2 flex">
             <Button
               type="button"
               variant="default"
-              size="tiny"
-              className="rounded-full text-xs px-2.5 py-1 h-[26px]"
-              icon={<Plug className="rotate-90 h-[14px] w-[14px]" />}
+              className="rounded-full"
+              icon={<Plug className="rotate-90" />}
+              onClick={onConnectClick}
             >
               Connect
             </Button>
@@ -101,33 +114,47 @@ export function ProjectHeader() {
                 <Search size={16} strokeWidth={1.5} />
                 <p className="flex text-xs pr-2 text-foreground-muted">Search...</p>
               </div>
-              <span className="whitespace-nowrap shrink-0 items-center text-[11px] leading-none tracking-[-0.025em] rounded px-[5px] py-[3px] hidden md:inline-flex h-full border border-default bg-surface-300 text-foreground-lighter shadow-xs">
+              <span className="whitespace-nowrap shrink-0 items-center text-[11px] leading-none tracking-[-0.025em] rounded px-[5px] py-[3px] hidden md:inline-flex h-full border-none bg-transparent text-foreground-lighter shadow-none pr-2">
                 ⌘K
               </span>
             </button>
 
-            <HeaderIconButton>
-              <CircleHelp size={16} strokeWidth={1.5} className="text-foreground-light" />
+            <HeaderIconButton label="Help">
+              <CircleHelp
+                size={16}
+                strokeWidth={1.5}
+                className="text-foreground-light group-hover:text-foreground"
+              />
             </HeaderIconButton>
 
             <div className="relative">
-              <HeaderIconButton destructive>
-                <Lightbulb size={16} strokeWidth={1.5} className="text-foreground-light" />
+              <HeaderIconButton label="Advisor Center" destructive={hasAdvisorIssue}>
+                <Lightbulb
+                  size={16}
+                  strokeWidth={1.5}
+                  className="text-foreground-light group-hover:text-foreground"
+                />
               </HeaderIconButton>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-destructive" />
+              {hasAdvisorIssue ? (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-destructive" />
+              ) : null}
             </div>
 
-            <HeaderIconButton>
-              <SqlEditorIcon className="text-foreground-light" />
+            <HeaderIconButton label="SQL Editor">
+              <SqlEditor
+                size={16}
+                strokeWidth={1.5}
+                className="text-foreground-light group-hover:text-foreground"
+              />
             </HeaderIconButton>
 
-            <HeaderIconButton>
+            <HeaderIconButton label="Assistant">
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 46 46"
                 fill="none"
-                className="text-brand-600"
+                className="text-brand-600 group-hover:text-brand"
               >
                 <path
                   fillRule="evenodd"
@@ -153,7 +180,8 @@ export function ProjectHeader() {
             type="button"
             variant="text"
             size="tiny"
-            className="hidden md:flex rounded-full overflow-hidden h-8 w-8 px-0 py-0 shrink-0 border-transparent"
+            className="hidden md:flex rounded-full overflow-hidden h-8 w-8 px-0 py-0 shrink-0 border-transparent hover:bg-surface-100"
+            aria-label="Account"
           >
             <figure className="bg-foreground flex items-center justify-center w-8 h-8 rounded-md">
               <User size={18} strokeWidth={1.5} className="text-background" />
@@ -167,16 +195,16 @@ export function ProjectHeader() {
 
 const SIDEBAR_ITEMS = [
   { icon: Home, label: "Project Overview", active: true },
-  { icon: Table2, label: "Table Editor", active: false },
-  { icon: SqlEditorIcon, label: "SQL Editor", active: false },
+  { icon: TableEditor, label: "Table Editor", active: false },
+  { icon: SqlEditor, label: "SQL Editor", active: false },
 ] as const;
 
 const SIDEBAR_DATABASE_ITEMS = [
   { icon: Database, label: "Database" },
-  { icon: Lock, label: "Authentication" },
-  { icon: Blocks, label: "Storage" },
-  { icon: Zap, label: "Edge Functions" },
-  { icon: Blocks, label: "Realtime" },
+  { icon: Auth, label: "Authentication" },
+  { icon: Storage, label: "Storage" },
+  { icon: EdgeFunctions, label: "Edge Functions" },
+  { icon: Realtime, label: "Realtime" },
 ] as const;
 
 const SIDEBAR_ADVISOR_ITEMS = [
@@ -207,7 +235,7 @@ function SidebarNavItem({
         )}
         href="#"
       >
-        <Icon size={20} strokeWidth={1.5} className="shrink-0" />
+        <Icon size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} className="shrink-0" />
         <span className="truncate group-data-[collapsible=icon]:hidden">{label}</span>
       </a>
       {hasDot ? (
@@ -225,7 +253,7 @@ export function ProductSidebar() {
       data-state="collapsed"
       data-collapsible="icon"
     >
-      <div className="absolute h-full inset-y-0 hidden md:flex left-0 w-12 border-r border-default z-50">
+      <div className="absolute h-full inset-y-0 hidden md:flex left-0 w-12 border-r z-50">
         <div className="flex h-full w-full flex-col bg-sidebar">
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto">
             <ul className="flex w-full min-w-0 flex-col gap-1">

@@ -1,4 +1,4 @@
-import { Shield } from "lucide-react";
+import { BarChart, Shield } from "lucide-react";
 import { PrototypeComponent } from "proto-plugin";
 import {
   AiIconAnimation,
@@ -64,6 +64,8 @@ export function AdvisorSection({ advisorMode, onDismissToEmpty }: AdvisorSection
     );
   }
 
+  const isPerformance = issue.category === "PERFORMANCE";
+
   return (
     <PrototypeComponent id="advisor-section">
       <div className="flex justify-between items-center mb-6">
@@ -77,28 +79,43 @@ export function AdvisorSection({ advisorMode, onDismissToEmpty }: AdvisorSection
         <Card
           className={cn(
             "min-h-full flex flex-col items-stretch cursor-pointer h-64",
-            "bg-destructive-200 border-destructive-400",
+            "bg-destructive-200 border-destructive-400 hover:border-destructive-500",
           )}
           onClick={onDismissToEmpty}
         >
           <CardHeader className="border-b-0 shrink-0 flex flex-row gap-2 space-y-0 justify-between items-center">
             <div className="flex flex-row items-center gap-3">
-              <Shield size={16} strokeWidth={1.5} className="text-destructive" />
-              <CardTitle className="text-xs font-mono uppercase text-foreground-light">
-                {issue.category}
-              </CardTitle>
+              {isPerformance ? (
+                <BarChart size={16} strokeWidth={1.5} className="text-destructive" />
+              ) : (
+                <Shield size={16} strokeWidth={1.5} className="text-destructive" />
+              )}
+              <CardTitle className="text-foreground-light">{issue.category}</CardTitle>
             </div>
-            <Badge variant="destructive" className="w-fit uppercase text-[9px] tracking-[0.07em]">
-              CRITICAL
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="destructive" className="w-fit">
+                {issue.severity.toUpperCase()}
+              </Badge>
+              <Button
+                type="button"
+                variant="text"
+                size="tiny"
+                className="w-7 h-7 p-0"
+                icon={<AiIconAnimation />}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                }}
+                aria-label="Help me fix this issue"
+              />
+            </div>
           </CardHeader>
           <CardContent className="p-6 pt-16 flex flex-col justify-end flex-1 overflow-auto">
             <h3 className="mb-1">{issue.title}</h3>
-            <div className="text-sm text-foreground-light">
+            <div className="leading-6 text-sm text-foreground-light">
               <p>
-                Table{" "}
-                <code className="text-code-inline">{issue.tableName}</code> is public, but RLS has
-                not been enabled.
+                Table <code className="text-code-inline">{issue.tableName}</code> is public, but RLS
+                has not been enabled.
               </p>
             </div>
           </CardContent>

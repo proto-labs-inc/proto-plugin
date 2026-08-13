@@ -7,6 +7,10 @@ export type SupabaseHomePagePreviewStateId =
   | "advisor-empty"
   | "advisor-loading"
   | "connect-framework"
+  | "connect-server"
+  | "connect-direct"
+  | "connect-orm"
+  | "connect-mcp"
   | "copy-popover-open";
 
 export const SUPABASE_HOME_PAGE_PREVIEW_STATE_IDS = [
@@ -14,12 +18,9 @@ export const SUPABASE_HOME_PAGE_PREVIEW_STATE_IDS = [
   "advisor-empty",
   "advisor-loading",
   "connect-framework",
+  "connect-server",
+  "connect-direct",
+  "connect-orm",
+  "connect-mcp",
   "copy-popover-open",
 ] as const satisfies readonly SupabaseHomePagePreviewStateId[];
-
-export type SupabaseHomePageLiveState = {
-  previewStateId: SupabaseHomePagePreviewStateId;
-  advisorMode: AdvisorMode;
-  connectSheet: ConnectSheetMode;
-  copyPopoverOpen: boolean;
-};

@@ -9,6 +9,15 @@ import TableEditorFiltersStateMapPage from "./src/prototypes/table-editor-filter
 import SupabaseHomePage from "./src/prototypes/supabase-home-page";
 import { supabaseHomePageComponentRegistry } from "./src/prototypes/supabase-home-page/component-ids";
 import SupabaseHomePageStateMapPage from "./src/prototypes/supabase-home-page/state-map-page";
+import SupabaseSqlEditor from "./src/prototypes/supabase-sql-editor";
+import { supabaseSqlEditorComponentRegistry } from "./src/prototypes/supabase-sql-editor/component-ids";
+import SupabaseSqlEditorStateMapPage from "./src/prototypes/supabase-sql-editor/state-map-page";
+import SupabaseDatabaseView from "./src/prototypes/supabase-database-view";
+import { supabaseDatabaseViewComponentRegistry } from "./src/prototypes/supabase-database-view/component-ids";
+import SupabaseDatabaseViewStateMapPage from "./src/prototypes/supabase-database-view/state-map-page";
+import SupabaseLogs from "./src/prototypes/supabase-logs";
+import { supabaseLogsComponentRegistry } from "./src/prototypes/supabase-logs/component-ids";
+import SupabaseLogsStateMapPage from "./src/prototypes/supabase-logs/state-map-page";
 
 export default definePrototypeConfig({
   bootstrap: {
@@ -59,6 +68,30 @@ export default definePrototypeConfig({
       component: SupabaseHomePage,
       componentRegistry: supabaseHomePageComponentRegistry,
       stateMapComponent: SupabaseHomePageStateMapPage,
+    },
+    {
+      slug: "supabase-sql-editor",
+      title: "Supabase SQL editor",
+      screenshot: "/prototypes/screenshots/supabase-sql-editor.png",
+      component: SupabaseSqlEditor,
+      componentRegistry: supabaseSqlEditorComponentRegistry,
+      stateMapComponent: SupabaseSqlEditorStateMapPage,
+    },
+    {
+      slug: "supabase-database-view",
+      title: "Supabase Database View",
+      screenshot: "/prototypes/screenshots/supabase-database-view.png",
+      component: SupabaseDatabaseView,
+      componentRegistry: supabaseDatabaseViewComponentRegistry,
+      stateMapComponent: SupabaseDatabaseViewStateMapPage,
+    },
+    {
+      slug: "supabase-logs",
+      title: "Supabase Logs",
+      screenshot: "/prototypes/screenshots/supabase-logs.png",
+      component: SupabaseLogs,
+      componentRegistry: supabaseLogsComponentRegistry,
+      stateMapComponent: SupabaseLogsStateMapPage,
     },
   ],
 });

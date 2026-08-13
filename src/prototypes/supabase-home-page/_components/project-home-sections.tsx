@@ -1,14 +1,18 @@
 import {
   Box,
   Cable,
+  Check,
   ChevronDown,
   ChevronRight,
+  Copy,
   Database,
   KeyRound,
+  Link2,
   Server,
   Sparkles,
 } from "lucide-react";
 import { PrototypeComponent } from "proto-plugin";
+import { useState } from "react";
 import {
   Button,
   Card,
@@ -32,6 +36,10 @@ const CONNECT_ICONS = {
   mcp: Sparkles,
   api_keys: KeyRound,
 } as const;
+
+const SCAFFOLD_CONTAINER_CLASS =
+  "mx-auto w-full @container max-w-[1600px] px-4 @lg:px-6 @xl:px-10";
+const SCAFFOLD_SECTION_CLASS = "flex flex-col first:pt-12 py-6 w-full";
 
 type ConnectSectionProps = {
   onConnectActionClick: (mode: ConnectSheetMode) => void;
@@ -106,12 +114,25 @@ export function ConnectSection({ onConnectActionClick }: ConnectSectionProps) {
 type ProjectTopSectionProps = {
   copyPopoverOpen: boolean;
   onCopyPopoverOpenChange: (open: boolean) => void;
+  onGetConnected: () => void;
 };
 
 export function ProjectTopSection({
   copyPopoverOpen,
   onCopyPopoverOpenChange,
+  onGetConnected,
 }: ProjectTopSectionProps) {
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
+  const menuItems = [
+    {
+      label: "Project URL",
+      value: MOCK_PROJECT.apiUrl,
+      displayValue: MOCK_PROJECT.apiUrl,
+      icon: Link2,
+    },
+  ];
+
   return (
     <PrototypeComponent id="project-home-sections.project-top-section">
       <div className="flex flex-col gap-y-4">
@@ -126,25 +147,81 @@ export function ProjectTopSection({
                   <span className="min-w-0 max-w-[400px] truncate text-left text-foreground-light">
                     {MOCK_PROJECT.apiUrl}
                   </span>
-                  <DropdownMenu open={copyPopoverOpen} onOpenChange={onCopyPopoverOpenChange}>
+                  <DropdownMenu
+                    open={copyPopoverOpen}
+                    onOpenChange={(open) => {
+                      if (!open) setCopiedItem(null);
+                      onCopyPopoverOpenChange(open);
+                    }}
+                  >
                     <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
-                        variant="default"
                         size="tiny"
-                        className="text-xs px-2.5 py-1 h-[26px]"
+                        variant="default"
+                        iconRight={
+                          <ChevronDown
+                            size={14}
+                            className={cn("transition-transform", copyPopoverOpen && "rotate-180")}
+                          />
+                        }
                       >
-                        <span className="truncate">
-                          Copy <span className="sr-only">project URL and API keys</span>
-                        </span>
-                        <ChevronDown size={14} className="ml-1" />
+                        Copy <span className="sr-only">project URL and API keys</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64">
-                      <DropdownMenuItem>Copy project URL</DropdownMenuItem>
+                    <DropdownMenuContent side="bottom" align="center" className="w-80 p-1">
+                      {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        const copied = copiedItem === item.label;
+
+                        return (
+                          <DropdownMenuItem
+                            key={item.label}
+                            className="group relative items-center gap-3 pr-10"
+                            onSelect={(event) => {
+                              event.preventDefault();
+                              void navigator.clipboard?.writeText(item.value);
+                              setCopiedItem(item.label);
+                            }}
+                          >
+                            <Icon size={14} className="mt-0.5 shrink-0 text-foreground-light" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm text-foreground">
+                                {copied ? null : <span className="sr-only">Copy</span>}
+                                {item.label}
+                                {copied ? (
+                                  <span className="sr-only">copied to your clipboard</span>
+                                ) : null}
+                              </div>
+                              <div className="truncate text-sm text-foreground-lighter">
+                                {item.displayValue}
+                              </div>
+                            </div>
+                            <div
+                              className={cn(
+                                "absolute right-2 top-1/2 -translate-y-1/2 text-foreground-lighter opacity-0 transition-opacity group-hover:opacity-100",
+                                copied && "opacity-100 text-brand",
+                              )}
+                            >
+                              {copied ? <Check size={14} /> : <Copy size={14} />}
+                            </div>
+                          </DropdownMenuItem>
+                        );
+                      })}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Copy anon key</DropdownMenuItem>
-                      <DropdownMenuItem>Copy service role key</DropdownMenuItem>
+                      <div className="p-1">
+                        <Button
+                          variant="default"
+                          size="tiny"
+                          className="w-full"
+                          onClick={() => {
+                            onCopyPopoverOpenChange(false);
+                            onGetConnected();
+                          }}
+                        >
+                          Get Connected
+                        </Button>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -156,3 +233,5 @@ export function ProjectTopSection({
     </PrototypeComponent>
   );
 }
+
+export { SCAFFOLD_CONTAINER_CLASS, SCAFFOLD_SECTION_CLASS };

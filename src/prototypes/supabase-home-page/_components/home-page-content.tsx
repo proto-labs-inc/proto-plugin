@@ -4,7 +4,12 @@ import { cn } from "ui";
 import { AdvisorSection } from "./advisor-section";
 import { ConnectSheetPanel } from "./connect-sheet-panel";
 import { ProductSidebar, ProjectHeader } from "./home-page-shell";
-import { ConnectSection, ProjectTopSection } from "./project-home-sections";
+import {
+  ConnectSection,
+  ProjectTopSection,
+  SCAFFOLD_CONTAINER_CLASS,
+  SCAFFOLD_SECTION_CLASS,
+} from "./project-home-sections";
 import type { SupabaseHomePageLiveState } from "./supabase-home-page-types";
 import type { ConnectSheetMode } from "./supabase-home-page-types";
 
@@ -28,23 +33,27 @@ export function HomePageContent({
       id="home-page-content"
       className={cn(PROTOTYPE_VIEW_SHELL_CLASS, "flex flex-col h-full w-full bg-dash-sidebar")}
     >
-      <ProjectHeader />
+      <ProjectHeader
+        onConnectClick={() => onConnectActionClick("framework")}
+        hasAdvisorIssue={liveState.advisorMode === "issue"}
+      />
 
       <div className="flex flex-1 w-full overflow-hidden relative">
         <ProductSidebar />
 
         <main className="h-full flex flex-col flex-1 w-full overflow-y-auto overflow-x-hidden min-w-0">
-          <div className="mx-auto w-full max-w-[1600px] px-4 lg:px-6 xl:px-10">
-            <div className="flex flex-col first:pt-12 py-6 w-full pb-0">
+          <div className={SCAFFOLD_CONTAINER_CLASS}>
+            <div className={cn(SCAFFOLD_SECTION_CLASS, "pb-0")}>
               <ProjectTopSection
                 copyPopoverOpen={liveState.copyPopoverOpen}
                 onCopyPopoverOpenChange={onCopyPopoverOpenChange}
+                onGetConnected={() => onConnectActionClick("framework")}
               />
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-[1600px] px-4 lg:px-6 xl:px-10">
-            <div className="flex flex-col first:pt-12 py-6 w-full gap-12 pb-32">
+          <div className={SCAFFOLD_CONTAINER_CLASS}>
+            <div className={cn(SCAFFOLD_SECTION_CLASS, "gap-12 pb-32")}>
               <ConnectSection onConnectActionClick={onConnectActionClick} />
               <AdvisorSection
                 advisorMode={liveState.advisorMode}
@@ -57,6 +66,7 @@ export function HomePageContent({
         <ConnectSheetPanel
           connectSheet={liveState.connectSheet}
           onClose={onCloseConnectSheet}
+          onModeChange={onConnectActionClick}
         />
       </div>
     </PrototypeComponent>

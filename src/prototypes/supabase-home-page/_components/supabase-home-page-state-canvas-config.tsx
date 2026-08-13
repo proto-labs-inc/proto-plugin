@@ -52,6 +52,10 @@ function renderWireframe(stateId: SupabaseHomePagePreviewStateId) {
         </div>
       );
     case "connect-framework":
+    case "connect-server":
+    case "connect-direct":
+    case "connect-orm":
+    case "connect-mcp":
       return (
         <div className="relative flex h-full gap-1 p-2">
           <WireBlock className="w-[14%] rounded-sm" />

@@ -1,0 +1,9 @@
+/*
+ * Product token VALUES for the Supabase SQL editor prototype preview.
+ * Host-level registration lives in src/styles/product-tailwind-theme.css.
+ */
+[data-prototype-screenshot] .supabase-sql-editor-theme,
+.supabase-sql-editor-theme {
+  --background-dash-sidebar: var(--background);
+  --background-dash-canvas: var(--background);
+}

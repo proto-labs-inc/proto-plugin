@@ -35,6 +35,10 @@ export async function sortPrototypesByCreationDate(
   );
 
   return [...prototypes].sort((a, b) => {
+    const pinnedA = a.slug === "table-editor-filters" ? 0 : 1;
+    const pinnedB = b.slug === "table-editor-filters" ? 0 : 1;
+    if (pinnedA !== pinnedB) return pinnedA - pinnedB;
+
     const creationDiff =
       (creationMsBySlug.get(b.slug) ?? 0) - (creationMsBySlug.get(a.slug) ?? 0);
     if (creationDiff !== 0) return creationDiff;
