@@ -18,6 +18,7 @@
 @import "../prototypes/supabase-sql-editor/supabase-sql-editor-theme.css";
 @import "../prototypes/supabase-database-view/supabase-database-view-theme.css";
 @import "../prototypes/supabase-logs/supabase-logs-theme.css";
+@import "../prototypes/front-cover/front-cover-theme.css";
 
 @theme {
   --text-grid: 13px;

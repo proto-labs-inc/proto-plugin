@@ -18,6 +18,9 @@ import SupabaseDatabaseViewStateMapPage from "./src/prototypes/supabase-database
 import SupabaseLogs from "./src/prototypes/supabase-logs";
 import { supabaseLogsComponentRegistry } from "./src/prototypes/supabase-logs/component-ids";
 import SupabaseLogsStateMapPage from "./src/prototypes/supabase-logs/state-map-page";
+import FrontCover from "./src/prototypes/front-cover";
+import { frontCoverComponentRegistry } from "./src/prototypes/front-cover/component-ids";
+import FrontCoverStateMapPage from "./src/prototypes/front-cover/state-map-page";
 
 export default definePrototypeConfig({
   bootstrap: {
@@ -92,6 +95,14 @@ export default definePrototypeConfig({
       component: SupabaseLogs,
       componentRegistry: supabaseLogsComponentRegistry,
       stateMapComponent: SupabaseLogsStateMapPage,
+    },
+    {
+      slug: "front-cover",
+      title: "Front cover",
+      screenshot: "/prototypes/screenshots/front-cover.png",
+      component: FrontCover,
+      componentRegistry: frontCoverComponentRegistry,
+      stateMapComponent: FrontCoverStateMapPage,
     },
   ],
 });
