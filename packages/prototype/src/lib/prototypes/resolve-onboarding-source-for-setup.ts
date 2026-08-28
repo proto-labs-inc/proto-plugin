@@ -9,23 +9,18 @@ export type OnboardingSourceForSetup = {
   folderName?: string;
 };
 
-/** Resolve link-source inputs from onboarding — never from linked SOURCE_PATH display name. */
+/** Resolve link-source inputs from the in-session directory pick only — not localStorage. */
 export function resolveOnboardingSourceForSetup({
   selectedDirectory,
-  persistedSourceName,
 }: {
   selectedDirectory: SourceDirectoryPick | null;
-  persistedSourceName?: string;
 }): OnboardingSourceForSetup {
   const absolutePath = resolveSourceDirectoryAbsolutePath(selectedDirectory);
   if (absolutePath) {
     return { absolutePath };
   }
 
-  const folderName =
-    selectedDirectory?.name.trim() ||
-    persistedSourceName?.trim() ||
-    undefined;
+  const folderName = selectedDirectory?.name.trim();
 
   if (!folderName || looksLikeAbsolutePath(folderName)) {
     return {};

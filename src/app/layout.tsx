@@ -68,8 +68,9 @@ export default function RootLayout({
     >
       <body className="bg-dash-sidebar text-foreground flex h-full min-h-0 flex-col overflow-hidden">
         <SupabaseTooltipProvider>
-          <SupabaseProductTheme />
-          <PrototypeSiteLayout>{children}</PrototypeSiteLayout>
+          <SupabaseProductTheme>
+            <PrototypeSiteLayout>{children}</PrototypeSiteLayout>
+          </SupabaseProductTheme>
         </SupabaseTooltipProvider>
       </body>
     </html>

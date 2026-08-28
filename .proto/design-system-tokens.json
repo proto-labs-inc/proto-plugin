@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "extractedAt": "2026-08-05T21:06:06.220Z",
+  "sourceCssFiles": [
+    "src/styles/supabase-product/ui-build/source/semantic.css",
+    "src/styles/supabase-product/ui-build/source/global.css",
+    "src/styles/supabase-product/ui-build/themes/light.css",
+    "src/styles/supabase-product/ui-build/themes/dark.css",
+    "src/styles/supabase-product/config-css/colors.css",
+    "packages/config/css/theme.css"
+  ],
+  "productThemes": [
+    "light",
+    "dark"
+  ],
+  "swatches": [
+    {
+      "role": "background",
+      "name": "Background",
+      "sourceVar": "--background",
+      "displayVar": "--background",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "foreground",
+      "name": "Foreground",
+      "sourceVar": "--foreground",
+      "displayVar": "--foreground",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "primary",
+      "name": "Primary",
+      "sourceVar": "--primary",
+      "displayVar": "--primary",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "secondary",
+      "name": "Secondary",
+      "sourceVar": "--secondary",
+      "displayVar": "--secondary",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "border",
+      "name": "Border",
+      "sourceVar": "--border",
+      "displayVar": "--border",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "destructive",
+      "name": "Destructive",
+      "sourceVar": "--destructive",
+      "displayVar": "--destructive",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "muted",
+      "name": "Muted",
+      "sourceVar": "--muted",
+      "displayVar": "--muted",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "accent",
+      "name": "Accent",
+      "sourceVar": "--accent",
+      "displayVar": "--accent",
+      "format": "color",
+      "required": true
+    },
+    {
+      "role": "card",
+      "name": "Card",
+      "sourceVar": "--card",
+      "displayVar": "--card",
+      "format": "color",
+      "required": false
+    },
+    {
+      "role": "popover",
+      "name": "Popover",
+      "sourceVar": "--popover",
+      "displayVar": "--popover",
+      "format": "color",
+      "required": false
+    },
+    {
+      "role": "warning",
+      "name": "Warning",
+      "sourceVar": "--warning",
+      "displayVar": "--warning",
+      "format": "color",
+      "required": false
+    },
+    {
+      "role": "info",
+      "name": "Info",
+      "sourceVar": "--info",
+      "displayVar": "--info",
+      "format": "color",
+      "required": false
+    },
+    {
+      "role": "input",
+      "name": "Input",
+      "sourceVar": "--input",
+      "displayVar": "--input",
+      "format": "color",
+      "required": false
+    },
+    {
+      "role": "ring",
+      "name": "Ring",
+      "sourceVar": "--ring",
+      "displayVar": "--ring",
+      "format": "color",
+      "required": false
+    }
+  ]
+}

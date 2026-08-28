@@ -13,7 +13,7 @@ export const BOOTSTRAP_VERIFY_SCRIPTS = {
   sourceLinked: "pnpm verify:source-linked",
   workspaceProfile: "pnpm verify:workspace-profile",
   onboarded: "pnpm verify:onboarded",
-  designSystemLoaded: "pnpm verify:design-system-loaded",
+  designSystemLoaded: "pnpm verify:component-library-loaded",
   designSystemStatic: "pnpm verify:design-system-static",
   designSystemVisual: "pnpm verify:design-system-visual",
   tailwindThemeRegistration: "pnpm verify:tailwind-theme",
@@ -26,15 +26,6 @@ export const EXTRACT_TAILWIND_THEME_COMMAND =
 
 export const DESIGN_SYSTEM_GENERATE_COMMAND =
   "node node_modules/proto-plugin/scripts/generate-design-system.mjs";
-
-/**
- * Scan the linked source for Storybook stories and write the facts-only
- * inventory to `.proto/design-system-stories.json`. The last stdout line is
- * `STORYBOOK: detected (…)` or `STORYBOOK: none`, which selects the component
- * inventory route in the design-system prompt.
- */
-export const SOURCE_STORIES_PARSE_COMMAND =
-  "node node_modules/proto-plugin/scripts/parse-source-stories.mjs";
 
 export const BOOTSTRAP_CHECKPOINTS: Record<BootstrapSetupPhase, string> = {
   preflight: "CHECKPOINT 0 COMPLETE: proto-plugin current",
@@ -102,7 +93,7 @@ function buildBootstrapApiAuthorityLines(): string[] {
     "",
     "The gallery and `/design-system` **do not** read the disk verify scripts directly. They call `GET /api/prototypes/bootstrap-status` from the running dev server.",
     "",
-    "- Disk checks (`pnpm verify:design-system-loaded`, etc.) can pass while the API still returns `complete: false` or `designSystemReady: false` — that leaves the UI stuck on onboarding or the design system loading panel.",
+    "- Disk checks (`pnpm verify:component-library-loaded`, etc.) can pass while the API still returns `complete: false` or `componentLibraryReady: false` — that leaves the UI stuck on onboarding or the component library loading panel.",
     "- **Never print CHECKPOINT 4 or 5** unless the dev server is running and the bootstrap status API agrees with workspace state.",
     "- Host layout must use `createPrototypeSiteLayout` from `proto-plugin/server` so bootstrap/debug wiring stays correct. Do not hand-roll a gallery shell wrapper.",
     "- Debug floating stepper is **opt-in only** — set `DEBUG=true` in `.env.local`. It must not appear in normal host development.",
@@ -123,7 +114,7 @@ export function buildBootstrapSetupMasterGatesLines(): string[] {
     "",
     "Proto tracks progress from real workspace state — there are no flags to write. Onboarding completes once the source is linked and the profile is set; the design system unlocks once `/design-system` is populated.",
     "",
-    "**Gallery unlock is API-driven.** Disk verify scripts are necessary but not sufficient — the final phase must confirm `GET /api/prototypes/bootstrap-status` returns `complete: true` and `designSystemReady: true` while the dev server is running.",
+    "**Gallery unlock is API-driven.** Disk verify scripts are necessary but not sufficient — the final phase must confirm `GET /api/prototypes/bootstrap-status` returns `complete: true` and `componentLibraryReady: true` while the dev server is running.",
     "",
     "| Phase | Section | Checkpoint | Verify |",
     "| ----- | ------- | ---------- | ------ |",

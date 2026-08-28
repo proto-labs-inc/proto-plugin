@@ -1,0 +1,12 @@
+/*
+ * Product token VALUES for the Supabase Database View prototype preview.
+ * Host-level registration lives in src/styles/product-tailwind-theme.css.
+ */
+[data-prototype-screenshot] .supabase-database-view-theme,
+.supabase-database-view-theme {
+  --background-dash-sidebar: var(--background);
+  --background-dash-canvas: var(--background);
+  --header-height: 3rem;
+  --sidebar-width: 13rem;
+  --sidebar-width-icon: 3rem;
+}

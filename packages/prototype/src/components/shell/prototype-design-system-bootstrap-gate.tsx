@@ -20,7 +20,7 @@ export function PrototypeDesignSystemBootstrapGate({
   designSystemPagePath,
   isEmpty = false,
 }: PrototypeDesignSystemBootstrapGateProps) {
-  const { isDesignSystemLoadingPanelVisible } = useBootstrapPreview();
+  const { isComponentLibraryLoadingPanelVisible } = useBootstrapPreview();
 
   if (isEmpty) {
     return (
@@ -32,7 +32,7 @@ export function PrototypeDesignSystemBootstrapGate({
     );
   }
 
-  if (isDesignSystemLoadingPanelVisible) {
+  if (isComponentLibraryLoadingPanelVisible) {
     return <PrototypeDesignSystemLoadingPanel />;
   }
 

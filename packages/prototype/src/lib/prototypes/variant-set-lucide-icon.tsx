@@ -9,6 +9,7 @@ import {
   FileSpreadsheet,
   FilterX,
   Inbox,
+  Layers,
   LayoutGrid,
   LayoutTemplate,
   PanelsTopLeft,
@@ -29,6 +30,7 @@ type VariantSetIconRule = {
 
 /** First match wins — order rules from most specific to broadest. */
 const VARIANT_SET_ICON_RULES: VariantSetIconRule[] = [
+  { test: /front-cover-hero|hero cover/i, icon: Layers },
   { test: /event-types-page-layout|event types page layout/i, icon: PanelsTopLeft },
   { test: /automat-analytics|analytics layout/i, icon: BarChart3 },
   { test: /grid-error-state-layout|error state layout/i, icon: AlertTriangle },

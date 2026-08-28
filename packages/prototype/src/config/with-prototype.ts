@@ -48,6 +48,10 @@ export function withPrototype(
     ],
     turbopack: {
       ...existingTurbopack,
+      // Hosts often symlink `source/` to an upstream monorepo that has its own
+      // lockfile. Next infers turbopack.root from lockfiles, which then becomes
+      // a common ancestor (e.g. $HOME) where `next` is not installed.
+      root: existingTurbopack.root ?? process.cwd(),
       resolveAlias: {
         ...existingResolveAlias,
         ...prototypeInternalAlias,

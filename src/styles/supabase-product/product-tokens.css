@@ -1,0 +1,10 @@
+/*
+ * Supabase product token VALUES synced from linked source (packages/config + ui/build).
+ * Host-local packages/ui, packages/ui-patterns, and packages/config stay untouched.
+ */
+@import "./ui-build/source/global.css";
+@import "./ui-build/source/semantic.css";
+@import "./ui-build/source/compat.css";
+@import "./ui-build/themes/light.css";
+@import "./ui-build/themes/dark.css";
+@import "./config-css/colors.css";

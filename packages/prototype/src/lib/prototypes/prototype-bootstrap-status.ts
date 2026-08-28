@@ -59,8 +59,8 @@ export type BootstrapRequirement = {
 export type PrototypeBootstrapStatus = {
   requirements: BootstrapRequirement[];
   complete: boolean;
-  /** Synced design tokens + ui primitives exist on disk. */
-  designSystemReady: boolean;
+  /** Component library sections populated under src/app/component-library/. */
+  componentLibraryReady: boolean;
   firstIncompleteId: BootstrapRequirementId | null;
   resolvedStep: BootstrapPreviewStep;
 };
@@ -247,7 +247,7 @@ export function evaluateBootstrapRequirements(options: {
   env?: NodeJS.ProcessEnv;
   checkExists: PathExistenceChecker;
   syncPaths?: BootstrapSyncPaths | null;
-  designSystemReady?: boolean;
+  componentLibraryReady?: boolean;
 }): PrototypeBootstrapStatus {
   const order = resolveBootstrapRequirementOrder(options.bootstrap);
   const requirements = order.map((id) =>
@@ -261,14 +261,14 @@ export function evaluateBootstrapRequirements(options: {
   const uiPrimitives = requirements.find(
     (requirement) => requirement.id === "uiPrimitives",
   );
-  const designSystemReady =
-    options.designSystemReady ??
+  const componentLibraryReady =
+    options.componentLibraryReady ??
     Boolean(designTokens?.satisfied && uiPrimitives?.satisfied);
 
   return {
     requirements,
     complete: firstIncomplete == null,
-    designSystemReady,
+    componentLibraryReady,
     firstIncompleteId: firstIncomplete?.id ?? null,
     resolvedStep: resolveBootstrapStep(requirements),
   };
@@ -284,7 +284,7 @@ export function createCompletedBootstrapStatus(): PrototypeBootstrapStatus {
   return {
     requirements,
     complete: true,
-    designSystemReady: true,
+    componentLibraryReady: true,
     firstIncompleteId: null,
     resolvedStep: "normal",
   };
@@ -304,7 +304,7 @@ export function createOnboardingRequiredBootstrapStatus(): PrototypeBootstrapSta
   return {
     requirements,
     complete: false,
-    designSystemReady: false,
+    componentLibraryReady: false,
     firstIncompleteId: requirements[0]?.id ?? null,
     resolvedStep: "welcome",
   };

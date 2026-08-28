@@ -75,12 +75,12 @@ async function main() {
     mismatches.push(formatMismatch("complete", expected.complete, actual.complete));
   }
 
-  if (actual.designSystemReady !== expected.designSystemReady) {
+  if (actual.componentLibraryReady !== expected.componentLibraryReady) {
     mismatches.push(
       formatMismatch(
-        "designSystemReady",
-        expected.designSystemReady,
-        actual.designSystemReady,
+        "componentLibraryReady",
+        expected.componentLibraryReady,
+        actual.componentLibraryReady,
       ),
     );
   }
@@ -96,13 +96,13 @@ async function main() {
     process.exit(1);
   }
 
-  if (!expected.complete || !expected.designSystemReady) {
+  if (!expected.complete || !expected.componentLibraryReady) {
     console.error(
       "BLOCKED: bootstrap status API is reachable but workspace setup is not finished on disk yet.",
     );
     console.error(
       `- complete: ${actual.complete}`,
-      `- designSystemReady: ${actual.designSystemReady}`,
+      `- componentLibraryReady: ${actual.componentLibraryReady}`,
     );
     process.exit(1);
   }
@@ -110,7 +110,7 @@ async function main() {
   console.log(
     `OK: bootstrap status API matches workspace state (${origin}${BOOTSTRAP_STATUS_PATH}).`,
   );
-  console.log("OK: complete=true, designSystemReady=true — gallery and design system should unlock.");
+  console.log("OK: complete=true, componentLibraryReady=true — gallery and component library should unlock.");
 }
 
 main();

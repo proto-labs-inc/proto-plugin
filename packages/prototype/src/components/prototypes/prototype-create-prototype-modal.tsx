@@ -9,7 +9,10 @@ import { Button } from "@prototype/components/ui/button";
 import { Input } from "@prototype/components/ui/input";
 import { Label } from "@prototype/components/ui/label";
 import { Switch } from "@prototype/components/ui/switch";
-import { buildCreatePrototypeCopyText } from "@prototype/lib/prototypes/create-prototype-prompt";
+import {
+  buildCreatePrototypeCopyText,
+  parseCreatePrototypeSourceUrl,
+} from "@prototype/lib/prototypes/create-prototype-prompt";
 import { readBriefFieldValue } from "@prototype/lib/prototypes/read-brief-field-value";
 import { useTrackEvent } from "@prototype/lib/prototypes/telemetry/prototype-telemetry-context";
 import { useWorkspaceProfile } from "@prototype/lib/prototypes/use-workspace-profile";
@@ -37,23 +40,24 @@ export function PrototypeCreatePrototypeModal({
 }: PrototypeCreatePrototypeModalProps) {
   const titleFieldId = useId();
   const descriptionFieldId = useId();
-  const routeFieldId = useId();
+  const urlFieldId = useId();
   const referenceHtmlFieldId = useId();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [route, setRoute] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
   const [referenceHtml, setReferenceHtml] = useState("");
   const { copy, icon, isCopied } = useCopyToClipboard();
   const workspaceProfile = useWorkspaceProfile();
   const track = useTrackEvent();
   const [isCopying, setIsCopying] = useState(false);
-  const canCopy = title.trim().length > 0;
+  const canCopy =
+    title.trim().length > 0 && parseCreatePrototypeSourceUrl(sourceUrl) != null;
 
   useEffect(() => {
     if (!open) {
       setTitle("");
       setDescription("");
-      setRoute("");
+      setSourceUrl("");
       setReferenceHtml("");
     }
   }, [open]);
@@ -69,13 +73,21 @@ export function PrototypeCreatePrototypeModal({
 
     const titleValue = readBriefFieldValue(titleFieldId);
     const descriptionValue = readBriefFieldValue(descriptionFieldId);
-    const routeValue = readBriefFieldValue(routeFieldId);
+    const sourceUrlValue = readBriefFieldValue(urlFieldId);
     const referenceHtmlValue = readBriefFieldValue(referenceHtmlFieldId);
-    const hasRequiredFields = titleValue.trim().length > 0;
+    const parsedSourceUrl = parseCreatePrototypeSourceUrl(sourceUrlValue);
 
-    if (!hasRequiredFields) {
+    if (titleValue.trim().length === 0) {
       toast.error("Missing fields", {
         description: "Fill in title before copying.",
+      });
+      return;
+    }
+
+    if (!parsedSourceUrl) {
+      toast.error("Invalid URL", {
+        description:
+          "Enter a full http(s) URL, for example http://localhost:8082/project/default.",
       });
       return;
     }
@@ -90,7 +102,7 @@ export function PrototypeCreatePrototypeModal({
         buildCreatePrototypeCopyText({
           title: titleValue,
           description: descriptionValue,
-          route: routeValue,
+          sourceUrl: parsedSourceUrl.href,
           referenceHtml: referenceHtmlValue,
           origin,
           referenceDocs: [],
@@ -102,7 +114,7 @@ export function PrototypeCreatePrototypeModal({
       track("modal.prompt_copied", {
         modal: "create-prototype",
         hasDescription: descriptionValue.trim().length > 0,
-        hasRoute: routeValue.trim().length > 0,
+        hasUrl: true,
         hasReferenceHtml: referenceHtmlValue.trim().length > 0,
         referenceDocsCount: 0,
       });
@@ -183,16 +195,18 @@ export function PrototypeCreatePrototypeModal({
         </Button>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor={routeFieldId} className="text-foreground">
-          Route
+        <Label htmlFor={urlFieldId} className="text-foreground">
+          URL <span className="tool-dialog-field-hint">(required)</span>
         </Label>
         <Input
-          id={routeFieldId}
-          value={route}
-          onChange={(event) => setRoute(event.target.value)}
-          placeholder="ex. /project/default/settings/team"
+          id={urlFieldId}
+          value={sourceUrl}
+          onChange={(event) => setSourceUrl(event.target.value)}
+          placeholder="ex. http://localhost:8082/project/default"
           className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
           spellCheck={false}
+          inputMode="url"
+          autoComplete="url"
         />
       </div>
       <div className="flex flex-col gap-1.5">

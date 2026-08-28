@@ -1,8 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   PROTOTYPE_PRODUCT_THEME_MANAGED_ATTR,
-  PROTOTYPE_VIEWPORT_ID,
+  PrototypeProductPreviewThemeProvider,
 } from "proto-plugin";
 import { useEffect } from "react";
 
@@ -26,18 +27,14 @@ function applyProductTheme(element: Element, theme: SupabaseProductTheme) {
 
 /**
  * Applies the source design system theme on prototype preview surfaces.
- * Skips component-library surfaces that manage their own product theme.
+ * Viewport theme is declared in React via PrototypeProductPreviewThemeProvider
+ * so SSR and hydration stay in sync. This effect only syncs nested source surfaces.
  */
-export function SupabaseProductTheme() {
+export function SupabaseProductTheme({ children }: { children: ReactNode }) {
   const productTheme = PRODUCT_THEME;
 
   useEffect(() => {
-    const applyToProductSurfaces = () => {
-      const viewport = document.getElementById(PROTOTYPE_VIEWPORT_ID);
-      if (viewport?.hasAttribute("data-prototype-screenshot")) {
-        applyProductTheme(viewport, productTheme);
-      }
-
+    const applyToNestedSourceSurfaces = () => {
       document
         .querySelectorAll("[data-prototype-source-surface]")
         .forEach((element) => {
@@ -48,22 +45,22 @@ export function SupabaseProductTheme() {
         });
     };
 
-    applyToProductSurfaces();
+    applyToNestedSourceSurfaces();
 
-    const observer = new MutationObserver(applyToProductSurfaces);
+    const observer = new MutationObserver(applyToNestedSourceSurfaces);
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: [
-        "data-prototype-screenshot",
-        "data-prototype-source-surface",
-        "id",
-      ],
+      attributeFilter: ["data-prototype-source-surface"],
     });
 
     return () => observer.disconnect();
   }, [productTheme]);
 
-  return null;
+  return (
+    <PrototypeProductPreviewThemeProvider theme={productTheme}>
+      {children}
+    </PrototypeProductPreviewThemeProvider>
+  );
 }

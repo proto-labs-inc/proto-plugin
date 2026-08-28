@@ -20,10 +20,14 @@ export const TABLE_EVENT_ACTIONS = {
   TableCreated: 'table_created',
   TableDataAdded: 'table_data_added',
   TableRLSEnabled: 'table_rls_enabled',
+  TableEditorFilterApplied: 'table_editor_filter_applied',
+  TableEditorFilterChipRemoved: 'table_editor_filter_chip_removed',
 } as const satisfies {
   TableCreated: TableCreatedEvent['action']
   TableDataAdded: TableDataAddedEvent['action']
   TableRLSEnabled: TableRlsEnabledEvent['action']
+  TableEditorFilterApplied: TableEditorFilterAppliedEvent['action']
+  TableEditorFilterChipRemoved: TableEditorFilterChipRemovedEvent['action']
 }
 
 export type TableEventAction = (typeof TABLE_EVENT_ACTIONS)[keyof typeof TABLE_EVENT_ACTIONS]
@@ -700,7 +704,7 @@ export interface SqlEditorTemplateClickedEvent {
  *
  * @group Events
  * @source studio
- * @page /project/{ref}/sql/{id}
+ * @page /dashboard/project/{ref}/sql/{id}
  */
 export interface SqlEditorAutosaveDisableClickedEvent {
   action: 'sql_editor_autosave_disable_clicked'
@@ -1776,7 +1780,7 @@ export interface BranchCreateButtonClickedEvent {
  *
  * @group Events
  * @source studio
- * @page /dashboard/project/{ref}/branches
+ * @page /dashboard/project/{ref}/branches, /dashboard/project/{ref}/merge or /dashboard/project/{ref}/settings/general
  */
 export interface BranchDeleteButtonClickedEvent {
   action: 'branch_delete_button_clicked'
@@ -2269,6 +2273,38 @@ export interface TableRlsEnabledEvent {
     /**
      * Name of the table
      */
+    table_name?: string
+  }
+  groups: Partial<TelemetryGroups>
+}
+
+/**
+ * User applied a quick filter in the table editor toolbar.
+ *
+ * @group Events
+ * @source studio
+ * @page /dashboard/project/{ref}/editor
+ */
+export interface TableEditorFilterAppliedEvent {
+  action: 'table_editor_filter_applied'
+  properties: {
+    schema_name?: string
+    table_name?: string
+  }
+  groups: Partial<TelemetryGroups>
+}
+
+/**
+ * User removed an active quick filter chip in the table editor toolbar.
+ *
+ * @group Events
+ * @source studio
+ * @page /dashboard/project/{ref}/editor
+ */
+export interface TableEditorFilterChipRemovedEvent {
+  action: 'table_editor_filter_chip_removed'
+  properties: {
+    schema_name?: string
     table_name?: string
   }
   groups: Partial<TelemetryGroups>
@@ -2817,7 +2853,6 @@ export type AiAssistantSource =
   | 'log_explorer'
   | 'error_code'
   | 'advisor_signal_detail'
-  | 'rls_tester'
 
 /**
  * User copied an AI prompt to clipboard instead of using the built-in assistant.
@@ -3284,8 +3319,8 @@ export interface AccessTokenRemovedEvent {
 }
 
 /**
- * User clicked the "Upgrade to Pro" CTA in one of the experiment placement surfaces.
- * GROWTH experiment: `upgradeCtaPlacement` (user_dropdown / org_projects_list).
+ * User clicked the "Upgrade to Pro" CTA. Fired from each CTA placement surface, with
+ * `placement` identifying which one (the user dropdown or the org project-list usage card).
  *
  * @group Events
  * @source studio
@@ -3294,25 +3329,6 @@ export interface UpgradeCtaClickedEvent {
   action: 'upgrade_cta_clicked'
   properties: {
     placement: 'user_dropdown' | 'org_projects_list'
-  }
-  groups: Omit<TelemetryGroups, 'project'>
-}
-
-/**
- * User was exposed to the upgrade CTA placement experiment.
- * Fires once per session per free-plan user enrolled in any variant (including control),
- * so the conversion analysis has a baseline cohort.
- *
- * @group Events
- * @source studio
- */
-export interface UpgradeCtaPlacementExperimentExposedEvent {
-  action: 'upgrade_cta_placement_experiment_exposed'
-  properties: {
-    /**
-     * The experiment variant shown to the user
-     */
-    variant: 'control' | 'user_dropdown' | 'org_projects_list'
   }
   groups: Omit<TelemetryGroups, 'project'>
 }
@@ -3547,18 +3563,6 @@ export interface HeaderLocalVersionPopoverOpenedEvent {
 }
 
 /**
- * User ran a query in the RLS tester feature preview.
- *
- * @group Events
- * @source studio
- */
-export interface RlsTesterRunQueryClickedEvent {
-  action: 'rls_tester_run_query_clicked'
-  properties: { type: 'raw' | 'inferred' }
-  groups: Partial<TelemetryGroups>
-}
-
-/**
  * @hidden
  */
 export type TelemetryEvent =
@@ -3697,6 +3701,8 @@ export type TelemetryEvent =
   | TableCreatedEvent
   | TableDataAddedEvent
   | TableRlsEnabledEvent
+  | TableEditorFilterAppliedEvent
+  | TableEditorFilterChipRemovedEvent
   | RlsGeneratePoliciesClickedEvent
   | RlsGeneratedPolicyRemovedEvent
   | RlsGeneratedPoliciesCreatedEvent
@@ -3738,7 +3744,6 @@ export type TelemetryEvent =
   | FreeMicroUpgradeBannerDismissedEvent
   | FreeMicroUpgradeBannerCtaClickedEvent
   | UpgradeCtaClickedEvent
-  | UpgradeCtaPlacementExperimentExposedEvent
   | AccessTokenCreatedEvent
   | AccessTokenRemovedEvent
   | ResourceExhaustionBannerUpgradeClickedEvent
@@ -3759,4 +3764,3 @@ export type TelemetryEvent =
   | HeaderUserDropdownOpenedEvent
   | HeaderLocalDropdownOpenedEvent
   | HeaderLocalVersionPopoverOpenedEvent
-  | RlsTesterRunQueryClickedEvent

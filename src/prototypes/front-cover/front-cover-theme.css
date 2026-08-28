@@ -1,0 +1,31 @@
+/*
+ * Product token VALUES + marketing layout helpers for the Front Cover prototype.
+ * Host-level registration lives in src/styles/product-tailwind-theme.css.
+ */
+[data-prototype-screenshot] .front-cover-theme,
+.front-cover-theme {
+  --background-dash-sidebar: var(--background);
+  --background-dash-canvas: var(--background);
+}
+
+[data-prototype-screenshot] .front-cover-theme .section-container,
+.front-cover-theme .section-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  [data-prototype-screenshot] .front-cover-theme .section-container,
+  .front-cover-theme .section-container {
+    padding-inline: 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  [data-prototype-screenshot] .front-cover-theme .section-container,
+  .front-cover-theme .section-container {
+    padding-inline: 6rem;
+  }
+}

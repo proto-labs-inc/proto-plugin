@@ -5,7 +5,11 @@ import path from "node:path";
 
 import { hostEnvHasValue } from "./host-env";
 
-const DESIGN_SYSTEM_SECTION_IDS = ["tokens"] as const;
+const COMPONENT_LIBRARY_SECTION_IDS = [
+  "ui-primitives",
+  "composite-components",
+  "tokens",
+] as const;
 
 export function isWorkspaceOnboardedByState(
   hostRoot: string,
@@ -34,28 +38,34 @@ function collectSourceFiles(dir: string, acc: string[]): void {
   }
 }
 
-export function isDesignSystemReadyByState(hostRoot: string): boolean {
-  const dir = path.join(hostRoot, "src", "app", "design-system");
-  const files: string[] = [];
-  collectSourceFiles(dir, files);
+export function isComponentLibraryReadyByState(hostRoot: string): boolean {
+  for (const rel of ["src/app/component-library", "src/app/design-system"]) {
+    const dir = path.join(hostRoot, rel);
+    const files: string[] = [];
+    collectSourceFiles(dir, files);
 
-  const found = new Set<string>();
-  for (const file of files) {
-    let text: string;
-    try {
-      text = fs.readFileSync(file, "utf8");
-    } catch {
-      continue;
-    }
-    for (const id of DESIGN_SYSTEM_SECTION_IDS) {
-      if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
-        found.add(id);
+    const found = new Set<string>();
+    for (const file of files) {
+      let text: string;
+      try {
+        text = fs.readFileSync(file, "utf8");
+      } catch {
+        continue;
       }
+      for (const id of COMPONENT_LIBRARY_SECTION_IDS) {
+        if (text.includes(`"${id}"`) || text.includes(`'${id}'`)) {
+          found.add(id);
+        }
+      }
+    }
+
+    if (COMPONENT_LIBRARY_SECTION_IDS.every((id) => found.has(id))) {
+      return true;
     }
   }
 
-  return DESIGN_SYSTEM_SECTION_IDS.every((id) => found.has(id));
+  return false;
 }
 
-/** @deprecated use isDesignSystemReadyByState */
-export const isComponentLibraryReadyByState = isDesignSystemReadyByState;
+/** @deprecated use isComponentLibraryReadyByState */
+export const isDesignSystemReadyByState = isComponentLibraryReadyByState;

@@ -91,7 +91,7 @@ export function PrototypeLinkSourceModal({
           id={pathFieldId}
           value={sourcePath}
           onChange={(event) => setSourcePath(event.target.value)}
-          placeholder="ex. ../cal.diy, cal.diy, or sibling folder to this host app"
+          placeholder="ex. ../my-product-repo or /Users/you/projects/my-app"
           className={PROTOTYPE_BRIEF_FIELD_BORDER_CLASS}
         />
       </div>

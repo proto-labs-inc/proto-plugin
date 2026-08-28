@@ -11,6 +11,8 @@ const VERIFY_SCRIPTS = {
     "node node_modules/proto-plugin/scripts/verify-host-env.mjs PROTOTYPE_USER_NAME",
   "verify:onboarded":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs onboarded",
+  "verify:component-library-loaded":
+    "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs component-library-loaded",
   "verify:design-system-loaded":
     "node node_modules/proto-plugin/scripts/verify-bootstrap-flag.mjs design-system-loaded",
   "verify:design-system-static":

@@ -12,6 +12,49 @@ import { buildWorkspaceProfileCopyText } from "@prototype/lib/prototypes/profile
 import { looksLikeAbsolutePath } from "@prototype/lib/prototypes/resolve-file-path";
 import type { WorkspaceProfile } from "@prototype/lib/prototypes/workspace-profile";
 
+/** When SOURCE_PATH is already set, it wins over stale onboarding folder names. */
+export function resolveBootstrapLinkSourceInputs({
+  sourcePath,
+  sourceFolderName,
+  currentSourcePath,
+}: {
+  sourcePath?: string;
+  sourceFolderName?: string;
+  currentSourcePath?: string;
+}): {
+  linkSourcePath?: string;
+  linkFolderName?: string;
+  linkCurrentSourcePath?: string;
+  effectiveSourcePath?: string;
+} {
+  const trimmedCurrent = currentSourcePath?.trim();
+  const trimmedSourcePath = sourcePath?.trim();
+  const absoluteSourcePath =
+    trimmedSourcePath && looksLikeAbsolutePath(trimmedSourcePath)
+      ? trimmedSourcePath
+      : undefined;
+  const trimmedFolderName = sourceFolderName?.trim();
+
+  if (trimmedCurrent && !absoluteSourcePath) {
+    return {
+      linkSourcePath: trimmedCurrent,
+      effectiveSourcePath: trimmedCurrent,
+    };
+  }
+
+  const linkCurrentSourcePath =
+    absoluteSourcePath && trimmedCurrent && absoluteSourcePath !== trimmedCurrent
+      ? trimmedCurrent
+      : undefined;
+
+  return {
+    linkSourcePath: absoluteSourcePath,
+    linkFolderName: absoluteSourcePath ? undefined : trimmedFolderName,
+    linkCurrentSourcePath,
+    effectiveSourcePath: absoluteSourcePath ?? trimmedCurrent,
+  };
+}
+
 function appendSection(sections: string[], title: string, body: string) {
   const trimmedBody = body.trim();
   if (!trimmedBody) return;
@@ -59,28 +102,26 @@ export function buildBootstrapSetupCopyText({
     "",
   ];
 
-  const trimmedSourcePath = sourcePath?.trim();
-  const trimmedSourceFolderName = sourceFolderName?.trim();
   const trimmedSourceDescription = sourceDescription?.trim();
-  const absoluteSourcePath =
-    trimmedSourcePath && looksLikeAbsolutePath(trimmedSourcePath)
-      ? trimmedSourcePath
-      : undefined;
+  const linkSourceInputs = resolveBootstrapLinkSourceInputs({
+    sourcePath,
+    sourceFolderName,
+    currentSourcePath,
+  });
 
   if (
-    absoluteSourcePath ||
-    trimmedSourceFolderName ||
+    linkSourceInputs.linkSourcePath ||
+    linkSourceInputs.linkFolderName ||
     trimmedSourceDescription
   ) {
     appendSection(
       sections,
       "Link source directory",
       buildLinkSourceCopyText({
-        sourcePath: absoluteSourcePath,
-        selectedFolderName:
-          absoluteSourcePath ? undefined : trimmedSourceFolderName,
+        sourcePath: linkSourceInputs.linkSourcePath,
+        selectedFolderName: linkSourceInputs.linkFolderName,
         description: trimmedSourceDescription,
-        currentSourcePath,
+        currentSourcePath: linkSourceInputs.linkCurrentSourcePath,
       }),
     );
   }
@@ -109,7 +150,7 @@ export function buildBootstrapSetupCopyText({
     sections,
     "Design system",
     buildPopulateDesignSystemCopyText({
-      sourcePath: absoluteSourcePath,
+      sourcePath: linkSourceInputs.effectiveSourcePath,
       syncConfigPath,
       designSystemPagePath,
       origin,

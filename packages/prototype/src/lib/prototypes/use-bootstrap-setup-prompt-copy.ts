@@ -11,7 +11,6 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 const PROFILE_STORAGE_KEYS = {
-  sourceName: "prototype-profile:source-name",
   agentContext: "prototype-profile:agent-context",
   agentContextPath: "prototype-profile:agent-context-path",
 } as const;
@@ -24,10 +23,6 @@ export function useBootstrapSetupPromptCopy(options?: {
   const track = useTrackEvent();
   const { currentSourcePath, syncConfigPath, designSystemPagePath } =
     useGalleryHostConfig();
-  const { value: sourceName } = usePersistedLocalString(
-    PROFILE_STORAGE_KEYS.sourceName,
-    "",
-  );
   const { value: agentContext } = usePersistedLocalString(
     PROFILE_STORAGE_KEYS.agentContext,
     "",
@@ -48,7 +43,6 @@ export function useBootstrapSetupPromptCopy(options?: {
         typeof window !== "undefined" ? window.location.origin : undefined;
       const onboardingSource = resolveOnboardingSourceForSetup({
         selectedDirectory: null,
-        persistedSourceName: sourceName,
       });
 
       await copy(
@@ -87,7 +81,6 @@ export function useBootstrapSetupPromptCopy(options?: {
     currentSourcePath,
     isCopying,
     options?.telemetryModal,
-    sourceName,
     syncConfigPath,
     track,
     workspaceProfile,
