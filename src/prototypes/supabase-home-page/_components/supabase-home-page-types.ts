@@ -2,6 +2,13 @@ export type AdvisorMode = "issue" | "empty" | "loading";
 
 export type ConnectSheetMode = "none" | "framework" | "server" | "direct" | "orm" | "mcp";
 
+export type SupabaseHomePageLiveState = {
+  previewStateId: SupabaseHomePagePreviewStateId;
+  advisorMode: AdvisorMode;
+  connectSheet: ConnectSheetMode;
+  copyPopoverOpen: boolean;
+};
+
 export type SupabaseHomePagePreviewStateId =
   | "default"
   | "advisor-empty"
