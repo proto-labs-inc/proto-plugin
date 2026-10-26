@@ -1,5 +1,6 @@
 {
   "name": "proto-plugin",
+  "license": "MIT",
   "version": "0.1.61",
   "type": "module",
   "publishConfig": {
@@ -15,6 +16,7 @@
     "src",
     "scripts",
     "README.md",
+    "LICENSE",
     "AGENTS.md",
     "components.json",
     "tsconfig.json"
